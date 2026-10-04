@@ -10,8 +10,8 @@ Add one after making a change:
 npx changeset
 ```
 
-`@readyph/ui` and `@readyph/design-tokens` are **version-locked** (`fixed` in
-`config.json`), so a bump to either releases both at the same version.
+`@readyph/ui` is the single published package — a changeset bumps it and updates
+its changelog.
 
 The Release workflow consumes these on `main`: it opens a "Version Packages" PR
 that applies the bumps and changelogs; merging it builds and publishes.
