@@ -5,7 +5,7 @@
 @import '@fontsource/inter/700.css';
 
 /* The CSS-variable theme (the theming contract). */
-@import '@readyph/design-tokens/theme.css';
+@import './theme.css';
 
 @tailwind base;
 @tailwind components;

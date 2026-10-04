@@ -1,6 +1,6 @@
 import { forwardRef } from 'react';
 import type { Icon as PhosphorIcon, IconProps, IconWeight } from '@phosphor-icons/react';
-import { iconSize, type IconSize } from '@readyph/design-tokens';
+import { iconSize, type IconSize } from '../tokens';
 import { cn } from '../utils/cn';
 
 export interface IconComponentProps extends Omit<IconProps, 'size' | 'weight' | 'ref'> {

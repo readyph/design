@@ -2,7 +2,7 @@
   "name": "readyph-design-system",
   "version": "0.0.0",
   "private": true,
-  "description": "ReadyPH design system — tokens, Tailwind preset and React components.",
+  "description": "ReadyPH design system — React components, tokens, Tailwind preset and theme.",
   "type": "module",
   "workspaces": [
     "packages/*"
@@ -11,11 +11,11 @@
     "node": ">=20.11"
   },
   "scripts": {
-    "tokens": "npm run generate -w @readyph/design-tokens",
+    "tokens": "npm run generate -w @readyph/ui",
     "storybook": "npm run storybook -w @readyph/ui",
     "build-storybook": "npm run build-storybook -w @readyph/ui",
-    "build": "npm run build -w @readyph/design-tokens && npm run build -w @readyph/ui",
-    "type-check": "npm run type-check -w @readyph/design-tokens && npm run type-check -w @readyph/ui",
+    "build": "npm run build -w @readyph/ui",
+    "type-check": "npm run type-check -w @readyph/ui",
     "test": "npm run test -w @readyph/ui",
     "changeset": "changeset",
     "version-packages": "changeset version",

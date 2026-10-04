@@ -1,5 +1,8 @@
 /* ReadyPH UI — React components on Tailwind + Radix + Phosphor. */
 
+// Design tokens (values + types)
+export * from './tokens';
+
 // Utilities
 export { cn, focusRing } from './utils/cn';
 export { formatShortcut } from './utils/shortcut';

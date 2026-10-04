@@ -1,4 +1,4 @@
-const preset = require('@readyph/design-tokens/preset');
+const preset = require('./preset.cjs');
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {

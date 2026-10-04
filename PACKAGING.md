@@ -1,12 +1,12 @@
 # Packaging & publishing
 
-This repo publishes two packages to **GitHub Packages (private)**:
+This repo publishes **one package** to **GitHub Packages (private)**:
 
-- `@readyph/design-tokens` — tokens, Tailwind preset (`./preset`), theme CSS (`./theme.css`)
-- `@readyph/ui` — React components, built to `dist/` (ESM + `.d.ts`)
+- `@readyph/ui` — React components built to `dist/` (ESM + `.d.ts`), plus the design
+  tokens, the **Tailwind preset** (`@readyph/ui/preset`) and the **theme CSS**
+  (`@readyph/ui/theme.css`).
 
-They are version-locked together (Changesets `fixed`), so they always publish at
-the same version. Spec: `kbase/concept/06-Design-system.md` §2.
+Spec: `kbase/concept/06-Design-system.md` §2.
 
 > **Assumption:** this directory (`design/`) is the git repository root (the
 > `.github/` workflows live here), and the repo is owned by the `readyph`
@@ -27,13 +27,10 @@ the same version. Spec: `kbase/concept/06-Design-system.md` §2.
 ### Dev vs. published resolution
 
 The published `exports`/`main`/`types` point at **`dist/`** (what consumers get;
-only `dist`, `css`, `preset.cjs` — and the ui package's `src/styles` — are
-shipped). Local dev stays **zero-build**: the one cross-package import
-(`@readyph/design-tokens` from `@readyph/ui`) resolves to source via a Vite alias
-([`.storybook/main.ts`](packages/ui/.storybook/main.ts)) for Storybook and a
-tsconfig `paths` entry ([`packages/ui/tsconfig.json`](packages/ui/tsconfig.json))
-for `tsc`/`tsup`. The `./preset` and `./theme.css` subpaths resolve through the
-package's own exports in both dev and published consumers.
+only `dist`, `preset.cjs` and `src/styles` are shipped). The `./preset`,
+`./theme.css` and `./styles.css` subpaths resolve through the package's own
+exports. The tokens, generator, preset and theme now live inside `@readyph/ui` —
+there is no separate tokens package.
 
 > This replaces the earlier `publishConfig`-swaps-`exports` approach, which is
 > unreliable: npm (10.5) does **not** apply `publishConfig` field overrides to the
@@ -42,8 +39,8 @@ package's own exports in both dev and published consumers.
 
 ### Verified on macOS (in this repo)
 
-- `npm run build` → `packages/{design-tokens,ui}/dist/index.{js,d.ts}` produced.
-- `npm run type-check` → passes (both packages).
+- `npm run build` → `packages/ui/dist/index.{js,d.ts}` produced (`prebuild` runs `generate`).
+- `npm run type-check` → passes.
 - `npm run build-storybook` → builds through the alias (no tokens build needed).
 - `npm pack --dry-run` → tarballs include `dist/` and the packed `package.json`
   `exports`/`types` resolve to `./dist/*`.
@@ -57,12 +54,11 @@ so they're left to you (or Claude Code on your Mac).
 ```bash
 cd design
 npm install                 # pull tooling (tsup, @changesets/cli)
-npm run build               # build both packages
+npm run build               # build the package
 
 # Authenticate: create a token (classic) with write:packages + read:packages
 export GITHUB_TOKEN=ghp_xxx # the repo .npmrc reads ${GITHUB_TOKEN}
 
-npm publish -w @readyph/design-tokens
 npm publish -w @readyph/ui
 ```
 
@@ -97,13 +93,13 @@ In the consuming repo, add an `.npmrc` so npm can resolve the private scope:
 ```
 
 ```bash
-npm i @readyph/ui @readyph/design-tokens
+npm i @readyph/ui
 npm i react react-dom @phosphor-icons/react   # the peers, if not already present
 ```
 
 ```cjs
 // tailwind.config.cjs
-const preset = require('@readyph/design-tokens/preset');
+const preset = require('@readyph/ui/preset');
 module.exports = {
   presets: [preset],
   content: [
@@ -115,7 +111,7 @@ module.exports = {
 
 ```ts
 // app entry — load the theme + the components' base stylesheet once
-import '@readyph/design-tokens/theme.css';
+import '@readyph/ui/theme.css';
 import '@readyph/ui/styles.css';
 ```
 

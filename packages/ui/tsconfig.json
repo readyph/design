@@ -2,10 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "types": ["vitest/globals", "@testing-library/jest-dom"],
-    "paths": {
-      "@readyph/design-tokens": ["../design-tokens/src/index.ts"]
-    }
+    "types": ["vitest/globals", "@testing-library/jest-dom"]
   },
   "include": ["src", ".storybook"]
 }

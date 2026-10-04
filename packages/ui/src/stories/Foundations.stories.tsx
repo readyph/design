@@ -6,7 +6,7 @@ import {
   radius,
   shadows,
   iconSize,
-} from '@readyph/design-tokens';
+} from '../tokens';
 import {
   House,
   MagnifyingGlass,
