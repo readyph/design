@@ -54,6 +54,11 @@ export const inventoryNav: NavDest[] = [
 /** Named story ids used for cross-flow links (back buttons, row clicks, rail). */
 export const routes = {
   portalHome: 'portal-dashboard--dashboard',
+  portalForgot: 'portal-auth--forgot-password',
+  portalForgotSent: 'portal-auth--forgot-password-sent',
+  portalReset: 'portal-auth--reset-password',
+  portalResetDone: 'portal-auth--reset-password-done',
+  portalResetExpired: 'portal-auth--reset-link-expired',
   inventoryHome: 'inventory-dashboard--dashboard',
   inventoryProducts: 'inventory-products--products',
   inventoryMovements: 'inventory-stock-movements--movements',

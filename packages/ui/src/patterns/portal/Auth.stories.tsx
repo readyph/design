@@ -9,6 +9,10 @@ import {
   Sparkle,
   ChartLineUp,
   Package,
+  ArrowLeft,
+  PaperPlaneTilt,
+  CheckCircle,
+  WarningCircle,
 } from '@phosphor-icons/react';
 import { Field } from '../../components/Field';
 import { Input } from '../../components/Input';
@@ -20,10 +24,12 @@ import { Icon } from '../../components/Icon';
 import { goToStory, routes } from '../nav';
 
 /**
- * Portal auth — Sign in & Sign up. Pre-login, so these do NOT use the app shell
- * (no rail/sidebar). A split layout: a tangerine brand panel (hidden on mobile)
- * beside a centered form. Appearance only — the app wires the actual auth calls
- * (02). See 03-Portal.md. Mock data.
+ * Portal auth — Sign in, Sign up, and the full forgot-password flow. Pre-login,
+ * so these do NOT use the app shell (no rail/sidebar). A split layout: a
+ * tangerine brand panel (hidden on mobile) beside a centered form. Appearance
+ * only — the app wires the actual auth calls (02). The reset-token rules
+ * (single active token, one-time use, 30-min expiry, no user enumeration) live
+ * in 03-Portal.md §9. Mock data.
  */
 const meta: Meta = {
   tags: ['!autodocs'],
@@ -88,6 +94,59 @@ function GoogleButton() {
   );
 }
 
+/** A "back to sign in" link used across the reset flow. */
+function BackToSignIn({ label = 'Back to sign in' }: { label?: string }) {
+  return (
+    <p className="mt-8 text-center text-sm">
+      <Link
+        href="#"
+        icon={ArrowLeft}
+        onClick={(e) => {
+          e.preventDefault();
+          goToStory('portal-auth--sign-in');
+        }}
+      >
+        {label}
+      </Link>
+    </p>
+  );
+}
+
+/**
+ * A centered notice screen (big icon + title + message + actions). Used for the
+ * "check your email", "password updated" and "link expired" states.
+ */
+function AuthNotice({
+  icon,
+  tone = 'primary',
+  title,
+  children,
+  actions,
+}: {
+  icon: typeof Envelope;
+  tone?: 'primary' | 'success' | 'error';
+  title: string;
+  children: ReactNode;
+  actions?: ReactNode;
+}) {
+  const toneRing =
+    tone === 'success'
+      ? 'bg-success-50 text-success-600'
+      : tone === 'error'
+        ? 'bg-error-50 text-error-600'
+        : 'bg-primary-50 text-primary-600';
+  return (
+    <div className="text-center">
+      <span className={`mx-auto mb-5 grid h-14 w-14 place-items-center rounded-full ${toneRing}`}>
+        <Icon icon={icon} size="lg" weight="fill" />
+      </span>
+      <h1 className="text-2xl font-semibold text-ink">{title}</h1>
+      <div className="mt-2 text-sm text-ink-muted">{children}</div>
+      {actions ? <div className="mt-6 space-y-3 text-left">{actions}</div> : null}
+    </div>
+  );
+}
+
 /* ----------------------------------------------------------------- Sign in -- */
 
 export const SignIn: Story = {
@@ -110,7 +169,16 @@ export const SignIn: Story = {
 
         <div className="flex items-center justify-between">
           <Checkbox label="Remember me" defaultChecked />
-          <Link href="#" className="text-sm">Forgot password?</Link>
+          <Link
+            href="#"
+            className="text-sm"
+            onClick={(e) => {
+              e.preventDefault();
+              goToStory(routes.portalForgot);
+            }}
+          >
+            Forgot password?
+          </Link>
         </div>
 
         <Button type="submit" fullWidth onClick={() => goToStory(routes.portalHome)}>
@@ -197,6 +265,161 @@ export const SignUp: Story = {
           Sign in
         </Link>
       </p>
+    </AuthShell>
+  ),
+};
+
+/* ------------------------------------------------- Forgot password (step 1) -- */
+/* Enter email → the app issues a single-use reset token and emails the link.   */
+
+export const ForgotPassword: Story = {
+  name: 'Forgot password',
+  render: () => (
+    <AuthShell>
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold text-ink">Reset your password</h1>
+        <p className="mt-1 text-sm text-ink-muted">
+          Enter your account email and we&apos;ll send a link to set a new password.
+        </p>
+      </div>
+
+      <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+        <Field label="Email">
+          <Input type="email" leftIcon={Envelope} placeholder="you@company.com" autoComplete="email" />
+        </Field>
+
+        <Button type="submit" fullWidth onClick={() => goToStory(routes.portalForgotSent)}>
+          Send reset link
+        </Button>
+      </form>
+
+      <BackToSignIn />
+    </AuthShell>
+  ),
+};
+
+/* ------------------------------------------------- Forgot password (step 2) -- */
+/* Confirmation. Wording is deliberately the same whether or not the email is   */
+/* registered — no account enumeration (see 03-Portal.md §9).                   */
+
+export const ForgotPasswordSent: Story = {
+  name: 'Forgot password · sent',
+  render: () => (
+    <AuthShell>
+      <AuthNotice
+        icon={PaperPlaneTilt}
+        title="Check your email"
+        actions={
+          <>
+            <BackToSignIn />
+            <p className="text-center text-sm text-ink-muted">
+              Didn&apos;t get it?{' '}
+              <Link
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  goToStory(routes.portalForgot);
+                }}
+              >
+                Try again
+              </Link>
+            </p>
+          </>
+        }
+      >
+        If an account exists for that email, we&apos;ve sent a link to reset your
+        password. The link works once and expires in 30 minutes.
+      </AuthNotice>
+    </AuthShell>
+  ),
+};
+
+/* --------------------------------------------------- Reset password (step 3) -- */
+/* The unique per-token page reached from the email link. New + confirm.        */
+
+export const ResetPassword: Story = {
+  name: 'Reset password',
+  render: () => (
+    <AuthShell>
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold text-ink">Set a new password</h1>
+        <p className="mt-1 text-sm text-ink-muted">
+          Choose a new password for <span className="font-medium text-ink">maria@sunrise.ph</span>.
+        </p>
+      </div>
+
+      <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+        <Field label="New password" hint="At least 8 characters.">
+          <Input type="password" leftIcon={Lock} placeholder="••••••••" autoComplete="new-password" />
+        </Field>
+
+        <Field label="Confirm password">
+          <Input type="password" leftIcon={Lock} placeholder="••••••••" autoComplete="new-password" />
+        </Field>
+
+        <Button type="submit" fullWidth onClick={() => goToStory(routes.portalResetDone)}>
+          Reset password
+        </Button>
+      </form>
+
+      <BackToSignIn label="Cancel" />
+    </AuthShell>
+  ),
+};
+
+/* --------------------------------------------------- Reset password (done) --- */
+
+export const ResetPasswordDone: Story = {
+  name: 'Reset password · done',
+  render: () => (
+    <AuthShell>
+      <AuthNotice
+        icon={CheckCircle}
+        tone="success"
+        title="Password updated"
+        actions={
+          <Button
+            fullWidth
+            onClick={() => goToStory('portal-auth--sign-in')}
+          >
+            Sign in
+          </Button>
+        }
+      >
+        Your password has been changed. For your security we&apos;ve signed out any
+        other sessions — sign in again to continue.
+      </AuthNotice>
+    </AuthShell>
+  ),
+};
+
+/* ---------------------------------------------- Reset link expired / invalid - */
+/* Shown when the token is expired, already used, or was superseded by a newer  */
+/* request. One active token at a time (see 03-Portal.md §9).                    */
+
+export const ResetLinkExpired: Story = {
+  name: 'Reset link expired',
+  render: () => (
+    <AuthShell>
+      <AuthNotice
+        icon={WarningCircle}
+        tone="error"
+        title="This link is no longer valid"
+        actions={
+          <>
+            <Button
+              fullWidth
+              onClick={() => goToStory(routes.portalForgot)}
+            >
+              Request a new link
+            </Button>
+            <BackToSignIn />
+          </>
+        }
+      >
+        Reset links expire after 30 minutes and can only be used once. If you
+        requested another link, only the most recent one works.
+      </AuthNotice>
     </AuthShell>
   ),
 };
