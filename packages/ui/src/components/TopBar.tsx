@@ -21,7 +21,7 @@ export const TopBar = forwardRef<HTMLElement, TopBarProps>(function TopBar(
   return (
     <header
       ref={ref}
-      className={cn('flex h-[3.25rem] items-center gap-4 border-b border-border bg-surface px-4', className)}
+      className={cn('flex h-[3.25rem] items-center gap-4 bg-transparent px-4', className)}
       {...rest}
     >
       {children ?? (

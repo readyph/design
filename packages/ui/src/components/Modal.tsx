@@ -99,7 +99,7 @@ function ModalRoot({
               )}
               {children && <div className="overflow-y-auto px-5 py-4 text-sm text-ink">{children}</div>}
               {footer && (
-                <div className="flex items-center justify-end gap-2 border-t border-border px-5 py-3">
+                <div className="flex items-center justify-end gap-2 px-5 py-3">
                   {footer}
                 </div>
               )}
@@ -119,7 +119,7 @@ function ModalRoot({
 /** Header region (provides the accessible dialog title). Use in composition mode. */
 export function ModalHeader({ className, children, ...rest }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn('border-b border-border px-5 py-4', className)} {...rest}>
+    <div className={cn('px-5 py-4', className)} {...rest}>
       <Dialog.Title className="text-base font-semibold text-ink">{children}</Dialog.Title>
     </div>
   );
@@ -138,7 +138,7 @@ export function ModalBody({ className, children, ...rest }: HTMLAttributes<HTMLD
 export function ModalFooter({ className, children, ...rest }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn('flex items-center justify-end gap-2 border-t border-border px-5 py-3', className)}
+      className={cn('flex items-center justify-end gap-2 px-5 py-3', className)}
       {...rest}
     >
       {children}

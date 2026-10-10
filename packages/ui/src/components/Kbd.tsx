@@ -7,7 +7,7 @@ export interface KbdProps extends HTMLAttributes<HTMLElement> {
 }
 
 /**
- * A styled keycap badge (tangerine-tinted). Used inline, in tooltips, in
+ * A styled keycap badge (brand-tinted). Used inline, in tooltips, in
  * button/nav key hints, and in a `?` shortcuts overlay. Purely presentational.
  *
  * @example <Kbd>⌘</Kbd><Kbd>K</Kbd>

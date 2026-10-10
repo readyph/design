@@ -4,10 +4,8 @@ import {
   DeviceMobile,
   Storefront,
   Plus,
-  Sparkle,
   MagnifyingGlass,
   Bell,
-  CaretDown,
   CaretLeft,
   List,
   SignOut,
@@ -18,9 +16,9 @@ import {
 import { Sidebar, SidebarSection, SidebarItem } from '../../components/Sidebar';
 import { TopBar } from '../../components/TopBar';
 import { IconButton } from '../../components/IconButton';
-import { Button } from '../../components/Button';
 import { Avatar } from '../../components/Avatar';
 import { Icon } from '../../components/Icon';
+import { LedaLauncher } from '../../components/LedaLauncher';
 import { Menu } from '../../components/Menu';
 import { StatusDot, type Status } from '../portal/shell';
 import { inventoryNav, goToStory, routes } from '../nav';
@@ -46,6 +44,8 @@ export interface InventoryShellProps {
   actions?: ReactNode;
   /** Wrap children in a scroll area (default). Pass false for a self-managing layout. */
   scroll?: boolean;
+  /** Hide the floating Ask-Leda launcher (e.g. when the page has Leda built in). */
+  hideLeda?: boolean;
   children: ReactNode;
 }
 
@@ -54,7 +54,7 @@ export interface InventoryShellProps {
  * platform) + inventory side nav + top bar, with a content slot. Mirrors the
  * Portal shell so the two platforms feel like one product. See 04-Inventory.md §3.
  */
-export function InventoryShell({ active, title, actions, scroll = true, children }: InventoryShellProps) {
+export function InventoryShell({ active, title, actions, scroll = true, hideLeda = false, children }: InventoryShellProps) {
   const mainNav = inventoryNav.filter((n) => n.key !== 'settings');
   const settingsNav = inventoryNav.find((n) => n.key === 'settings')!;
 
@@ -109,16 +109,13 @@ export function InventoryShell({ active, title, actions, scroll = true, children
       </div>
 
       {/* Window */}
-      <div className="flex min-w-0 flex-1 overflow-hidden bg-surface sm:my-2 sm:mr-2 sm:rounded-xl sm:border sm:border-border sm:shadow-sm">
+      <div className="flex min-w-0 flex-1 overflow-hidden bg-transparent">
         <Sidebar className="hidden lg:flex">
-          <div className="mb-2 flex items-center justify-between px-2 pt-1">
-            <button className="flex items-center gap-1.5 text-sm font-semibold text-ink focus:outline-none">
-              <span className="grid h-6 w-6 place-items-center rounded-base bg-primary-50 text-primary-700">
-                <Icon icon={Package} size="sm" weight="fill" />
-              </span>
-              Inventory <Icon icon={CaretDown} size="sm" className="text-ink-subtle" />
-            </button>
-            <IconButton icon={MagnifyingGlass} label="Search" variant="subtle" size="sm" />
+          <div className="mb-2 flex items-center gap-2 px-2 pt-1">
+            <span className="grid h-6 w-6 place-items-center rounded-base bg-primary-50 text-primary-700">
+              <Icon icon={Package} size="sm" weight="fill" />
+            </span>
+            <span className="text-sm font-bold tracking-tight text-ink">Inventory</span>
           </div>
           <SidebarSection>
             {mainNav.map((n) => (
@@ -160,7 +157,7 @@ export function InventoryShell({ active, title, actions, scroll = true, children
           </div>
         </Sidebar>
 
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="relative flex min-w-0 flex-1 flex-col">
           <TopBar
             start={
               <>
@@ -171,13 +168,20 @@ export function InventoryShell({ active, title, actions, scroll = true, children
             end={
               actions ?? (
                 <>
+                  <label className="hidden h-9 items-center gap-2 rounded-full bg-surface-muted px-3.5 text-ink-subtle md:flex">
+                    <Icon icon={MagnifyingGlass} size="sm" />
+                    <input
+                      placeholder="Search everything…"
+                      className="w-48 bg-transparent text-sm text-ink outline-none placeholder:text-ink-subtle"
+                    />
+                  </label>
                   <IconButton icon={Bell} label="Notifications" variant="subtle" />
-                  <Button size="sm" leftIcon={Sparkle}>Ask Leda</Button>
                 </>
               )
             }
           />
-          {scroll ? <div className="min-h-0 flex-1 overflow-y-auto">{children}</div> : <div className="flex min-h-0 flex-1 flex-col">{children}</div>}
+                    {scroll ? <div className="min-h-0 flex-1 overflow-y-auto">{children}</div> : <div className="flex min-h-0 flex-1 flex-col">{children}</div>}
+          {!hideLeda && <LedaLauncher />}
         </div>
       </div>
     </div>

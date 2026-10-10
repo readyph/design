@@ -82,7 +82,7 @@ function DrawerRoot({
           {propMode ? (
             <>
               {(title || !hideClose) && (
-                <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-4">
+                <div className="flex items-start justify-between gap-4 px-5 py-4">
                   <div className="min-w-0">
                     {title && (
                       <Dialog.Title className="text-base font-semibold text-ink">{title}</Dialog.Title>
@@ -98,7 +98,7 @@ function DrawerRoot({
               )}
               <div className="flex-1 overflow-y-auto px-5 py-4 text-sm text-ink">{children}</div>
               {footer && (
-                <div className="flex items-center justify-end gap-2 border-t border-border px-5 py-3">
+                <div className="flex items-center justify-end gap-2 px-5 py-3">
                   {footer}
                 </div>
               )}
@@ -118,7 +118,7 @@ function DrawerRoot({
 /** Header region (provides the accessible dialog title). Use in composition mode. */
 export function OffCanvasHeader({ className, children, ...rest }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn('border-b border-border px-5 py-4', className)} {...rest}>
+    <div className={cn('px-5 py-4', className)} {...rest}>
       <Dialog.Title className="text-base font-semibold text-ink">{children}</Dialog.Title>
     </div>
   );
@@ -137,7 +137,7 @@ export function OffCanvasBody({ className, children, ...rest }: HTMLAttributes<H
 export function OffCanvasFooter({ className, children, ...rest }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn('flex items-center justify-end gap-2 border-t border-border px-5 py-3', className)}
+      className={cn('flex items-center justify-end gap-2 px-5 py-3', className)}
       {...rest}
     >
       {children}

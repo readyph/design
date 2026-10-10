@@ -50,7 +50,7 @@ function Ramp({ title, scale }: { title: string; scale: Record<string, string> }
 export const Colors: Story = {
   render: () => (
     <div className="flex flex-col gap-8 p-8">
-      <Ramp title="Primary — tangerine (brand + action)" scale={colors.primary} />
+      <Ramp title="Primary — blue (brand + action)" scale={colors.primary} />
       <Ramp title="Neutral — ink / gray" scale={colors.neutral} />
       <div>
         <h3 className="mb-2 text-sm font-semibold text-ink">Semantic</h3>

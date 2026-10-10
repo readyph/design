@@ -3,7 +3,7 @@ import { cn } from '../utils/cn';
 
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   padding?: 'none' | 'sm' | 'md' | 'lg';
-  /** Elevation; `flat` relies on the border only. */
+  /** Elevation; `flat` is a plain filled panel. */
   elevation?: 'flat' | 'sm' | 'md';
   /** Hover affordance for clickable cards. */
   interactive?: boolean;
@@ -22,7 +22,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(function Card(
     <div
       ref={ref}
       className={cn(
-        'rounded-lg border border-border bg-surface',
+        'rounded-lg bg-surface',
         paddings[padding],
         elevations[elevation],
         interactive && 'transition-shadow duration-DEFAULT hover:shadow-md',
@@ -45,7 +45,7 @@ export const CardHeader = forwardRef<HTMLDivElement, CardSectionProps>(function 
   ref,
 ) {
   return (
-    <div ref={ref} className={cn('flex items-center justify-between gap-3 border-b border-border pb-3', className)} {...rest}>
+    <div ref={ref} className={cn('flex items-center justify-between gap-3 pb-3', className)} {...rest}>
       {children}
     </div>
   );
@@ -57,7 +57,7 @@ export const CardFooter = forwardRef<HTMLDivElement, CardSectionProps>(function 
   ref,
 ) {
   return (
-    <div ref={ref} className={cn('flex items-center justify-end gap-2 border-t border-border pt-3', className)} {...rest}>
+    <div ref={ref} className={cn('flex items-center justify-end gap-2 pt-3', className)} {...rest}>
       {children}
     </div>
   );

@@ -20,7 +20,7 @@ export const SettingsSection = forwardRef<HTMLElement, SettingsSectionProps>(fun
   return (
     <section
       ref={ref}
-      className={cn('grid gap-4 border-b border-border py-6 last:border-0 md:grid-cols-[18rem_1fr]', className)}
+      className={cn('grid gap-4 py-6 md:grid-cols-[18rem_1fr]', className)}
       {...rest}
     >
       <div className="flex items-start justify-between gap-2">

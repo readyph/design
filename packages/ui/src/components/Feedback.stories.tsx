@@ -30,7 +30,7 @@ export const Notices: Story = {
         Your changes have been published.
       </Notice>
       <Notice tone="warning" title="Check contrast">
-        Tangerine 500 does not clear 4.5:1 for small white text — use 600/700.
+        Blue 500 does not clear 4.5:1 for small white text — use 600/700.
       </Notice>
       <Notice tone="error" title="Publish failed" onDismiss={() => {}}>
         The registry rejected the token. Try again.

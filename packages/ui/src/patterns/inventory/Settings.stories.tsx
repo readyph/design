@@ -83,7 +83,7 @@ function SectionCard({ title, action, children }: { title: string; action?: Reac
         <h2 className="text-sm font-semibold text-ink">{title}</h2>
         {action}
       </div>
-      <div className="border-t border-border">{children}</div>
+      <div>{children}</div>
     </Card>
   );
 }

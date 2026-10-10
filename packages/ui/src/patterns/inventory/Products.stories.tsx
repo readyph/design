@@ -219,14 +219,14 @@ export const Products: Story = {
               <OffCanvas.Body className="space-y-6">
                 {/* Stock summary */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-lg border border-border p-3">
+                  <div className="rounded-lg bg-surface p-3">
                     <p className="text-xs text-ink-subtle">On hand</p>
                     <p className="mt-0.5 text-2xl font-semibold tabular-nums text-ink">
                       {selected.stock}
                       <span className="ml-1 text-sm font-normal text-ink-subtle">{selected.unit}</span>
                     </p>
                   </div>
-                  <div className="rounded-lg border border-border p-3">
+                  <div className="rounded-lg bg-surface p-3">
                     <p className="text-xs text-ink-subtle">Reorder at</p>
                     <p className="mt-0.5 text-2xl font-semibold tabular-nums text-ink">{selected.reorder}</p>
                   </div>
@@ -254,7 +254,7 @@ export const Products: Story = {
                 {/* Movement history */}
                 <div>
                   <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-subtle">Recent movements</h3>
-                  <div className="divide-y divide-border rounded-lg border border-border">
+                  <div className="divide-y divide-border rounded-lg bg-surface">
                     {history.map((m, i) => (
                       <div key={i} className="flex items-center gap-3 px-3 py-2">
                         <span

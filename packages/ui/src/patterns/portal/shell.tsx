@@ -4,10 +4,8 @@ import {
   DeviceMobile,
   Storefront,
   Plus,
-  Sparkle,
   MagnifyingGlass,
   Bell,
-  CaretDown,
   List,
   SignOut,
   CreditCard,
@@ -17,9 +15,9 @@ import {
 import { Sidebar, SidebarSection, SidebarItem } from '../../components/Sidebar';
 import { TopBar } from '../../components/TopBar';
 import { IconButton } from '../../components/IconButton';
-import { Button } from '../../components/Button';
 import { Avatar } from '../../components/Avatar';
 import { Icon } from '../../components/Icon';
+import { LedaLauncher } from '../../components/LedaLauncher';
 import { Menu } from '../../components/Menu';
 import { cn } from '../../utils/cn';
 import { portalNav, goToStory, routes } from '../nav';
@@ -106,13 +104,10 @@ export function PortalShell({ active, title, actions, scroll = true, children }:
       </div>
 
       {/* Window */}
-      <div className="flex min-w-0 flex-1 overflow-hidden bg-surface sm:my-2 sm:mr-2 sm:rounded-xl sm:border sm:border-border sm:shadow-sm">
+      <div className="flex min-w-0 flex-1 overflow-hidden bg-transparent">
         <Sidebar className="hidden lg:flex">
-          <div className="mb-2 flex items-center justify-between px-2 pt-1">
-            <button className="flex items-center gap-1 text-sm font-semibold text-ink focus:outline-none">
-              Sunrise Groceries <Icon icon={CaretDown} size="sm" className="text-ink-subtle" />
-            </button>
-            <IconButton icon={MagnifyingGlass} label="Search" variant="subtle" size="sm" />
+          <div className="mb-2 px-2 pt-1">
+            <span className="text-sm font-bold tracking-tight text-ink">Sunrise Groceries</span>
           </div>
           <SidebarSection>
             {mainNav.map((n) => (
@@ -146,7 +141,7 @@ export function PortalShell({ active, title, actions, scroll = true, children }:
           </SidebarSection>
         </Sidebar>
 
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="relative flex min-w-0 flex-1 flex-col">
           <TopBar
             start={
               <>
@@ -157,13 +152,20 @@ export function PortalShell({ active, title, actions, scroll = true, children }:
             end={
               actions ?? (
                 <>
+                  <label className="hidden h-9 items-center gap-2 rounded-full bg-surface-muted px-3.5 text-ink-subtle focus-within:bg-surface-muted/80 md:flex">
+                    <Icon icon={MagnifyingGlass} size="sm" />
+                    <input
+                      placeholder="Search everything…"
+                      className="w-48 bg-transparent text-sm text-ink outline-none placeholder:text-ink-subtle"
+                    />
+                  </label>
                   <IconButton icon={Bell} label="Notifications" variant="subtle" />
-                  <Button size="sm" leftIcon={Sparkle}>Ask Leda</Button>
                 </>
               )
             }
           />
-          {scroll ? <div className="min-h-0 flex-1 overflow-y-auto">{children}</div> : <div className="flex min-h-0 flex-1 flex-col">{children}</div>}
+                    {scroll ? <div className="min-h-0 flex-1 overflow-y-auto">{children}</div> : <div className="flex min-h-0 flex-1 flex-col">{children}</div>}
+          <LedaLauncher />
         </div>
       </div>
     </div>

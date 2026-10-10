@@ -1,23 +1,23 @@
 /**
- * Color palette — white base, tangerine-orange primary.
+ * Color palette — white base, blue primary.
  *
  * Source of truth for the CSS-variable theme and the Tailwind preset
  * (see `kbase/concept/06-Design-system.md` §4). White surfaces, near-black
- * ink text, tangerine as the single brand/action color.
+ * ink text, blue as the single brand/action color.
  */
 export const colors = {
-  /** Tangerine — brand + action color. */
+  /** Blue — brand + action color. */
   primary: {
-    50: '#fff5ec',
-    100: '#ffe8d2',
-    200: '#ffcfa0',
-    300: '#ffb26b',
-    400: '#ff9640',
-    500: '#f5841f', // brand
-    600: '#e06d0c', // solid buttons / links
-    700: '#b85309', // hover / link text
-    800: '#933f0e',
-    900: '#78350f',
+    50: '#eff6ff',
+    100: '#dbeafe',
+    200: '#bfdbfe',
+    300: '#93c5fd',
+    400: '#60a5fa',
+    500: '#3b82f6', // brand
+    600: '#2563eb', // solid buttons / links
+    700: '#1d4ed8', // hover / link text
+    800: '#1e40af',
+    900: '#1e3a8a',
   },
   /** Ink / gray. */
   neutral: {
@@ -58,10 +58,10 @@ export const colors = {
     strong: '#d4d4d4',
   },
   /** Links carry the brand color. */
-  link: '#e06d0c',
+  link: '#2563eb',
   /**
-   * Pastel status pills: background + readable foreground. Peach reads as the
-   * warm tangerine family; green / teal / gray round out the set.
+   * Pastel status pills: background + readable foreground. Blue / green /
+   * teal / gray round out the status set.
    */
   tint: {
     peach: { bg: '#fbe5de', fg: '#8f3d28' },

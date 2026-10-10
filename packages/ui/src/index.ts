@@ -60,6 +60,9 @@ export {
 
 // Data display
 export { Card, CardHeader, CardFooter, type CardProps } from './components/Card';
+export { LedaLauncher, type LedaLauncherProps } from './components/LedaLauncher';
+export { RevenueChart, type RevenueChartProps, type RevenueSeries } from './components/RevenueChart';
+export { Notifications, type NotificationsProps, type NotificationItem, type NotificationKind } from './components/Notifications';
 export { Avatar, type AvatarProps, type AvatarSize } from './components/Avatar';
 export { AvatarGroup, type AvatarGroupProps } from './components/AvatarGroup';
 export { Table, type TableProps, type TableColumn } from './components/Table';

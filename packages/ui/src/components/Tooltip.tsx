@@ -42,13 +42,13 @@ export function Tooltip({
             align={align}
             sideOffset={6}
             className={cn(
-              'z-tooltip max-w-xs rounded-base bg-neutral-900 px-2.5 py-1.5 text-xs text-white shadow-md',
+              'z-tooltip max-w-xs rounded-base bg-ink px-2.5 py-1.5 text-xs text-surface shadow-md',
               'data-[state=delayed-open]:animate-[ds-popover-in_120ms_ease] motion-reduce:animate-none',
               className,
             )}
           >
             {content}
-            <RadixTooltip.Arrow className="fill-neutral-900" />
+            <RadixTooltip.Arrow className="fill-ink" />
           </RadixTooltip.Content>
         </RadixTooltip.Portal>
       </RadixTooltip.Root>

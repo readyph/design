@@ -39,7 +39,7 @@ export function SegmentedControl({
   };
   const h = size === 'sm' ? 'h-7 text-xs' : 'h-8 text-sm';
   return (
-    <div role="tablist" aria-label={ariaLabel} className={cn('inline-flex items-center gap-0.5 rounded-lg bg-surface-muted p-0.5', className)}>
+    <div role="tablist" aria-label={ariaLabel} className={cn('inline-flex items-center gap-0.5 rounded-lg bg-surface-muted p-1', className)}>
       {options.map((o) => {
         const active = o.value === current;
         return (

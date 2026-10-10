@@ -75,3 +75,62 @@
   from { opacity: 0; transform: scale(0.97); }
   to { opacity: 1; transform: scale(1); }
 }
+
+/* ===========================================================================
+ * Dark theme — flat, blue accent. The generator owns the light :root palette;
+ * this block layers the dark palette on top. Toggle with data-theme="dark" on
+ * a root node (<html>, <body>, or any .ds-root). Flat surfaces: no glass, no
+ * ambient glow, no gradients.
+ * ======================================================================== */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --ds-primary-50: 30 58 138;
+  --ds-primary-100: 30 64 175;
+  --ds-primary-200: 29 78 216;
+  --ds-primary-300: 59 130 246;
+  --ds-primary-400: 96 165 250;
+  --ds-primary-500: 59 130 246;
+  --ds-primary-600: 37 99 235;
+  --ds-primary-700: 96 165 250;
+  --ds-primary-800: 147 197 253;
+  --ds-primary-900: 219 234 254;
+
+  --ds-neutral-50: 24 24 28;
+  --ds-neutral-100: 30 30 36;
+  --ds-neutral-200: 42 42 50;
+  --ds-neutral-300: 55 55 64;
+  --ds-neutral-400: 120 120 132;
+  --ds-neutral-500: 150 150 162;
+  --ds-neutral-600: 180 180 192;
+  --ds-neutral-700: 205 205 214;
+  --ds-neutral-800: 228 228 235;
+  --ds-neutral-900: 243 243 246;
+
+  --ds-success: 52 210 123;
+  --ds-warning: 240 163 58;
+  --ds-error: 242 97 91;
+  --ds-info: 91 140 240;
+
+  --ds-surface: 22 22 29;
+  --ds-surface-subtle: 28 28 35;
+  --ds-surface-muted: 40 40 48;
+  --ds-canvas: 10 10 14;
+
+  --ds-ink: 243 243 246;
+  --ds-ink-muted: 162 162 173;
+  --ds-ink-subtle: 120 121 132;
+
+  --ds-border: 38 38 46;
+  --ds-border-strong: 60 60 70;
+
+  --ds-link: 96 165 250;
+  --ds-focus: 59 130 246;
+
+  --ds-tint-peach-bg: 60 40 28;  --ds-tint-peach-fg: 245 190 150;
+  --ds-tint-green-bg: 18 54 36;  --ds-tint-green-fg: 110 231 183;
+  --ds-tint-teal-bg: 12 54 56;   --ds-tint-teal-fg: 94 234 212;
+  --ds-tint-gray-bg: 42 42 50;   --ds-tint-gray-fg: 200 200 210;
+
+  --ds-overlay: rgba(0, 0, 0, 0.6);
+}

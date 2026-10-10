@@ -120,19 +120,19 @@ export const Movements: Story = {
 
           {/* Today's net */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
-            <div className="rounded-lg border border-border p-4">
+            <div className="rounded-lg bg-surface p-4">
               <p className="flex items-center gap-1.5 text-xs text-ink-subtle">
                 <Icon icon={ArrowDown} size="sm" className="text-success" /> In today
               </p>
               <p className="mt-1 text-2xl font-semibold tabular-nums text-ink">+55</p>
             </div>
-            <div className="rounded-lg border border-border p-4">
+            <div className="rounded-lg bg-surface p-4">
               <p className="flex items-center gap-1.5 text-xs text-ink-subtle">
                 <Icon icon={ArrowUp} size="sm" className="text-error" /> Out today
               </p>
               <p className="mt-1 text-2xl font-semibold tabular-nums text-ink">−8</p>
             </div>
-            <div className="rounded-lg border border-border p-4">
+            <div className="rounded-lg bg-surface p-4">
               <p className="flex items-center gap-1.5 text-xs text-ink-subtle">
                 <Icon icon={ArrowsDownUp} size="sm" /> Net
               </p>

@@ -11,7 +11,7 @@ export type ButtonVariant = 'primary' | 'secondary' | 'subtle' | 'danger';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  /** Visual weight. `primary` is the single tangerine CTA. */
+  /** Visual weight. `primary` is the single blue CTA. */
   variant?: ButtonVariant;
   size?: ButtonSize;
   /** Show a spinner and disable interaction. */
@@ -34,7 +34,7 @@ const base =
   'relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-base font-medium transition-colors duration-DEFAULT ease-standard disabled:cursor-not-allowed disabled:opacity-50';
 
 const variants: Record<ButtonVariant, string> = {
-  primary: 'bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800',
+  primary: 'bg-primary-500 text-white hover:bg-primary-600',
   secondary:
     'border border-border bg-surface text-ink hover:bg-surface-subtle active:bg-surface-muted',
   subtle: 'bg-transparent text-ink hover:bg-surface-muted active:bg-neutral-200',

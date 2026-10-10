@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import {
-  Sparkle,
+  WaveTriangle,
   Export,
   CurrencyDollar,
   ArrowsClockwise,
@@ -86,7 +86,7 @@ export const Reports: Story = {
           <PageHeader
             title="Reports"
             description="Saved reports · generate new ones with Leda"
-            actions={<Button leftIcon={Sparkle}>Generate with Leda</Button>}
+            actions={<Button leftIcon={WaveTriangle}>Generate with Leda</Button>}
           />
 
           <div className="mt-6 grid gap-6 lg:grid-cols-3">

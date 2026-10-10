@@ -4,7 +4,7 @@ import { cn, focusRing } from '../utils/cn';
 import { Icon } from './Icon';
 
 export interface LinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
-  /** `default` carries the brand tangerine; `muted` for secondary links. */
+  /** `default` carries the brand blue; `muted` for secondary links. */
   tone?: 'default' | 'muted';
   /** Underline behavior. */
   underline?: 'hover' | 'always' | 'none';

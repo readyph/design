@@ -6,7 +6,7 @@ import {
   User,
   Buildings,
   GoogleLogo,
-  Sparkle,
+  WaveTriangle,
   ChartLineUp,
   Package,
   ArrowLeft,
@@ -26,7 +26,7 @@ import { goToStory, routes } from '../nav';
 /**
  * Portal auth — Sign in, Sign up, and the full forgot-password flow. Pre-login,
  * so these do NOT use the app shell (no rail/sidebar). A split layout: a
- * tangerine brand panel (hidden on mobile) beside a centered form. Appearance
+ * blue brand panel (hidden on mobile) beside a centered form. Appearance
  * only — the app wires the actual auth calls (02). The reset-token rules
  * (single active token, one-time use, 30-min expiry, no user enumeration) live
  * in 03-Portal.md §9. Mock data.
@@ -41,14 +41,14 @@ type Story = StoryObj;
 
 const features = [
   { icon: ChartLineUp, text: 'A live command center for every platform' },
-  { icon: Sparkle, text: 'Leda, your AI assistant — just ask' },
+  { icon: WaveTriangle, text: 'Leda, your AI assistant — just ask' },
   { icon: Package, text: 'Inventory, orders and more in one place' },
 ];
 
 /** The shared auth layout: brand panel + a centered form slot. */
 function AuthShell({ children }: { children: ReactNode }) {
   return (
-    <div className="ds-root flex min-h-screen w-full bg-surface font-sans text-ink">
+    <div className="ds-root flex min-h-screen w-full bg-surface-canvas font-sans text-ink">
       {/* Brand panel */}
       <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-gradient-to-br from-primary-500 to-primary-700 p-12 text-white lg:flex">
         <div className="flex items-center gap-2.5">
@@ -131,10 +131,10 @@ function AuthNotice({
 }) {
   const toneRing =
     tone === 'success'
-      ? 'bg-success-50 text-success-600'
+      ? 'bg-success/10 text-success'
       : tone === 'error'
-        ? 'bg-error-50 text-error-600'
-        : 'bg-primary-50 text-primary-600';
+        ? 'bg-error/10 text-error'
+        : 'bg-primary-500/10 text-primary-500';
   return (
     <div className="text-center">
       <span className={`mx-auto mb-5 grid h-14 w-14 place-items-center rounded-full ${toneRing}`}>

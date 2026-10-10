@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { type ReactNode } from 'react';
-import { Envelope, Lock, Camera, ArrowsClockwise, Sparkle } from '@phosphor-icons/react';
+import { Envelope, Lock, Camera, ArrowsClockwise, WaveTriangle } from '@phosphor-icons/react';
 import { Field } from '../../components/Field';
 import { Input } from '../../components/Input';
 import { Checkbox } from '../../components/Checkbox';
@@ -13,7 +13,7 @@ import { goToStory, routes } from '../nav';
  * Inventory auth — Sign in only. The Inventory platform is staff-facing, so
  * there is no self-signup: staff accounts are provisioned by the owner/admin
  * in the Portal. Pre-login, so this does NOT use the app shell. A split
- * layout: a tangerine brand panel (hidden on mobile) beside a centered form.
+ * layout: a blue brand panel (hidden on mobile) beside a centered form.
  * Appearance only — the app wires the actual auth calls (02). See 04-Inventory.md.
  */
 const meta: Meta = {
@@ -27,13 +27,13 @@ type Story = StoryObj;
 const features = [
   { icon: Camera, text: 'Snap a delivery receipt — Leda logs the movements' },
   { icon: ArrowsClockwise, text: 'Stock in and out in seconds' },
-  { icon: Sparkle, text: 'Ask Leda about any product or order' },
+  { icon: WaveTriangle, text: 'Ask Leda about any product or order' },
 ];
 
 /** The shared auth layout: brand panel + a centered form slot. */
 function AuthShell({ children }: { children: ReactNode }) {
   return (
-    <div className="ds-root flex min-h-screen w-full bg-surface font-sans text-ink">
+    <div className="ds-root flex min-h-screen w-full bg-surface-canvas font-sans text-ink">
       {/* Brand panel */}
       <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-gradient-to-br from-primary-500 to-primary-700 p-12 text-white lg:flex">
         <div className="flex items-center gap-2.5">

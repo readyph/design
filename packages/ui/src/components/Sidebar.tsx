@@ -18,7 +18,7 @@ export const Sidebar = forwardRef<HTMLElement, SidebarProps>(function Sidebar(
   return (
     <nav
       ref={ref}
-      className={cn('flex w-sidebar flex-col gap-1 border-r border-border bg-surface p-3', className)}
+      className={cn('flex w-sidebar flex-col gap-1.5 bg-transparent p-3', className)}
       {...rest}
     >
       {children}
@@ -36,7 +36,7 @@ export const SidebarSection = forwardRef<HTMLDivElement, SidebarSectionProps>(fu
   ref,
 ) {
   return (
-    <div ref={ref} className={cn('flex flex-col gap-1 py-2', className)} {...rest}>
+    <div ref={ref} className={cn('flex flex-col gap-1.5 py-2', className)} {...rest}>
       {title && <p className="px-3 pb-1 text-xs font-medium uppercase tracking-wide text-ink-subtle">{title}</p>}
       {children}
     </div>

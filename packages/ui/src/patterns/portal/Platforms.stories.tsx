@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { Package, DeviceMobile, Storefront, Bank, Plus, DotsThree, ArrowClockwise, Gear, Calculator, Truck, Gift, type Icon as PhosphorIcon } from '@phosphor-icons/react';
+import { Package, DeviceMobile, Storefront, Bank, Plus, DotsThree, ArrowClockwise, Gear, Calculator, Truck, Gift, ArrowSquareOut, type Icon as PhosphorIcon } from '@phosphor-icons/react';
 import { PageHeader } from '../../components/PageHeader';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
@@ -8,6 +8,7 @@ import { Badge } from '../../components/Badge';
 import { Menu } from '../../components/Menu';
 import { Icon } from '../../components/Icon';
 import { PortalShell, StatusDot, type Status } from './shell';
+import { goToStory, routes } from './../nav';
 
 /**
  * Connected platforms — monitor and manage every platform the company runs,
@@ -32,10 +33,12 @@ interface Connected {
   sync: string;
   alerts: number;
   metric: string;
+  /** Prototype story to open; real-app route lives in nav.ts. */
+  storyId?: string;
 }
 
 const connected: Connected[] = [
-  { name: 'Inventory', icon: Package, status: 'active', version: 'v2.4', sync: '2m ago', alerts: 2, metric: '128 products · 7 low' },
+  { name: 'Inventory', icon: Package, status: 'active', version: 'v2.4', sync: '2m ago', alerts: 2, metric: '128 products · 7 low', storyId: routes.inventoryHome },
   { name: 'Mobile app', icon: DeviceMobile, status: 'active', version: 'v1.9', sync: 'just now', alerts: 0, metric: '342 users online' },
   { name: 'Storefront', icon: Storefront, status: 'degraded', version: 'v1.2', sync: '12m ago', alerts: 1, metric: 'Sync retrying…' },
   { name: 'POS', icon: Bank, status: 'offline', version: 'v1.0', sync: '3h ago', alerts: 1, metric: 'Disconnected' },
@@ -82,13 +85,14 @@ export const Platforms: Story = {
                 </div>
               </div>
               <div className="mt-4 flex items-center gap-2">
+                <Button size="sm" leftIcon={ArrowSquareOut} disabled={p.status === 'offline'} onClick={() => p.storyId && goToStory(p.storyId)}>Open</Button>
                 {p.status === 'offline' ? (
                   <Button size="sm" variant="secondary" leftIcon={ArrowClockwise}>Reconnect</Button>
                 ) : (
                   <Button size="sm" variant="secondary" leftIcon={Gear}>Configure</Button>
                 )}
                 <Menu
-                  trigger={<IconButton icon={DotsThree} label="Platform actions" variant="subtle" size="sm" />}
+                  trigger={<IconButton icon={DotsThree} label="Platform actions" variant="subtle" size="sm" className="ml-auto" />}
                   items={[
                     { label: 'View activity', icon: ArrowClockwise },
                     { label: 'Settings', icon: Gear },

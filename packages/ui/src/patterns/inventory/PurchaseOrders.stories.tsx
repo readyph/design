@@ -244,7 +244,7 @@ export const Detail: Story = {
 
               <Card>
                 <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-subtle">Source document</h3>
-                <div className="flex items-center gap-3 rounded-lg border border-border p-3">
+                <div className="flex items-center gap-3 rounded-lg bg-surface p-3">
                   <span className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-surface-muted text-ink-subtle">
                     <Icon icon={ImageIcon} size="lg" />
                   </span>
@@ -327,7 +327,7 @@ export const Extract: Story = {
                 </span>
                 <Button size="sm" variant="subtle">Replace</Button>
               </div>
-              <div className="grid aspect-[3/4] place-items-center border-t border-border bg-surface-subtle">
+              <div className="grid aspect-[3/4] place-items-center bg-surface-subtle">
                 <div className="text-center text-ink-subtle">
                   <Icon icon={Receipt} size="lg" />
                   <p className="mt-2 text-xs">Purchase order photo</p>

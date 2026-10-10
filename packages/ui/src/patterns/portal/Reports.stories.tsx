@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useState } from 'react';
-import { ChartBar, Package, UsersThree, Buildings, Plus, Sparkle, Export, type Icon as PhosphorIcon } from '@phosphor-icons/react';
+import { ChartBar, Package, UsersThree, Buildings, Plus, WaveTriangle, Export, type Icon as PhosphorIcon } from '@phosphor-icons/react';
 import { Button } from '../../components/Button';
 import { Badge } from '../../components/Badge';
 import { Icon } from '../../components/Icon';
@@ -54,11 +54,11 @@ const branchRows = [
 function BarChart() {
   const max = Math.max(...bars.map((b) => b.v));
   return (
-    <div className="rounded-xl border border-border bg-surface p-5">
+    <div className="rounded-xl bg-surface p-5">
       <p className="mb-4 text-xs font-medium uppercase tracking-wide text-ink-subtle">Daily sales this week (₱k)</p>
-      <div className="flex h-40 items-end gap-3">
+      <div className="flex h-40 items-stretch gap-3">
         {bars.map((b) => (
-          <div key={b.d} className="flex flex-1 flex-col items-center gap-2">
+          <div key={b.d} className="flex h-full flex-1 flex-col items-center gap-2">
             <div className="flex w-full flex-1 items-end">
               <div className="w-full rounded-t-md bg-primary-500/85" style={{ height: `${(b.v / max) * 100}%` }} title={`${b.d}: ₱${b.v}k`} />
             </div>
@@ -79,7 +79,7 @@ export const Reports: Story = {
       <PortalShell active="reports" title="Reports" scroll={false}>
         <div className="flex min-h-0 flex-1">
           {/* saved reports */}
-          <div className="hidden w-64 shrink-0 flex-col border-r border-border lg:flex">
+          <div className="hidden w-64 shrink-0 flex-col lg:flex">
             <div className="flex items-center justify-between px-4 py-3">
               <p className="text-sm font-semibold text-ink">Saved reports</p>
               <Button size="sm" variant="subtle" leftIcon={Plus}>New</Button>
@@ -99,8 +99,8 @@ export const Reports: Story = {
                 </button>
               ))}
             </div>
-            <div className="border-t border-border p-3">
-              <Button fullWidth variant="secondary" size="sm" leftIcon={Sparkle}>Generate with Leda</Button>
+            <div className="p-3">
+              <Button fullWidth variant="secondary" size="sm" leftIcon={WaveTriangle}>Generate with Leda</Button>
             </div>
           </div>
 
@@ -114,7 +114,7 @@ export const Reports: Story = {
                 </div>
                 <div className="flex gap-2">
                   <Button variant="secondary" size="sm" leftIcon={Export}>Export</Button>
-                  <Button size="sm" leftIcon={Sparkle}>Ask Leda</Button>
+                  <Button size="sm" leftIcon={WaveTriangle}>Ask Leda</Button>
                 </div>
               </div>
 
@@ -124,7 +124,7 @@ export const Reports: Story = {
                   { label: 'Orders', value: '388' },
                   { label: 'Avg. order', value: '₱1,255' },
                 ].map((k) => (
-                  <div key={k.label} className="rounded-xl border border-border bg-surface p-4">
+                  <div key={k.label} className="rounded-xl bg-surface p-4">
                     <p className="text-xs text-ink-subtle">{k.label}</p>
                     <p className="mt-1 text-2xl font-semibold tabular-nums text-ink">{k.value}</p>
                   </div>
@@ -133,8 +133,8 @@ export const Reports: Story = {
 
               <BarChart />
 
-              <div className="overflow-hidden rounded-xl border border-border">
-                <div className="flex items-center justify-between border-b border-border bg-surface-subtle px-4 py-2.5">
+              <div className="overflow-hidden rounded-xl bg-surface">
+                <div className="flex items-center justify-between bg-surface-subtle px-4 py-2.5">
                   <p className="text-sm font-medium text-ink">Revenue by branch</p>
                   <Badge tone="neutral" size="sm">4 branches</Badge>
                 </div>

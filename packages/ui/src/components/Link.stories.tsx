@@ -20,7 +20,7 @@ export const Playground: Story = {};
 export const Tones: Story = {
   render: () => (
     <div className="flex flex-col items-start gap-2">
-      <Link href="#">Default (brand tangerine)</Link>
+      <Link href="#">Default (brand blue)</Link>
       <Link href="#" tone="muted">
         Muted link
       </Link>

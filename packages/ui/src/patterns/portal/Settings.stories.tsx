@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { Buildings, Clock, CreditCard, Sparkle } from '@phosphor-icons/react';
+import { Buildings, Clock, CreditCard, WaveTriangle } from '@phosphor-icons/react';
 import { Tabs, TabPanel } from '../../components/Tabs';
 import { SettingsSection } from '../../components/SettingsSection';
 import { Field } from '../../components/Field';
@@ -148,7 +148,7 @@ export const Settings: Story = {
                       Plans, payment methods and invoices will live here. For now you're on the Growth plan.
                     </p>
                   </div>
-                  <Button size="sm" variant="secondary" leftIcon={Sparkle}>Ask Leda</Button>
+                  <Button size="sm" variant="secondary" leftIcon={WaveTriangle}>Ask Leda</Button>
                 </div>
               </Card>
             </div>

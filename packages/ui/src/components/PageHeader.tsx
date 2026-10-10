@@ -16,7 +16,7 @@ export const PageHeader = forwardRef<HTMLDivElement, PageHeaderProps>(function P
   ref,
 ) {
   return (
-    <div ref={ref} className={cn('flex flex-col gap-3 border-b border-border pb-4', className)} {...rest}>
+    <div ref={ref} className={cn('flex flex-col gap-3 pb-4', className)} {...rest}>
       {breadcrumbs}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">

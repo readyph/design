@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useState, type ReactNode } from 'react';
-import { FileText, Plus, PencilSimple, Sparkle, Clock, DotsThree } from '@phosphor-icons/react';
+import { FileText, Plus, PencilSimple, WaveTriangle, Clock, DotsThree } from '@phosphor-icons/react';
 import { Button } from '../../components/Button';
 import { IconButton } from '../../components/IconButton';
 import { Badge } from '../../components/Badge';
@@ -124,7 +124,7 @@ export const Memory: Story = {
         <div className="flex min-h-0 flex-1">
           {/* files */}
           <div className="flex min-w-0 flex-1 flex-col">
-            <div className="flex items-center gap-3 border-b border-border px-4 py-3 sm:px-6">
+            <div className="flex items-center gap-3 px-4 py-3 sm:px-6">
               <div>
                 <p className="text-sm font-semibold text-ink">Company memory</p>
                 <p className="text-xs text-ink-subtle">What Leda knows and answers from</p>
@@ -165,10 +165,10 @@ export const Memory: Story = {
           </div>
 
           {/* preview */}
-          <aside className="hidden w-96 shrink-0 flex-col border-l border-border lg:flex">
+          <aside className="hidden w-96 shrink-0 flex-col lg:flex">
             {doc ? (
               <>
-                <div className="flex items-center gap-2 border-b border-border px-5 py-3">
+                <div className="flex items-center gap-2 px-5 py-3">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-ink">{doc.title}</p>
                     <p className="text-xs text-ink-subtle">Updated {doc.updated} · by {doc.by}</p>
@@ -177,8 +177,8 @@ export const Memory: Story = {
                   <Button size="sm" variant="secondary" leftIcon={PencilSimple}>Edit</Button>
                 </div>
                 <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 leading-relaxed">{doc.body}</div>
-                <div className="flex items-center gap-2 border-t border-border px-5 py-3 text-xs text-ink-subtle">
-                  <Icon icon={Sparkle} size="sm" className="text-primary-500" />
+                <div className="flex items-center gap-2 px-5 py-3 text-xs text-ink-subtle">
+                  <Icon icon={WaveTriangle} size="sm" className="text-primary-500" />
                   {doc.by === 'Leda' ? 'Saved by Leda from your conversations' : 'Edited by you'}
                 </div>
               </>
@@ -197,6 +197,6 @@ export const Memory: Story = {
 function cnCard(selected: boolean): string {
   return [
     'flex flex-col rounded-xl border bg-surface p-4 text-left transition-colors',
-    selected ? 'border-primary-300 ring-1 ring-primary-200' : 'border-border hover:border-primary-200 hover:bg-surface-subtle',
+    selected ? 'border-primary-300 ring-1 ring-primary-200' : 'border-transparent hover:border-primary-200 hover:bg-surface-subtle',
   ].join(' ');
 }

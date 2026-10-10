@@ -6,7 +6,7 @@ import {
   type ReactNode,
   type TextareaHTMLAttributes,
 } from 'react';
-import { PaperPlaneRight, Sparkle, X, type Icon as PhosphorIcon } from '@phosphor-icons/react';
+import { PaperPlaneRight, WaveTriangle, X, type Icon as PhosphorIcon } from '@phosphor-icons/react';
 import { cn, focusRing } from '../utils/cn';
 import { Icon } from './Icon';
 
@@ -60,13 +60,13 @@ export interface ChatHeaderProps extends Omit<HTMLAttributes<HTMLDivElement>, 't
 }
 
 const ChatHeader = forwardRef<HTMLDivElement, ChatHeaderProps>(function ChatHeader(
-  { title, subtitle, icon = Sparkle, actions, onClose, className, children, ...rest },
+  { title, subtitle, icon = WaveTriangle, actions, onClose, className, children, ...rest },
   ref,
 ) {
   return (
     <div
       ref={ref}
-      className={cn('flex items-center gap-3 border-b border-border px-4 py-3', className)}
+      className={cn('flex items-center gap-3 px-4 py-3', className)}
       {...rest}
     >
       {children ?? (
@@ -161,7 +161,7 @@ const ChatQuickActions = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElemen
     return (
       <div
         ref={ref}
-        className={cn('flex flex-wrap gap-2 border-t border-border px-3 py-2', className)}
+        className={cn('flex flex-wrap gap-2 px-3 py-2', className)}
         {...rest}
       >
         {children}
@@ -207,7 +207,7 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(function ChatI
 
   return (
     <form
-      className="border-t border-border p-3"
+      className="p-3"
       onSubmit={(event) => {
         event.preventDefault();
         submit();
