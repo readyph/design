@@ -130,3 +130,48 @@ export { Menu, type MenuProps, type MenuItem } from './components/Menu';
 export { Divider, type DividerProps } from './components/Divider';
 export { PageHeader, type PageHeaderProps } from './components/PageHeader';
 export { SettingsSection, type SettingsSectionProps } from './components/SettingsSection';
+
+// Leda AI chat widgets — in-conversation blocks (Portal §4 / Inventory §4)
+export {
+  LedaWidget,
+  LedaStatGrid,
+  LedaChart,
+  LedaFacts,
+  LedaProposal,
+  LedaForm,
+  LedaChoices,
+  LedaLinks,
+  LedaResult,
+  LedaMemory,
+  LedaSuggestions,
+  type LedaWidgetProps,
+  type LedaTone,
+  type LedaStatItem,
+  type LedaStatGridProps,
+  type LedaChartProps,
+  type LedaChartDatum,
+  type LedaFactsProps,
+  type LedaProposalProps,
+  type ProposalChange,
+  type ProposalIntent,
+  type ProposalStatus,
+  type LedaFormProps,
+  type LedaChoicesProps,
+  type LedaChoiceOption,
+  type LedaLinksProps,
+  type LedaLink,
+  type LedaResultProps,
+  type ResultTone,
+  type LedaMemoryProps,
+  type LedaSuggestionsProps,
+  type LedaSuggestion,
+} from './components/LedaWidget';
+export {
+  LedaHeatmap,
+  LedaSegmentBars,
+  type LedaHeatmapProps,
+  type LedaHeatmapRow,
+  type LedaSegmentBarsProps,
+  type LedaSegmentRow,
+} from './components/LedaWidget';
+export { LedaTable, type LedaTableProps, type LedaTableColumn } from './components/LedaWidget';
