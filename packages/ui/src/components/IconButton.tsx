@@ -17,9 +17,11 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
   loading?: boolean;
 }
 
+// Every variant carries a 1px border (transparent except `secondary`) so all
+// variants share the same geometry — see the note in Button.tsx.
 const variants: Record<IconButtonVariant, string> = {
   primary: 'bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800',
-  secondary: 'border border-border bg-surface text-ink hover:bg-surface-subtle',
+  secondary: 'border-border bg-transparent text-ink hover:bg-surface-subtle',
   subtle: 'bg-transparent text-ink-muted hover:bg-surface-muted hover:text-ink',
   danger: 'bg-transparent text-error hover:bg-error/10',
 };
@@ -45,7 +47,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       className={cn(
-        'inline-grid place-items-center rounded-base transition-colors duration-DEFAULT ease-standard disabled:cursor-not-allowed disabled:opacity-50',
+        'inline-grid place-items-center border border-transparent rounded-base transition-colors duration-DEFAULT ease-standard disabled:cursor-not-allowed disabled:opacity-50',
         focusRing,
         variants[variant],
         s.box,

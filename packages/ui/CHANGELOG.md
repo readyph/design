@@ -1,5 +1,17 @@
 # @readyph/ui
 
+## 0.3.2
+
+### Patch Changes
+
+- Button & IconButton: give every variant a consistent 1px border (transparent on
+  primary/subtle/danger, coloured on secondary) so all variants share identical
+  geometry. The `secondary` variant stays an outlined button (transparent
+  background + border); previously only it had a border, which inset its fill and
+  made it render a hair smaller than the other variants at the same size.
+- Modal: add a `2xl` size (`max-w-4xl`) above `xl`, for wide dialogs such as a
+  marketplace card grid.
+
 ## 0.3.1
 
 ### Patch Changes

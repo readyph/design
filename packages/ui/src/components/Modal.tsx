@@ -4,7 +4,7 @@ import { X } from '@phosphor-icons/react';
 import { cn, focusRing } from '../utils/cn';
 import { Icon } from './Icon';
 
-export type ModalSize = 'sm' | 'md' | 'lg' | 'xl';
+export type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 
 export interface ModalProps {
   open?: boolean;
@@ -28,6 +28,7 @@ const sizes: Record<ModalSize, string> = {
   md: 'max-w-md',
   lg: 'max-w-lg',
   xl: 'max-w-2xl',
+  '2xl': 'max-w-4xl',
 };
 
 const overlay =
