@@ -201,45 +201,44 @@ const I = {
 };
 
 const platforms: { ic: string; st: string; on?: boolean; go?: string }[] = [
-  { ic: I.box, st: 'active', on: true, go: routes.inventoryHome }, { ic: I.device, st: 'active' }, { ic: I.store, st: 'degraded' }, { ic: I.card, st: 'offline' },
+  { ic: I.box, st: 'active', on: true, go: routes.inventoryHome },
 ];
 const nav: { ic: string; l: string; on?: boolean; badge?: number; go: string }[] = [
   { ic: I.home, l: 'Home', on: true, go: routes.portalHome }, { ic: I.chart, l: 'Reports', go: 'portal-reports--reports' }, { ic: I.users, l: 'Team', badge: 8, go: 'portal-team--team' }, { ic: I.grid, l: 'Platforms', go: 'portal-platforms--platforms' }, { ic: I.book, l: 'Memory', go: 'portal-memory--memory' },
 ];
 const kpis = [
-  { l: 'Revenue', v: '₱24.6k', d: '+12%', c: 'var(--success)' }, { l: 'Orders', v: '18', d: '+4', c: 'var(--success)' },
-  { l: 'New customers', v: '8', d: 'today', c: 'var(--subtle)' }, { l: 'Open issues', v: '3', d: '2 urgent', c: 'var(--error)' },
+  { l: 'Products', v: '128', d: 'tracked', c: 'var(--subtle)' }, { l: 'Low stock', v: '7', d: 'reorder soon', c: 'var(--warning)' },
+  { l: 'Open POs', v: '3', d: 'awaiting', c: 'var(--subtle)' }, { l: 'Movements', v: '24', d: 'today', c: 'var(--success)' },
 ];
 const revSeries: RevenueSeries[] = [
-  { label: 'Storefront', value: '₱1.77k', amount: 1.77, color: '#1e3a8a' },
-  { label: 'POS', value: '₱0.88k', amount: 0.88, color: '#3b6fd4' },
-  { label: 'Mobile app', value: '₱3.53k', amount: 3.53, color: '#3b82f6' },
-  { label: 'Wholesale', value: '₱2.65k', amount: 2.65, color: '#bcd3f7' },
+  { label: 'Produce', value: '46', amount: 46, color: '#1e3a8a' },
+  { label: 'Beverages', value: '34', amount: 34, color: '#3b6fd4' },
+  { label: 'Dry goods', value: '29', amount: 29, color: '#3b82f6' },
+  { label: 'Household', value: '19', amount: 19, color: '#bcd3f7' },
 ];
 type AT = 'message' | 'review' | 'order' | 'request' | 'stock' | 'status';
 const AM: Record<AT, { ic: string; c: string }> = {
   message: { ic: I.chat, c: 'ai-info' }, review: { ic: I.star, c: 'ai-warning' }, order: { ic: I.cart, c: 'ai-success' },
   request: { ic: I.question, c: 'ai-accent' }, stock: { ic: I.box, c: 'ai-warning' }, status: { ic: I.warning, c: 'ai-error' },
 };
-const activity: { t: AT; p: string; x: string; w: string }[] = [
-  { t: 'review', p: 'Mobile app', x: 'New 5★ review from Jenny R.', w: '2m' },
-  { t: 'order', p: 'Storefront', x: 'Order #1043 placed · ₱1,250', w: '8m' },
-  { t: 'stock', p: 'Inventory', x: 'Mango boxes out of stock', w: '15m' },
-  { t: 'request', p: 'Mobile app', x: 'Refund requested on Order #1039', w: '32m' },
-  { t: 'message', p: 'Mobile app', x: 'New message from Carlo M.', w: '41m' },
-  { t: 'status', p: 'POS', x: 'Terminal 2 went offline', w: '1h' },
-  { t: 'order', p: 'Storefront', x: 'Order #1042 placed · ₱890', w: '1h' },
-  { t: 'review', p: 'Mobile app', x: 'New 4★ review from Ana L.', w: '2h' },
+const activity: { t: AT; g: string; p: string; x: string; w: string }[] = [
+  { t: 'stock', g: 'Alerts', p: 'Inventory', x: 'Mango boxes out of stock', w: '15m' },
+  { t: 'order', g: 'Purchasing', p: 'Inventory', x: 'PO-0912 received · 40 cases', w: '38m' },
+  { t: 'request', g: 'Stock', p: 'Inventory', x: 'Stock count started — Aisle 3', w: '52m' },
+  { t: 'stock', g: 'Alerts', p: 'Inventory', x: 'Calamansi below reorder point · 6 left', w: '1h' },
+  { t: 'message', g: 'Stock', p: 'Inventory', x: 'Leda logged 12 units of Milk 1L', w: '1h' },
+  { t: 'order', g: 'Purchasing', p: 'Inventory', x: 'PO-0911 partially received · 18/30', w: '2h' },
+  { t: 'status', g: 'Alerts', p: 'Inventory', x: 'Supplier sync failed — San Miguel', w: '3h' },
 ];
-const actTabs = ['All', 'Mobile app', 'Storefront', 'Inventory', 'POS'];
-const chips = ['How are my platforms doing?', 'Show this week’s sales', 'What’s low on stock?'];
-const notifTabs = ['View All', 'New Order', 'Weekly Update'];
+const actTabs = ['All', 'Stock', 'Purchasing', 'Alerts'];
+const chips = ['What’s low on stock?', 'Show stock movements this week', 'Which purchase orders are open?'];
+const notifTabs = ['View All', 'Purchasing', 'Weekly Update'];
 const notifItems: NotificationItem[] = [
-  { id: '1', title: 'New order for ID: MSLES880', time: 'Wednesday 8.30 pm', avatarName: 'Marco Reyes', count: 2, tags: ['New Order'] },
-  { id: '2', title: 'Payment successfully verified', body: 'The payment has been confirmed. Proceed with shipping.', time: 'Tuesday 7.30 am', kind: 'payment', tags: ['New Order'] },
+  { id: '1', title: 'Purchase order PO-0912 received', body: '40 cases checked in — 2 lines short. Review the variance.', time: 'Wednesday 8.30 pm', kind: 'order', count: 2, tags: ['Purchasing'] },
+  { id: '2', title: 'Low stock: Mango boxes out of stock', body: 'Mango boxes hit zero. Leda can draft a reorder PO.', time: 'Tuesday 7.30 am', kind: 'activity', tags: ['Purchasing'] },
   { id: '3', title: 'Your security password has been successfully changed.', time: 'Monday 9.30 am', kind: 'security' },
-  { id: '4', title: 'New order for ID: MSLES882', time: 'Sunday 4.30 pm', avatarName: 'Ana Lim', count: 4, tags: ['New Order'] },
-  { id: '5', title: 'Reached 230k visitors in May', body: 'You had 230k visits last month, a 3.8% increase from April.', time: 'Monday 9.30 am', kind: 'activity', tags: ['Weekly Update'] },
+  { id: '4', title: 'Purchase order PO-0911 partially received', body: '18 of 30 units received from San Miguel.', time: 'Sunday 4.30 pm', kind: 'order', tags: ['Purchasing'] },
+  { id: '5', title: 'Stock value up 3.8% vs April', body: 'Inventory on hand is worth 3.8% more than last month.', time: 'Monday 9.30 am', kind: 'activity', tags: ['Weekly Update'] },
 ];
 
 interface Msg { id: number; role: 'user' | 'assistant'; text: string; pending?: boolean; widget?: boolean }
@@ -253,7 +252,7 @@ export const Dashboard: Story = {
     const [notifOpen, setNotifOpen] = useState(false);
     const [notifTab, setNotifTab] = useState('View All');
     const chatting = messages.length > 0;
-    const shown = filter === 'All' ? activity : activity.filter((a) => a.p === filter);
+    const shown = filter === 'All' ? activity : activity.filter((a) => a.g === filter);
 
     const hr = new Date().getHours();
     const period = hr < 12 ? 'morning' : hr < 18 ? 'afternoon' : 'evening';
@@ -264,7 +263,7 @@ export const Dashboard: Story = {
       const uid = Date.now(); const aid = uid + 1;
       setMessages((p) => [...p, { id: uid, role: 'user', text: t }, { id: aid, role: 'assistant', text: '', pending: true }]);
       setDraft('');
-      window.setTimeout(() => setMessages((p) => p.map((m) => (m.id === aid ? { ...m, pending: false, text: 'Here’s this week’s revenue across all platforms — want a breakdown by platform?', widget: true } : m))), 1000);
+      window.setTimeout(() => setMessages((p) => p.map((m) => (m.id === aid ? { ...m, pending: false, text: 'Here’s your current stock by category — want me to list the 7 items that are low on stock?', widget: true } : m))), 1000);
     };
     const submit = (e: FormEvent) => { e.preventDefault(); ask(draft); };
 
@@ -316,12 +315,12 @@ export const Dashboard: Story = {
                           <div><h1>Good {period}, Maria</h1><p>Here’s your briefing — ask me anything to go deeper.</p></div>
                         </div>
                         <RevenueChart
-                          title="Revenue Sources"
-                          total="₱8.83K"
-                          caption="Revenue by channel this month"
+                          title="Stock by category"
+                          total="128"
+                          caption="Products across categories"
                           series={revSeries}
-                          delta={{ label: 'better than last month', value: '+72.4%' }}
-                          sortOptions={['Month', 'Week', 'Quarter']}
+                          delta={{ label: 'low or out of stock', value: '7' }}
+                          sortOptions={['By count', 'By value']}
                         />
                       </>
                     ) : (
@@ -336,7 +335,7 @@ export const Dashboard: Story = {
                                 <p>{m.text}</p>
                                 {m.widget && (
                                   <div className="card">
-                                    <div className="whead">{ic(I.trend, { w: 16 })} Revenue · last 7 days</div>
+                                    <div className="whead">{ic(I.trend, { w: 16 })} Stock movements · last 7 days</div>
                                     <div className="wbody">
                                       <svg width="100%" height="110" viewBox="0 0 560 120" preserveAspectRatio="none" fill="none" style={{ color: 'var(--accent)' }}>
                                         <defs><linearGradient id="rpbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="currentColor" stopOpacity="0.2" /><stop offset="1" stopColor="currentColor" stopOpacity="0" /></linearGradient></defs>
@@ -344,7 +343,7 @@ export const Dashboard: Story = {
                                         <path d="M0 86 L93 70 L186 78 L279 44 L372 54 L465 22 L560 40" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                                       </svg>
                                     </div>
-                                    <div className="wfoot"><button className="btn">Export</button><button className="btn primary">By platform</button></div>
+                                    <div className="wfoot"><button className="btn">Export</button><button className="btn primary">Low stock</button></div>
                                   </div>
                                 )}
                               </>
@@ -363,28 +362,28 @@ export const Dashboard: Story = {
                     )}
                     <form className="cform" onSubmit={submit}>
                       {ic(I.wave, { w: 18, stroke: 'var(--accent)', sw: 2 })}
-                      <input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Ask Leda to show a report, add stock, reply to a review…" />
+                      <input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Ask Leda to show a report, add stock, or check what’s low…" />
                       <button className="send" type="submit" aria-label="Send">{ic(I.enter, { w: 18 })}</button>
                     </form>
-                    <p className="hint">Leda can pull data and take actions across all your platforms.</p>
+                    <p className="hint">Leda can pull data and take actions across your connected platforms.</p>
                   </div></div>
                 </div>
                 <aside className="side">
                   {!chatting ? (
                     <div className="side-sec">
-                      <div className="side-head"><span className="t">Today</span><span className="s">All platforms</span></div>
+                      <div className="side-head"><span className="t">Today</span><span className="s">Inventory</span></div>
                       <div className="kpis">{kpis.map((k) => (<div className="kpi" key={k.l}><div className="l">{k.l}</div><div className="v tabular">{k.v}</div><div className="d" style={{ color: k.c }}>{k.d}</div></div>))}</div>
                     </div>
                   ) : (
                     <div className="side-sec dock-anim">
                       <RevenueChart
                         compact
-                        title="Revenue Sources"
-                        total="₱8.83K"
-                        caption="Revenue by channel this month"
+                        title="Stock by category"
+                        total="128"
+                        caption="Products across categories"
                         series={revSeries}
-                        delta={{ label: 'better than last month', value: '+72.4%' }}
-                        sortOptions={['Month', 'Week', 'Quarter']}
+                        delta={{ label: 'low or out of stock', value: '7' }}
+                        sortOptions={['By count', 'By value']}
                       />
                     </div>
                   )}

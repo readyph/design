@@ -1,8 +1,6 @@
 import { type ReactNode } from 'react';
 import {
   Package,
-  DeviceMobile,
-  Storefront,
   Plus,
   MagnifyingGlass,
   Bell,
@@ -36,10 +34,10 @@ export function StatusDot({ status }: { status: Status }) {
   );
 }
 
+// Only Inventory is connected today (see Portal/Platforms). The "+" connects
+// more from the marketplace. Keep this in sync with the Platforms page.
 const railPlatforms: { icon: PhosphorIcon; status: Status; label: string; storyId?: string }[] = [
   { icon: Package, status: 'active', label: 'Inventory', storyId: routes.inventoryHome },
-  { icon: DeviceMobile, status: 'active', label: 'Mobile app' },
-  { icon: Storefront, status: 'degraded', label: 'Storefront' },
 ];
 
 export type NavKey = 'home' | 'reports' | 'team' | 'platforms' | 'memory' | 'settings';
