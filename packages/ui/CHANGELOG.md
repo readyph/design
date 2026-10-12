@@ -1,5 +1,11 @@
 # @readyph/ui
 
+## 0.3.1
+
+### Patch Changes
+
+- Re-align the portal **Connected platforms** page and the Dashboard story with real platform data: only Inventory is connected, the real marketplace catalog shows under "Add a platform" (Loyalty coming soon), card metrics derive from the API `metrics` shape, and each marketplace "Connect" button is pinned to the bottom of its card. Prototype/pattern stories only — shipped components are unchanged.
+
 ## 0.3.0
 
 ### Minor Changes
