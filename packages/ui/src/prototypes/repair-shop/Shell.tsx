@@ -14,7 +14,7 @@ import { OffCanvas } from '../../components/Drawer';
 import { Skeleton } from '../../components/Skeleton';
 import { Tooltip } from '../../components/Tooltip';
 import { cn } from '../../utils/cn';
-import { BRANCHES, COMPANY } from './data';
+import { BRANCHES, COMPANY, type Branch } from './data';
 
 export type RepairNav = 'jobs' | 'catalogue' | 'customers';
 
@@ -34,7 +34,7 @@ export interface RepairShellProps {
   branchState?: BranchState;
   /** Open the mobile menu on first render (stories). */
   menuOpen?: boolean;
-  children: ReactNode;
+  children: ReactNode | ((branch: Branch) => ReactNode);
 }
 
 const NAV: { key: RepairNav; label: string; icon: typeof Briefcase }[] = [
@@ -126,7 +126,7 @@ export function RepairShell({ active, model = 'A', branchId = 'davao', branchSta
       {model === 'B' && <TenantRailB current={current} onPick={pick} state={state} />}
       <Sidebar className="hidden w-56 shrink-0 lg:flex">
         <div className="mb-2 px-2 pt-1">
-          <div className="flex items-center gap-2 text-sm font-bold tracking-tight"><Icon icon={Wrench} size="md" className="text-primary-600" />{COMPANY.name}</div>
+          <div className="flex items-center gap-2 text-sm font-bold tracking-tight"><Icon icon={Wrench} size="md" className="text-ink" />{COMPANY.name}</div>
           {model === 'B' && state !== 'loading' && <p className="mt-1 pl-7 text-xs text-ink-muted">{branch.name} workspace</p>}
         </div>
         {nav}
@@ -144,7 +144,7 @@ export function RepairShell({ active, model = 'A', branchId = 'davao', branchSta
           }
           end={
             <Menu
-              trigger={<button aria-label="Account" className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"><Avatar name="Staff Member" size="sm" /></button>}
+              trigger={<button aria-label="Account" className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"><Avatar name="Maricel Santos" size="sm" /></button>}
               items={[{ type: 'label', label: 'staff@montauto.example' }, { label: 'Log out', icon: SignOut, danger: true }]}
             />
           }
@@ -155,7 +155,7 @@ export function RepairShell({ active, model = 'A', branchId = 'davao', branchSta
               You are still on {branch.name}. <Button size="sm" variant="secondary" className="ml-2" onClick={() => setRetried(true)}>Retry</Button>
             </Notice>
           )}
-          {children}
+          {typeof children === 'function' ? children(branch) : children}
         </main>
       </div>
 

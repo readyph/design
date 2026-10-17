@@ -28,7 +28,7 @@ import { Tabs, TabPanel } from '../../components/Tabs';
 import { Textarea } from '../../components/Textarea';
 import { QuotationIntake, type IntakeScenario } from './QuotationIntake';
 import {
-  JOBS, JOB_SERVICES, JOB_PARTS, JOB_STATUSES, PAYMENT_MODES,
+  BRANCHES, JOBS, JOB_SERVICES, JOB_PARTS, JOB_STATUSES, PAYMENT_MODES,
   isDueToday, isLocked, isOverdue, jobTotals, nextStatuses, peso, statusMeta,
   type Job, type JobStatus,
 } from './data';
@@ -60,10 +60,11 @@ export type ListState = 'default' | 'empty-tab' | 'empty-branch' | 'loading' | '
  * an attention strip and due-date filters answer "what needs me today" and work on a phone.
  */
 export function JobList({
-  state = 'default', initialTab = 'all', initialQuery = '', branchName = 'Davao City', intake, onOpenJob,
+  state = 'default', initialTab = 'all', initialQuery = '', branchId = 'davao', intake, onOpenJob,
 }: {
-  state?: ListState; initialTab?: string; initialQuery?: string; branchName?: string; intake?: IntakeScenario; onOpenJob?: (j: Job) => void;
+  state?: ListState; initialTab?: string; initialQuery?: string; branchId?: string; intake?: IntakeScenario; onOpenJob?: (j: Job) => void;
 }) {
+  const branchName = (BRANCHES.find((b) => b.id === branchId) ?? BRANCHES[0]).name;
   const [tab, setTab] = useState(initialTab);
   const [q, setQ] = useState(initialQuery);
   const [who, setWho] = useState('any');
@@ -71,7 +72,7 @@ export function JobList({
   const [page, setPage] = useState(1);
   const [intakeOpen, setIntakeOpen] = useState(intake !== undefined);
 
-  const source = state === 'empty-branch' || state === 'empty-tab' ? [] : JOBS;
+  const source = useMemo(() => (state === 'empty-branch' || state === 'empty-tab' ? [] : JOBS.filter((j) => j.branch === branchId)), [state, branchId]);
   const counts = useMemo(() => {
     const c: Record<string, number> = { all: source.length };
     JOB_STATUSES.forEach((s) => (c[s.value] = source.filter((j) => j.status === s.value).length));
@@ -87,6 +88,7 @@ export function JobList({
     [source, tab, who, due, q],
   );
   const paged = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const pending = state === 'loading' || state === 'error';
   const open = source.filter((j) => j.status !== 'completed');
 
   const columns: TableColumn<Job>[] = [
@@ -102,7 +104,7 @@ export function JobList({
       icon={ClipboardText}
       title={state === 'empty-branch' ? `No jobs in ${branchName} yet` : q || who !== 'any' || due !== 'any' ? 'No job matches these filters' : 'No jobs in this status'}
       description={state === 'empty-branch' ? 'Create the first quotation for a walk-in customer.' : 'Clear a filter or pick another status.'}
-      action={<Button size="sm" leftIcon={Plus} onClick={() => setIntakeOpen(true)}>New quotation</Button>}
+      action={<Button size="sm" variant="secondary" leftIcon={Plus} onClick={() => setIntakeOpen(true)}>New quotation</Button>}
     />
   );
 
@@ -117,10 +119,16 @@ export function JobList({
 
       <Card>
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <Stat label="Open jobs" value={state === 'loading' ? '-' : open.length} />
-          <Stat label="Overdue" value={state === 'loading' ? '-' : source.filter(isOverdue).length} delta={source.some(isOverdue) ? 'Past due date' : undefined} deltaTone="error" />
-          <Stat label="Due today" value={state === 'loading' ? '-' : source.filter(isDueToday).length} />
-          <Stat label="For pick-up" value={state === 'loading' ? '-' : counts.for_pickup ?? 0} />
+          {pending ? (
+            ['Open jobs', 'Overdue', 'Due today', 'For pick-up'].map((l) => <Stat key={l} label={l} value={<Skeleton className="h-8 w-12" />} />)
+          ) : (
+            <>
+              <Stat label="Open jobs" value={open.length} />
+              <Stat label="Overdue" value={source.filter(isOverdue).length} delta={source.some(isOverdue) ? 'Past due date' : undefined} deltaTone="error" />
+              <Stat label="Due today" value={source.filter(isDueToday).length} />
+              <Stat label="For pick-up" value={counts.for_pickup ?? 0} />
+            </>
+          )}
         </div>
       </Card>
 
@@ -132,9 +140,9 @@ export function JobList({
       />
 
       <div className="flex flex-col gap-2 sm:flex-row">
-        <SearchBar className="sm:max-w-sm sm:flex-1" placeholder="Search customer, plate or job #" value={q} onValueChange={(v) => { setQ(v); setPage(1); }} onClear={() => setQ('')} />
-        <Select className="sm:w-44" value={who} onValueChange={setWho} options={[{ value: 'any', label: 'Anyone' }, { value: 'none', label: 'Unassigned' }, { value: 'Mechanic One', label: 'Mechanic One' }, { value: 'Mechanic Two', label: 'Mechanic Two' }, { value: 'Staff Member', label: 'Staff Member' }]} />
-        <Select className="sm:w-44" value={due} onValueChange={setDue} options={[{ value: 'any', label: 'Any due date' }, { value: 'overdue', label: 'Overdue' }, { value: 'today', label: 'Due today' }]} />
+        <SearchBar aria-label="Search jobs" className="sm:max-w-sm sm:flex-1" placeholder="Search customer, plate or job #" value={q} onValueChange={(v) => { setQ(v); setPage(1); }} onClear={() => setQ('')} />
+        <Field label={<span className="sr-only">Filter by assignee</span>} className="gap-0 sm:w-44"><Select value={who} onValueChange={setWho} options={[{ value: 'any', label: 'Anyone' }, { value: 'none', label: 'Unassigned' }, { value: 'Rey Bautista', label: 'Rey Bautista' }, { value: 'Dennis Alcala', label: 'Dennis Alcala' }, { value: 'Carlo Reyes', label: 'Carlo Reyes' }, { value: 'Joel Mendoza', label: 'Joel Mendoza' }, { value: 'Maricel Santos', label: 'Maricel Santos' }]} /></Field>
+        <Field label={<span className="sr-only">Filter by due date</span>} className="gap-0 sm:w-44"><Select value={due} onValueChange={setDue} options={[{ value: 'any', label: 'Any due date' }, { value: 'overdue', label: 'Overdue' }, { value: 'today', label: 'Due today' }]} /></Field>
       </div>
 
       {state === 'error' ? (
@@ -151,7 +159,7 @@ export function JobList({
             {state !== 'loading' && paged.length === 0 && <li>{empty}</li>}
             {state !== 'loading' && paged.map((j) => (
               <li key={j.id}>
-                <button className="flex min-h-[3rem] w-full flex-col gap-1 p-4 text-left hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus" onClick={() => onOpenJob?.(j)}>
+                <button className="flex min-h-12 w-full flex-col gap-1 p-4 text-left hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus" onClick={() => onOpenJob?.(j)}>
                   <span className="flex items-center justify-between gap-2"><span className="font-medium">{j.customer}</span><StatusBadge status={j.status} /></span>
                   <span className="text-sm text-ink-muted">{j.plate} / {j.brand} {j.model} / #{j.id}</span>
                   <span className="flex items-center justify-between gap-2 text-sm"><span className="text-ink-muted">{j.assignee ?? 'Unassigned'}</span><DueCell job={j} /></span>
@@ -178,8 +186,8 @@ export function JobList({
 export type DetailState = 'default' | 'loading' | 'error' | 'validation' | 'empty-items';
 
 const COMMENTS = [
-  { who: 'Mechanic One', text: 'Terminals were corroded. Cleaned them and replaced the battery.', when: 'Oct 13, 2026, 10:12 AM', on: 'Battery Services' },
-  { who: 'Staff Member', text: 'Discounted by manager.', when: 'Oct 12, 2026, 5:37 PM', on: null as string | null },
+  { who: 'Rey Bautista', text: 'Terminals were corroded. Cleaned them and replaced the battery.', when: 'Oct 13, 2026, 10:12 AM', on: 'Battery Services' },
+  { who: 'Maricel Santos', text: 'Discounted by manager.', when: 'Oct 12, 2026, 5:37 PM', on: null as string | null },
 ];
 
 function CommentThread({ filter, tried }: { filter?: string; tried?: boolean }) {
@@ -287,7 +295,7 @@ export function JobDetail({ status: initial = 'in_progress', state = 'default', 
       <Card>
         <DataList stacked className="grid grid-cols-2 gap-x-4 sm:grid-cols-3 lg:grid-cols-6" items={[
           { label: 'Plate no.', value: 'LLK 5515' }, { label: 'Brand', value: 'Honda' }, { label: 'Model', value: 'Civic' },
-          { label: 'Year', value: '2012' }, { label: 'Mileage', value: '130,000 km' }, { label: 'Assigned to', value: 'Mechanic One' },
+          { label: 'Year', value: '2012' }, { label: 'Mileage', value: '130,000 km' }, { label: 'Assigned to', value: 'Rey Bautista' },
         ]} />
       </Card>
 
@@ -311,7 +319,7 @@ export function JobDetail({ status: initial = 'in_progress', state = 'default', 
                       <Table data={services} rowKey={(s) => s.id} columns={[
                         { key: 'name', header: 'Service', render: (s) => (<div><div className="font-medium">{s.name}</div><div className="text-xs text-ink-muted">{s.description}</div></div>) },
                         { key: 'who', header: 'Assigned to', render: (s) => (s.assignees.length ? s.assignees.join(', ') : <span className="text-ink-muted">Unassigned</span>) },
-                        { key: 'status', header: 'Status', render: (s) => <Badge className="whitespace-nowrap" tone={s.status === 'completed' ? 'success' : s.status === 'in_progress' ? 'primary' : 'info'}>{s.status === 'in_progress' ? 'In-progress' : s.status === 'todo' ? 'To-do' : 'Completed'}</Badge> },
+                        { key: 'status', header: 'Status', render: (s) => <Badge className="whitespace-nowrap" tone={s.status === 'completed' ? 'success' : s.status === 'in_progress' ? 'primary' : 'info'}>{s.status === 'in_progress' ? 'In progress' : s.status === 'todo' ? 'To-do' : 'Completed'}</Badge> },
                         { key: 'price', header: 'Price', align: 'right', render: (s) => <span className="tabular-nums">{peso(s.price)}</span> },
                         { key: 'a', header: '', align: 'right', render: (s) => (<Menu trigger={<IconButton icon={DotsThreeVertical} label={`Actions for ${s.name}`} variant="subtle" size="sm" />} items={[{ label: `Comments (${s.comments})`, icon: ChatText, onSelect: () => setCommentsFor(s.name) }, { label: 'Assign mechanic' }, { type: 'separator' }, { label: 'Remove', icon: Trash, danger: true, disabled: locked, onSelect: () => setDeleting(s.name) }]} />) },
                       ]} />
@@ -320,7 +328,7 @@ export function JobDetail({ status: initial = 'in_progress', state = 'default', 
                       {services.map((s) => (
                         <li key={s.id} className="flex items-start justify-between gap-2 px-4 py-3 text-sm">
                           <div className="min-w-0"><p className="font-medium">{s.name}</p><p className="text-xs text-ink-muted">{s.assignees[0] ?? 'Unassigned'}</p><p className="mt-1 tabular-nums">{peso(s.price)}</p></div>
-                          <div className="flex items-center gap-1"><Badge tone={s.status === 'completed' ? 'success' : 'primary'}>{s.status === 'completed' ? 'Completed' : 'In-progress'}</Badge>
+                          <div className="flex items-center gap-1"><Badge tone={s.status === 'completed' ? 'success' : 'primary'}>{s.status === 'completed' ? 'Completed' : 'In progress'}</Badge>
                             <Menu trigger={<IconButton icon={DotsThreeVertical} label={`Actions for ${s.name}`} variant="subtle" />} items={[{ label: `Comments (${s.comments})`, icon: ChatText, onSelect: () => setCommentsFor(s.name) }, { label: 'Remove', icon: Trash, danger: true, disabled: locked, onSelect: () => setDeleting(s.name) }]} /></div>
                         </li>
                       ))}
@@ -360,7 +368,7 @@ export function JobDetail({ status: initial = 'in_progress', state = 'default', 
             <TabPanel value="comments"><Card><CommentThread tried={state === 'validation'} /></Card></TabPanel>
             <TabPanel value="history">
               <Card><ul className="space-y-3 text-sm">
-                {[['Staff Member', 'moved the job from To-do to In-progress', 'Oct 13, 2026'], ['Staff Member', 'approved the quotation', 'Oct 12, 2026'], ['James Castro', 'confirmed the quotation', 'Oct 12, 2026'], ['Staff Member', 'created the quotation', 'Oct 12, 2026']].map(([who, what, when], i) => (
+                {[['Maricel Santos', 'moved the job from To-do to In progress', 'Oct 13, 2026'], ['Maricel Santos', 'approved the quotation', 'Oct 12, 2026'], ['James Castro', 'confirmed the quotation', 'Oct 12, 2026'], ['Maricel Santos', 'created the quotation', 'Oct 12, 2026']].map(([who, what, when], i) => (
                   <li key={i} className="flex gap-3"><Avatar name={who} size="xs" /><div><p><span className="font-medium">{who}</span> {what}</p><p className="text-xs text-ink-muted">{when}</p></div></li>
                 ))}
               </ul></Card>
@@ -371,7 +379,7 @@ export function JobDetail({ status: initial = 'in_progress', state = 'default', 
           </Tabs>
         </div>
 
-        <Card id="payment" className="h-fit space-y-4 lg:sticky lg:top-2">
+        <Card id="payment" className="h-fit scroll-mt-4 space-y-4 lg:sticky lg:top-2">
           <div className="flex items-center justify-between"><h2 className="font-semibold">Payment and invoice</h2><Badge tone={payState === 'Paid' ? 'success' : payState === 'Partial' ? 'warning' : 'neutral'} dot>{payState}</Badge></div>
           <div className="space-y-1">
             <DataList items={[{ label: 'Services', value: <span className="tabular-nums">{peso(t.services)}</span> }, { label: 'Parts', value: <span className="tabular-nums">{peso(t.parts)}</span> }, { label: 'Total', value: <span className="font-semibold tabular-nums">{peso(t.total)}</span> }, { label: 'Paid', value: <span className="tabular-nums">{peso(paid)}</span> }]} />
@@ -384,7 +392,7 @@ export function JobDetail({ status: initial = 'in_progress', state = 'default', 
             <div className="space-y-3">
               <Field label="Amount received" error={amountError}><Input inputMode="decimal" value={amount} invalid={!!amountError} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" /></Field>
               <Field label="Mode of payment"><Select value={mode} onValueChange={setMode} options={PAYMENT_MODES.map((m) => ({ value: m, label: m }))} /></Field>
-              <Button fullWidth onClick={recordPayment}>Record payment</Button>
+              <Button fullWidth className="max-md:hidden" onClick={recordPayment}>Record payment</Button>
             </div>
           ) : (
             <Notice tone="success">Fully paid. No balance left on this job.</Notice>
@@ -395,6 +403,13 @@ export function JobDetail({ status: initial = 'in_progress', state = 'default', 
           </div>
         </Card>
       </div>
+
+      {balance > 0 && (
+        <div className="sticky bottom-0 -mx-4 flex items-center justify-between gap-3 border-t border-border bg-surface px-4 py-3 shadow-lg md:hidden">
+          <div><p className="text-xs text-ink-muted">Balance</p><p className="text-lg font-semibold tabular-nums">{peso(balance)}</p></div>
+          <Button onClick={() => { if (amount) { recordPayment(); return; } const el = document.querySelector<HTMLInputElement>('#payment input'); el?.scrollIntoView({ behavior: 'smooth', block: 'center' }); el?.focus({ preventScroll: true }); }}>Record payment</Button>
+        </div>
+      )}
 
       <OffCanvas open={commentsFor !== null} onOpenChange={(o) => !o && setCommentsFor(null)} title={`Comments: ${commentsFor ?? ''}`} width="440px">
         <CommentThread filter={commentsFor ?? undefined} />

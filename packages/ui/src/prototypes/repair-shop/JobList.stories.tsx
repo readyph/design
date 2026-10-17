@@ -16,7 +16,7 @@ function Page({ model = 'A', ...props }: { model?: BranchModel } & Parameters<ty
   const [open, setOpen] = useState(false);
   return (
     <RepairShell active="jobs" model={model}>
-      {open ? <JobDetail onBack={() => setOpen(false)} /> : <JobList {...props} onOpenJob={() => setOpen(true)} />}
+      {(b) => (open ? <JobDetail onBack={() => setOpen(false)} /> : <JobList key={b.id} {...props} branchId={b.id} onOpenJob={() => setOpen(true)} />)}
     </RepairShell>
   );
 }

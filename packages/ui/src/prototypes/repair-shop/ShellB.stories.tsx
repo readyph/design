@@ -9,7 +9,7 @@ export default meta;
 type Story = StoryObj;
 
 const Page = ({ branchState, menuOpen }: { branchState?: BranchState; menuOpen?: boolean }) => (
-  <RepairShell active="jobs" model="B" branchState={branchState} menuOpen={menuOpen}><JobList /></RepairShell>
+  <RepairShell active="jobs" model="B" branchState={branchState} menuOpen={menuOpen}>{(b) => <JobList key={b.id} branchId={b.id} />}</RepairShell>
 );
 
 export const Default: Story = { render: () => <Page /> };
