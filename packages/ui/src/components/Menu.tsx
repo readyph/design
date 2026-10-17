@@ -43,7 +43,7 @@ export function Menu({ trigger, items, side = 'bottom', align = 'end', className
           align={align}
           sideOffset={6}
           className={cn(
-            'z-dropdown min-w-48 rounded-md border border-border bg-surface p-1 shadow-lg focus:outline-none',
+            'z-popover min-w-48 rounded-md border border-border bg-surface p-1 shadow-lg focus:outline-none',
             'data-[state=open]:animate-[ds-popover-in_120ms_ease] motion-reduce:animate-none',
             className,
           )}
