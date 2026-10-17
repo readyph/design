@@ -143,6 +143,7 @@ export function TodayPage({
         <div className="flex items-center gap-2">
           <Caption>Needs attention</Caption>
           {state === 'default' && attention.length > 0 && <Badge tone="warning" size="sm">{attention.length}</Badge>}
+          {state === 'default' && attention.length > 0 && <span className="ml-auto"><LedaSlot /></span>}
         </div>
         {state === 'error' ? (
           <RetryNotice title="Could not load today's jobs">Check your connection and try again.</RetryNotice>
@@ -173,7 +174,6 @@ export function TodayPage({
                   </button>
                   <div className="flex flex-wrap items-center gap-3 pl-11 sm:flex-col sm:items-end sm:gap-2 sm:pl-0">
                     <NextButton job={j} onAdvance={onAdvance} />
-                    <LedaSlot />
                   </div>
                 </li>
               );
@@ -190,6 +190,12 @@ export function TodayPage({
 // ---------------------------------------------------------------- Job list
 
 export type ListState = 'default' | 'empty-tab' | 'empty-branch' | 'loading' | 'error';
+
+const MAIN_TABS = [
+  { value: 'all', label: 'All' }, { value: 'quotation', label: 'Quotation' }, { value: 'in_progress', label: 'In progress' },
+  { value: 'for_pickup', label: 'For pick-up' },
+];
+const OTHER_TABS = JOB_STATUSES.filter((s) => !MAIN_TABS.some((t) => t.value === s.value));
 
 const ASSIGNEES = ['Rey Bautista', 'Dennis Alcala', 'Carlo Reyes', 'Joel Mendoza', 'Maricel Santos'];
 
@@ -257,21 +263,22 @@ export function JobList({
       />
 
       <div className="flex flex-wrap items-center gap-3">
-        <div className="w-full sm:min-w-56 sm:flex-1">
-          <SearchBar aria-label="Search jobs" placeholder="Search customer, plate or job no.…" shortcut="/" value={q} onValueChange={(v) => { setQ(v); setPage(1); }} onClear={() => setQ('')} />
+        <div className="w-full sm:min-w-32 sm:flex-[1_1_8rem]">
+          <SearchBar aria-label="Search jobs" placeholder="Search jobs…" shortcut="/" value={q} onValueChange={(v) => { setQ(v); setPage(1); }} onClear={() => setQ('')} />
         </div>
-        <div className="max-w-full overflow-x-auto">
-          <SegmentedControl
-            aria-label="Filter by status"
-            value={tab}
-            onChange={(v) => { setTab(v); setPage(1); }}
-            options={[{ value: 'all', label: <span className="whitespace-nowrap">{pending ? 'All' : `All ${counts.all}`}</span> }, ...JOB_STATUSES.map((s) => ({ value: s.value, label: <span className="whitespace-nowrap">{pending ? s.label : `${s.label} ${counts[s.value]}`}</span> }))]}
-          />
-        </div>
-        <Field label={<span className="sr-only">Filter by assignee</span>} className="w-full gap-0 sm:w-44">
+        <SegmentedControl
+          aria-label="Filter by status"
+          value={tab}
+          onChange={(v) => { setTab(v); setPage(1); }}
+          options={MAIN_TABS.map((t) => ({ value: t.value, label: <span className="whitespace-nowrap">{t.label}</span> }))}
+        />
+        <Field label={<span className="sr-only">More statuses</span>} className="w-full gap-0 sm:w-28">
+          <Select value={OTHER_TABS.some((t) => t.value === tab) ? tab : 'more'} onValueChange={(v) => { setTab(v === 'more' ? 'all' : v); setPage(1); }} options={[{ value: 'more', label: 'More' }, ...OTHER_TABS.map((t) => ({ value: t.value, label: `${t.label}${pending ? '' : ` (${counts[t.value]})`}` }))]} />
+        </Field>
+        <Field label={<span className="sr-only">Filter by assignee</span>} className="w-full gap-0 sm:w-36">
           <Select value={who} onValueChange={(v) => { setWho(v); setPage(1); }} options={[{ value: 'any', label: 'Anyone' }, { value: 'none', label: 'Unassigned' }, ...ASSIGNEES.map((a) => ({ value: a, label: a }))]} />
         </Field>
-        <Field label={<span className="sr-only">Filter by due date</span>} className="w-full gap-0 sm:w-44">
+        <Field label={<span className="sr-only">Filter by due date</span>} className="w-full gap-0 sm:w-36">
           <Select value={due} onValueChange={(v) => { setDue(v); setPage(1); }} options={[{ value: 'any', label: 'Any due date' }, { value: 'overdue', label: 'Overdue' }, { value: 'today', label: 'Due today' }]} />
         </Field>
       </div>
@@ -482,10 +489,10 @@ export function JobDetail({
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="min-w-0 space-y-4 lg:col-span-2">
           <Tabs value={tab} onValueChange={setTab} items={[
-            { value: 'items', label: 'Services and parts' },
+            { value: 'items', label: 'Items' },
             { value: 'comments', label: 'Comments', badge: COMMENTS.length },
             { value: 'history', label: 'History' },
-            { value: 'files', label: 'Attachments', badge: 3 },
+            { value: 'files', label: 'Files', badge: 3 },
           ]}>
             <TabPanel value="items" className="flex flex-col gap-4 pt-4">
               {itemsCard('Services', `${peso(t.services)} · ${services.length} item${services.length === 1 ? '' : 's'}`, 'Add service', services.length === 0, 'services',
