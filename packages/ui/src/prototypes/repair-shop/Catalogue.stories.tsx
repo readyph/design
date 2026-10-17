@@ -54,6 +54,7 @@ function Catalogue({ state = 'default', openForm = false, editing = false, linke
 
   const svcCols: TableColumn<ShopService>[] = [
     { key: 'name', header: 'Service', render: (s) => (<div><p className="font-medium text-ink">{s.name}</p><p className="max-w-md truncate text-xs text-ink-subtle">{s.description}</p></div>) },
+    { key: 'scope', header: 'Scope of work', render: (s) => <span className="text-ink-muted">{s.scope || '-'}</span> },
     { key: 'price', header: 'Price', align: 'right', render: (s) => <span className="tabular-nums text-ink">{peso(s.price)}</span> },
     { key: 'added', header: 'Date added', render: (s) => <span className="whitespace-nowrap text-ink-muted">{s.added}</span> },
     { key: 'status', header: 'Status', render: (s) => <ActiveBadge active={s.active} /> },
@@ -84,10 +85,12 @@ function Catalogue({ state = 'default', openForm = false, editing = false, linke
         ) : (
           <>
             <Table columns={svcCols} data={services} rowKey={(s) => s.id} loading={state === 'loading'} empty={empty} onRowClick={setSvcForm} />
-            <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-ink-muted">
-              <span>{services.length} services displayed</span>
-              <Pagination page={page} pageCount={1} onPageChange={setPage} />
-            </div>
+            {state !== 'loading' && (
+              <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-ink-muted">
+                <span>{services.length} services displayed</span>
+                <Pagination page={page} pageCount={1} onPageChange={setPage} />
+              </div>
+            )}
           </>
         )}
         <LinkedInventory linked={linked} state={inv} />
@@ -115,10 +118,11 @@ function ServiceForm({ item, onClose, startTried }: { item: ShopService | 'new';
   const edit = item !== 'new' ? item : null;
   const [name, setName] = useState(edit?.name ?? '');
   const [desc, setDesc] = useState(edit?.description ?? '');
+  const [scope, setScope] = useState(edit?.scope ?? '');
   const [price, setPrice] = useState(edit ? edit.price.toFixed(2) : '');
   const [active, setActive] = useState(edit?.active ?? true);
   const [tried, setTried] = useState(!!startTried);
-  const priceBad = price.trim() !== '' && !(Number(price) >= 0);
+  const priceBad = price.trim() === '' || !(Number(price) >= 0);
   const errs = { name: !name.trim() && 'Enter a clear, specific name.', price: priceBad && 'Enter a price of 0 or more.' };
   const e = (k: keyof typeof errs) => (tried && errs[k] ? (errs[k] as string) : undefined);
   const save = () => { setTried(true); if (!Object.values(errs).some(Boolean)) onClose(); };
@@ -126,10 +130,11 @@ function ServiceForm({ item, onClose, startTried }: { item: ShopService | 'new';
     <FormPage title={edit ? 'Update service' : 'Add a new service'} description="Services appear in quotations and on jobs." onClose={onClose} submitLabel={edit ? 'Update service' : 'Add service'} onSubmit={save}>
       <SettingsSection title="Details" description="What the customer sees on a quotation.">
         <Field label="Service name" required error={e('name')}><Input value={name} onChange={(ev) => setName(ev.target.value)} placeholder="e.g., Brake Pad Replacement" /></Field>
+        <Field label="Scope of work" hint="Optional. For example, Mechanical or Air conditioning."><Input value={scope} onChange={(ev) => setScope(ev.target.value)} placeholder="e.g., Mechanical" /></Field>
         <Field label="Description" hint={`${desc.length}/220`}><Textarea rows={3} maxLength={220} value={desc} onChange={(ev) => setDesc(ev.target.value)} /></Field>
       </SettingsSection>
-      <SettingsSection title="Price" description="Optional. Tax and parts are calculated separately.">
-        <Field label="Price" error={e('price')}>
+      <SettingsSection title="Price" description="Tax and parts are calculated separately.">
+        <Field label="Price" required error={e('price')}>
           <Input value={price} onChange={(ev) => setPrice(ev.target.value)} onBlur={() => { if (price.trim() !== '' && Number(price) >= 0) setPrice(Number(price).toFixed(2)); }} inputMode="decimal" placeholder="0.00" />
         </Field>
       </SettingsSection>

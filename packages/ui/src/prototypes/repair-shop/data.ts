@@ -71,7 +71,6 @@ export const JOB_PARTS: JobPart[] = [
 ];
 
 export interface ShopService { id: number; name: string; description: string; scope: string; price: number; added: string; active: boolean }
-export const SCOPES = ['Essential Routine Maintenance', 'Air conditioning', 'Body Building', 'Detailing', 'Painting', 'Machining', 'Mechanical', 'Electrical'];
 export const SERVICES: ShopService[] = [
   { id: 9, name: 'Brake Pad Replacement', description: 'Inspect braking system and replace worn-out pads.', scope: 'Mechanical', price: 3000, added: 'Oct 06, 2026', active: false },
   { id: 6, name: 'Test service', description: 'Service testing', scope: 'Essential Routine Maintenance', price: 5000, added: 'Apr 08, 2026', active: true },
