@@ -1,20 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { RepairShell, type BranchState } from './Shell';
-import { JobList } from './JobScreens';
+import { RepairFlow } from './Flow';
 import { fullscreen, mobile } from './params';
 
-/** PROTOTYPE (RDY-18) - Branch is an entity under one tenant. A switcher in the top bar re-scopes every record to the selected branch; one login, one tenant, company-wide settings stay shared. */
-const meta: Meta = { title: 'Prototypes/Repair shop/Shell (A: branch under tenant)', tags: ['!autodocs'], parameters: fullscreen };
+/** PROTOTYPE (RDY-18) - Shell A, decided: a branch is an entity under one tenant. A switcher in the top bar re-scopes every record to the branch and keeps you on the same page; single-branch tenants see the name as plain text. */
+const meta: Meta = { title: 'Repair shop/Shell A', tags: ['!autodocs'], parameters: fullscreen };
 export default meta;
 type Story = StoryObj;
 
-const Page = ({ branchState, menuOpen }: { branchState?: BranchState; menuOpen?: boolean }) => (
-  <RepairShell active="jobs" model="A" branchState={branchState} menuOpen={menuOpen}>{(b) => <JobList key={b.id} branchId={b.id} />}</RepairShell>
-);
-
-/** Starts on Davao City, then the play step picks Cebu - Mandaue from the switcher so the header and records visibly re-scope. */
+/** Opens on Today for Davao City, then the play step picks Cebu - Mandaue so the header description and items visibly re-scope on the same page. */
 export const Default: Story = {
-  render: () => <Page />,
+  render: () => <RepairFlow />,
   play: async ({ canvasElement }) => {
     const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
     await wait(600);
@@ -25,8 +20,8 @@ export const Default: Story = {
     item?.click();
   },
 };
-export const SingleBranch: Story = { name: 'Single branch (no switching)', render: () => <Page branchState="single" /> };
-export const LoadingBranches: Story = { name: 'Loading branches', render: () => <Page branchState="loading" /> };
-export const BranchesError: Story = { name: 'Error (branches failed)', render: () => <Page branchState="error" /> };
-export const Mobile: Story = { name: 'Mobile 390', parameters: mobile, render: () => <Page /> };
-export const MobileMenuOpen: Story = { name: 'Mobile 390 (menu open)', parameters: mobile, render: () => <Page menuOpen /> };
+export const SingleBranch: Story = { name: 'Single branch (plain text, no switching)', render: () => <RepairFlow branchState="single" /> };
+export const LoadingBranches: Story = { name: 'Loading branches', render: () => <RepairFlow branchState="loading" /> };
+export const BranchesError: Story = { name: 'Error (branches failed)', render: () => <RepairFlow branchState="error" /> };
+export const Mobile: Story = { name: 'Mobile 390', parameters: mobile, render: () => <RepairFlow /> };
+export const MobileMenuOpen: Story = { name: 'Mobile 390 (menu open)', parameters: mobile, render: () => <RepairFlow menuOpen /> };

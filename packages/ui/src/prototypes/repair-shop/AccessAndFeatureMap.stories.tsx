@@ -7,6 +7,7 @@ import { Field } from '../../components/Field';
 import { Input } from '../../components/Input';
 import { Notice } from '../../components/Notice';
 import { PageHeader } from '../../components/PageHeader';
+import { Page } from './Page';
 import { Table, type TableColumn } from '../../components/Table';
 
 /**
@@ -14,7 +15,7 @@ import { Table, type TableColumn } from '../../components/Table';
  * (area -> proposed epic -> shared API coverage). Source of truth for planning is the ticket.
  */
 const meta: Meta = {
-  title: 'Prototypes/Repair shop/Access and feature map',
+  title: 'Repair shop/Access and feature map',
   tags: ['!autodocs'],
   parameters: { layout: 'fullscreen' },
 };
@@ -24,8 +25,8 @@ type Story = StoryObj;
 function AuthFrame({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
   return (
     <div className="ds-root grid min-h-screen place-items-center bg-surface-canvas p-6 font-sans text-ink">
-      <Card className="w-full max-w-sm space-y-4 p-6">
-        <div><h1 className="text-xl font-semibold">{title}</h1><p className="mt-1 text-sm text-ink-muted">{description}</p></div>
+      <Card padding="lg" className="flex w-full max-w-sm flex-col gap-4">
+        <div className="flex flex-col gap-1"><h1 className="text-xl font-semibold">{title}</h1><p className="text-sm text-ink-muted">{description}</p></div>
         {children}
       </Card>
     </div>
@@ -43,7 +44,7 @@ function Login({ mode = 'default' }: { mode?: 'default' | 'error' | 'loading' | 
       <Field label="Password" required error={tried && !pw ? 'Enter your password.' : undefined}><Input type="password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="Password" /></Field>
       <Button fullWidth loading={mode === 'loading'} onClick={() => setTried(true)}>Log in</Button>
       <div className="text-center text-sm text-primary-700">Forgot password?</div>
-      <Notice tone="neutral">After login the user lands in their role area: staff on Jobs, mechanics on their tickets. Their active branch is shown in the header.</Notice>
+      <Notice tone="neutral">After login the user lands in their role area: staff on Today, mechanics on their tickets. Their active branch is shown in the header.</Notice>
     </AuthFrame>
   );
 }
@@ -117,8 +118,10 @@ export const FeatureMap: Story = {
     ];
     return (
       <div className="ds-root min-h-screen bg-surface-canvas p-6 font-sans text-ink">
-        <PageHeader title="Repair shop platform: feature map" description="The source app runs on its own API; almost nothing maps onto the shared /api/v1 yet." />
-        <Card padding="none"><Table columns={cols} data={AREAS} rowKey={(a) => a.epic} /></Card>
+        <Page>
+          <PageHeader className="pb-0" title="Repair shop platform: feature map" description="The source app runs on its own API; almost nothing maps onto the shared /api/v1 yet." />
+          <Card padding="none"><Table columns={cols} data={AREAS} rowKey={(a) => a.epic} /></Card>
+        </Page>
       </div>
     );
   },

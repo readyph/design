@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { Plus, DotsThreeVertical, PencilSimple, Trash, WarningOctagon } from '@phosphor-icons/react';
+import { Plus, DotsThreeVertical, PencilSimple, Trash } from '@phosphor-icons/react';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
@@ -17,6 +17,8 @@ import { Select } from '../../components/Select';
 import { Table, type TableColumn } from '../../components/Table';
 import { Textarea } from '../../components/Textarea';
 import { RepairShell } from './Shell';
+import { Page, RetryNotice } from './Page';
+import { Skeleton } from '../../components/Skeleton';
 import { CUSTOMERS, validEmail, validPhone, type Customer, type Vehicle } from './data';
 
 /**
@@ -24,7 +26,7 @@ import { CUSTOMERS, validEmail, validPhone, type Customer, type Vehicle } from '
  * Customer delete is a soft delete: job history is kept.
  */
 const meta: Meta = {
-  title: 'Prototypes/Repair shop/Customers',
+  title: 'Repair shop/Customers',
   tags: ['!autodocs'],
   parameters: { layout: 'fullscreen' },
 };
@@ -44,7 +46,7 @@ function CustomerForm({ open, customer, onClose }: { open: boolean; customer?: C
   const e = (k: keyof typeof errs) => (tried && errs[k] ? (errs[k] as string) : undefined);
   return (
     <Modal open={open} onOpenChange={(o) => !o && onClose()} title={customer ? 'Edit customer' : 'Add a new customer'} footer={<><Button variant="subtle" onClick={onClose}>Cancel</Button><Button onClick={save}>{customer ? 'Save customer' : 'Add customer'}</Button></>}>
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4">
         <Field label="Customer name" required error={e('name')}><Input value={name} onChange={(ev) => setName(ev.target.value)} placeholder="e.g., Juan Dela Cruz" /></Field>
         <Field label="Contact number" required error={e('phone')} hint="+63, then 10 digits"><Input value={phone} onChange={(ev) => setPhone(ev.target.value)} placeholder="917 123 4567" /></Field>
         <Field label="Email address" required error={e('email')}><Input value={email} onChange={(ev) => setEmail(ev.target.value)} placeholder="name@email.com" /></Field>
@@ -86,16 +88,20 @@ function CustomersList({ state = 'default', openForm = false, confirmDelete = fa
   ];
   return (
     <RepairShell active="customers">
-      <PageHeader title="Customers" description="Customers and the vehicles they bring in." actions={<Button leftIcon={Plus} onClick={() => setForm(true)}>Add customer</Button>} />
-      <div className="mb-4 max-w-md"><SearchBar placeholder="Search customers" value={q} onValueChange={setQ} /></div>
-      {state === 'error' ? (
-        <Notice tone="error" title="Could not load customers" icon={WarningOctagon}>Try again in a moment. <Button size="sm" variant="secondary" className="ml-2">Retry</Button></Notice>
-      ) : (
-        <Card padding="none">
-          <Table columns={cols} data={rows} rowKey={(c) => c.id} loading={state === 'loading'} empty={<EmptyState title="No customers yet" description={q ? 'Nothing matches your search.' : 'Add your first customer, or create one while writing a quotation.'} action={<Button size="sm" leftIcon={Plus} onClick={() => setForm(true)}>Add customer</Button>} />} />
-          <div className="flex items-center justify-between border-t border-border px-4 py-3 text-sm text-ink-muted"><span>{rows.length} customers displayed</span><Pagination page={page} pageCount={1} onPageChange={setPage} /></div>
-        </Card>
-      )}
+      <Page>
+        <PageHeader className="pb-0" title="Customers" description="Customers and the vehicles they bring in." actions={<Button leftIcon={Plus} onClick={() => setForm(true)}>Add customer</Button>} />
+        <div className="max-w-md"><SearchBar aria-label="Search customers" placeholder="Search customers" value={q} onValueChange={setQ} /></div>
+        {state === 'error' ? (
+          <RetryNotice title="Could not load customers">Try again in a moment.</RetryNotice>
+        ) : (
+          <>
+            <Card padding="none">
+              <Table columns={cols} data={rows} rowKey={(c) => c.id} loading={state === 'loading'} empty={<EmptyState title="No customers yet" description={q ? 'Nothing matches your search.' : 'Add your first customer, or create one while writing a quotation.'} action={<Button size="sm" leftIcon={Plus} onClick={() => setForm(true)}>Add customer</Button>} />} />
+            </Card>
+            <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-ink-muted"><span>{rows.length} customers displayed</span><Pagination page={page} pageCount={1} onPageChange={setPage} /></div>
+          </>
+        )}
+      </Page>
       <CustomerForm open={form} onClose={() => setForm(false)} />
       <ConfirmDelete open={del} onOpenChange={setDel} name="Clarke Sorento" />
     </RepairShell>
@@ -110,7 +116,7 @@ function CustomerDetail({ customer = CUSTOMERS[0], vehicleForm = false, confirmD
   const [edit, setEdit] = useState(false);
   const [veh, setVeh] = useState<Vehicle | 'new' | null>(vehicleForm ? 'new' : null);
   const [del, setDel] = useState(confirmDelete);
-  if (loading) return <RepairShell active="customers"><div className="space-y-3"><div className="h-8 w-64 animate-pulse rounded bg-surface-muted" /><div className="h-40 animate-pulse rounded bg-surface-muted" /></div></RepairShell>;
+  if (loading) return <RepairShell active="customers"><Page><Skeleton className="h-8 w-64" /><Skeleton className="h-40 w-full rounded-lg" /></Page></RepairShell>;
   const cols: TableColumn<Vehicle>[] = [
     { key: 'plate', header: 'Plate no.', render: (v) => v.plate },
     { key: 'bm', header: 'Brand / model', render: (v) => `${v.brand} ${v.model}` },
@@ -122,13 +128,15 @@ function CustomerDetail({ customer = CUSTOMERS[0], vehicleForm = false, confirmD
   ];
   return (
     <RepairShell active="customers">
-      <PageHeader title={customer.name} description={`${customer.phone}  ${customer.email}`} actions={<><Button variant="secondary" leftIcon={PencilSimple} onClick={() => setEdit(true)}>Edit</Button><Button variant="danger" leftIcon={Trash} onClick={() => setDel(true)}>Delete</Button></>} />
-      <Card className="mb-4"><div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">{[['Customer ID', String(customer.id)], ['Contact no.', customer.phone], ['Email', customer.email], ['Address', customer.address || '-']].map(([k, v]) => (<div key={k}><div className="text-xs text-ink-muted">{k}</div><div className="font-medium">{v}</div></div>))}</div></Card>
-      <Card padding="none">
-        <div className="flex items-center justify-between p-4"><div><div className="font-semibold">Vehicles</div><div className="text-xs text-ink-muted">{customer.vehicles.length} vehicle{customer.vehicles.length === 1 ? '' : 's'}</div></div><Button size="sm" leftIcon={Plus} onClick={() => setVeh('new')}>Add vehicle</Button></div>
-        <Table columns={cols} data={customer.vehicles} rowKey={(v) => v.plate} empty={<EmptyState title="No vehicles yet" description="Add a vehicle so this customer can be picked on a quotation." action={<Button size="sm" leftIcon={Plus} onClick={() => setVeh('new')}>Add vehicle</Button>} />} />
-      </Card>
-      <Notice tone="info" className="mt-4">Gap in the source app: no job history on this page. Proposed: list this customer's jobs here.</Notice>
+      <Page>
+        <PageHeader className="pb-0" title={customer.name} description={`${customer.phone}  ${customer.email}`} actions={<><Button variant="secondary" leftIcon={PencilSimple} onClick={() => setEdit(true)}>Edit</Button><Button variant="danger" leftIcon={Trash} onClick={() => setDel(true)}>Delete</Button></>} />
+        <Card><div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">{[['Customer ID', String(customer.id)], ['Contact no.', customer.phone], ['Email', customer.email], ['Address', customer.address || '-']].map(([k, v]) => (<div key={k} className="flex flex-col"><span className="text-xs text-ink-muted">{k}</span><span className="font-medium">{v}</span></div>))}</div></Card>
+        <Card className="flex flex-col gap-4">
+          <div className="flex items-center justify-between gap-3"><div className="flex flex-col"><span className="font-semibold">Vehicles</span><span className="text-xs text-ink-muted">{customer.vehicles.length} vehicle{customer.vehicles.length === 1 ? '' : 's'}</span></div><Button size="sm" leftIcon={Plus} onClick={() => setVeh('new')}>Add vehicle</Button></div>
+          <Table columns={cols} data={customer.vehicles} rowKey={(v) => v.plate} empty={<EmptyState title="No vehicles yet" description="Add a vehicle so this customer can be picked on a quotation." action={<Button size="sm" leftIcon={Plus} onClick={() => setVeh('new')}>Add vehicle</Button>} />} />
+        </Card>
+        <Notice tone="info">Gap in the source app: no job history on this page. Proposed: list this customer's jobs here.</Notice>
+      </Page>
       <CustomerForm open={edit} customer={customer} onClose={() => setEdit(false)} />
       <VehicleForm open={veh !== null} vehicle={veh && veh !== 'new' ? veh : undefined} onClose={() => setVeh(null)} />
       <ConfirmDelete open={del} onOpenChange={setDel} name={customer.name} />

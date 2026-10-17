@@ -34,25 +34,27 @@ export interface Job {
   since: string;
   due: string;
   branch: string;
+  /** Unpaid amount in pesos; drives the suggested next action and the Unpaid stat. */
+  balance: number;
 }
 
 export const JOBS: Job[] = [
-  { id: 25, customer: 'Ana Dizon', phone: '+63 92 7811 2040', plate: 'NBC 2210', brand: 'Mitsubishi', model: 'Mirage', assignee: null, status: 'quotation', since: 'Oct 16, 2026', due: 'Oct 23, 2026', branch: 'davao' },
-  { id: 24, customer: 'Ramon Aquino', phone: '+63 93 5502 7788', plate: 'DAB 9087', brand: 'Toyota', model: 'Hilux', assignee: null, status: 'for_approval', since: 'Oct 15, 2026', due: 'Oct 21, 2026', branch: 'davao' },
-  { id: 23, customer: 'Grace Tan', phone: '+63 91 7525 4425', plate: 'KJK 4441', brand: 'Mitsubishi', model: 'Montero Sport', assignee: 'Joel Mendoza', status: 'in_progress', since: 'Oct 13, 2026', due: 'Oct 18, 2026', branch: 'davao' },
-  { id: 22, customer: 'Clarke Sorento', phone: '+63 91 5860 6971', plate: 'LAN 3852', brand: 'Honda', model: 'Civic Type-R', assignee: 'Maricel Santos', status: 'completed', since: 'Oct 7, 2026', due: 'Oct 12, 2026', branch: 'davao' },
-  { id: 21, customer: 'Nicole Villanueva', phone: '+63 91 5860 6975', plate: 'LAQ 8735', brand: 'Toyota', model: 'Vios', assignee: 'Rey Bautista', status: 'todo', since: 'Oct 14, 2026', due: 'Oct 20, 2026', branch: 'davao' },
-  { id: 19, customer: 'Miguel Sorento', phone: '+63 91 5860 6972', plate: 'LDP 5432', brand: 'Honda', model: 'Civic', assignee: 'Rey Bautista', status: 'todo', since: 'Oct 10, 2026', due: 'Oct 17, 2026', branch: 'davao' },
-  { id: 17, customer: 'Fred Go', phone: '+63 95 2998 8888', plate: 'GHH 5433', brand: 'Honda', model: 'Civic', assignee: 'Rey Bautista', status: 'pending', since: 'Apr 9, 2026', due: 'May 13, 2026', branch: 'davao' },
-  { id: 15, customer: 'Jude Ramos', phone: '+63 95 4445 1445', plate: 'GGS 5444', brand: 'KIA', model: 'Picanto', assignee: null, status: 'for_pickup', since: 'Oct 9, 2026', due: 'Oct 16, 2026', branch: 'davao' },
-  { id: 13, customer: 'James Castro', phone: '+63 95 1225 2522', plate: 'LLK 5515', brand: 'Honda', model: 'Civic', assignee: 'Rey Bautista', status: 'in_progress', since: 'Oct 12, 2026', due: 'Oct 19, 2026', branch: 'davao' },
-  { id: 31, customer: 'Liza Fernandez', phone: '+63 917 302 5541', plate: 'CAX 7712', brand: 'Suzuki', model: 'Ertiga', assignee: 'Dennis Alcala', status: 'in_progress', since: 'Oct 14, 2026', due: 'Oct 18, 2026', branch: 'cebu' },
-  { id: 30, customer: 'Paolo Ybanez', phone: '+63 927 440 1189', plate: 'GBT 3086', brand: 'Toyota', model: 'Innova', assignee: null, status: 'quotation', since: 'Oct 16, 2026', due: 'Oct 22, 2026', branch: 'cebu' },
-  { id: 29, customer: 'Mylene Cabahug', phone: '+63 998 215 7364', plate: 'NDF 1590', brand: 'Nissan', model: 'Almera', assignee: 'Dennis Alcala', status: 'for_pickup', since: 'Oct 9, 2026', due: 'Oct 17, 2026', branch: 'cebu' },
-  { id: 42, customer: 'Jerome Villaruel', phone: '+63 906 118 9023', plate: 'UVK 6628', brand: 'Ford', model: 'Ranger', assignee: 'Carlo Reyes', status: 'todo', since: 'Oct 15, 2026', due: 'Oct 19, 2026', branch: 'qc' },
-  { id: 41, customer: 'Cherry Manalo', phone: '+63 945 772 3310', plate: 'NAB 4471', brand: 'Honda', model: 'City', assignee: 'Carlo Reyes', status: 'pending', since: 'Oct 8, 2026', due: 'Oct 15, 2026', branch: 'qc' },
-  { id: 40, customer: 'Benjie Salonga', phone: '+63 918 604 2275', plate: 'TXR 2058', brand: 'Toyota', model: 'Fortuner', assignee: null, status: 'for_approval', since: 'Oct 16, 2026', due: 'Oct 24, 2026', branch: 'qc' },
-  { id: 39, customer: 'Teresita Lim', phone: '+63 929 331 8806', plate: 'ZPA 9034', brand: 'Mitsubishi', model: 'Xpander', assignee: 'Maricel Santos', status: 'completed', since: 'Oct 5, 2026', due: 'Oct 11, 2026', branch: 'qc' },
+  { id: 25, customer: 'Ana Dizon', phone: '+63 92 7811 2040', plate: 'NBC 2210', brand: 'Mitsubishi', model: 'Mirage', assignee: null, status: 'quotation', since: 'Oct 16, 2026', due: 'Oct 23, 2026', branch: 'davao', balance: 4500 },
+  { id: 24, customer: 'Ramon Aquino', phone: '+63 93 5502 7788', plate: 'DAB 9087', brand: 'Toyota', model: 'Hilux', assignee: null, status: 'for_approval', since: 'Oct 15, 2026', due: 'Oct 21, 2026', branch: 'davao', balance: 7800 },
+  { id: 23, customer: 'Grace Tan', phone: '+63 91 7525 4425', plate: 'KJK 4441', brand: 'Mitsubishi', model: 'Montero Sport', assignee: 'Joel Mendoza', status: 'in_progress', since: 'Oct 13, 2026', due: 'Oct 18, 2026', branch: 'davao', balance: 6200 },
+  { id: 22, customer: 'Clarke Sorento', phone: '+63 91 5860 6971', plate: 'LAN 3852', brand: 'Honda', model: 'Civic Type-R', assignee: 'Maricel Santos', status: 'completed', since: 'Oct 7, 2026', due: 'Oct 12, 2026', branch: 'davao', balance: 1200 },
+  { id: 21, customer: 'Nicole Villanueva', phone: '+63 91 5860 6975', plate: 'LAQ 8735', brand: 'Toyota', model: 'Vios', assignee: 'Rey Bautista', status: 'todo', since: 'Oct 14, 2026', due: 'Oct 20, 2026', branch: 'davao', balance: 3000 },
+  { id: 19, customer: 'Miguel Sorento', phone: '+63 91 5860 6972', plate: 'LDP 5432', brand: 'Honda', model: 'Civic', assignee: 'Rey Bautista', status: 'todo', since: 'Oct 10, 2026', due: 'Oct 17, 2026', branch: 'davao', balance: 1800 },
+  { id: 17, customer: 'Fred Go', phone: '+63 95 2998 8888', plate: 'GHH 5433', brand: 'Honda', model: 'Civic', assignee: 'Rey Bautista', status: 'pending', since: 'Apr 9, 2026', due: 'May 13, 2026', branch: 'davao', balance: 2500 },
+  { id: 15, customer: 'Jude Ramos', phone: '+63 95 4445 1445', plate: 'GGS 5444', brand: 'KIA', model: 'Picanto', assignee: null, status: 'for_pickup', since: 'Oct 9, 2026', due: 'Oct 16, 2026', branch: 'davao', balance: 3500 },
+  { id: 13, customer: 'James Castro', phone: '+63 95 1225 2522', plate: 'LLK 5515', brand: 'Honda', model: 'Civic', assignee: 'Rey Bautista', status: 'in_progress', since: 'Oct 12, 2026', due: 'Oct 19, 2026', branch: 'davao', balance: 3000 },
+  { id: 31, customer: 'Liza Fernandez', phone: '+63 917 302 5541', plate: 'CAX 7712', brand: 'Suzuki', model: 'Ertiga', assignee: 'Dennis Alcala', status: 'in_progress', since: 'Oct 14, 2026', due: 'Oct 18, 2026', branch: 'cebu', balance: 4000 },
+  { id: 30, customer: 'Paolo Ybanez', phone: '+63 927 440 1189', plate: 'GBT 3086', brand: 'Toyota', model: 'Innova', assignee: null, status: 'quotation', since: 'Oct 16, 2026', due: 'Oct 22, 2026', branch: 'cebu', balance: 2800 },
+  { id: 29, customer: 'Mylene Cabahug', phone: '+63 998 215 7364', plate: 'NDF 1590', brand: 'Nissan', model: 'Almera', assignee: 'Dennis Alcala', status: 'for_pickup', since: 'Oct 9, 2026', due: 'Oct 17, 2026', branch: 'cebu', balance: 1500 },
+  { id: 42, customer: 'Jerome Villaruel', phone: '+63 906 118 9023', plate: 'UVK 6628', brand: 'Ford', model: 'Ranger', assignee: 'Carlo Reyes', status: 'todo', since: 'Oct 15, 2026', due: 'Oct 19, 2026', branch: 'qc', balance: 5200 },
+  { id: 41, customer: 'Cherry Manalo', phone: '+63 945 772 3310', plate: 'NAB 4471', brand: 'Honda', model: 'City', assignee: 'Carlo Reyes', status: 'pending', since: 'Oct 8, 2026', due: 'Oct 15, 2026', branch: 'qc', balance: 2100 },
+  { id: 40, customer: 'Benjie Salonga', phone: '+63 918 604 2275', plate: 'TXR 2058', brand: 'Toyota', model: 'Fortuner', assignee: null, status: 'for_approval', since: 'Oct 16, 2026', due: 'Oct 24, 2026', branch: 'qc', balance: 9400 },
+  { id: 39, customer: 'Teresita Lim', phone: '+63 929 331 8806', plate: 'ZPA 9034', brand: 'Mitsubishi', model: 'Xpander', assignee: 'Maricel Santos', status: 'completed', since: 'Oct 5, 2026', due: 'Oct 11, 2026', branch: 'qc', balance: 0 },
 ];
 
 export interface JobService { id: number; name: string; description: string; updated: string; assignees: string[]; price: number; status: 'todo' | 'in_progress' | 'completed'; comments: number }
@@ -127,3 +129,26 @@ export const BRANCHES: Branch[] = [
 export const TODAY = new Date('2026-10-17T00:00:00');
 export const isOverdue = (j: Pick<Job, 'due' | 'status'>) => j.status !== 'completed' && new Date(j.due) < TODAY;
 export const isDueToday = (j: Pick<Job, 'due' | 'status'>) => j.status !== 'completed' && new Date(j.due).getTime() === TODAY.getTime();
+
+/** The one suggested next step for a job, from its status and balance. */
+export interface NextAction { key: 'send' | 'approve' | 'start' | 'ready' | 'complete' | 'pay'; label: string; to?: JobStatus }
+export const nextAction = (status: JobStatus, balance: number): NextAction | null => {
+  switch (status) {
+    case 'quotation': return { key: 'send', label: 'Send quotation', to: 'for_approval' };
+    case 'for_approval': return { key: 'approve', label: 'Mark approved', to: 'todo' };
+    case 'todo':
+    case 'pending': return { key: 'start', label: 'Start work', to: 'in_progress' };
+    case 'in_progress': return { key: 'ready', label: 'Mark ready', to: 'for_pickup' };
+    case 'for_pickup': return balance > 0 ? { key: 'pay', label: 'Record payment' } : { key: 'complete', label: 'Complete job', to: 'completed' };
+    case 'completed': return balance > 0 ? { key: 'pay', label: 'Record payment' } : null;
+  }
+};
+
+/** Why a job is on the Today list, most urgent first. Null when it needs nothing today. */
+export const attentionReason = (j: Job): { label: string; tone: 'error' | 'warning' | 'info' } | null => {
+  if (isOverdue(j)) return { label: 'Overdue', tone: 'error' };
+  if (isDueToday(j)) return { label: 'Due today', tone: 'warning' };
+  if (j.status === 'for_approval') return { label: 'Waiting on customer', tone: 'info' };
+  if (j.balance > 0 && (j.status === 'for_pickup' || j.status === 'completed')) return { label: `Unpaid ${peso(j.balance)}`, tone: 'warning' };
+  return null;
+};

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { Plus, DotsThreeVertical, PencilSimple, WarningOctagon } from '@phosphor-icons/react';
+import { Plus, DotsThreeVertical, PencilSimple } from '@phosphor-icons/react';
 import { Badge } from '../../components/Badge';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
@@ -9,7 +9,6 @@ import { Field } from '../../components/Field';
 import { Input } from '../../components/Input';
 import { Menu } from '../../components/Menu';
 import { Modal } from '../../components/Modal';
-import { Notice } from '../../components/Notice';
 import { Pagination } from '../../components/Pagination';
 import { PageHeader } from '../../components/PageHeader';
 import { SearchBar } from '../../components/SearchBar';
@@ -19,6 +18,7 @@ import { Table, type TableColumn } from '../../components/Table';
 import { Tabs } from '../../components/Tabs';
 import { Textarea } from '../../components/Textarea';
 import { RepairShell } from './Shell';
+import { Page, RetryNotice } from './Page';
 import { PARTS, SCOPES, SERVICES, peso, type ShopPart, type ShopService } from './data';
 
 /**
@@ -27,7 +27,7 @@ import { PARTS, SCOPES, SERVICES, peso, type ShopPart, type ShopService } from '
  * activate/deactivate and delete exist in its API and are shown here as proposed.
  */
 const meta: Meta = {
-  title: 'Prototypes/Repair shop/Catalogue',
+  title: 'Repair shop/Catalogue',
   tags: ['!autodocs'],
   parameters: { layout: 'fullscreen' },
 };
@@ -82,26 +82,33 @@ function Catalogue({ initialTab = 'services', state = 'default', openForm = fals
 
   return (
     <RepairShell active="catalogue">
-      <PageHeader
-        title="Catalogue"
-        description="Services and parts that can be added to quotations and jobs."
-        actions={<Button leftIcon={Plus} onClick={() => (isServices ? setSvcForm('new') : setPartForm('new'))}>{isServices ? 'Add service' : 'Add product'}</Button>}
-      />
-      <Tabs variant="pill" value={tab} onValueChange={(v) => { setTab(v); setQ(''); setPage(1); }} items={[{ value: 'services', label: 'Services', badge: SERVICES.length }, { value: 'parts', label: 'Parts', badge: PARTS.length }]} />
-      <div className="my-4 max-w-md"><SearchBar placeholder={isServices ? 'Search a service' : 'Search a product'} value={q} onValueChange={setQ} /></div>
-      {state === 'error' ? (
-        <Notice tone="error" title="Could not load the catalogue" icon={WarningOctagon}>Try again in a moment. <Button size="sm" variant="secondary" className="ml-2">Retry</Button></Notice>
-      ) : (
-        <Card padding="none">
-          {isServices
-            ? <Table columns={svcCols} data={services} rowKey={(s) => s.id} loading={state === 'loading'} empty={empty} />
-            : <Table columns={partCols} data={parts} rowKey={(p) => p.id} loading={state === 'loading'} empty={empty} />}
-          <div className="flex items-center justify-between border-t border-border px-4 py-3 text-sm text-ink-muted">
-            <span>{(isServices ? services : parts).length} {isServices ? 'services' : 'products'} displayed</span>
-            <Pagination page={page} pageCount={1} onPageChange={setPage} />
-          </div>
-        </Card>
-      )}
+      <Page>
+        <PageHeader
+          className="pb-0"
+          title="Catalogue"
+          description="Services and parts that can be added to quotations and jobs."
+          actions={<Button leftIcon={Plus} onClick={() => (isServices ? setSvcForm('new') : setPartForm('new'))}>{isServices ? 'Add service' : 'Add product'}</Button>}
+        />
+        <div className="flex flex-col gap-3">
+          <Tabs variant="pill" value={tab} onValueChange={(v) => { setTab(v); setQ(''); setPage(1); }} items={[{ value: 'services', label: 'Services', badge: SERVICES.length }, { value: 'parts', label: 'Parts', badge: PARTS.length }]} />
+          <div className="max-w-md"><SearchBar aria-label={isServices ? 'Search a service' : 'Search a product'} placeholder={isServices ? 'Search a service' : 'Search a product'} value={q} onValueChange={setQ} /></div>
+        </div>
+        {state === 'error' ? (
+          <RetryNotice title="Could not load the catalogue">Try again in a moment.</RetryNotice>
+        ) : (
+          <>
+            <Card padding="none">
+              {isServices
+                ? <Table columns={svcCols} data={services} rowKey={(s) => s.id} loading={state === 'loading'} empty={empty} />
+                : <Table columns={partCols} data={parts} rowKey={(p) => p.id} loading={state === 'loading'} empty={empty} />}
+            </Card>
+            <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-ink-muted">
+              <span>{(isServices ? services : parts).length} {isServices ? 'services' : 'products'} displayed</span>
+              <Pagination page={page} pageCount={1} onPageChange={setPage} />
+            </div>
+          </>
+        )}
+      </Page>
       <ServiceForm item={svcForm} onClose={() => setSvcForm(null)} />
       <PartForm item={partForm} onClose={() => setPartForm(null)} />
     </RepairShell>
@@ -120,7 +127,7 @@ function ServiceForm({ item, onClose }: { item: ShopService | 'new' | null; onCl
   const save = () => { setTried(true); if (!Object.values(errs).some(Boolean)) onClose(); };
   return (
     <Modal open={item !== null} onOpenChange={(o) => !o && onClose()} title={edit ? 'Update service' : 'Add a new service'} footer={<><Button variant="subtle" onClick={onClose}>Cancel</Button><Button onClick={save}>{edit ? 'Update service' : 'Add service'}</Button></>}>
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4">
         <Field label="Service name" required error={tried ? (errs.name as string) || undefined : undefined}><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g., Brake Pad Replacement" /></Field>
         <Field label="Description" required hint={`${desc.length}/220`} error={tried ? (errs.desc as string) || undefined : undefined}><Textarea rows={3} maxLength={220} value={desc} onChange={(e) => setDesc(e.target.value)} /></Field>
         <Field label="Price" required error={tried ? (errs.price as string) || undefined : undefined}><Input value={price} onChange={(e) => setPrice(e.target.value)} inputMode="decimal" placeholder="0.00" /></Field>
@@ -144,7 +151,7 @@ function PartForm({ item, onClose }: { item: ShopPart | 'new' | null; onClose: (
   return (
     <Modal open={item !== null} onOpenChange={(o) => !o && onClose()} size="xl" title={edit ? 'Update product' : 'Add a new product'} footer={<><Button variant="subtle" onClick={onClose}>Cancel</Button><Button onClick={() => { setTried(true); if (!bad) onClose(); }}>{edit ? 'Save product' : 'Add product'}</Button></>}>
       <div className="grid grid-cols-2 gap-4">
-        <div className="col-span-2 rounded-lg border border-dashed border-border-strong p-5 text-center text-sm text-ink-muted">Product images: choose or drop several files</div>
+        <div className="col-span-2 rounded-lg border border-dashed border-border-strong p-4 text-center text-sm text-ink-muted">Product images: choose or drop several files</div>
         <Field label="Product name" required error={tried && !name ? 'Enter a clear, specific name.' : undefined}><Input value={name} onChange={(e) => setName(e.target.value)} /></Field>
         <Field label="SKU"><Input defaultValue={edit ? `DB-${22000 + edit.id}` : ''} /></Field>
         <Field label="Description" className="col-span-2"><Textarea rows={2} maxLength={220} defaultValue={edit?.description} /></Field>
