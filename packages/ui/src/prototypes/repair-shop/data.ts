@@ -36,12 +36,15 @@ export interface Job {
 }
 
 export const JOBS: Job[] = [
+  { id: 25, customer: 'Ana Dizon', phone: '+63 92 7811 2040', plate: 'NBC 2210', brand: 'Mitsubishi', model: 'Mirage', assignee: null, status: 'quotation', since: 'Oct 16, 2026', due: 'Oct 23, 2026' },
+  { id: 24, customer: 'Ramon Aquino', phone: '+63 93 5502 7788', plate: 'DAB 9087', brand: 'Toyota', model: 'Hilux', assignee: null, status: 'for_approval', since: 'Oct 15, 2026', due: 'Oct 21, 2026' },
+  { id: 23, customer: 'Grace Tan', phone: '+63 91 7525 4425', plate: 'KJK 4441', brand: 'Mitsubishi', model: 'Montero Sport', assignee: 'Mechanic Two', status: 'in_progress', since: 'Oct 13, 2026', due: 'Oct 18, 2026' },
   { id: 22, customer: 'Clarke Sorento', phone: '+63 91 5860 6971', plate: 'LAN 3852', brand: 'Honda', model: 'Civic Type-R', assignee: 'Staff Member', status: 'completed', since: 'Oct 7, 2026', due: 'Oct 12, 2026' },
-  { id: 21, customer: 'Nicole Villanueva', phone: '+63 91 5860 6975', plate: 'LAQ 8735', brand: 'Toyota', model: 'Vios', assignee: 'Mechanic One', status: 'todo', since: 'May 14, 2026', due: 'May 14, 2026' },
-  { id: 19, customer: 'Miguel Sorento', phone: '+63 91 5860 6972', plate: 'LDP 5432', brand: 'Honda', model: 'Civic', assignee: 'Mechanic One', status: 'todo', since: 'May 14, 2026', due: 'Oct 15, 2026' },
+  { id: 21, customer: 'Nicole Villanueva', phone: '+63 91 5860 6975', plate: 'LAQ 8735', brand: 'Toyota', model: 'Vios', assignee: 'Mechanic One', status: 'todo', since: 'Oct 14, 2026', due: 'Oct 20, 2026' },
+  { id: 19, customer: 'Miguel Sorento', phone: '+63 91 5860 6972', plate: 'LDP 5432', brand: 'Honda', model: 'Civic', assignee: 'Mechanic One', status: 'todo', since: 'Oct 10, 2026', due: 'Oct 17, 2026' },
   { id: 17, customer: 'Fred Go', phone: '+63 95 2998 8888', plate: 'GHH 5433', brand: 'Honda', model: 'Civic', assignee: 'Mechanic One', status: 'pending', since: 'Apr 9, 2026', due: 'May 13, 2026' },
-  { id: 15, customer: 'Jude Ramos', phone: '+63 95 4445 1445', plate: 'GGS 5444', brand: 'KIA', model: 'Picanto', assignee: null, status: 'for_pickup', since: 'Apr 8, 2026', due: 'Apr 8, 2026' },
-  { id: 13, customer: 'James Castro', phone: '+63 95 1225 2522', plate: 'LLK 5515', brand: 'Honda', model: 'Civic', assignee: 'Mechanic One', status: 'in_progress', since: 'Apr 7, 2026', due: 'Apr 7, 2026' },
+  { id: 15, customer: 'Jude Ramos', phone: '+63 95 4445 1445', plate: 'GGS 5444', brand: 'KIA', model: 'Picanto', assignee: null, status: 'for_pickup', since: 'Oct 9, 2026', due: 'Oct 16, 2026' },
+  { id: 13, customer: 'James Castro', phone: '+63 95 1225 2522', plate: 'LLK 5515', brand: 'Honda', model: 'Civic', assignee: 'Mechanic One', status: 'in_progress', since: 'Oct 12, 2026', due: 'Oct 19, 2026' },
 ];
 
 export interface JobService { id: number; name: string; description: string; updated: string; assignees: string[]; price: number; status: 'todo' | 'in_progress' | 'completed'; comments: number }
@@ -102,3 +105,17 @@ export const jobTotals = (services: JobService[], parts: JobPart[]) => {
 /** PH mobile: 10 digits after +63, no leading zero. */
 export const validPhone = (v: string) => /^9\d{9}$/.test(v.replace(/[\s-]/g, ''));
 export const validEmail = (v: string) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v);
+
+/** Branch model (RDY-18 open decision). Mock branches of one company. */
+export const COMPANY = { name: 'Montauto Auto Care', initials: 'MA' };
+export interface Branch { id: string; name: string; short: string; address: string; openJobs: number }
+export const BRANCHES: Branch[] = [
+  { id: 'davao', name: 'Davao City', short: 'DC', address: 'J.P. Laurel Ave., Davao City', openJobs: 9 },
+  { id: 'cebu', name: 'Cebu - Mandaue', short: 'CM', address: 'A.C. Cortes Ave., Mandaue City', openJobs: 6 },
+  { id: 'qc', name: 'Quezon City', short: 'QC', address: 'Timog Ave., Quezon City', openJobs: 12 },
+];
+
+/** Fixed "today" so overdue logic is stable in stories. */
+export const TODAY = new Date('2026-10-17T00:00:00');
+export const isOverdue = (j: Pick<Job, 'due' | 'status'>) => j.status !== 'completed' && new Date(j.due) < TODAY;
+export const isDueToday = (j: Pick<Job, 'due' | 'status'>) => j.status !== 'completed' && new Date(j.due).getTime() === TODAY.getTime();
