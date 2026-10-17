@@ -101,6 +101,15 @@ export {
 } from './components/Sidebar';
 export { IconRail, IconRailItem, type IconRailProps, type IconRailItemProps } from './components/IconRail';
 export { TopBar, type TopBarProps } from './components/TopBar';
+export {
+  PlatformShell,
+  type PlatformShellProps,
+  type PlatformShellPlatform,
+  type PlatformShellSection,
+  type PlatformShellNavItem,
+  type PlatformShellAccount,
+  type PlatformShellFooterLink,
+} from './components/PlatformShell';
 export { MainNav, MainNavItem, type MainNavProps, type MainNavItemProps } from './components/MainNav';
 
 // Overlays
