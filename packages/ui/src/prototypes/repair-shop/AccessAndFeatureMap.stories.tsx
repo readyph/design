@@ -44,7 +44,7 @@ function Login({ mode = 'default' }: { mode?: 'default' | 'error' | 'loading' | 
       <Field label="Password" required error={tried && !pw ? 'Enter your password.' : undefined}><Input type="password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="Password" /></Field>
       <Button fullWidth loading={mode === 'loading'} onClick={() => setTried(true)}>Log in</Button>
       <div className="text-center text-sm text-primary-700">Forgot password?</div>
-      <Notice tone="neutral">After login the user lands in their role area: staff on Today, mechanics on their tickets. Their active branch is shown in the header.</Notice>
+      <Notice tone="neutral">After login the user lands in their role area: staff on Today, mechanics on their tickets. Their branch platform is shown in the header.</Notice>
     </AuthFrame>
   );
 }
@@ -91,7 +91,7 @@ type Cover = 'shared' | 'partial' | 'new' | 'unverified';
 interface Area { epic: string; features: string; endpoints: string; shared: string; cover: Cover }
 
 const AREAS: Area[] = [
-  { epic: '1. Access, session and branch', features: 'Login, forgot/reset password, refresh, logout, role area split, branch switcher', endpoints: 'auth/login|logout|token/refresh|password/*, users/me, users/me/branches, users/me/change-branch', shared: 'auth/*, users/me exist; branch does not', cover: 'partial' },
+  { epic: '1. Access, session and branch', features: 'Login, forgot/reset password, refresh, logout, role area split, branch as its own platform', endpoints: 'auth/login|logout|token/refresh|password/*, users/me, users/me/branches, users/me/change-branch', shared: 'auth/*, users/me exist; branch does not', cover: 'partial' },
   { epic: '2. Service catalogue', features: 'List, search, sort, add/edit, activate, scope-of-work categories', endpoints: 'services, services/{id}, services/categories', shared: 'None', cover: 'new' },
   { epic: '3. Parts catalogue', features: 'List, add/edit, images, units, brand, category, stock + minimum', endpoints: 'products, products/categories, products/units, companies/brands, inventory/stats', shared: 'inventory/products, categories, summary (no brand, units, multi-image)', cover: 'partial' },
   { epic: '4. Customers and vehicles', features: 'List, add/edit/soft-delete customer, vehicles CRUD', endpoints: 'customers, customers/{id}, customers/{id}/vehicles', shared: 'None', cover: 'new' },

@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { toast } from '../../components/toast/toastStore';
-import { RepairShell, type BranchState, type RepairNav } from './Shell';
+import { RepairShell, type RepairNav } from './Shell';
 import { JobDetail, JobList, TodayPage, type DetailState, type ListState, type TodayState } from './JobScreens';
 import type { IntakeScenario, NewQuotation } from './QuotationIntake';
-import { JOBS, statusMeta, type Job, type JobPart, type JobService, type NextAction } from './data';
+import { BRANCHES, JOBS, statusMeta, type Job, type JobPart, type JobService, type NextAction } from './data';
 
 export interface RepairFlowProps {
   start?: 'today' | 'jobs';
-  branchState?: BranchState;
+  /** Show every branch as its own platform in the rail (stories). */
+  manyPlatforms?: boolean;
   menuOpen?: boolean;
   todayState?: TodayState;
   listState?: ListState;
@@ -20,9 +21,9 @@ export interface RepairFlowProps {
 
 /**
  * Stateful wrapper that wires Today, Jobs and the job detail together inside Shell A, so the
- * flow can be walked: Today -> next action, New quotation -> toast -> job detail, branch switch stays on the page.
+ * flow can be walked: Today -> next action, New quotation -> toast -> job detail.
  */
-export function RepairFlow({ start = 'today', branchState, menuOpen, todayState, listState, initialTab, initialQuery, intake, detail }: RepairFlowProps) {
+export function RepairFlow({ start = 'today', manyPlatforms, menuOpen, todayState, listState, initialTab, initialQuery, intake, detail }: RepairFlowProps) {
   const [page, setPage] = useState<RepairNav>(start);
   const [jobs, setJobs] = useState<Job[]>(JOBS);
   const [openId, setOpenId] = useState<number | null>(detail ? detail.jobId ?? 13 : null);
@@ -37,7 +38,7 @@ export function RepairFlow({ start = 'today', branchState, menuOpen, todayState,
   const open = openId !== null ? jobs.find((j) => j.id === openId) : undefined;
 
   return (
-    <RepairShell active={page === 'jobs' || page === 'today' ? page : 'today'} branchState={branchState} menuOpen={menuOpen} onNavigate={(k) => { setOpenId(null); if (k === 'today' || k === 'jobs') setPage(k); }}>
+    <RepairShell active={page === 'jobs' || page === 'today' ? page : 'today'} platforms={manyPlatforms ? BRANCHES : undefined} menuOpen={menuOpen} onNavigate={(k) => { setOpenId(null); if (k === 'today' || k === 'jobs') setPage(k); }}>
       {(b) => {
         const onOpenJob = (j: Job) => setOpenId(j.id);
         const onCreated = (q: NewQuotation) => {
