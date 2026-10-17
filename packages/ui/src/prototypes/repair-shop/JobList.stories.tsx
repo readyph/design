@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { RepairFlow } from './Flow';
-import { fullscreen, mobile } from './params';
+import { mobile } from './params';
 
 /** PROTOTYPE (RDY-18) - the full job list with status tabs, filters and one suggested next action per row. Opens from the Jobs nav item. */
-const meta: Meta = { title: 'Repair shop/Job list', tags: ['!autodocs'], parameters: fullscreen };
+const meta: Meta = { title: 'Repair shop/Job list', tags: ['!autodocs'], parameters: { layout: 'fullscreen' } };
 export default meta;
 type Story = StoryObj;
 

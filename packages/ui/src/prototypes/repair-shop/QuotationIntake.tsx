@@ -32,7 +32,7 @@ const ASSIGNEES = ['Rey Bautista', 'Dennis Alcala', 'Carlo Reyes', 'Joel Mendoza
 function IntakeSection({ title, aside, children }: { title: string; aside?: ReactNode; children: ReactNode }) {
   return (
     <section className="flex flex-col gap-3">
-      <div className="flex items-center justify-between gap-3"><h3 className="text-sm font-semibold">{title}</h3>{aside}</div>
+      <div className="flex items-center justify-between gap-3"><h3 className="text-xs font-semibold uppercase tracking-wide text-ink-subtle">{title}</h3>{aside}</div>
       <div className="flex flex-col gap-4">{children}</div>
     </section>
   );
@@ -125,19 +125,10 @@ export function QuotationIntake({
   ];
 
   return (
-    <OffCanvas
-      open={open}
-      onOpenChange={onOpenChange}
-      title="New quotation"
-      description="Customer, vehicle and work. Everything else is optional."
-      width="560px"
-      footer={
-        <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button variant="subtle" onClick={() => onOpenChange(false)} disabled={saving}>Cancel</Button>
-          <Button onClick={submit} loading={saving} disabled={saving}>{preApproved ? 'Create job' : 'Send for confirmation'}</Button>
-        </div>
-      }
-    >
+    <OffCanvas open={open} onOpenChange={onOpenChange} width="35rem">
+      <OffCanvas.Header>New quotation</OffCanvas.Header>
+      <OffCanvas.Body>
+      <p className="-mt-2 mb-6 text-sm text-ink-muted">Customer, vehicle and work. Everything else is optional.</p>
       <form className="flex flex-col gap-6" noValidate onSubmit={(e) => { e.preventDefault(); submit(); }}>
         {tried && invalid && <Notice tone="error" title="Fix the highlighted fields to continue" icon={WarningOctagon} />}
         {failed && (
@@ -274,6 +265,11 @@ export function QuotationIntake({
           }]}
         />
       </form>
+      </OffCanvas.Body>
+      <OffCanvas.Footer>
+        <Button variant="subtle" onClick={() => onOpenChange(false)} disabled={saving}>Cancel</Button>
+        <Button onClick={submit} loading={saving} disabled={saving}>{preApproved ? 'Create job' : 'Send for confirmation'}</Button>
+      </OffCanvas.Footer>
     </OffCanvas>
   );
 }

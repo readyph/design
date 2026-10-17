@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { RepairFlow } from './Flow';
-import { fullscreen, mobile } from './params';
+import { mobile } from './params';
 
-/** PROTOTYPE (RDY-18) - Shell A. Each branch is its own platform: the leftmost rail lists every platform connected to the tenant (Portal, Inventory, each Repair shop branch) and the header shows company and branch name as plain text. Account and sign-out stay in the platforms sidebar. */
-const meta: Meta = { title: 'Repair shop/Shell A', tags: ['!autodocs'], parameters: fullscreen };
+/** PROTOTYPE (RDY-18) - Shell, copied from the shipped InventoryShell. Each branch is its own platform: the rail has the R home tile, Inventory and every Repair shop branch with a status dot, a plus button and the account menu at the bottom. Company and branch sit in the sidebar header. */
+const meta: Meta = { title: 'Repair shop/Shell A', tags: ['!autodocs'], parameters: { layout: 'fullscreen' } };
 export default meta;
 type Story = StoryObj;
 

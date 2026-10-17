@@ -2,15 +2,15 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { RepairShell } from './Shell';
 import { JobDetail, type DetailState } from './JobScreens';
 import { JOBS, type JobStatus } from './data';
-import { fullscreen, mobile } from './params';
+import { mobile } from './params';
 
 /** PROTOTYPE (RDY-18) - job detail. The next action is the single primary in the header (the sticky bar on mobile); free status moves live in "Change status". The Leda slot is an inert placeholder. */
-const meta: Meta = { title: 'Repair shop/Job detail', tags: ['!autodocs'], parameters: fullscreen };
+const meta: Meta = { title: 'Repair shop/Job detail', tags: ['!autodocs'], parameters: { layout: 'fullscreen' } };
 export default meta;
 type Story = StoryObj;
 
 const Page = ({ status, state, id = 13 }: { status?: JobStatus; state?: DetailState; id?: number }) => (
-  <RepairShell active="jobs">{(b) => <JobDetail job={JOBS.find((j) => j.id === id)} status={status} state={state} branchName={b.name} />}</RepairShell>
+  <RepairShell active="jobs" title="Job #13">{(b) => <JobDetail job={JOBS.find((j) => j.id === id)} status={status} state={state} branchName={b.name} />}</RepairShell>
 );
 
 export const Default: Story = { name: 'Default (in progress, next: Mark ready)', render: () => <Page /> };

@@ -1,21 +1,28 @@
 import type { ReactNode } from 'react';
-import { WarningOctagon } from '@phosphor-icons/react';
+import { ArrowLeft, WarningOctagon } from '@phosphor-icons/react';
 import { Button } from '../../components/Button';
+import { Icon } from '../../components/Icon';
 import { Notice } from '../../components/Notice';
-import { cn } from '../../utils/cn';
+import { cn, focusRing } from '../../utils/cn';
 
-/** One flex wrapper per page: sections stack with gap-6 (LR-3). The shell supplies the page padding. */
-export function Page({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cn('flex flex-col gap-6', className)}>{children}</div>;
+const WIDTH = { default: 'max-w-6xl', detail: 'max-w-5xl', form: 'max-w-3xl' } as const;
+
+/** The shipped page container: centred, space-y-6, p-4 sm:p-6. Narrower on detail pages and forms. */
+export function Page({ children, width = 'default', className }: { children: ReactNode; width?: keyof typeof WIDTH; className?: string }) {
+  return <div className={cn('mx-auto w-full space-y-6 p-4 sm:p-6', WIDTH[width], className)}>{children}</div>;
 }
 
-/** A section heading with its content, heading to content gap-3. */
-export function Section({ title, children }: { title: ReactNode; children: ReactNode }) {
+/** Small uppercase caption used by the Inventory dashboard feed. */
+export function Caption({ children }: { children: ReactNode }) {
+  return <p className="text-[0.6875rem] font-semibold uppercase tracking-wider text-ink-subtle">{children}</p>;
+}
+
+/** Detail pages go back with an arrow and the parent name, not breadcrumbs. */
+export function BackButton({ label, onClick }: { label: string; onClick?: () => void }) {
   return (
-    <section className="flex flex-col gap-3">
-      <h2 className="text-base font-semibold text-ink">{title}</h2>
-      {children}
-    </section>
+    <button onClick={onClick} className={cn('inline-flex items-center gap-1.5 rounded text-sm text-ink-muted hover:text-ink', focusRing)}>
+      <Icon icon={ArrowLeft} size="sm" /> {label}
+    </button>
   );
 }
 

@@ -38,7 +38,7 @@ export function RepairFlow({ start = 'today', manyPlatforms, menuOpen, todayStat
   const open = openId !== null ? jobs.find((j) => j.id === openId) : undefined;
 
   return (
-    <RepairShell active={page === 'jobs' || page === 'today' ? page : 'today'} platforms={manyPlatforms ? BRANCHES : undefined} menuOpen={menuOpen} onNavigate={(k) => { setOpenId(null); if (k === 'today' || k === 'jobs') setPage(k); }}>
+    <RepairShell active={page === 'jobs' || page === 'today' ? page : 'today'} title={open ? `Job #${open.id}` : undefined} platforms={manyPlatforms ? BRANCHES : undefined} menuOpen={menuOpen} onNavigate={(k) => { setOpenId(null); if (k === 'today' || k === 'jobs') setPage(k); }}>
       {(b) => {
         const onOpenJob = (j: Job) => setOpenId(j.id);
         const onCreated = (q: NewQuotation) => {

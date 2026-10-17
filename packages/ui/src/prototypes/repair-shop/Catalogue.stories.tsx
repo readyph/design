@@ -1,30 +1,31 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { Plus, DotsThreeVertical, PencilSimple } from '@phosphor-icons/react';
+import { Plus, DotsThree, PencilSimple, Power } from '@phosphor-icons/react';
 import { Badge } from '../../components/Badge';
 import { Button } from '../../components/Button';
-import { Card } from '../../components/Card';
 import { EmptyState } from '../../components/EmptyState';
 import { Field } from '../../components/Field';
+import { IconButton } from '../../components/IconButton';
 import { Input } from '../../components/Input';
 import { Menu } from '../../components/Menu';
-import { Modal } from '../../components/Modal';
 import { Pagination } from '../../components/Pagination';
 import { PageHeader } from '../../components/PageHeader';
 import { SearchBar } from '../../components/SearchBar';
+import { SegmentedControl } from '../../components/SegmentedControl';
+import { SettingsSection } from '../../components/SettingsSection';
 import { Select } from '../../components/Select';
 import { Switch } from '../../components/Switch';
 import { Table, type TableColumn } from '../../components/Table';
-import { Tabs } from '../../components/Tabs';
 import { Textarea } from '../../components/Textarea';
 import { RepairShell } from './Shell';
-import { Page, RetryNotice } from './Page';
+import { BackButton, Page, RetryNotice } from './Page';
 import { PARTS, SCOPES, SERVICES, peso, type ShopPart, type ShopService } from './data';
+import { mobile } from './params';
 
 /**
- * PROTOTYPE (RDY-18) - service catalogue and parts catalogue.
- * Inactive items are hidden from search and quotations. Row action is Edit only in the source app;
- * activate/deactivate and delete exist in its API and are shown here as proposed.
+ * PROTOTYPE (RDY-18) - service catalogue and parts catalogue, on the Inventory/Products list pattern. Add and edit are
+ * settings-type pages (SettingsSection + Field). Inactive items are hidden from search and quotations. Row action is
+ * Edit only in the source app; activate/deactivate is in its API and is shown here as proposed.
  */
 const meta: Meta = {
   title: 'Repair shop/Catalogue',
@@ -37,8 +38,14 @@ type Story = StoryObj;
 type ListState = 'default' | 'empty' | 'loading' | 'error';
 
 function ActiveBadge({ active }: { active: boolean }) {
-  return <Badge tone={active ? 'success' : 'neutral'} dot>{active ? 'Active' : 'Inactive'}</Badge>;
+  return <Badge tone={active ? 'success' : 'neutral'} size="sm" dot>{active ? 'Active' : 'Inactive'}</Badge>;
 }
+
+const rowMenu = (label: string, active: boolean, onEdit: () => void) => (
+  <span onClick={(e) => e.stopPropagation()}>
+    <Menu trigger={<IconButton icon={DotsThree} label={`Actions for ${label}`} variant="subtle" size="sm" />} items={[{ label: 'Edit', icon: PencilSimple, onSelect: onEdit }, { label: active ? 'Deactivate' : 'Activate', icon: Power }]} />
+  </span>
+);
 
 function Catalogue({ initialTab = 'services', state = 'default', openForm = false, editing = false }: { initialTab?: string; state?: ListState; openForm?: boolean; editing?: boolean }) {
   const [tab, setTab] = useState(initialTab);
@@ -51,32 +58,35 @@ function Catalogue({ initialTab = 'services', state = 'default', openForm = fals
   const parts = useMemo(() => (state === 'empty' ? [] : PARTS.filter((p) => p.name.toLowerCase().includes(q.toLowerCase()))), [q, state]);
 
   const svcCols: TableColumn<ShopService>[] = [
-    { key: 'id', header: 'ID', render: (s) => <span className="text-ink-muted">{s.id}</span> },
-    { key: 'name', header: 'Name', render: (s) => (<div><div className="font-medium">{s.name}</div><div className="max-w-md truncate text-xs text-ink-muted">{s.description}</div></div>) },
-    { key: 'scope', header: 'Scope of work', render: (s) => s.scope },
-    { key: 'price', header: 'Price', align: 'right', render: (s) => peso(s.price) },
-    { key: 'added', header: 'Date added', render: (s) => s.added },
+    { key: 'name', header: 'Service', render: (s) => (<div><p className="font-medium text-ink">{s.name}</p><p className="max-w-md truncate text-xs text-ink-subtle">{s.description}</p></div>) },
+    { key: 'scope', header: 'Scope of work', render: (s) => <span className="text-ink-muted">{s.scope}</span> },
+    { key: 'price', header: 'Price', align: 'right', render: (s) => <span className="tabular-nums text-ink">{peso(s.price)}</span> },
+    { key: 'added', header: 'Date added', render: (s) => <span className="whitespace-nowrap text-ink-muted">{s.added}</span> },
     { key: 'status', header: 'Status', render: (s) => <ActiveBadge active={s.active} /> },
-    { key: 'actions', header: '', align: 'right', render: (s) => <Menu trigger={<button aria-label="Row actions"><DotsThreeVertical size={18} /></button>} items={[{ label: 'Edit', icon: PencilSimple, onSelect: () => setSvcForm(s) }, { label: s.active ? 'Deactivate' : 'Activate' }]} /> },
+    { key: 'actions', header: '', align: 'right', width: 48, render: (s) => rowMenu(s.name, s.active, () => setSvcForm(s)) },
   ];
   const partCols: TableColumn<ShopPart>[] = [
-    { key: 'name', header: 'Name', render: (p) => (<div><div className="font-medium">{p.name}</div><div className="max-w-md truncate text-xs text-ink-muted">{p.description}</div></div>) },
-    { key: 'price', header: 'Unit price', align: 'right', render: (p) => peso(p.price) },
-    { key: 'cost', header: 'Unit cost', align: 'right', render: (p) => peso(p.cost) },
-    { key: 'category', header: 'Category', render: (p) => p.category },
-    { key: 'brand', header: 'Brand', render: (p) => p.brand },
-    { key: 'stock', header: 'Stock', render: (p) => <Badge tone={p.stock <= p.minStock ? 'warning' : 'neutral'}>{p.stock <= p.minStock ? `${p.stock} low` : p.stock}</Badge> },
-    { key: 'unit', header: 'Unit', render: (p) => p.unit },
-    { key: 'status', header: 'Status', render: (p) => <ActiveBadge active={p.active} /> },
-    { key: 'actions', header: '', align: 'right', render: (p) => <Menu trigger={<button aria-label="Row actions"><DotsThreeVertical size={18} /></button>} items={[{ label: 'Edit', icon: PencilSimple, onSelect: () => setPartForm(p) }, { label: p.active ? 'Deactivate' : 'Activate' }]} /> },
+    { key: 'name', header: 'Part', render: (p) => (<div><p className="font-medium text-ink">{p.name}</p><p className="max-w-md truncate text-xs text-ink-subtle">{p.description}</p></div>) },
+    { key: 'category', header: 'Category', render: (p) => <span className="text-ink-muted">{p.category}</span> },
+    { key: 'brand', header: 'Brand', render: (p) => <span className="text-ink-muted">{p.brand}</span> },
+    { key: 'price', header: 'Unit price', align: 'right', render: (p) => <span className="tabular-nums text-ink">{peso(p.price)}</span> },
+    { key: 'cost', header: 'Unit cost', align: 'right', render: (p) => <span className="tabular-nums text-ink-muted">{peso(p.cost)}</span> },
+    { key: 'stock', header: 'Stock', align: 'right', render: (p) => <span className="tabular-nums text-ink">{p.stock} <span className="text-xs text-ink-subtle">{p.unit}</span></span> },
+    { key: 'status', header: 'Status', render: (p) => (p.stock <= p.minStock ? <Badge tone="warning" size="sm" dot>Low stock</Badge> : <ActiveBadge active={p.active} />) },
+    { key: 'actions', header: '', align: 'right', width: 48, render: (p) => rowMenu(p.name, p.active, () => setPartForm(p)) },
   ];
 
   const isServices = tab === 'services';
+  const addNew = () => (isServices ? setSvcForm('new') : setPartForm('new'));
+
+  if (svcForm) return <RepairShell active="catalogue" title="Catalogue"><ServiceForm item={svcForm} onClose={() => setSvcForm(null)} startTried={openForm && !editing} /></RepairShell>;
+  if (partForm) return <RepairShell active="catalogue" title="Catalogue"><PartForm item={partForm} onClose={() => setPartForm(null)} startTried={openForm && !editing} /></RepairShell>;
+
   const empty = (
     <EmptyState
       title={isServices ? 'No services yet' : 'No parts yet'}
       description={q ? 'Nothing matches your search.' : isServices ? 'Add the labour and services your shop offers.' : 'Add the parts and materials you use on jobs.'}
-      action={<Button size="sm" leftIcon={Plus} onClick={() => (isServices ? setSvcForm('new') : setPartForm('new'))}>{isServices ? 'Add service' : 'Add product'}</Button>}
+      action={<Button size="sm" leftIcon={Plus} onClick={addNew}>{isServices ? 'Add service' : 'Add part'}</Button>}
     />
   );
 
@@ -84,87 +94,125 @@ function Catalogue({ initialTab = 'services', state = 'default', openForm = fals
     <RepairShell active="catalogue">
       <Page>
         <PageHeader
-          className="pb-0"
           title="Catalogue"
           description="Services and parts that can be added to quotations and jobs."
-          actions={<Button leftIcon={Plus} onClick={() => (isServices ? setSvcForm('new') : setPartForm('new'))}>{isServices ? 'Add service' : 'Add product'}</Button>}
+          actions={<Button leftIcon={Plus} onClick={addNew}>{isServices ? 'Add service' : 'Add part'}</Button>}
         />
-        <div className="flex flex-col gap-3">
-          <Tabs variant="pill" value={tab} onValueChange={(v) => { setTab(v); setQ(''); setPage(1); }} items={[{ value: 'services', label: 'Services', badge: SERVICES.length }, { value: 'parts', label: 'Parts', badge: PARTS.length }]} />
-          <div className="max-w-md"><SearchBar aria-label={isServices ? 'Search a service' : 'Search a product'} placeholder={isServices ? 'Search a service' : 'Search a product'} value={q} onValueChange={setQ} /></div>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="w-full sm:min-w-56 sm:flex-1">
+            <SearchBar aria-label={isServices ? 'Search services' : 'Search parts'} placeholder={isServices ? 'Search services…' : 'Search parts…'} shortcut="/" value={q} onValueChange={setQ} onClear={() => setQ('')} />
+          </div>
+          <SegmentedControl
+            aria-label="Catalogue type"
+            value={tab}
+            onChange={(v) => { setTab(v); setQ(''); setPage(1); }}
+            options={[{ value: 'services', label: `Services ${SERVICES.length}` }, { value: 'parts', label: `Parts ${PARTS.length}` }]}
+          />
         </div>
         {state === 'error' ? (
           <RetryNotice title="Could not load the catalogue">Try again in a moment.</RetryNotice>
         ) : (
           <>
-            <Card padding="none">
-              {isServices
-                ? <Table columns={svcCols} data={services} rowKey={(s) => s.id} loading={state === 'loading'} empty={empty} />
-                : <Table columns={partCols} data={parts} rowKey={(p) => p.id} loading={state === 'loading'} empty={empty} />}
-            </Card>
+            {isServices
+              ? <Table columns={svcCols} data={services} rowKey={(s) => s.id} loading={state === 'loading'} empty={empty} onRowClick={setSvcForm} />
+              : <Table columns={partCols} data={parts} rowKey={(p) => p.id} loading={state === 'loading'} empty={empty} onRowClick={setPartForm} />}
             <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-ink-muted">
-              <span>{(isServices ? services : parts).length} {isServices ? 'services' : 'products'} displayed</span>
+              <span>{(isServices ? services : parts).length} {isServices ? 'services' : 'parts'} displayed</span>
               <Pagination page={page} pageCount={1} onPageChange={setPage} />
             </div>
           </>
         )}
       </Page>
-      <ServiceForm item={svcForm} onClose={() => setSvcForm(null)} />
-      <PartForm item={partForm} onClose={() => setPartForm(null)} />
     </RepairShell>
   );
 }
 
-function ServiceForm({ item, onClose }: { item: ShopService | 'new' | null; onClose: () => void }) {
-  const edit = item && item !== 'new' ? item : null;
+/** A settings-type page: back button, header, SettingsSection blocks, actions at the bottom. */
+function FormPage({ title, description, onClose, children, submitLabel, onSubmit }: { title: string; description: string; onClose: () => void; children: ReactNode; submitLabel: string; onSubmit: () => void }) {
+  return (
+    <Page width="form">
+      <BackButton label="Catalogue" onClick={onClose} />
+      <PageHeader title={title} description={description} />
+      <div className="divide-y divide-border">{children}</div>
+      <div className="flex flex-col-reverse gap-2 border-t border-border pt-6 sm:flex-row sm:justify-end">
+        <Button variant="subtle" onClick={onClose}>Cancel</Button>
+        <Button onClick={onSubmit}>{submitLabel}</Button>
+      </div>
+    </Page>
+  );
+}
+
+function ServiceForm({ item, onClose, startTried }: { item: ShopService | 'new'; onClose: () => void; startTried?: boolean }) {
+  const edit = item !== 'new' ? item : null;
   const [name, setName] = useState(edit?.name ?? '');
   const [desc, setDesc] = useState(edit?.description ?? '');
   const [price, setPrice] = useState(edit ? String(edit.price) : '');
   const [scope, setScope] = useState(edit?.scope ?? '');
   const [active, setActive] = useState(edit?.active ?? true);
-  const [tried, setTried] = useState(false);
+  const [tried, setTried] = useState(!!startTried);
   const errs = { name: !name && 'Enter a clear, specific name.', desc: !desc && 'Describe the service.', price: !(Number(price) > 0) && 'Enter the service fee. Tax and parts are calculated separately.', scope: !scope && 'Choose the scope of work for filtering and reporting.' };
+  const e = (k: keyof typeof errs) => (tried && errs[k] ? (errs[k] as string) : undefined);
   const save = () => { setTried(true); if (!Object.values(errs).some(Boolean)) onClose(); };
   return (
-    <Modal open={item !== null} onOpenChange={(o) => !o && onClose()} title={edit ? 'Update service' : 'Add a new service'} footer={<><Button variant="subtle" onClick={onClose}>Cancel</Button><Button onClick={save}>{edit ? 'Update service' : 'Add service'}</Button></>}>
-      <div className="flex flex-col gap-4">
-        <Field label="Service name" required error={tried ? (errs.name as string) || undefined : undefined}><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g., Brake Pad Replacement" /></Field>
-        <Field label="Description" required hint={`${desc.length}/220`} error={tried ? (errs.desc as string) || undefined : undefined}><Textarea rows={3} maxLength={220} value={desc} onChange={(e) => setDesc(e.target.value)} /></Field>
-        <Field label="Price" required error={tried ? (errs.price as string) || undefined : undefined}><Input value={price} onChange={(e) => setPrice(e.target.value)} inputMode="decimal" placeholder="0.00" /></Field>
-        <Field label="Scope of work" required hint="Categories can be created from this field in the source app." error={tried ? (errs.scope as string) || undefined : undefined}><Select value={scope} onValueChange={setScope} placeholder="Select scope of work" options={SCOPES.map((s) => ({ value: s, label: s }))} /></Field>
+    <FormPage title={edit ? 'Update service' : 'Add a new service'} description="Services appear in quotations and on jobs." onClose={onClose} submitLabel={edit ? 'Update service' : 'Add service'} onSubmit={save}>
+      <SettingsSection title="Details" description="What the customer sees on a quotation.">
+        <Field label="Service name" required error={e('name')}><Input value={name} onChange={(ev) => setName(ev.target.value)} placeholder="e.g., Brake Pad Replacement" /></Field>
+        <Field label="Description" required hint={`${desc.length}/220`} error={e('desc')}><Textarea rows={3} maxLength={220} value={desc} onChange={(ev) => setDesc(ev.target.value)} /></Field>
+      </SettingsSection>
+      <SettingsSection title="Price and scope" description="Used for totals, filtering and reporting.">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="Price" required error={e('price')}><Input value={price} onChange={(ev) => setPrice(ev.target.value)} inputMode="decimal" placeholder="0.00" /></Field>
+          <Field label="Scope of work" required hint="Categories can be created from this field in the source app." error={e('scope')}><Select value={scope} onValueChange={setScope} placeholder="Select scope of work" options={SCOPES.map((s) => ({ value: s, label: s }))} /></Field>
+        </div>
+      </SettingsSection>
+      <SettingsSection title="Availability">
         <Switch checked={active} onCheckedChange={setActive} label="Status" description="Inactive services will not appear in search or quotations." />
-      </div>
-    </Modal>
+      </SettingsSection>
+    </FormPage>
   );
 }
 
-function PartForm({ item, onClose }: { item: ShopPart | 'new' | null; onClose: () => void }) {
-  const edit = item && item !== 'new' ? item : null;
+function PartForm({ item, onClose, startTried }: { item: ShopPart | 'new'; onClose: () => void; startTried?: boolean }) {
+  const edit = item !== 'new' ? item : null;
   const [name, setName] = useState(edit?.name ?? '');
   const [price, setPrice] = useState(edit ? String(edit.price) : '');
   const [cost, setCost] = useState(edit ? String(edit.cost) : '');
   const [qty, setQty] = useState(edit ? String(edit.stock) : '');
   const [min, setMin] = useState(edit ? String(edit.minStock) : '');
   const [active, setActive] = useState(edit?.active ?? true);
-  const [tried, setTried] = useState(false);
+  const [tried, setTried] = useState(!!startTried);
   const bad = !name || !(Number(price) > 0);
   return (
-    <Modal open={item !== null} onOpenChange={(o) => !o && onClose()} size="xl" title={edit ? 'Update product' : 'Add a new product'} footer={<><Button variant="subtle" onClick={onClose}>Cancel</Button><Button onClick={() => { setTried(true); if (!bad) onClose(); }}>{edit ? 'Save product' : 'Add product'}</Button></>}>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="col-span-2 rounded-lg border border-dashed border-border-strong p-4 text-center text-sm text-ink-muted">Product images: choose or drop several files</div>
-        <Field label="Product name" required error={tried && !name ? 'Enter a clear, specific name.' : undefined}><Input value={name} onChange={(e) => setName(e.target.value)} /></Field>
-        <Field label="SKU"><Input defaultValue={edit ? `DB-${22000 + edit.id}` : ''} /></Field>
-        <Field label="Description" className="col-span-2"><Textarea rows={2} maxLength={220} defaultValue={edit?.description} /></Field>
-        <Field label="Unit specs"><Select placeholder="Select unit" defaultValue={edit?.unit} options={['Set (set)', 'Liter (L)', 'Pack (pack)', 'Box (box)', 'Ounce (oz)'].map((u) => ({ value: u, label: u }))} /></Field>
-        <Field label="Price" required error={tried && !(Number(price) > 0) ? 'Enter the price.' : undefined}><Input value={price} onChange={(e) => setPrice(e.target.value)} inputMode="decimal" /></Field>
-        <Field label="Unit cost"><Input value={cost} onChange={(e) => setCost(e.target.value)} inputMode="decimal" /></Field>
-        <Field label="Quantity" hint="Current units on hand."><Input value={qty} onChange={(e) => setQty(e.target.value)} inputMode="numeric" /></Field>
-        <Field label="Minimum quantity" hint="Below this a low-stock alert shows."><Input value={min} onChange={(e) => setMin(e.target.value)} inputMode="numeric" /></Field>
-        <Field label="Category"><Select placeholder="Select category" defaultValue={edit?.category} options={['Brake System', 'Cleaning', 'Aircon Filter', 'Oil Filter'].map((c) => ({ value: c, label: c }))} /></Field>
-        <Field label="Brand"><Select placeholder="Select brand" defaultValue={edit?.brand} options={['Bendix', 'Hybrid Solutions', 'Vic', 'Ac Filter'].map((c) => ({ value: c, label: c }))} /></Field>
-        <div className="col-span-2"><Switch checked={active} onCheckedChange={setActive} label="Status" description="Inactive products will not appear in search or quotations." /></div>
-      </div>
-    </Modal>
+    <FormPage title={edit ? 'Update part' : 'Add a new part'} description="Parts and materials used on jobs." onClose={onClose} submitLabel={edit ? 'Save part' : 'Add part'} onSubmit={() => { setTried(true); if (!bad) onClose(); }}>
+      <SettingsSection title="Details" description="Name, code and images.">
+        <div className="rounded-lg border border-dashed border-border-strong p-4 text-center text-sm text-ink-muted">Part images: choose or drop several files</div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="Part name" required error={tried && !name ? 'Enter a clear, specific name.' : undefined}><Input value={name} onChange={(ev) => setName(ev.target.value)} /></Field>
+          <Field label="SKU"><Input defaultValue={edit ? `DB-${22000 + edit.id}` : ''} /></Field>
+        </div>
+        <Field label="Description"><Textarea rows={2} maxLength={220} defaultValue={edit?.description} /></Field>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="Category"><Select placeholder="Select category" defaultValue={edit?.category} options={['Brake System', 'Cleaning', 'Aircon Filter', 'Oil Filter'].map((c) => ({ value: c, label: c }))} /></Field>
+          <Field label="Brand"><Select placeholder="Select brand" defaultValue={edit?.brand} options={['Bendix', 'Hybrid Solutions', 'Vic', 'Ac Filter'].map((c) => ({ value: c, label: c }))} /></Field>
+        </div>
+      </SettingsSection>
+      <SettingsSection title="Pricing" description="Unit price is what the customer pays; unit cost is what you paid.">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <Field label="Price" required error={tried && !(Number(price) > 0) ? 'Enter the price.' : undefined}><Input value={price} onChange={(ev) => setPrice(ev.target.value)} inputMode="decimal" /></Field>
+          <Field label="Unit cost"><Input value={cost} onChange={(ev) => setCost(ev.target.value)} inputMode="decimal" /></Field>
+          <Field label="Unit specs"><Select placeholder="Select unit" defaultValue={edit?.unit} options={['Set (set)', 'Liter (L)', 'Pack (pack)', 'Box (box)', 'Ounce (oz)'].map((u) => ({ value: u, label: u }))} /></Field>
+        </div>
+      </SettingsSection>
+      <SettingsSection title="Stock" description="Below the minimum quantity a low-stock alert shows.">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="Quantity" hint="Current units on hand."><Input value={qty} onChange={(ev) => setQty(ev.target.value)} inputMode="numeric" /></Field>
+          <Field label="Minimum quantity"><Input value={min} onChange={(ev) => setMin(ev.target.value)} inputMode="numeric" /></Field>
+        </div>
+      </SettingsSection>
+      <SettingsSection title="Availability">
+        <Switch checked={active} onCheckedChange={setActive} label="Status" description="Inactive parts will not appear in search or quotations." />
+      </SettingsSection>
+    </FormPage>
   );
 }
 
@@ -177,3 +225,4 @@ export const ServiceEdit: Story = { name: 'Service - edit form', render: () => <
 export const PartsDefault: Story = { name: 'Parts - default (low stock flagged)', render: () => <Catalogue initialTab="parts" /> };
 export const PartsEmpty: Story = { name: 'Parts - empty', render: () => <Catalogue initialTab="parts" state="empty" /> };
 export const PartAdd: Story = { name: 'Part - add form', render: () => <Catalogue initialTab="parts" openForm /> };
+export const ServicesMobile: Story = { name: 'Services - mobile 390', parameters: mobile, render: () => <Catalogue /> };

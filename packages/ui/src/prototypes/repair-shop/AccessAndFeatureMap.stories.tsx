@@ -44,7 +44,7 @@ function Login({ mode = 'default' }: { mode?: 'default' | 'error' | 'loading' | 
       <Field label="Password" required error={tried && !pw ? 'Enter your password.' : undefined}><Input type="password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="Password" /></Field>
       <Button fullWidth loading={mode === 'loading'} onClick={() => setTried(true)}>Log in</Button>
       <div className="text-center text-sm text-primary-700">Forgot password?</div>
-      <Notice tone="neutral">After login the user lands in their role area: staff on Today, mechanics on their tickets. Their branch platform is shown in the header.</Notice>
+      <Notice tone="neutral">After login the user lands in their role area: staff on Today, mechanics on their tickets. Their branch platform is shown in the sidebar header and the platforms rail.</Notice>
     </AuthFrame>
   );
 }
@@ -117,10 +117,10 @@ export const FeatureMap: Story = {
       { key: 'cover', header: 'Backend', render: (a) => <Badge tone={coverTone[a.cover]}>{coverLabel[a.cover]}</Badge> },
     ];
     return (
-      <div className="ds-root min-h-screen bg-surface-canvas p-6 font-sans text-ink">
+      <div className="ds-root min-h-screen bg-surface-canvas font-sans text-ink">
         <Page>
-          <PageHeader className="pb-0" title="Repair shop platform: feature map" description="The source app runs on its own API; almost nothing maps onto the shared /api/v1 yet." />
-          <Card padding="none"><Table columns={cols} data={AREAS} rowKey={(a) => a.epic} /></Card>
+          <PageHeader title="Repair shop platform: feature map" description="The source app runs on its own API; almost nothing maps onto the shared /api/v1 yet." />
+          <Table columns={cols} data={AREAS} rowKey={(a) => a.epic} />
         </Page>
       </div>
     );
