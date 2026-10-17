@@ -78,7 +78,6 @@ export function TodayPage({
 }: { state?: TodayState; branchId?: string; intake?: IntakeScenario } & JobFlowProps) {
   const branchName = branchOf(branchId);
   const [intakeOpen, setIntakeOpen] = useState(intake !== undefined);
-  const pending = state === 'loading' || state === 'error';
   const source = useMemo(() => (state === 'clear' ? [] : jobs.filter((j) => j.branch === branchId)), [state, jobs, branchId]);
 
   const dueToday = source.filter(isDueToday);
@@ -96,19 +95,21 @@ export function TodayPage({
         actions={<Button leftIcon={Plus} onClick={() => setIntakeOpen(true)}>New quotation</Button>}
       />
 
-      <Card>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {pending ? (
-            ['Due today', 'Waiting on customer', 'Unpaid'].map((l) => <Stat key={l} label={l} value={<Skeleton className="h-8 w-12" />} />)
-          ) : (
-            <>
-              <Stat label="Due today" value={dueToday.length} />
-              <Stat label="Waiting on customer" value={waiting.length} />
-              <Stat label="Unpaid" value={unpaid.length} delta={unpaid.length ? peso(unpaid.reduce((a, j) => a + j.balance, 0)) : undefined} deltaTone="error" />
-            </>
-          )}
-        </div>
-      </Card>
+      {state !== 'error' && (
+        <Card>
+          <div className="grid grid-cols-3 gap-2 sm:gap-4">
+            {state === 'loading' ? (
+              ['Due today', 'Waiting on customer', 'Unpaid'].map((l) => <Stat key={l} label={l} value={<Skeleton className="h-8 w-12" />} />)
+            ) : (
+              <>
+                <Stat label="Due today" value={dueToday.length} />
+                <Stat label="Waiting on customer" value={waiting.length} />
+                <Stat label="Unpaid" value={unpaid.length} delta={unpaid.length ? peso(unpaid.reduce((a, j) => a + j.balance, 0)) : undefined} deltaTone="error" />
+              </>
+            )}
+          </div>
+        </Card>
+      )}
 
       <Section title="Needs attention">
         {state === 'error' ? (
@@ -435,7 +436,7 @@ export function JobDetail({
                     <div className="hidden md:block">
                       <Table data={services} rowKey={(s) => s.id} columns={[
                         { key: 'name', header: 'Service', render: (s) => (<div className="flex flex-col"><span className="font-medium">{s.name}</span><span className="text-xs text-ink-muted">{s.description}</span></div>) },
-                        { key: 'who', header: 'Assigned to', render: (s) => (s.assignees.length ? s.assignees.join(', ') : <span className="text-ink-muted">Unassigned</span>) },
+                        { key: 'who', header: 'Assigned to', width: '24%', render: (s) => (s.assignees.length ? s.assignees.join(', ') : <span className="text-ink-muted">Unassigned</span>) },
                         { key: 'status', header: 'Status', render: (s) => <Badge className="whitespace-nowrap" tone={s.status === 'completed' ? 'success' : s.status === 'in_progress' ? 'primary' : 'info'}>{s.status === 'in_progress' ? 'In progress' : s.status === 'todo' ? 'To-do' : 'Completed'}</Badge> },
                         { key: 'price', header: 'Price', align: 'right', render: (s) => <span className="tabular-nums">{peso(s.price)}</span> },
                         { key: 'a', header: '', align: 'right', render: (s) => (<Menu trigger={<IconButton icon={DotsThreeVertical} label={`Actions for ${s.name}`} variant="subtle" size="sm" />} items={[{ label: `Comments (${s.comments})`, icon: ChatText, onSelect: () => setCommentsFor(s.name) }, { label: 'Assign mechanic' }, { type: 'separator' }, { label: 'Remove', icon: Trash, danger: true, disabled: locked, onSelect: () => setDeleting(s.name) }]} />) },
