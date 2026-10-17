@@ -152,3 +152,15 @@ export const attentionReason = (j: Job): { label: string; tone: 'error' | 'warni
   if (j.balance > 0 && (j.status === 'for_pickup' || j.status === 'completed')) return { label: `Unpaid ${peso(j.balance)}`, tone: 'warning' };
   return null;
 };
+
+/** Inventory products read from the linked inventory platform (inventory.catalog). Read-only in the repair shop. */
+export interface InventoryItem { id: number; sku: string; name: string; price: number; onHand: number; minQty: number; unit: string }
+export const INVENTORY: InventoryItem[] = [
+  { id: 1, sku: 'OEM-156', name: 'Oil filter', price: 1500, onHand: 20, minQty: 5, unit: 'box' },
+  { id: 3, sku: 'AR-1256', name: 'Aircon filter', price: 750, onHand: 10, minQty: 5, unit: 'pc' },
+  { id: 5, sku: 'CW-142', name: 'Car wash shampoo 1.42L', price: 350, onHand: 3, minQty: 10, unit: 'pc' },
+  { id: 6, sku: 'BP-VIOS-F', name: 'Front brake pad set, Toyota Vios', price: 1500, onHand: 25, minQty: 5, unit: 'set' },
+  { id: 8, sku: 'EO-5W30-4L', name: 'Engine oil 5W-30, 4L', price: 2150, onHand: 0, minQty: 6, unit: 'pc' },
+  { id: 9, sku: 'SP-NGK-IR', name: 'Spark plug, iridium', price: 480, onHand: 32, minQty: 12, unit: 'pc' },
+];
+export const stockTone = (i: InventoryItem) => (i.onHand === 0 ? 'error' : i.onHand <= i.minQty ? 'warning' : null);
