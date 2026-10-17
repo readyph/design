@@ -62,7 +62,7 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
         <RadixSelect.Content
           position="popper"
           sideOffset={4}
-          className="z-dropdown max-h-72 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-md border border-border bg-surface shadow-lg"
+          className="z-popover max-h-72 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-md border border-border bg-surface shadow-lg"
         >
           <RadixSelect.ScrollUpButton className="flex h-6 items-center justify-center text-ink-subtle">
             <Icon icon={CaretUp} size="sm" />
