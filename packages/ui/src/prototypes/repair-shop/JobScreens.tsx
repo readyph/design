@@ -311,7 +311,7 @@ export function JobDetail({ status: initial = 'in_progress', state = 'default', 
                       <Table data={services} rowKey={(s) => s.id} columns={[
                         { key: 'name', header: 'Service', render: (s) => (<div><div className="font-medium">{s.name}</div><div className="text-xs text-ink-muted">{s.description}</div></div>) },
                         { key: 'who', header: 'Assigned to', render: (s) => (s.assignees.length ? s.assignees.join(', ') : <span className="text-ink-muted">Unassigned</span>) },
-                        { key: 'status', header: 'Status', render: (s) => <Badge tone={s.status === 'completed' ? 'success' : s.status === 'in_progress' ? 'primary' : 'info'}>{s.status === 'in_progress' ? 'In-progress' : s.status === 'todo' ? 'To-do' : 'Completed'}</Badge> },
+                        { key: 'status', header: 'Status', render: (s) => <Badge className="whitespace-nowrap" tone={s.status === 'completed' ? 'success' : s.status === 'in_progress' ? 'primary' : 'info'}>{s.status === 'in_progress' ? 'In-progress' : s.status === 'todo' ? 'To-do' : 'Completed'}</Badge> },
                         { key: 'price', header: 'Price', align: 'right', render: (s) => <span className="tabular-nums">{peso(s.price)}</span> },
                         { key: 'a', header: '', align: 'right', render: (s) => (<Menu trigger={<IconButton icon={DotsThreeVertical} label={`Actions for ${s.name}`} variant="subtle" size="sm" />} items={[{ label: `Comments (${s.comments})`, icon: ChatText, onSelect: () => setCommentsFor(s.name) }, { label: 'Assign mechanic' }, { type: 'separator' }, { label: 'Remove', icon: Trash, danger: true, disabled: locked, onSelect: () => setDeleting(s.name) }]} />) },
                       ]} />
