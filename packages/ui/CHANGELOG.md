@@ -1,5 +1,11 @@
 # @readyph/ui
 
+## 0.4.0
+
+### Minor Changes
+
+- 702838f: Add the shared `PlatformShell` (platforms rail, sidebar, top bar, optional Leda launcher) with its prop types.
+
 ## 0.3.4
 
 ### Patch Changes
