@@ -64,10 +64,8 @@ function JobRow({ job, onOpen }: { job: MechanicJob; onOpen?: (j: MechanicJob) =
     <li>
       <button className={cn(ROW, focusRing)} onClick={() => onOpen?.(job)} aria-label={`Open job ${job.id}, ${job.plate}`}>
         <span className="flex min-w-0 flex-1 flex-col gap-1">
-          <span className="flex items-center justify-between gap-2">
-            <span className="truncate text-sm font-semibold text-ink">{job.plate} · {job.vehicle}</span>
-            <span className="shrink-0">{badge}</span>
-          </span>
+          <span className="text-sm font-semibold text-ink">{job.plate} · {job.vehicle}</span>
+          <span className="flex">{badge}</span>
           <span className="truncate text-xs text-ink-muted">{job.customer} · {g === 'waiting' ? (job.holdReason ?? 'Pending') : currentTask(job)}</span>
         </span>
         <Icon icon={CaretRight} size="sm" className="shrink-0 text-ink-subtle" />
@@ -130,13 +128,10 @@ export function MechanicToday({ jobs = MY_JOBS, state = 'default', onOpenJob, on
                   <Card className="flex flex-col gap-3">
                     <button className={cn('flex min-h-11 w-full items-start justify-between gap-3 rounded text-left', focusRing)} onClick={() => onOpenJob?.(j)} aria-label={`Open job ${j.id}, ${j.plate}`}>
                       <span className="flex min-w-0 flex-col gap-1">
-                        <span className="truncate text-sm font-semibold text-ink">{j.plate} · {j.vehicle}</span>
+                        <span className="text-sm font-semibold text-ink">{j.plate} · {j.vehicle}</span>
+                        <span className="flex">{due.tone !== 'neutral' ? <Badge tone={due.tone} size="sm">{due.text}</Badge> : <StatusBadge status={j.status} />}</span>
                         <span className="text-xs text-ink-muted">{j.customer} · {currentTask(j)}</span>
                         <span className="line-clamp-2 text-xs text-ink-muted">{j.concern}</span>
-                      </span>
-                      <span className="flex shrink-0 flex-col items-end gap-1">
-                        {due.tone !== 'neutral' ? <Badge tone={due.tone} size="sm">{due.text}</Badge> : <StatusBadge status={j.status} />}
-                        {due.tone !== 'neutral' && <StatusBadge status={j.status} />}
                       </span>
                     </button>
                     {next && <Button fullWidth variant={i === 0 ? 'primary' : 'secondary'} className="min-h-11" onClick={() => onAdvance?.(j)}>{next.label}</Button>}

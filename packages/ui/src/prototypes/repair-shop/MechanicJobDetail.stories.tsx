@@ -13,7 +13,7 @@ export const ToDo: Story = { name: 'Mobile 390 (to-do, next: Start work)', param
 export const Pending: Story = { name: 'Mobile 390 (pending)', parameters: mechanic, render: () => <MechanicFlow detail={d({ jobId: 17 })} /> };
 export const ForPickup: Story = { name: 'Mobile 390 (for pick-up)', parameters: mechanic, render: () => <MechanicFlow detail={d({ jobId: 15 })} /> };
 export const Completed: Story = { name: 'Mobile 390 (completed, locked)', parameters: mechanic, render: () => <MechanicFlow detail={d({ jobId: 22 })} /> };
-export const EmptySections: Story = { name: 'Mobile 390 (no items, comments or files)', parameters: mechanic, render: () => <MechanicFlow detail={d({ jobId: 21 })} /> };
+export const EmptySections: Story = { name: 'Mobile 390 (for approval, no items, comments or files)', parameters: mechanic, render: () => <MechanicFlow detail={d({ jobId: 24 })} /> };
 export const Loading: Story = { name: 'Mobile 390 (loading)', parameters: mechanic, render: () => <MechanicFlow detail={d({ state: 'loading' })} /> };
 export const ErrorState: Story = { name: 'Mobile 390 (error)', parameters: mechanic, render: () => <MechanicFlow detail={d({ state: 'error' })} /> };
 export const SaveFailed: Story = { name: 'Mobile 390 (status save failed)', parameters: mechanic, render: () => <MechanicFlow detail={d({ jobId: 13, saveFailed: 'for_pickup' })} /> };
