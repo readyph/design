@@ -114,7 +114,7 @@ function RailPlatform({ p }: { p: PlatformShellPlatform }) {
       <span
         className={cn(
           tile,
-          p.active ? 'bg-primary-50 text-primary-700' : 'text-ink-subtle hover:bg-surface-muted hover:text-ink',
+          p.active ? 'bg-primary-50 text-primary-700' : 'text-ink-muted hover:bg-surface-muted hover:text-ink',
         )}
       >
         {p.icon ? (
@@ -185,7 +185,7 @@ export function PlatformShell({
         {company ? (
           <span className="flex min-w-0 flex-col leading-tight">
             <span className="truncate text-sm font-bold tracking-tight text-ink">{company}</span>
-            <span className="truncate text-xs text-ink-subtle">{platform.name}</span>
+            <span className="truncate text-xs text-ink-muted">{platform.name}</span>
           </span>
         ) : (
           <span className="truncate text-sm font-bold tracking-tight text-ink">{platform.name}</span>
@@ -219,7 +219,7 @@ export function PlatformShell({
             <a
               href={footerLink.href}
               onClick={footerLink.onClick}
-              className={cn('flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-ink-subtle hover:bg-surface-muted hover:text-ink', focusRing)}
+              className={cn('flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-ink-muted hover:bg-surface-muted hover:text-ink', focusRing)}
             >
               <Icon icon={CaretLeft} size="sm" /> {footerLink.label}
             </a>
@@ -227,7 +227,7 @@ export function PlatformShell({
             <button
               type="button"
               onClick={footerLink.onClick}
-              className={cn('flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-ink-subtle hover:bg-surface-muted hover:text-ink', focusRing)}
+              className={cn('flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-ink-muted hover:bg-surface-muted hover:text-ink', focusRing)}
             >
               <Icon icon={CaretLeft} size="sm" /> {footerLink.label}
             </button>
@@ -294,7 +294,7 @@ export function PlatformShell({
           aria-label="Connect a platform"
           title="Connect a platform"
           onClick={onAddPlatform}
-          className={cn(tile, 'text-ink-subtle hover:bg-surface-muted hover:text-ink', focusRing)}
+          className={cn(tile, 'text-ink-muted hover:bg-surface-muted hover:text-ink', focusRing)}
         >
           <Icon icon={Plus} size="md" />
         </button>
@@ -327,12 +327,12 @@ export function PlatformShell({
             end={
               actions ?? (
                 <>
-                  <label className="hidden h-9 items-center gap-2 rounded-full bg-surface-muted px-3.5 text-ink-subtle md:flex">
+                  <label className="hidden h-9 items-center gap-2 rounded-full bg-surface-muted px-3.5 text-ink-muted md:flex">
                     <Icon icon={MagnifyingGlass} size="sm" />
                     <input
                       aria-label="Search everything"
                       placeholder="Search everything…"
-                      className="w-48 bg-transparent text-sm text-ink outline-none placeholder:text-ink-subtle"
+                      className="w-48 bg-transparent text-sm text-ink outline-none placeholder:text-ink-muted"
                     />
                   </label>
                   <IconButton icon={Bell} label="Notifications" variant="subtle" />
