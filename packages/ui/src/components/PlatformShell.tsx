@@ -6,6 +6,8 @@ import {
   CaretLeft,
   List,
   SignOut,
+  ArrowClockwise,
+  WarningCircle,
   type Icon as PhosphorIcon,
 } from '@phosphor-icons/react';
 import { cn, focusRing } from '../utils/cn';
@@ -64,7 +66,14 @@ export interface PlatformShellFooterLink {
   onClick?: () => void;
 }
 
+/** State of the platforms list in the rail. The Portal tile, "+" and account menu render in every state. */
+export type PlatformShellRailState = 'loading' | 'error' | 'ready';
+
 export interface PlatformShellProps {
+  /** State of the rail's platform list (default `ready`). */
+  railState?: PlatformShellRailState;
+  /** Retry loading the platform list; shown as a button in the `error` state. */
+  onRetryPlatforms?: () => void;
   /** The platform this shell runs as: sidebar header name and icon. */
   platform: { name: string; icon: PhosphorIcon };
   /** Tenant/company name; shown in the sidebar header with the platform name beneath it. */
@@ -143,6 +152,8 @@ export function PlatformShell({
   platform,
   company,
   platforms,
+  railState = 'ready',
+  onRetryPlatforms,
   sections,
   activeKey,
   footerLink,
@@ -250,9 +261,34 @@ export function PlatformShell({
           <button type="button" onClick={onHome} {...homeProps}>R</button>
         )}
         <div className="my-1 h-px w-6 bg-border" />
-        {platforms.map((p) => (
-          <RailPlatform key={p.id} p={p} />
-        ))}
+        {railState === 'ready' &&
+          platforms.map((p) => (
+            <RailPlatform key={p.id} p={p} />
+          ))}
+        {railState === 'loading' && (
+          <div role="status" aria-busy="true" className="flex flex-col items-center gap-2">
+            <span className="sr-only">Loading your platforms</span>
+            {[0, 1, 2].map((i) => (
+              <span key={i} aria-hidden="true" className={cn(tile, 'border border-border-strong bg-surface-muted motion-safe:animate-pulse')} />
+            ))}
+          </div>
+        )}
+        {railState === 'error' && (
+          <div role="alert" className="flex w-full flex-col items-center gap-1 text-center">
+            <Icon icon={WarningCircle} size="md" className="text-error" />
+            <span className="text-xs leading-tight text-ink-muted">Platforms failed</span>
+            <button
+              type="button"
+              onClick={onRetryPlatforms}
+              aria-label="Retry loading platforms"
+              className={cn('mt-1 flex w-full flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-xs font-semibold text-primary-700 hover:bg-surface-muted', focusRing)}
+            >
+              <Icon icon={ArrowClockwise} size="sm" />
+              Retry
+            </button>
+          </div>
+        )}
+        {railState === 'error' && <div aria-hidden="true" className="my-1 h-px w-6 bg-border" />}
         <button
           type="button"
           aria-label="Connect a platform"
