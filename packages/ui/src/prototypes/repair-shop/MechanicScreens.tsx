@@ -22,6 +22,7 @@ import { Skeleton } from '../../components/Skeleton';
 import { Textarea } from '../../components/Textarea';
 import { toast } from '../../components/toast/toastStore';
 import { cn, focusRing } from '../../utils/cn';
+import './mechanic.css';
 import { Caption, RetryNotice } from './Page';
 import { StatusBadge } from './JobScreens';
 import { INVENTORY, statusMeta, stockTone, type JobStatus } from './data';
@@ -62,11 +63,14 @@ function JobRow({ job, onOpen }: { job: MechanicJob; onOpen?: (j: MechanicJob) =
   return (
     <li>
       <button className={cn(ROW, focusRing)} onClick={() => onOpen?.(job)} aria-label={`Open job ${job.id}, ${job.plate}`}>
-        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="truncate text-sm font-medium text-ink">{job.plate} · {job.vehicle}</span>
+        <span className="flex min-w-0 flex-1 flex-col gap-1">
+          <span className="flex items-center justify-between gap-2">
+            <span className="truncate text-sm font-semibold text-ink">{job.plate} · {job.vehicle}</span>
+            <span className="shrink-0">{badge}</span>
+          </span>
           <span className="truncate text-xs text-ink-muted">{job.customer} · {g === 'waiting' ? (job.holdReason ?? 'Pending') : currentTask(job)}</span>
         </span>
-        <span className="flex shrink-0 items-center gap-2">{badge}<Icon icon={CaretRight} size="sm" className="text-ink-subtle" /></span>
+        <Icon icon={CaretRight} size="sm" className="shrink-0 text-ink-subtle" />
       </button>
     </li>
   );
@@ -128,7 +132,7 @@ export function MechanicToday({ jobs = MY_JOBS, state = 'default', onOpenJob, on
                       <span className="flex min-w-0 flex-col gap-1">
                         <span className="truncate text-sm font-semibold text-ink">{j.plate} · {j.vehicle}</span>
                         <span className="text-xs text-ink-muted">{j.customer} · {currentTask(j)}</span>
-                        <span className="line-clamp-2 text-xs text-ink-subtle">{j.concern}</span>
+                        <span className="line-clamp-2 text-xs text-ink-muted">{j.concern}</span>
                       </span>
                       <span className="flex shrink-0 flex-col items-end gap-1">
                         {due.tone !== 'neutral' ? <Badge tone={due.tone} size="sm">{due.text}</Badge> : <StatusBadge status={j.status} />}
@@ -429,7 +433,7 @@ export function MechanicJobDetail({ job: source = MY_JOBS[0], state = 'default',
       </MPage>
 
       {/* Sticky action bar: the next action is the one primary; Status holds free moves and corrections. */}
-      <div className="sticky bottom-0 mt-auto flex items-center gap-3 bg-surface p-4 shadow-lg" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
+      <div className="mech-safe-bottom-bar sticky bottom-0 mt-auto flex items-center gap-3 border-t border-border bg-surface px-4 pt-4">
         <Button variant="secondary" className="min-h-11" disabled={locked} onClick={() => setSheet('status')}>Change status</Button>
         {next ? (
           <Button className="min-h-11 flex-1" onClick={() => move(next.to)}>{next.label}</Button>

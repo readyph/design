@@ -7,6 +7,7 @@ import { Menu } from '../../components/Menu';
 import { Toaster } from '../../components/toast/Toaster';
 import { cn, focusRing } from '../../utils/cn';
 import { ME } from './MechanicData';
+import './mechanic.css';
 
 export type MechanicTab = 'today' | 'jobs' | 'customers';
 
@@ -22,7 +23,7 @@ const TABS: { key: MechanicTab; label: string; icon: PhosphorIcon }[] = [
  */
 export function BottomTabBar({ active, counts, onChange }: { active: MechanicTab; counts?: Partial<Record<MechanicTab, number>>; onChange?: (t: MechanicTab) => void }) {
   return (
-    <nav aria-label="Main" className="shrink-0 bg-surface shadow-lg" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+    <nav aria-label="Main" className="mech-safe-bottom shrink-0 border-t border-border bg-surface">
       <ul className="grid grid-cols-3">
         {TABS.map((t) => {
           const on = t.key === active;
@@ -32,11 +33,12 @@ export function BottomTabBar({ active, counts, onChange }: { active: MechanicTab
               <button
                 aria-current={on ? 'page' : undefined}
                 onClick={() => onChange?.(t.key)}
-                className={cn('flex min-h-14 w-full flex-col items-center justify-center gap-1 text-xs font-medium', on ? 'text-primary-700' : 'text-ink-muted', focusRing)}
+                className={cn('relative flex min-h-14 w-full flex-col items-center justify-center gap-1 text-xs font-medium', on ? 'text-primary-700' : 'text-ink-muted hover:text-ink', focusRing)}
               >
+                {on && <span aria-hidden className="absolute inset-x-6 top-0 h-0.5 rounded-b-full bg-primary-600" />}
                 <span className="relative">
                   <Icon icon={t.icon} size="md" weight={on ? 'fill' : 'regular'} />
-                  {n ? <span className="absolute -right-3 -top-1.5"><Badge size="sm" tone="primary">{n}</Badge></span> : null}
+                  {n ? <span className="absolute -right-5 -top-2"><Badge size="sm" tone="primary">{n}</Badge></span> : null}
                 </span>
                 {t.label}
               </button>
@@ -65,7 +67,7 @@ export interface MechanicShellProps {
 export function MechanicShell({ tab, hideTabs, offline, counts, onTab, children }: MechanicShellProps) {
   return (
     <div className="ds-root flex h-dvh w-full flex-col overflow-hidden bg-surface-canvas font-sans text-ink">
-      <header className="flex shrink-0 items-center justify-between gap-3 bg-surface px-4 py-2" style={{ paddingTop: 'max(0.5rem, env(safe-area-inset-top))' }}>
+      <header className="mech-safe-top flex shrink-0 items-center justify-between gap-3 border-b border-border bg-surface px-4 pb-2">
         <div className="flex min-w-0 items-center gap-2">
           <span className="grid h-8 w-8 shrink-0 place-items-center rounded-base bg-primary-50 text-primary-700"><Icon icon={Wrench} size="sm" weight="fill" /></span>
           <span className="flex min-w-0 flex-col leading-tight">
