@@ -23,6 +23,11 @@ import { Textarea } from '../../components/Textarea';
 import { toast } from '../../components/toast/toastStore';
 import { cn, focusRing } from '../../utils/cn';
 import './mechanic.css';
+import { INVENTORY, statusMeta, stockTone, type JobStatus } from './data';
+import {
+  GROUPS, HOLD_REASONS, MECHANIC_MOVES, MY_CUSTOMERS, MY_JOBS, dueLabel, groupOf, mechanicNext, urgency,
+  type JobFile, type MCustomer, type MechanicJob, type UsedItem,
+} from './MechanicData';
 import { RetryNotice } from './Page';
 
 /** Sentence-case section caption (the shared Page Caption is uppercase). */
@@ -36,11 +41,6 @@ function StatusBadge({ status }: { status: JobStatus }) {
   const tone = status === 'in_progress' ? 'info' : status === 'todo' ? 'neutral' : m.tone;
   return <Badge className="whitespace-nowrap" tone={tone} dot>{m.label}</Badge>;
 }
-import { INVENTORY, statusMeta, stockTone, type JobStatus } from './data';
-import {
-  GROUPS, HOLD_REASONS, MECHANIC_MOVES, MY_CUSTOMERS, MY_JOBS, dueLabel, groupOf, mechanicNext, urgency,
-  type JobFile, type MCustomer, type MechanicJob, type UsedItem,
-} from './MechanicData';
 
 export type MState = 'default' | 'empty' | 'loading' | 'error';
 
@@ -55,7 +55,7 @@ const ROW = 'flex min-h-14 w-full items-center gap-3 px-4 py-3 text-left hover:b
 function Group({ title, count, hint, children }: { title: string; count?: number; hint?: string; children: ReactNode }) {
   return (
     <section className="flex flex-col gap-2" aria-label={title}>
-      <div className="flex items-baseline justify-between gap-2 px-1">
+      <div className="flex min-h-11 items-center justify-between gap-2 px-1">
         <Caption>{title}{count !== undefined ? ` · ${count}` : ''}</Caption>
         {hint && <span className="truncate text-xs text-ink-subtle">{hint}</span>}
       </div>
@@ -340,7 +340,7 @@ export function MechanicJobDetail({ job: source = MY_JOBS[0], state = 'default',
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge status={job.status} />
-            {due.tone !== 'neutral' && job.status !== 'completed' && job.status !== 'for_pickup' && <Badge tone={due.tone} size="sm">{due.text}</Badge>}
+            {due.tone !== 'neutral' && job.status !== 'completed' && job.status !== 'for_pickup' && <Badge tone={job.status === 'pending' && due.tone === 'warning' ? 'neutral' : due.tone} size="sm">{due.text}</Badge>}
             {unsent.includes('status') && <Unsent />}
             <span className="text-xs text-ink-muted">Job #{job.id} · {due.tone === 'neutral' ? due.text : `Due ${job.due.replace(', 2026', '')}`}</span>
           </div>
