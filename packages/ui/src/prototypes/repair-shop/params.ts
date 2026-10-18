@@ -8,3 +8,6 @@ export const mobile = {
     defaultViewport: 'rs390',
   },
 } as const;
+
+/** Mechanic workspace: mobile-only, so every story uses the 390x844 viewport. */
+export const mechanic = mobile;
