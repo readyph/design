@@ -37,7 +37,7 @@ export const SidebarSection = forwardRef<HTMLDivElement, SidebarSectionProps>(fu
 ) {
   return (
     <div ref={ref} className={cn('flex flex-col gap-1.5 py-2', className)} {...rest}>
-      {title && <p className="px-3 pb-1 text-xs font-medium uppercase tracking-wide text-ink-subtle">{title}</p>}
+      {title && <p className="px-3 pb-1 text-xs font-medium uppercase tracking-wide text-ink-muted">{title}</p>}
       {children}
     </div>
   );
@@ -78,7 +78,7 @@ export const SidebarItem = forwardRef<HTMLElement, SidebarItemProps>(function Si
           ))}
         </span>
       ) : (
-        badge != null && <span className="text-xs text-ink-subtle">{badge}</span>
+        badge != null && <span className="text-xs text-ink-muted">{badge}</span>
       )}
     </>
   );
