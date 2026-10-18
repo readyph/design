@@ -274,9 +274,9 @@ export function PlatformShell({
           </div>
         )}
         {railState === 'error' && (
-          <div role="alert" className="flex w-full flex-col items-center gap-1 px-1 text-center">
+          <div role="alert" className="flex w-full flex-col items-center gap-1 text-center">
             <Icon icon={WarningCircle} size="md" className="text-error" />
-            <span className="text-xs leading-tight text-ink-muted">Can't load platforms</span>
+            <span className="text-xs leading-tight text-ink-muted">Platforms failed</span>
             <button
               type="button"
               onClick={onRetryPlatforms}
@@ -288,6 +288,7 @@ export function PlatformShell({
             </button>
           </div>
         )}
+        {railState === 'error' && <div aria-hidden="true" className="my-1 h-px w-6 bg-border" />}
         <button
           type="button"
           aria-label="Connect a platform"
