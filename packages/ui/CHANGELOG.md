@@ -1,5 +1,11 @@
 # @readyph/ui
 
+## 0.5.1
+
+### Patch Changes
+
+- d7c6983: Fix remaining axe color-contrast failures: error Notice body text uses text-ink, and the active nav label in Sidebar and PlatformShell, and Kbd text, use primary-900 in dark mode.
+
 ## 0.5.0
 
 ### Minor Changes
