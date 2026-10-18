@@ -276,11 +276,11 @@ export function PlatformShell({
         {railState === 'error' && (
           <div role="alert" className="flex w-full flex-col items-center gap-1 px-1 text-center">
             <Icon icon={WarningCircle} size="md" className="text-error" />
-            <span className="sr-only">Couldn't load your platforms</span>
-            <span aria-hidden="true" className="text-xs leading-tight text-ink-muted">Load failed</span>
+            <span className="text-xs leading-tight text-ink-muted">Can't load platforms</span>
             <button
               type="button"
               onClick={onRetryPlatforms}
+              aria-label="Retry loading platforms"
               className={cn('mt-1 flex w-full flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-xs font-semibold text-primary-700 hover:bg-surface-muted', focusRing)}
             >
               <Icon icon={ArrowClockwise} size="sm" />
