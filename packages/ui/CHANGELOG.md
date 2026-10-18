@@ -1,5 +1,17 @@
 # @readyph/ui
 
+## 0.5.0
+
+### Minor Changes
+
+- 353862b: PlatformShell: add `railState` (`'loading' | 'error' | 'ready'`, default `'ready'`) and `onRetryPlatforms` so the rail shows placeholder tiles while platforms load and a "Platforms failed" message with a Retry button on error. Exports the `PlatformShellRailState` type.
+
+### Patch Changes
+
+- 97cb785: PlatformShell: muted text (rail icons, "Back to Portal", search placeholder, sidebar section titles and badges) now uses the `ink-muted` token instead of `ink-subtle`, which failed WCAG AA colour contrast in light and dark.
+- 71e54d4: PlatformShell: show the company name once in the mobile off-canvas (the dialog title is now visually hidden, the sidebar brand carries the name).
+- e478c15: Add the Repair shop Set password pattern story (all states), merge the invalid-link message, drop the extra show/hide tab stop and add a light-mode card hairline.
+
 ## 0.4.0
 
 ### Minor Changes
