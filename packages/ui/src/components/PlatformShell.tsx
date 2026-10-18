@@ -114,7 +114,7 @@ function RailPlatform({ p }: { p: PlatformShellPlatform }) {
       <span
         className={cn(
           tile,
-          p.active ? 'bg-primary-50 text-primary-700' : 'text-ink-muted hover:bg-surface-muted hover:text-ink',
+          p.active ? 'bg-primary-50 text-primary-700 [[data-theme=dark]_&]:text-primary-900' : 'text-ink-muted hover:bg-surface-muted hover:text-ink',
         )}
       >
         {p.icon ? (
