@@ -23,8 +23,19 @@ import { Textarea } from '../../components/Textarea';
 import { toast } from '../../components/toast/toastStore';
 import { cn, focusRing } from '../../utils/cn';
 import './mechanic.css';
-import { Caption, RetryNotice } from './Page';
-import { StatusBadge } from './JobScreens';
+import { RetryNotice } from './Page';
+
+/** Sentence-case section caption (the shared Page Caption is uppercase). */
+function Caption({ children }: { children: React.ReactNode }) {
+  return <p className="text-xs font-semibold text-ink-muted">{children}</p>;
+}
+
+/** Local status chip: In progress must not read as the red Overdue chip. */
+function StatusBadge({ status }: { status: JobStatus }) {
+  const m = statusMeta(status);
+  const tone = status === 'in_progress' ? 'info' : status === 'todo' ? 'neutral' : m.tone;
+  return <Badge className="whitespace-nowrap" tone={tone} dot>{m.label}</Badge>;
+}
 import { INVENTORY, statusMeta, stockTone, type JobStatus } from './data';
 import {
   GROUPS, HOLD_REASONS, MECHANIC_MOVES, MY_CUSTOMERS, MY_JOBS, dueLabel, groupOf, mechanicNext, urgency,
@@ -48,7 +59,7 @@ function Group({ title, count, hint, children }: { title: string; count?: number
         <Caption>{title}{count !== undefined ? ` · ${count}` : ''}</Caption>
         {hint && <span className="truncate text-xs text-ink-subtle">{hint}</span>}
       </div>
-      <ul className="flex flex-col divide-y divide-border overflow-hidden rounded-lg bg-surface shadow-sm">{children}</ul>
+      <ul className="flex flex-col divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface">{children}</ul>
     </section>
   );
 }
@@ -78,7 +89,7 @@ function ListSkeleton({ rows = 4 }: { rows?: number }) {
   return (
     <div aria-busy="true" className="flex flex-col gap-2">
       <Skeleton className="h-3 w-24" />
-      <ul className="flex flex-col divide-y divide-border overflow-hidden rounded-lg bg-surface shadow-sm">
+      <ul className="flex flex-col divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface">
         {Array.from({ length: rows }, (_, i) => (
           <li key={i} className="flex min-h-14 flex-col justify-center gap-2 px-4 py-3"><Skeleton className="h-4 w-48" /><Skeleton className="h-3 w-64" /></li>
         ))}
@@ -113,9 +124,9 @@ export function MechanicToday({ jobs = MY_JOBS, state = 'default', onOpenJob, on
       {state === 'error' ? (
         <RetryNotice title="Could not load your jobs">Check your connection and try again.</RetryNotice>
       ) : state === 'loading' ? (
-        <div aria-busy="true" className="flex flex-col gap-3">{[0, 1, 2].map((i) => <Card key={i} className="flex flex-col gap-3"><Skeleton className="h-4 w-48" /><Skeleton className="h-3 w-64" /><Skeleton className="h-11 w-full" /></Card>)}</div>
+        <div aria-busy="true" className="flex flex-col gap-3">{[0, 1, 2].map((i) => <Card key={i} elevation="flat" className="flex flex-col gap-3 rounded-xl border border-border"><Skeleton className="h-4 w-48" /><Skeleton className="h-3 w-64" /><Skeleton className="h-11 w-full" /></Card>)}</div>
       ) : now.length === 0 ? (
-        <Card><EmptyState icon={CheckCircle} title="Nothing needs you right now" description="No jobs are waiting for you to start or finish. Check Jobs for pending work or jobs for pick-up." action={<Button variant="secondary" className="min-h-11" onClick={onGoJobs}>See all jobs</Button>} /></Card>
+        <Card elevation="flat" className="rounded-xl border border-border"><EmptyState icon={CheckCircle} title="Nothing needs you right now" description="No jobs are waiting for you to start or finish. Check Jobs for pending work or jobs for pick-up." action={<Button variant="secondary" className="min-h-11" onClick={onGoJobs}>See all jobs</Button>} /></Card>
       ) : (
         <section aria-label="Needs you now" className="flex flex-col gap-2">
           <div className="px-1"><Caption>Needs you now · {now.length}</Caption></div>
@@ -125,7 +136,7 @@ export function MechanicToday({ jobs = MY_JOBS, state = 'default', onOpenJob, on
               const due = dueLabel(j);
               return (
                 <li key={j.id}>
-                  <Card className="flex flex-col gap-3">
+                  <Card elevation="flat" className="flex flex-col gap-3 rounded-xl border border-border">
                     <button className={cn('flex min-h-11 w-full items-start justify-between gap-3 rounded text-left', focusRing)} onClick={() => onOpenJob?.(j)} aria-label={`Open job ${j.id}, ${j.plate}`}>
                       <span className="flex min-w-0 flex-col gap-1">
                         <span className="text-sm font-semibold text-ink">{j.plate} · {j.vehicle}</span>
@@ -173,9 +184,9 @@ export function MechanicJobs({ jobs = MY_JOBS, state = 'default', initialQuery =
       ) : state === 'loading' ? (
         <><ListSkeleton rows={3} /><ListSkeleton rows={2} /></>
       ) : source.length === 0 ? (
-        <Card><EmptyState icon={ClipboardText} title="No jobs assigned to you" description="When the front desk assigns you a job, it shows up here." /></Card>
+        <Card elevation="flat" className="rounded-xl border border-border"><EmptyState icon={ClipboardText} title="No jobs assigned to you" description="When the front desk assigns you a job, it shows up here." /></Card>
       ) : visible.length === 0 ? (
-        <Card><EmptyState icon={ClipboardText} title="No job matches" description={`Nothing for "${q}". Check the plate number or customer name.`} action={<Button variant="secondary" className="min-h-11" onClick={() => setQ('')}>Clear search</Button>} /></Card>
+        <Card elevation="flat" className="rounded-xl border border-border"><EmptyState icon={ClipboardText} title="No job matches" description={`Nothing for "${q}". Check the plate number or customer name.`} action={<Button variant="secondary" className="min-h-11" onClick={() => setQ('')}>Clear search</Button>} /></Card>
       ) : (
         GROUPS.map((g) => {
           const rows = visible.filter((j) => groupOf(j) === g.key).sort((a, b) => urgency(a) - urgency(b));
@@ -206,9 +217,9 @@ export function MechanicCustomers({ state = 'default', initialQuery = '', onOpen
       ) : state === 'loading' ? (
         <ListSkeleton rows={4} />
       ) : source.length === 0 ? (
-        <Card><EmptyState icon={Users} title="No customers yet" description="Customers on the jobs assigned to you show up here." /></Card>
+        <Card elevation="flat" className="rounded-xl border border-border"><EmptyState icon={Users} title="No customers yet" description="Customers on the jobs assigned to you show up here." /></Card>
       ) : visible.length === 0 ? (
-        <Card><EmptyState icon={Users} title="No customer matches" description={`Nothing for "${q}".`} action={<Button variant="secondary" className="min-h-11" onClick={() => setQ('')}>Clear search</Button>} /></Card>
+        <Card elevation="flat" className="rounded-xl border border-border"><EmptyState icon={Users} title="No customer matches" description={`Nothing for "${q}".`} action={<Button variant="secondary" className="min-h-11" onClick={() => setQ('')}>Clear search</Button>} /></Card>
       ) : (
         <Group title="Customers" count={visible.length}>
           {visible.map((c) => (
@@ -369,14 +380,14 @@ export function MechanicJobDetail({ job: source = MY_JOBS[0], state = 'default',
         </Group>
 
         <section className="flex flex-col gap-2" aria-label="Items used">
-          <div className="flex items-center justify-between gap-2 px-1">
+          <div className="flex min-h-11 items-center justify-between gap-2 px-1">
             <Caption>Items used · {job.items.length}</Caption>
             <Button size="sm" variant="secondary" className="min-h-11" leftIcon={Plus} disabled={locked} onClick={() => setSheet('item')}>Add item</Button>
           </div>
           {job.items.length === 0 ? (
-            <Card><EmptyState icon={Package} title="No items used yet" description="Add the parts and supplies you use so the quotation and stock stay right." /></Card>
+            <Card elevation="flat" className="rounded-xl border border-border"><EmptyState icon={Package} title="No items used yet" description="Add the parts and supplies you use so the quotation and stock stay right." /></Card>
           ) : (
-            <ul className="flex flex-col divide-y divide-border overflow-hidden rounded-lg bg-surface shadow-sm">
+            <ul className="flex flex-col divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface">
               {job.items.map((it) => (
                 <li key={it.id} className="flex min-h-14 items-center gap-2 pl-4 pr-2">
                   <span className="flex min-w-0 flex-1 flex-col py-3"><span className="truncate text-sm font-medium text-ink">{it.name}</span><span className="text-xs text-ink-muted">{it.sku} · {it.qty} {it.unit}</span></span>
@@ -392,14 +403,14 @@ export function MechanicJobDetail({ job: source = MY_JOBS[0], state = 'default',
         </section>
 
         <section className="flex flex-col gap-2" aria-label="Comments">
-          <div className="flex items-center justify-between gap-2 px-1">
+          <div className="flex min-h-11 items-center justify-between gap-2 px-1">
             <Caption>Comments · {job.comments.length}</Caption>
             <Button size="sm" variant="secondary" className="min-h-11" leftIcon={ChatText} onClick={() => setSheet('comment')}>Comment</Button>
           </div>
           {job.comments.length === 0 ? (
-            <Card><EmptyState icon={ChatText} title="No comments yet" description="Leave a note for the front desk or the next mechanic." /></Card>
+            <Card elevation="flat" className="rounded-xl border border-border"><EmptyState icon={ChatText} title="No comments yet" description="Leave a note for the front desk or the next mechanic." /></Card>
           ) : (
-            <ul className="flex flex-col divide-y divide-border overflow-hidden rounded-lg bg-surface shadow-sm">
+            <ul className="flex flex-col divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface">
               {job.comments.map((c, i) => (
                 <li key={i} className="flex flex-col gap-1 px-4 py-3 text-sm">
                   <p className="flex flex-wrap items-center gap-x-2 gap-y-1"><span className="font-medium text-ink">{c.who}</span><span className="text-xs text-ink-muted">{c.when}</span>{c.pending && <Unsent />}</p>
@@ -411,14 +422,14 @@ export function MechanicJobDetail({ job: source = MY_JOBS[0], state = 'default',
         </section>
 
         <section className="flex flex-col gap-2" aria-label="Attachments">
-          <div className="flex items-center justify-between gap-2 px-1">
+          <div className="flex min-h-11 items-center justify-between gap-2 px-1">
             <Caption>Attachments · {job.files.length}</Caption>
             <Button size="sm" variant="secondary" className="min-h-11" leftIcon={Camera} disabled={locked} onClick={() => { const f: JobFile = { name: `photo-${job.files.length + 1}.jpg`, size: '1.2 MB', kind: 'photo' }; update({ ...job, files: [...job.files, f] }); toast.success('Photo added.'); }}>Add photo</Button>
           </div>
           {job.files.length === 0 ? (
-            <Card><EmptyState icon={Camera} title="No attachments" description="Take a photo of the problem or the finished work." /></Card>
+            <Card elevation="flat" className="rounded-xl border border-border"><EmptyState icon={Camera} title="No attachments" description="Take a photo of the problem or the finished work." /></Card>
           ) : (
-            <ul className="flex flex-col divide-y divide-border overflow-hidden rounded-lg bg-surface shadow-sm">
+            <ul className="flex flex-col divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface">
               {job.files.map((f) => (
                 <li key={f.name} className="flex min-h-14 items-center gap-3 px-4 py-3"><Icon icon={FILE_ICON[f.kind]} size="md" className="shrink-0 text-ink-subtle" /><span className="min-w-0 flex-1 truncate text-sm text-ink">{f.name}</span><span className="text-xs text-ink-muted">{f.size}</span></li>
               ))}
@@ -479,7 +490,7 @@ function StatusSheet({ open, startOnHold, current, onOpenChange, onPick }: { ope
             </div>
           </div>
         ) : (
-          <ul className="flex flex-col divide-y divide-border overflow-hidden rounded-lg bg-surface-subtle" role="radiogroup" aria-label="Status">
+          <ul className="flex flex-col divide-y divide-border overflow-hidden rounded-xl bg-surface-subtle" role="radiogroup" aria-label="Status">
             {MECHANIC_MOVES.map((m) => (
               <li key={m.value}>
                 <button
@@ -516,7 +527,7 @@ function AddItemSheet({ open, tried, onOpenChange, onAdd }: { open: boolean; tri
           {list.length === 0 ? (
             <EmptyState icon={Package} title="No stock item matches" description="Check the name or SKU, or tell the front desk the item is missing." />
           ) : (
-            <ul className="flex flex-col divide-y divide-border overflow-hidden rounded-lg bg-surface-subtle" role="radiogroup" aria-label="Stock items">
+            <ul className="flex flex-col divide-y divide-border overflow-hidden rounded-xl bg-surface-subtle" role="radiogroup" aria-label="Stock items">
               {list.map((i) => {
                 const tone = stockTone(i);
                 return (

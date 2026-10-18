@@ -38,7 +38,7 @@ export function BottomTabBar({ active, counts, onChange }: { active: MechanicTab
                 {on && <span aria-hidden className="absolute inset-x-6 top-0 h-0.5 rounded-b-full bg-primary-600" />}
                 <span className="relative">
                   <Icon icon={t.icon} size="md" weight={on ? 'fill' : 'regular'} />
-                  {n ? <span className="absolute -right-5 -top-2"><Badge size="sm" tone="primary">{n}</Badge></span> : null}
+                  {n ? <span className="absolute -right-6 -top-3"><Badge size="sm" tone="primary">{n}</Badge></span> : null}
                 </span>
                 {t.label}
               </button>
