@@ -16,7 +16,7 @@ import { Avatar } from './Avatar';
 import { Icon } from './Icon';
 import { LedaLauncher } from './LedaLauncher';
 import { Menu, type MenuItem } from './Menu';
-import { OffCanvas } from './Drawer';
+import { OffCanvas, OffCanvasHeader } from './Drawer';
 import { StatusDot, type StatusTone } from './StatusDot';
 
 export interface PlatformShellPlatform {
@@ -313,7 +313,9 @@ export function PlatformShell({
         </div>
       </div>
 
-      <OffCanvas open={open} onOpenChange={setOpen} side="left" title={company ?? platform.name} width="288px">
+      <OffCanvas open={open} onOpenChange={setOpen} side="left" width="288px">
+        {/* Accessible dialog title only: the sidebar brand already shows the company name. */}
+        <OffCanvasHeader className="sr-only">{company ?? platform.name}</OffCanvasHeader>
         <Sidebar className="flex p-0">{sidebarBody}</Sidebar>
       </OffCanvas>
     </div>
