@@ -269,7 +269,7 @@ export function PlatformShell({
           <div role="status" aria-busy="true" className="flex flex-col items-center gap-2">
             <span className="sr-only">Loading your platforms</span>
             {[0, 1, 2].map((i) => (
-              <span key={i} aria-hidden="true" className={cn(tile, 'bg-surface-muted motion-safe:animate-pulse')} />
+              <span key={i} aria-hidden="true" className={cn(tile, 'border border-border-strong bg-surface-muted motion-safe:animate-pulse')} />
             ))}
           </div>
         )}
