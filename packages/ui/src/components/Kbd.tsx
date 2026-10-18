@@ -21,7 +21,7 @@ export const Kbd = forwardRef<HTMLElement, KbdProps>(function Kbd(
       ref={ref}
       className={cn(
         'inline-flex items-center justify-center rounded-sm border border-primary-200',
-        'bg-primary-50 font-sans font-medium text-primary-700 tabular-nums',
+        'bg-primary-50 font-sans font-medium text-primary-700 tabular-nums [[data-theme=dark]_&]:text-primary-900',
         'shadow-[inset_0_-1px_0_rgb(var(--ds-primary-200))]',
         size === 'sm' ? 'h-4 min-w-4 px-1 text-[0.6875rem]' : 'h-5 min-w-5 px-1.5 text-xs',
         className,
