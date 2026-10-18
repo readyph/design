@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { Briefcase, CalendarCheck, Package, Users, Wrench } from '@phosphor-icons/react';
-import { PlatformShell, type PlatformShellPlatform, type PlatformShellProps } from './PlatformShellRail';
-import { Card } from '../../components/Card';
+import { PlatformShell, type PlatformShellPlatform, type PlatformShellProps } from './PlatformShell';
+import { Card } from './Card';
 
-/** PROTOTYPE (RDY-64) - Platform shell rail states. The rail never goes blank: loading shows three quiet placeholder tiles (opacity pulse only with motion allowed); error shows one short line and a Retry button. The Portal tile, "+" and account menu stay in every state. Lift into @readyph/ui: `railState` and `onRetryPlatforms` on PlatformShell. */
+/** Platform shell rail states. The rail never goes blank: loading shows three quiet placeholder tiles (opacity pulse only with motion allowed); error shows one short line and a Retry button. The Portal tile, "+" and account menu stay in every state. */
 const meta: Meta = { title: 'Platform shell/Rail states', tags: ['!autodocs'], parameters: { layout: 'fullscreen' } };
 export default meta;
 type Story = StoryObj;
