@@ -1,9 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { SetPassword } from './SetPassword';
-import { mobile } from './params';
+
+const mobile = {
+  layout: 'fullscreen',
+  viewport: {
+    viewports: { rs390: { name: 'Mobile 390', styles: { width: '390px', height: '844px' } } },
+    defaultViewport: 'rs390',
+  },
+} as const;
 
 /**
- * Repair shop set-new-password (RDY-66). Pre-login, no shell. One left-aligned form on a
+ * Repair shop set-new-password pattern (RDY-90, from the RDY-66 prototype). Pre-login, no shell. One left-aligned form on a
  * Card; validate on blur and submit; focus moves to the first error, or to the heading on
  * success / invalid link. Appearance only: the app wires the reset call. Replaces the
  * temporary RDY-30 screen. Success has no auto sign-in.

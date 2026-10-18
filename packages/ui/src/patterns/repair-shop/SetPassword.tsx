@@ -12,6 +12,9 @@ import { Notice } from '../../components/Notice';
 export const MIN_LENGTH = 8;
 export const ACCOUNT_EMAIL = 'ramon@dizonautocare.ph';
 
+/** Light mode gets a hairline so the card separates from the canvas; dark is unchanged. */
+const CARD = 'flex flex-col gap-4 border border-border [[data-theme=dark]_&]:border-transparent';
+
 export type SetPasswordView = 'form' | 'success' | 'invalid';
 
 export interface SetPasswordProps {
@@ -52,7 +55,12 @@ export function AuthFrame({ children }: { children: ReactNode }) {
   );
 }
 
-function PasswordInput({ shown, onToggle, ...rest }: { shown: boolean; onToggle: () => void } & React.ComponentProps<typeof Input>) {
+function PasswordInput({
+  shown,
+  onToggle,
+  toggleTabStop = true,
+  ...rest
+}: { shown: boolean; onToggle: () => void; toggleTabStop?: boolean } & React.ComponentProps<typeof Input>) {
   return (
     <div className="relative">
       <Input type={shown ? 'text' : 'password'} leftIcon={Lock} className="pr-12" autoComplete="new-password" {...rest} />
@@ -62,6 +70,7 @@ function PasswordInput({ shown, onToggle, ...rest }: { shown: boolean; onToggle:
         aria-pressed={shown}
         size="sm"
         disabled={rest.disabled}
+        tabIndex={toggleTabStop ? undefined : -1}
         onClick={onToggle}
         className="absolute right-1 top-1/2 -translate-y-1/2"
       />
@@ -100,10 +109,10 @@ export function SetPassword({ view: initialView = 'form', initial, loading = fal
   if (view === 'invalid') {
     return (
       <AuthFrame>
-        <Card className="flex flex-col gap-4">
+        <Card className={CARD}>
           <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-semibold text-ink outline-none">This link can&apos;t be used</h1>
-          <Notice tone="error" icon={WarningOctagon} title="The link is invalid or has expired">
-            Reset links work once and expire after 30 minutes. If you asked for another link, only the newest one works.
+          <Notice tone="error" icon={WarningOctagon}>
+            It is invalid or has expired. Reset links work once and expire after 30 minutes. If you asked for another link, only the newest one works.
           </Notice>
           <Button fullWidth onClick={onRequestLink}>Request a new link</Button>
           <Link href="#" className="text-sm" onClick={(e) => { e.preventDefault(); onBackToSignIn?.(); }}>Back to sign in</Link>
@@ -115,7 +124,7 @@ export function SetPassword({ view: initialView = 'form', initial, loading = fal
   if (view === 'success') {
     return (
       <AuthFrame>
-        <Card className="flex flex-col gap-4">
+        <Card className={CARD}>
           <div className="flex items-center gap-3">
             <Icon icon={CheckCircle} size="lg" weight="fill" className="text-success" />
             <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-semibold text-ink outline-none">Password updated</h1>
@@ -131,7 +140,7 @@ export function SetPassword({ view: initialView = 'form', initial, loading = fal
 
   return (
     <AuthFrame>
-      <Card className="flex flex-col gap-4">
+      <Card className={CARD}>
         <div className="flex flex-col gap-2">
           <h1 className="text-2xl font-semibold text-ink">Set a new password</h1>
           <p className="text-sm text-ink-muted">
@@ -154,6 +163,7 @@ export function SetPassword({ view: initialView = 'form', initial, loading = fal
             <PasswordInput
               ref={confirmRef}
               shown={shown}
+              toggleTabStop={false}
               onToggle={() => setShown((s) => !s)}
               value={confirm}
               disabled={loading}
