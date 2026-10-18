@@ -106,7 +106,7 @@ export function SetPassword({ view: initialView = 'form', initial, loading = fal
             Reset links work once and expire after 30 minutes. If you asked for another link, only the newest one works.
           </Notice>
           <Button fullWidth onClick={onRequestLink}>Request a new link</Button>
-          <Link href="#" onClick={(e) => { e.preventDefault(); onBackToSignIn?.(); }}>Back to sign in</Link>
+          <Link href="#" className="text-sm" onClick={(e) => { e.preventDefault(); onBackToSignIn?.(); }}>Back to sign in</Link>
         </Card>
       </AuthFrame>
     );
@@ -116,8 +116,8 @@ export function SetPassword({ view: initialView = 'form', initial, loading = fal
     return (
       <AuthFrame>
         <Card className="flex flex-col gap-4">
-          <div className="flex items-center gap-2">
-            <Icon icon={CheckCircle} size="md" weight="fill" className="text-success" />
+          <div className="flex items-center gap-3">
+            <Icon icon={CheckCircle} size="lg" weight="fill" className="text-success" />
             <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-semibold text-ink outline-none">Password updated</h1>
           </div>
           <p className="text-sm text-ink-muted">
@@ -163,7 +163,7 @@ export function SetPassword({ view: initialView = 'form', initial, loading = fal
           </Field>
           <Button type="submit" fullWidth loading={loading}>Update password</Button>
         </form>
-        <Link href="#" onClick={(e) => { e.preventDefault(); onBackToSignIn?.(); }}>Cancel and back to sign in</Link>
+        <Link href="#" className="text-sm" onClick={(e) => { e.preventDefault(); onBackToSignIn?.(); }}>Cancel and back to sign in</Link>
       </Card>
     </AuthFrame>
   );
