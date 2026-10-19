@@ -51,7 +51,7 @@ export const MainNavItem = forwardRef<HTMLElement, MainNavItemProps>(function Ma
   const { shortcutMode } = useShortcutMode();
   const classes = cn(
     'group inline-flex items-center gap-2 rounded-base px-3 py-2 text-sm font-medium transition-colors duration-DEFAULT',
-    active ? 'bg-primary-50 text-primary-700' : 'text-ink-muted hover:bg-surface-muted hover:text-ink',
+    active ? 'bg-primary-50 text-primary-700 [[data-theme=dark]_&]:text-primary-900' : 'text-ink-muted hover:bg-surface-muted hover:text-ink',
     focusRing,
     className,
   );
