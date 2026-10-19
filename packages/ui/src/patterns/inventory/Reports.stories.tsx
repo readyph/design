@@ -106,7 +106,7 @@ export const Reports: Story = {
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-ink">{s.name}</p>
-                    <p className="text-xs text-ink-subtle">Updated {s.updated}</p>
+                    <p className={s.active ? "text-xs text-primary-900" : "text-xs text-ink-subtle"}>Updated {s.updated}</p>
                   </div>
                 </button>
               ))}

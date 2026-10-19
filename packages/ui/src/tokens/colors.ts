@@ -68,7 +68,7 @@ export const colors = {
     strong: '#d4d4d4',
   },
   /** Links carry the brand color. */
-  link: '#2563eb',
+  link: '#1d4ed8',
   /**
    * Pastel status pills: background + readable foreground. Blue / green /
    * teal / gray round out the status set.

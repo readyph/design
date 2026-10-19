@@ -24,7 +24,7 @@ const css = `
   --accent:#3b82f6; --accent-2:#2563eb; --accent-soft:rgba(59,130,246,.15);
   --win:#0c0c11; --panel:#0a0a0e; --card:#16161d; --card2:#101016; --fill:rgba(255,255,255,.05); --fill-h:rgba(255,255,255,.09);
   --border:rgba(255,255,255,.06); --hair:rgba(255,255,255,.06);
-  --text:#f5f5f8; --muted:#9a9ba7; --subtle:#62636e;
+  --text:#f5f5f8; --muted:#9a9ba7; --subtle:#8a8b97;
   --success:#34d27b; --warning:#f0a33a; --error:#f2615b; --info:#5b8cf0;
   --success-soft:rgba(52,210,123,.14); --warning-soft:rgba(240,163,58,.14); --error-soft:rgba(242,97,91,.14); --info-soft:rgba(91,140,240,.14);
   --ch1:#242a3d; --ch2:#2e3f82; --ch3:#3b82f6; --ch4:#d7e3f7;
@@ -35,11 +35,11 @@ const css = `
 }
 /* Light theme — redefine the scope's colour variables; structure is unchanged. */
 [data-theme="light"] .rpb{
-  --accent:#3b82f6; --accent-2:#2563eb; --accent-soft:rgba(59,130,246,.12);
+  --accent:#3b82f6; --accent-text:#1d4ed8; --accent-2:#2563eb; --accent-soft:rgba(59,130,246,.12);
   --win:#eceef2; --panel:#eceef2; --card:#ffffff; --card2:#ffffff;
   --fill:rgba(17,17,20,.05); --fill-h:rgba(17,17,20,.08);
   --border:rgba(17,17,20,.10); --hair:rgba(17,17,20,.08);
-  --text:#17171a; --muted:#5c5d66; --subtle:#8a8b94;
+  --text:#17171a; --muted:#5c5d66; --subtle:#666770;
   --success:#16a34a; --warning:#d97706; --error:#dc2626; --info:#2563eb;
   --success-soft:rgba(22,163,74,.12); --warning-soft:rgba(217,119,6,.12); --error-soft:rgba(220,38,38,.12); --info-soft:rgba(37,99,235,.12);
   --ch1:#1e3a8a; --ch2:#3b6fd4; --ch3:#3b82f6; --ch4:#bcd3f7;
@@ -67,7 +67,7 @@ const css = `
 .rpb .nlbl{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--subtle);padding:14px 8px 6px}
 .rpb .nav-item{display:flex;align-items:center;gap:11px;padding:9px 11px;margin-bottom:4px;border-radius:10px;font-size:13px;color:var(--muted);cursor:pointer;border:0;background:transparent;width:100%;text-align:left;font-family:inherit}
 .rpb .nav-item:hover{background:var(--fill-h);color:var(--text)}
-.rpb .nav-item.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.rpb .nav-item.on{background:var(--accent-soft);color:var(--accent-text,var(--accent));font-weight:600}
 .rpb .nav-item .badge{margin-left:auto;font-size:10.5px;font-weight:600;background:var(--fill);color:var(--muted);padding:2px 8px;border-radius:999px}
 /* main */
 .rpb .main{flex:1;min-width:0;display:flex;flex-direction:column}
