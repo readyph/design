@@ -91,7 +91,7 @@ export const Reports: Story = {
                   onClick={() => setSelected(r.id)}
                   className={cn(
                     'flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm',
-                    r.id === selected ? 'bg-primary-50 text-primary-700' : 'text-ink-muted hover:bg-surface-muted hover:text-ink',
+                    r.id === selected ? 'bg-primary-50 text-primary-900' : 'text-ink-muted hover:bg-surface-muted hover:text-ink',
                   )}
                 >
                   <Icon icon={r.icon} size="md" weight={r.id === selected ? 'fill' : 'regular'} className={r.id === selected ? 'text-primary-600' : 'text-ink-subtle'} />

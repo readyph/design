@@ -41,7 +41,7 @@ export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(function R
       {options.map((opt) => (
         <label
           key={opt.value}
-          className={cn('flex items-start gap-2.5', opt.disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer')}
+          className={cn('flex items-start gap-2.5', opt.disabled ? 'cursor-not-allowed' : 'cursor-pointer')}
         >
           <RadixRadio.Item
             value={opt.value}
@@ -55,7 +55,7 @@ export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(function R
             <RadixRadio.Indicator className="block h-2.5 w-2.5 rounded-full bg-primary-600" />
           </RadixRadio.Item>
           <span className="flex flex-col">
-            <span className="text-sm text-ink">{opt.label}</span>
+            <span className={cn("text-sm", opt.disabled ? "text-ink-muted" : "text-ink")}>{opt.label}</span>
             {opt.description && <span className="text-xs text-ink-muted">{opt.description}</span>}
           </span>
         </label>

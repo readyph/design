@@ -55,10 +55,10 @@ export const Checkbox = forwardRef<HTMLButtonElement, CheckboxProps>(function Ch
   if (!label) return box;
 
   return (
-    <label className={cn('flex cursor-pointer items-start gap-2.5', disabled && 'cursor-not-allowed opacity-60', className)}>
+    <label className={cn('flex cursor-pointer items-start gap-2.5', disabled && 'cursor-not-allowed', className)}>
       <span className="mt-0.5">{box}</span>
       <span className="flex flex-col">
-        <span className="text-sm text-ink">{label}</span>
+        <span className={cn("text-sm", disabled ? "text-ink-muted" : "text-ink")}>{label}</span>
         {description && <span className="text-xs text-ink-muted">{description}</span>}
       </span>
     </label>
