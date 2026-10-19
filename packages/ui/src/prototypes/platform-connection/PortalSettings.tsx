@@ -5,6 +5,7 @@ import { Button } from '../../components/Button';
 import { Field } from '../../components/Field';
 import { Input } from '../../components/Input';
 import { Modal } from '../../components/Modal';
+import { PageHeader } from '../../components/PageHeader';
 import { Notice } from '../../components/Notice';
 import { ProgressBar } from '../../components/ProgressBar';
 import { Icon } from '../../components/Icon';
@@ -164,7 +165,8 @@ export function SettingsPage({ tab = 'company', state = 'default', modal = false
   const [t, setT] = useState(tab);
   return (
     <ConnShell app="portal" activeKey="settings" title={<span className="text-sm font-semibold">Settings</span>} onAccountTab={setT}>
-      <Page width="form">
+      <Page>
+        <PageHeader title="Settings" description="Company, schedule, account and billing" />
         <Tabs variant="underline" value={t} onValueChange={setT} items={[
           { value: 'company', label: tabLabel(Buildings, 'Company') }, { value: 'schedule', label: tabLabel(Clock, 'Schedule') },
           { value: 'account', label: tabLabel(User, 'Account') }, { value: 'billing', label: tabLabel(CreditCard, 'Billing') },
