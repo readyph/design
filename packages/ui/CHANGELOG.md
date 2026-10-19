@@ -1,5 +1,13 @@
 # @readyph/ui
 
+## 0.5.2
+
+### Patch Changes
+
+- 81b67f1: Fix Avatar fallback initials contrast in dark theme (3.43:1): initials now use text-primary-800 on primary-100.
+- 6f34fb5: Fix remaining Notifications contrast failures: item time labels use text-ink-muted and the selected tab uses text-link, so axe reports 0 colour-contrast violations in light and dark.
+- d00faf0: Fix Notifications footer button contrast in dark theme (3.54:1): use the text-link token instead of text-primary-600.
+
 ## 0.5.1
 
 ### Patch Changes
