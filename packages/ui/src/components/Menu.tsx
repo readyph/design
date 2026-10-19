@@ -14,6 +14,11 @@ export interface MenuActionItem {
   /** Display-only key hint, revealed in shortcut mode. */
   shortcut?: string;
   onSelect?: () => void;
+  /** Render the item as a real `<a>` (middle-click, copy-link). Keyboard behaviour is unchanged. */
+  href?: string;
+  /** Anchor target; `_blank` gets `rel="noopener noreferrer"` unless `rel` is given. Only with `href`. */
+  target?: string;
+  rel?: string;
   disabled?: boolean;
   danger?: boolean;
 }
@@ -60,21 +65,8 @@ export function Menu({ trigger, items, side = 'bottom', align = 'end', className
               );
             }
             const it = item as MenuActionItem;
-            return (
-              <RadixMenu.Item
-                key={i}
-                disabled={it.disabled}
-                onSelect={it.onSelect}
-                className={cn(
-                  'flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none',
-                  'data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-700',
-                  'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
-                  it.danger
-                    ? 'text-error-fg data-[highlighted]:bg-error/10 data-[highlighted]:text-error-fg'
-                    : 'text-ink',
-                  focusRing,
-                )}
-              >
+            const content = (
+              <>
                 {it.icon && <Icon icon={it.icon} size="sm" className="text-ink-subtle" />}
                 <span className="flex-1">{it.label}</span>
                 {it.shortcut && shortcutMode && (
@@ -86,6 +78,34 @@ export function Menu({ trigger, items, side = 'bottom', align = 'end', className
                     ))}
                   </span>
                 )}
+              </>
+            );
+            const itemClass = cn(
+              'flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none',
+              'data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-700',
+              'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+              it.danger
+                ? 'text-error-fg data-[highlighted]:bg-error/10 data-[highlighted]:text-error-fg'
+                : 'text-ink',
+              focusRing,
+            );
+            if (it.href !== undefined) {
+              return (
+                <RadixMenu.Item key={i} asChild disabled={it.disabled} onSelect={it.onSelect}>
+                  <a
+                    href={it.disabled ? undefined : it.href}
+                    target={it.target}
+                    rel={it.rel ?? (it.target === '_blank' ? 'noopener noreferrer' : undefined)}
+                    className={itemClass}
+                  >
+                    {content}
+                  </a>
+                </RadixMenu.Item>
+              );
+            }
+            return (
+              <RadixMenu.Item key={i} disabled={it.disabled} onSelect={it.onSelect} className={itemClass}>
+                {content}
               </RadixMenu.Item>
             );
           })}
