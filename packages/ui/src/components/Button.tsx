@@ -38,8 +38,8 @@ export const base =
   'relative inline-flex items-center justify-center gap-2 whitespace-nowrap border border-transparent rounded-base font-medium transition-colors duration-DEFAULT ease-standard disabled:cursor-not-allowed disabled:opacity-50';
 
 export const variants: Record<ButtonVariant, string> = {
-  primary: 'bg-primary-600 text-white hover:bg-primary-700',
-  secondary: 'border-border-strong bg-surface text-ink hover:bg-surface-subtle active:bg-surface-muted',
+  primary: 'bg-primary-600 text-white hover:bg-primary-700 [[data-theme=dark]_&]:hover:bg-primary-200',
+  secondary: 'border-border-strong bg-surface text-ink [[data-theme=dark]_&]:border-border [[data-theme=dark]_&]:bg-transparent hover:bg-surface-subtle active:bg-surface-muted [[data-theme=dark]_&]:hover:bg-surface-subtle [[data-theme=dark]_&]:active:bg-surface-muted',
   subtle: 'bg-transparent text-ink hover:bg-surface-muted active:bg-neutral-200',
   danger: 'bg-error text-white hover:brightness-95 active:brightness-90',
 };
@@ -87,7 +87,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
           <Spinner size={size === 'lg' ? 'md' : 'sm'} />
         </span>
       )}
-      <span className={cn('contents', loading && 'invisible')}>
+      <span className={cn('inline-flex items-center justify-center gap-2', loading && 'invisible')}>
         {leftIcon && <Icon icon={leftIcon} size={iconSizeFor[size]} />}
         {children}
         {rightIcon && <Icon icon={rightIcon} size={iconSizeFor[size]} />}
