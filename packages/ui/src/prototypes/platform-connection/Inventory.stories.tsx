@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { Package, Tag, Truck, PlugsConnected, ArrowSquareOut, Trash, Plus } from '@phosphor-icons/react';
+import { Field } from '../../components/Field';
 import { Button } from '../../components/Button';
 import { Icon } from '../../components/Icon';
 import { IconButton } from '../../components/IconButton';
@@ -10,21 +11,36 @@ import { SettingsSection } from '../../components/SettingsSection';
 import { Skeleton } from '../../components/Skeleton';
 import { StatusDot } from '../../components/StatusDot';
 import { Tabs, TabPanel } from '../../components/Tabs';
+import { toast } from '../../components/toast/toastStore';
 import { Page, RetryNotice } from '../repair-shop/Page';
 import { mobile } from '../repair-shop/params';
 import { ConnShell } from './ConnShell';
+import { PORTAL } from './data';
+import { LinkButton } from './LinkButton';
 
 /** PROTOTYPE (RDY-120) - Inventory Settings after the cut (Units and Reorder defaults removed), a real Platform tab with a Manage in Portal link, and the shared rail listing real platforms. */
 const meta: Meta = { title: 'Inventory/Connected settings', tags: ['!autodocs'], parameters: { layout: 'fullscreen' } };
 export default meta;
 type Story = StoryObj;
 
-function NameList({ title, description, items, noun }: { title: string; description: string; items: string[]; noun: string }) {
+function NameList({ title, description, initial, noun }: { title: string; description: string; initial: string[]; noun: string }) {
+  const [items, setItems] = useState(initial);
+  const [draft, setDraft] = useState('');
+  const [error, setError] = useState<string>();
+  const add = () => {
+    const v = draft.trim();
+    if (!v) return setError(`Enter a ${noun} name.`);
+    if (items.some((i) => i.toLowerCase() === v.toLowerCase())) return setError(`${v} is already in the list.`);
+    setItems([...items, v]); setDraft(''); setError(undefined);
+  };
   return (
-    <SettingsSection title={title} description={description}>
-      <div className="flex gap-2"><Input placeholder={`New ${noun}`} aria-label={`New ${noun}`} /><Button leftIcon={Plus}>Add</Button></div>
+    <SettingsSection title={title} description={description} actions={<Button size="sm" onClick={() => toast.success(`${title} saved.`)}>Save</Button>}>
+      <Field label={`New ${noun}`} error={error}>
+        <div className="flex gap-2"><Input value={draft} onChange={(e) => { setDraft(e.target.value); setError(undefined); }} onKeyDown={(e) => e.key === 'Enter' && add()} placeholder={`New ${noun}`} /><Button leftIcon={Plus} onClick={add}>Add</Button></div>
+      </Field>
+      {items.length === 0 && <p className="text-sm text-ink-muted">No {noun === 'category' ? 'categories' : 'suppliers'} yet.</p>}
       <ul className="flex flex-col divide-y divide-border">
-        {items.map((i) => <li key={i} className="flex items-center justify-between py-2 text-sm">{i}<IconButton icon={Trash} label={`Delete ${i}`} variant="subtle" size="sm" /></li>)}
+        {items.map((i) => <li key={i} className="flex items-center justify-between py-2 text-sm">{i}<IconButton icon={Trash} label={`Delete ${i}`} variant="subtle" size="sm" onClick={() => setItems(items.filter((x) => x !== i))} /></li>)}
       </ul>
     </SettingsSection>
   );
@@ -39,7 +55,7 @@ function PlatformTab({ state }: { state: 'default' | 'loading' | 'error' }) {
         <div className="flex flex-wrap items-center gap-3">
           <span className="grid h-11 w-11 place-items-center rounded-lg bg-primary-50 text-primary-700"><Icon icon={Package} size="md" weight="fill" /></span>
           <div className="flex min-w-0 flex-1 flex-col gap-1"><p className="flex items-center gap-2 text-sm font-medium">Main inventory <StatusDot status="active" label="Active" /></p><p className="text-xs text-ink-subtle">Shared with Davao branch (stock and catalog)</p></div>
-          <Button size="sm" variant="secondary" rightIcon={ArrowSquareOut}>Manage in Portal</Button>
+          <LinkButton size="sm" variant="secondary" rightIcon={ArrowSquareOut} href={`${PORTAL}/platforms`}>Manage in Portal</LinkButton>
         </div>
       </SettingsSection>
     </div>
@@ -55,8 +71,8 @@ function InventorySettings({ tab = 'categories', state = 'default' }: { tab?: st
         <Tabs variant="underline" value={t} onValueChange={setT} items={[
           { value: 'categories', label: 'Categories', icon: Tag }, { value: 'suppliers', label: 'Suppliers', icon: Truck }, { value: 'platform', label: 'Platform', icon: PlugsConnected },
         ]}>
-          <TabPanel value="categories"><div className="pt-6"><NameList title="Categories" description="Group products for browsing and reports." noun="category" items={['Engine parts', 'Brakes', 'Filters', 'Lubricants']} /></div></TabPanel>
-          <TabPanel value="suppliers"><div className="pt-6"><NameList title="Suppliers" description="Who you buy from on purchase orders." noun="supplier" items={['Davao Auto Supply', 'Mindanao Lubricants Inc.', 'Cebu Brake Depot']} /></div></TabPanel>
+          <TabPanel value="categories"><div className="pt-6"><NameList title="Categories" description="Group products for browsing and reports." noun="category" initial={['Engine parts', 'Brakes', 'Filters', 'Lubricants']} /></div></TabPanel>
+          <TabPanel value="suppliers"><div className="pt-6"><NameList title="Suppliers" description="Who you buy from on purchase orders." noun="supplier" initial={['Davao Auto Supply', 'Mindanao Lubricants Inc.', 'Cebu Brake Depot']} /></div></TabPanel>
           <TabPanel value="platform"><PlatformTab state={state} /></TabPanel>
         </Tabs>
       </Page>

@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { Package, ArrowSquareOut } from '@phosphor-icons/react';
 import { Badge } from '../../components/Badge';
-import { Button } from '../../components/Button';
 import { EmptyState } from '../../components/EmptyState';
 import { Icon } from '../../components/Icon';
 import { PageHeader } from '../../components/PageHeader';
@@ -11,6 +10,8 @@ import { Page, RetryNotice } from '../repair-shop/Page';
 import { mobile } from '../repair-shop/params';
 import { RepairFlow } from '../repair-shop/Flow';
 import { ConnShell } from './ConnShell';
+import { PORTAL } from './data';
+import { LinkButton } from './LinkButton';
 
 /** PROTOTYPE (RDY-120) - Repair shop branch Settings (new), the Parts empty state with a working action, and New quotation opening the intake from Today and Jobs. */
 const meta: Meta = { title: 'Repair shop/Settings and parts', tags: ['!autodocs'], parameters: { layout: 'fullscreen' } };
@@ -32,14 +33,14 @@ function RepairSettings({ state = 'default' }: { state?: 'default' | 'loading' |
         {state === 'error' && <RetryNotice title="Couldn't load branch settings" />}
         {state === 'default' && (
           <>
-            <SettingsSection title="Branch" description="Name and status are managed in the Portal." actions={<Button size="sm" variant="secondary" rightIcon={ArrowSquareOut}>Manage in Portal</Button>}>
+            <SettingsSection title="Branch" description="Name and status are managed in the Portal." actions={<LinkButton size="sm" variant="secondary" rightIcon={ArrowSquareOut} href={`${PORTAL}/platforms`}>Manage in Portal</LinkButton>}>
               <Row label="Branch name" value="Davao branch" />
               <Row label="Status" value="Active" />
             </SettingsSection>
             <SettingsSection title="Parts source" description="Where parts and stock levels come from.">
               <div className="flex items-center gap-3 text-sm"><span className="grid h-9 w-9 place-items-center rounded-lg bg-primary-50 text-primary-700"><Icon icon={Package} size="md" /></span><div className="flex flex-1 flex-col gap-1"><p className="font-medium">Main inventory</p><p className="text-xs text-ink-subtle">Linked - 214 products</p></div><Badge tone="success" size="sm">Linked</Badge></div>
             </SettingsSection>
-            <SettingsSection title="Team access" description="Who can use this branch." actions={<Button size="sm" variant="secondary" rightIcon={ArrowSquareOut}>Manage team</Button>}>
+            <SettingsSection title="Team access" description="Who can use this branch." actions={<LinkButton size="sm" variant="secondary" rightIcon={ArrowSquareOut} href={`${PORTAL}/team`}>Manage team</LinkButton>}>
               <p className="text-sm text-ink-muted">4 members. Invite or change access from Portal &gt; Team.</p>
             </SettingsSection>
           </>
@@ -61,7 +62,7 @@ export const PartsNoInventory: Story = {
       <Page>
         <PageHeader title="Catalogue" />
         <EmptyState icon={Package} title="No inventory linked" description="Parts come from a linked Inventory. Until one is linked, add parts by hand on each job."
-          action={<Button rightIcon={ArrowSquareOut}>Connect inventory in Portal</Button>} />
+          action={<LinkButton rightIcon={ArrowSquareOut} href={`${PORTAL}/platforms?connect=rs-cdo`}>Connect inventory in Portal</LinkButton>} />
       </Page>
     </ConnShell>
   ),

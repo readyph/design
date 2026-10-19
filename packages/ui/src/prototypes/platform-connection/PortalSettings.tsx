@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { Buildings, Check, Clock, CreditCard, User, Warning } from '@phosphor-icons/react';
+import { Buildings, Check, Clock, CreditCard, User, Warning, type Icon as PhosphorIcon } from '@phosphor-icons/react';
 import { Badge } from '../../components/Badge';
 import { Button } from '../../components/Button';
 import { Field } from '../../components/Field';
@@ -7,7 +7,9 @@ import { Input } from '../../components/Input';
 import { Modal } from '../../components/Modal';
 import { Notice } from '../../components/Notice';
 import { ProgressBar } from '../../components/ProgressBar';
+import { Icon } from '../../components/Icon';
 import { Select } from '../../components/Select';
+import { Switch } from '../../components/Switch';
 import { SettingsSection } from '../../components/SettingsSection';
 import { Skeleton } from '../../components/Skeleton';
 import { Tabs, TabPanel } from '../../components/Tabs';
@@ -37,23 +39,44 @@ function CompanyTab({ state }: { state: SettingsState }) {
         <Field label="Address"><Input placeholder="Add your business address" /></Field>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Website"><Input placeholder="example.com" /></Field>
-          <Field label="Timezone"><Select value="Asia/Manila" onValueChange={() => undefined} options={[{ value: 'Asia/Manila', label: 'Asia/Manila (GMT+8)' }]} /></Field>
+          <div className="flex flex-col gap-1"><span className="text-sm font-medium">Timezone</span><span className="flex h-md items-center text-sm text-ink-muted">Asia/Manila (GMT+8)</span></div>
         </div>
       </SettingsSection>
     </Stack>
   );
 }
 
-const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+interface DayHours { open: boolean; from: string; to: string }
+const initialHours = (): Record<string, DayHours> =>
+  Object.fromEntries(DAYS.map((d) => [d, { open: d !== 'Sunday', from: '08:00', to: '18:00' }]));
+
 function ScheduleTab() {
+  const [hours, setHours] = useState(initialHours);
+  const set = (d: string, patch: Partial<DayHours>) => setHours((h) => ({ ...h, [d]: { ...h[d], ...patch } }));
+  const bad = (h: DayHours) => h.open && h.to <= h.from;
+  const invalid = DAYS.some((d) => bad(hours[d]));
   return (
     <Stack>
-      <SettingsSection title="Business hours" description="Leda tells customers when you are open." actions={<Button size="sm" onClick={() => toast.success('Business hours saved.')}>Save</Button>}>
+      <SettingsSection title="Business hours" description="Leda tells customers when you are open."
+        actions={<Button size="sm" onClick={() => (invalid ? toast.error('Closing time must be after opening time.') : toast.success('Business hours saved.'))}>Save</Button>}>
         <div className="flex flex-col gap-3">
-          {DAYS.map((d) => (
-            <div key={d} className="flex items-center gap-3 text-sm"><span className="w-28 text-ink-muted">{d}</span><span className="tabular-nums">8:00 AM - 6:00 PM</span></div>
-          ))}
-          <div className="flex items-center gap-3 text-sm"><span className="w-28 text-ink-muted">Sunday</span><Badge size="sm">Closed</Badge></div>
+          {DAYS.map((d) => {
+            const h = hours[d];
+            return (
+              <div key={d} className="flex flex-wrap items-center gap-3 text-sm">
+                <span className="w-28 text-ink-muted">{d}</span>
+                <Switch checked={h.open} onCheckedChange={(open) => set(d, { open })} label={<span className="sr-only">{d} open</span>} />
+                {h.open
+                  ? <div className="flex items-center gap-2">
+                      <Input type="time" inputSize="sm" aria-label={`${d} opens`} value={h.from} invalid={bad(h)} onChange={(e) => set(d, { from: e.target.value })} className="w-32" />
+                      <span className="text-ink-muted">to</span>
+                      <Input type="time" inputSize="sm" aria-label={`${d} closes`} value={h.to} invalid={bad(h)} onChange={(e) => set(d, { to: e.target.value })} className="w-32" />
+                    </div>
+                  : <Badge size="sm">Closed</Badge>}
+              </div>
+            );
+          })}
         </div>
       </SettingsSection>
     </Stack>
@@ -132,14 +155,19 @@ function BillingTab({ state, requestOpen }: { state: SettingsState; requestOpen:
   );
 }
 
+/** Tab icons show from sm up; below sm the row is labels only so all four tabs fit at 390. */
+function tabLabel(icon: PhosphorIcon, label: string) {
+  return <><span className="hidden sm:inline-flex"><Icon icon={icon} size="sm" /></span>{label}</>;
+}
+
 export function SettingsPage({ tab = 'company', state = 'default', modal = false }: { tab?: string; state?: SettingsState; modal?: boolean }) {
   const [t, setT] = useState(tab);
   return (
-    <ConnShell app="portal" activeKey="settings" title={<span className="text-sm font-semibold">Settings</span>}>
+    <ConnShell app="portal" activeKey="settings" title={<span className="text-sm font-semibold">Settings</span>} onAccountTab={setT}>
       <Page width="form">
-        <Tabs value={t} onValueChange={setT} items={[
-          { value: 'company', label: 'Company', icon: Buildings }, { value: 'schedule', label: 'Schedule', icon: Clock },
-          { value: 'account', label: 'Account', icon: User }, { value: 'billing', label: 'Billing', icon: CreditCard },
+        <Tabs variant="underline" value={t} onValueChange={setT} items={[
+          { value: 'company', label: tabLabel(Buildings, 'Company') }, { value: 'schedule', label: tabLabel(Clock, 'Schedule') },
+          { value: 'account', label: tabLabel(User, 'Account') }, { value: 'billing', label: tabLabel(CreditCard, 'Billing') },
         ]}>
           <TabPanel value="company"><CompanyTab state={state} /></TabPanel>
           <TabPanel value="schedule"><ScheduleTab /></TabPanel>

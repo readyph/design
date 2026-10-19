@@ -1,9 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { Wrench, WifiSlash, Lock, Warning } from '@phosphor-icons/react';
-import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { Icon } from '../../components/Icon';
 import { Spinner } from '../../components/Spinner';
+import { HANDOFF_OPENING, PORTAL } from './data';
+import { LinkButton } from './LinkButton';
 
 /** PROTOTYPE (RDY-120) - what a user sees when a Portal link opens another app: signing in, session expired, app unreachable, no access. */
 const meta: Meta = { title: 'Portal/App handoff', tags: ['!autodocs'], parameters: { layout: 'fullscreen' } };
@@ -24,6 +25,6 @@ function Handoff({ icon, title, description, children, tone = 'neutral' }: { ico
 }
 
 export const Opening: Story = { name: 'Opening the app', render: () => <Handoff icon={Wrench} title="Opening Davao branch" description="Signing you in."><Spinner size="lg" className="text-ink-subtle" /></Handoff> };
-export const Expired: Story = { name: 'Session expired', render: () => <Handoff icon={Lock} title="Your session expired" description="Sign in again to continue to Davao branch."><Button fullWidth autoFocus>Sign in</Button></Handoff> };
-export const Unreachable: Story = { name: 'App unreachable', render: () => <Handoff icon={WifiSlash} tone="error" title="Davao branch isn't responding" description="Your data is safe. Try again in a moment."><div className="flex w-full gap-2"><Button fullWidth variant="secondary">Back to Portal</Button><Button fullWidth autoFocus>Try again</Button></div></Handoff> };
-export const NoAccess: Story = { name: 'No access to this platform', render: () => <Handoff icon={Warning} tone="error" title="You don't have access" description="Ask your company owner to give you access to Davao branch in Portal > Team."><Button fullWidth variant="secondary">Back to Portal</Button></Handoff> };
+export const Expired: Story = { name: 'Session expired', render: () => <Handoff icon={Lock} title="Your session expired" description="Sign in again to continue to Davao branch."><LinkButton fullWidth autoFocus href={`${PORTAL}/login`}>Sign in</LinkButton></Handoff> };
+export const Unreachable: Story = { name: 'App unreachable', render: () => <Handoff icon={WifiSlash} tone="error" title="Davao branch isn't responding" description="Your data is safe. Try again in a moment."><div className="flex w-full gap-2"><LinkButton fullWidth variant="secondary" href={PORTAL}>Back to Portal</LinkButton><LinkButton fullWidth autoFocus href={HANDOFF_OPENING}>Try again</LinkButton></div></Handoff> };
+export const NoAccess: Story = { name: 'No access to this platform', render: () => <Handoff icon={Warning} tone="error" title="You don't have access" description="Ask your company owner to give you access to Davao branch in Portal > Team."><LinkButton fullWidth variant="secondary" href={PORTAL}>Back to Portal</LinkButton></Handoff> };

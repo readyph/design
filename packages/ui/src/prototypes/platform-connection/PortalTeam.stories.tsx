@@ -28,14 +28,28 @@ const MEMBERS: Member[] = [
   { name: 'Liza Mercado', email: 'liza.mercado@gmail.com', role: 'Staff', access: 'Main inventory', pending: true },
 ];
 
-function InviteModal({ open, onOpenChange, error }: { open: boolean; onOpenChange: (o: boolean) => void; error?: boolean }) {
+const EMAIL_OK = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function InviteModal({ open, onOpenChange, prefill = '' }: { open: boolean; onOpenChange: (o: boolean) => void; prefill?: string }) {
+  const [email, setEmail] = useState(prefill);
+  const [role, setRole] = useState('staff');
+  const [access, setAccess] = useState('all');
+  const [tried, setTried] = useState(Boolean(prefill));
+  const error = tried && !EMAIL_OK.test(email.trim()) ? 'Enter a valid email.' : undefined;
+  const close = (o: boolean) => { onOpenChange(o); if (!o) { setEmail(prefill); setTried(Boolean(prefill)); } };
+  const send = () => {
+    setTried(true);
+    if (!EMAIL_OK.test(email.trim())) return;
+    close(false);
+    toast.success(`Invitation sent to ${email.trim()}.`);
+  };
   return (
-    <Modal open={open} onOpenChange={onOpenChange} title="Invite a team member" description="They get an email to join and choose which platforms they can use."
-      footer={<><Button variant="subtle" onClick={() => onOpenChange(false)}>Cancel</Button><Button onClick={() => { onOpenChange(false); toast.success('Invitation sent to liza.mercado@gmail.com.'); }}>Send invite</Button></>}>
+    <Modal open={open} onOpenChange={close} title="Invite a team member" description="They get an email to join and choose which platforms they can use."
+      footer={<><Button variant="subtle" onClick={() => close(false)}>Cancel</Button><Button onClick={send}>Send invite</Button></>}>
       <div className="flex flex-col gap-4">
-        <Field label="Email" required error={error ? 'Enter a valid email.' : undefined}><Input type="email" autoFocus autoComplete="off" placeholder="name@company.ph" defaultValue={error ? 'liza@' : ''} /></Field>
-        <Field label="Role"><Select value="staff" onValueChange={() => undefined} options={[{ value: 'staff', label: 'Staff' }, { value: 'mechanic', label: 'Mechanic' }, { value: 'admin', label: 'Admin' }]} /></Field>
-        <Field label="Platform access" hint="Inventory and each Repair shop branch can be allowed separately."><Select value="all" onValueChange={() => undefined} options={[{ value: 'all', label: 'All platforms' }, { value: 'inv', label: 'Main inventory only' }, { value: 'dvo', label: 'Davao branch only' }]} /></Field>
+        <Field label="Email" required error={error}><Input type="email" autoFocus autoComplete="off" placeholder="name@company.ph" value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
+        <Field label="Role"><Select value={role} onValueChange={setRole} options={[{ value: 'staff', label: 'Staff' }, { value: 'mechanic', label: 'Mechanic' }, { value: 'admin', label: 'Admin' }]} /></Field>
+        <Field label="Platform access" hint="Inventory and each Repair shop branch can be allowed separately."><Select value={access} onValueChange={setAccess} options={[{ value: 'all', label: 'All platforms' }, { value: 'inv', label: 'Main inventory only' }, { value: 'dvo', label: 'Davao branch only' }]} /></Field>
       </div>
     </Modal>
   );
@@ -58,7 +72,7 @@ function TeamPage({ open = false, error = false, state = 'default' }: { open?: b
         {state === 'error' && <RetryNotice title="Couldn't load your team">Check your connection and try again.</RetryNotice>}
         {state === 'empty' && <EmptyState icon={UsersThree} title="Just you so far" description="Invite staff and mechanics and choose which platforms they can use." action={<Button leftIcon={Plus} onClick={() => setO(true)}>Invite member</Button>} />}
         {(state === 'default' || state === 'loading') && <Table columns={columns} data={state === 'loading' ? [] : MEMBERS} loading={state === 'loading'} rowKey={(m) => m.email} />}
-        <InviteModal open={o} onOpenChange={setO} error={error} />
+        <InviteModal open={o} onOpenChange={setO} prefill={error ? 'liza@' : ''} />
       </Page>
     </ConnShell>
   );

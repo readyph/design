@@ -1,9 +1,15 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Package, Wrench, Gauge, ArrowsLeftRight, Receipt, ChartBar, Gear, SquaresFour, Users, BookOpen, House, CalendarCheck, ClipboardText, UsersThree, CreditCard, User, Storefront } from '@phosphor-icons/react';
+import { Button } from '../../components/Button';
+import { Field } from '../../components/Field';
+import { Input } from '../../components/Input';
+import { Modal } from '../../components/Modal';
+import { Select } from '../../components/Select';
 import { Toaster } from '../../components/toast/Toaster';
+import { toast } from '../../components/toast/toastStore';
 import { PlatformShell, type PlatformShellPlatform, type PlatformShellSection } from '../../components/PlatformShell';
 import type { StatusTone } from '../../components/StatusDot';
-import { COMPANY, PLATFORMS, type AppKey } from './data';
+import { COMPANY, PLATFORMS, PORTAL, type AppKey } from './data';
 
 const NAV: Record<AppKey, { name: string; icon: typeof Package; sections: PlatformShellSection[]; footer?: string }> = {
   portal: {
@@ -56,15 +62,43 @@ export function railFor(activeId: string | null): PlatformShellPlatform[] {
   }));
 }
 
+/** Add platform: pick the kind and name it. Opened by the rail "+" and the Platforms page. */
+export function AddPlatformModal({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
+  const [kind, setKind] = useState('repair_shop');
+  const [name, setName] = useState('');
+  const [tried, setTried] = useState(false);
+  const close = (o: boolean) => { onOpenChange(o); if (!o) { setName(''); setTried(false); } };
+  const add = () => {
+    if (!name.trim()) { setTried(true); return; }
+    close(false);
+    toast.success(`${name.trim()} added. Connect data to finish setup.`);
+  };
+  return (
+    <Modal open={open} onOpenChange={close} title="Add a platform" description="Add Inventory or a Repair shop branch to Sunrise Auto Parts."
+      footer={<><Button variant="subtle" onClick={() => close(false)}>Cancel</Button><Button onClick={add}>Add platform</Button></>}>
+      <div className="flex flex-col gap-4">
+        <Field label="Platform name" required error={tried && !name.trim() ? 'Enter a name.' : undefined}><Input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="Iloilo branch" /></Field>
+        <Field label="Type"><Select value={kind} onValueChange={setKind} options={[{ value: 'repair_shop', label: 'Repair shop branch' }, { value: 'inventory', label: 'Inventory' }]} /></Field>
+      </div>
+    </Modal>
+  );
+}
+
+const leave = (url: string) => () => window.location.assign(url);
+
 /**
  * PlatformShell wired the way every app should be after RDY-120: one real rail, Account and Billing
- * in the account menu everywhere (in the Portal they open Settings tabs, in the other apps they leave
- * to the Portal), "Back to Portal" footer outside the Portal.
+ * in the account menu everywhere. In the Portal they switch the Settings tab (onAccountTab, or a link to
+ * Portal Settings from other pages); in the other apps they leave to Portal Settings. "+" opens the Add
+ * platform flow in the Portal and leaves to it elsewhere. Sign out confirms with a toast.
  */
 export function ConnShell({
-  app, activeKey, activeId = null, title, children,
-}: { app: AppKey; activeKey: string; activeId?: string | null; title?: ReactNode; children: ReactNode }) {
+  app, activeKey, activeId = null, title, onAccountTab, onAddPlatform, children,
+}: { app: AppKey; activeKey: string; activeId?: string | null; title?: ReactNode; onAccountTab?: (tab: 'account' | 'billing') => void; onAddPlatform?: () => void; children: ReactNode }) {
   const cfg = NAV[app];
+  const [addOpen, setAddOpen] = useState(false);
+  const goTab = (tab: 'account' | 'billing') => (onAccountTab ? () => onAccountTab(tab) : leave(`${PORTAL}/settings?tab=${tab}`));
+  const add = onAddPlatform ?? (app === 'portal' ? () => setAddOpen(true) : leave(`${PORTAL}/platforms?add=1`));
   return (
     <PlatformShell
       platform={{ name: cfg.name, icon: cfg.icon }}
@@ -73,21 +107,22 @@ export function ConnShell({
       sections={cfg.sections}
       activeKey={activeKey}
       title={title ?? <span className="text-sm font-semibold text-ink">{COMPANY}</span>}
-      actions={<span />}
-      homeHref="https://portal.readyph.app"
-      onAddPlatform={() => undefined}
-      footerLink={cfg.footer ? { label: cfg.footer, href: 'https://portal.readyph.app' } : undefined}
+      actions={<></>}
+      homeHref={PORTAL}
+      onAddPlatform={add}
+      footerLink={cfg.footer ? { label: cfg.footer, href: PORTAL } : undefined}
       account={{
         name: 'Maria Santos',
         email: 'maria@sunrise.ph',
         items: [
-          { label: 'Account', icon: User, onSelect: () => undefined },
-          { label: 'Billing', icon: CreditCard, onSelect: () => undefined },
+          { label: 'Account', icon: User, onSelect: goTab('account') },
+          { label: 'Billing', icon: CreditCard, onSelect: goTab('billing') },
         ],
-        onSignOut: () => undefined,
+        onSignOut: () => toast.success('Signed out of Portal, Inventory and Repair shop.'),
       }}
     >
       {children}
+      {app === 'portal' && !onAddPlatform && <AddPlatformModal open={addOpen} onOpenChange={setAddOpen} />}
       <Toaster position="bottom-right" />
     </PlatformShell>
   );

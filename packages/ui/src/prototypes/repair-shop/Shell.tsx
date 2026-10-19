@@ -27,6 +27,10 @@ export interface RepairShellProps {
   /** Open the mobile menu on first render (stories). */
   menuOpen?: boolean;
   onNavigate?: (key: RepairNav) => void;
+  /** Show the top-bar search box only when a handler exists; omitted otherwise (no inert control). */
+  onSearch?: () => void;
+  /** Show the notifications bell only when a handler exists; omitted otherwise. */
+  onNotifications?: () => void;
   children: ReactNode | ((branch: Branch) => ReactNode);
 }
 
@@ -45,7 +49,7 @@ const ALL_NAV = [...MAIN_NAV, ...MANAGE_NAV];
  * StatusDot, "+" and account menu; sidebar with Manage section and Back to Portal; top bar with title, search,
  * notifications). Leda is not integrated, so there is no launcher. Each branch is its own platform in the rail.
  */
-export function RepairShell({ active, title, branchId = 'davao', platforms, menuOpen = false, onNavigate, children }: RepairShellProps) {
+export function RepairShell({ active, title, branchId = 'davao', platforms, menuOpen = false, onNavigate, onSearch, onNotifications, children }: RepairShellProps) {
   const [menu, setMenu] = useState(menuOpen);
   const branch = BRANCHES.find((b) => b.id === branchId) ?? BRANCHES[0];
   const branchPlatforms = platforms ?? [branch];
@@ -145,11 +149,13 @@ export function RepairShell({ active, title, branchId = 'davao', platforms, menu
             }
             end={
               <>
+                {onSearch && (
                 <label className="hidden h-9 items-center gap-2 rounded-full bg-surface-muted px-3.5 text-ink-subtle md:flex">
                   <Icon icon={MagnifyingGlass} size="sm" />
-                  <input aria-label="Search everything" placeholder="Search everything…" className="w-48 bg-transparent text-sm text-ink outline-none placeholder:text-ink-subtle" />
+                  <input aria-label="Search everything" onFocus={onSearch} placeholder="Search everything…" className="w-48 bg-transparent text-sm text-ink outline-none placeholder:text-ink-subtle" />
                 </label>
-                <IconButton icon={Bell} label="Notifications" variant="subtle" />
+                )}
+                {onNotifications && <IconButton icon={Bell} label="Notifications" variant="subtle" onClick={onNotifications} />}
               </>
             }
           />
