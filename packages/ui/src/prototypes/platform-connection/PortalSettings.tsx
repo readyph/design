@@ -65,8 +65,8 @@ function PasswordModal({ open, onOpenChange }: { open: boolean; onOpenChange: (o
     <Modal open={open} onOpenChange={onOpenChange} title="Change password" description="You will be signed out of Portal, Inventory and Repair shop, then sign in with the new password."
       footer={<><Button variant="subtle" onClick={() => onOpenChange(false)}>Cancel</Button><Button onClick={() => { onOpenChange(false); toast.success('Password changed. Signing you out.'); }}>Change password</Button></>}>
       <div className="flex flex-col gap-4">
-        <Field label="Current password"><Input type="password" /></Field>
-        <Field label="New password" hint="At least 8 characters."><Input type="password" /></Field>
+        <Field label="Current password"><Input type="password" autoFocus autoComplete="current-password" /></Field>
+        <Field label="New password" hint="At least 8 characters."><Input type="password" autoComplete="new-password" /></Field>
         <Field label="Confirm new password"><Input type="password" /></Field>
       </div>
     </Modal>
@@ -89,8 +89,8 @@ function AccountTab({ passwordOpen }: { passwordOpen: boolean }) {
   );
 }
 
-function UsageRow({ label, value, pct }: { label: string; value: string; pct: number }) {
-  return <div className="flex flex-col gap-2"><div className="flex justify-between text-sm"><span className="text-ink-muted">{label}</span><span className="tabular-nums">{value}</span></div><ProgressBar value={pct} /></div>;
+function UsageRow({ label, value, pct, full }: { label: string; value: string; pct: number; full?: boolean }) {
+  return <div className="flex flex-col gap-2"><div className="flex justify-between text-sm"><span className="text-ink-muted">{label}</span><span className="tabular-nums">{value}</span></div><ProgressBar value={pct} label={`${label}: ${value}`} tone={full ? 'error' : 'primary'} /></div>;
 }
 
 function PlanChangeModal({ open, onOpenChange, onSent }: { open: boolean; onOpenChange: (o: boolean) => void; onSent: () => void }) {
@@ -122,7 +122,7 @@ function BillingTab({ state, requestOpen }: { state: SettingsState; requestOpen:
       <SettingsSection title="Usage this month" description="Resets on the 1st.">
         <div className="flex flex-col gap-4">
           <UsageRow label="Leda messages" value="640 of 1,000" pct={64} />
-          <UsageRow label="Platforms" value="3 of 3" pct={100} />
+          <UsageRow label="Platforms" value="3 of 3" pct={100} full={atLimit} />
           <UsageRow label="Team members" value="8 of 10" pct={80} />
         </div>
         {atLimit && <Notice tone="warning" icon={Warning}>You are at your platform limit. Request a plan change to connect more.</Notice>}

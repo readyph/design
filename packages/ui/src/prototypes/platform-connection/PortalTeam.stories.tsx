@@ -33,7 +33,7 @@ function InviteModal({ open, onOpenChange, error }: { open: boolean; onOpenChang
     <Modal open={open} onOpenChange={onOpenChange} title="Invite a team member" description="They get an email to join and choose which platforms they can use."
       footer={<><Button variant="subtle" onClick={() => onOpenChange(false)}>Cancel</Button><Button onClick={() => { onOpenChange(false); toast.success('Invitation sent to liza.mercado@gmail.com.'); }}>Send invite</Button></>}>
       <div className="flex flex-col gap-4">
-        <Field label="Email" required error={error ? 'Enter a valid email.' : undefined}><Input type="email" placeholder="name@company.ph" defaultValue={error ? 'liza@' : ''} /></Field>
+        <Field label="Email" required error={error ? 'Enter a valid email.' : undefined}><Input type="email" autoFocus autoComplete="off" placeholder="name@company.ph" defaultValue={error ? 'liza@' : ''} /></Field>
         <Field label="Role"><Select value="staff" onValueChange={() => undefined} options={[{ value: 'staff', label: 'Staff' }, { value: 'mechanic', label: 'Mechanic' }, { value: 'admin', label: 'Admin' }]} /></Field>
         <Field label="Platform access" hint="Inventory and each Repair shop branch can be allowed separately."><Select value="all" onValueChange={() => undefined} options={[{ value: 'all', label: 'All platforms' }, { value: 'inv', label: 'Main inventory only' }, { value: 'dvo', label: 'Davao branch only' }]} /></Field>
       </div>

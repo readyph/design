@@ -15,8 +15,8 @@ function Handoff({ icon, title, description, children, tone = 'neutral' }: { ico
     <div className="ds-root grid min-h-screen place-items-center bg-surface-canvas p-4 font-sans text-ink sm:p-6">
       <Card padding="lg" className="flex w-full max-w-sm flex-col items-center gap-4 text-center">
         <span className={tone === 'error' ? 'grid h-12 w-12 place-items-center rounded-full bg-error-50 text-error' : 'grid h-12 w-12 place-items-center rounded-full bg-primary-50 text-primary-700'}><Icon icon={icon} size="lg" /></span>
-        <h1 className="text-lg font-semibold">{title}</h1>
-        <p className="text-sm text-ink-muted">{description}</p>
+        <div className="flex flex-col gap-2" role="status" aria-live="polite"><h1 className="text-lg font-semibold">{title}</h1>
+        <p className="text-sm text-ink-muted">{description}</p></div>
         {children}
       </Card>
     </div>
@@ -24,6 +24,6 @@ function Handoff({ icon, title, description, children, tone = 'neutral' }: { ico
 }
 
 export const Opening: Story = { name: 'Opening the app', render: () => <Handoff icon={Wrench} title="Opening Davao branch" description="Signing you in."><Spinner size="lg" className="text-ink-subtle" /></Handoff> };
-export const Expired: Story = { name: 'Session expired', render: () => <Handoff icon={Lock} title="Your session expired" description="Sign in again to continue to Davao branch."><Button fullWidth>Sign in</Button></Handoff> };
-export const Unreachable: Story = { name: 'App unreachable', render: () => <Handoff icon={WifiSlash} tone="error" title="Davao branch isn't responding" description="Your data is safe. Try again in a moment."><div className="flex w-full gap-2"><Button fullWidth variant="secondary">Back to Portal</Button><Button fullWidth>Try again</Button></div></Handoff> };
+export const Expired: Story = { name: 'Session expired', render: () => <Handoff icon={Lock} title="Your session expired" description="Sign in again to continue to Davao branch."><Button fullWidth autoFocus>Sign in</Button></Handoff> };
+export const Unreachable: Story = { name: 'App unreachable', render: () => <Handoff icon={WifiSlash} tone="error" title="Davao branch isn't responding" description="Your data is safe. Try again in a moment."><div className="flex w-full gap-2"><Button fullWidth variant="secondary">Back to Portal</Button><Button fullWidth autoFocus>Try again</Button></div></Handoff> };
 export const NoAccess: Story = { name: 'No access to this platform', render: () => <Handoff icon={Warning} tone="error" title="You don't have access" description="Ask your company owner to give you access to Davao branch in Portal > Team."><Button fullWidth variant="secondary">Back to Portal</Button></Handoff> };
