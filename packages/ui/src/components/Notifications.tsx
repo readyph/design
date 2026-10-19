@@ -86,7 +86,7 @@ export const Notifications = forwardRef<HTMLDivElement, NotificationsProps>(func
                   onClick={() => onTabChange?.(t)}
                   className={cn(
                     'flex-1 whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-semibold transition-colors',
-                    on ? 'bg-surface text-primary-600 shadow-sm' : 'text-ink-muted hover:text-ink',
+                    on ? 'bg-surface text-link shadow-sm' : 'text-ink-muted hover:text-ink',
                   )}
                 >
                   {t}
@@ -122,7 +122,7 @@ export const Notifications = forwardRef<HTMLDivElement, NotificationsProps>(func
             <span className="min-w-0 flex-1">
               <span className="block font-semibold leading-snug text-ink">{n.title}</span>
               {n.body && <span className="mt-0.5 block text-sm leading-snug text-ink-muted">{n.body}</span>}
-              <span className="mt-1 block text-xs text-ink-subtle">{n.time}</span>
+              <span className="mt-1 block text-xs text-ink-muted">{n.time}</span>
             </span>
           </button>
         ))}
