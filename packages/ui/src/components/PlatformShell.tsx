@@ -179,7 +179,7 @@ export function PlatformShell({
   const sidebarBody = (
     <>
       <div className="mb-2 flex items-center gap-2 px-2 pt-1">
-        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-base bg-primary-50 text-primary-700">
+        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-base bg-primary-50 text-primary-700 [[data-theme=dark]_&]:text-primary-900">
           <Icon icon={platform.icon} size="sm" weight="fill" />
         </span>
         {company ? (

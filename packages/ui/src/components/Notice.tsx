@@ -48,7 +48,7 @@ export const Notice = forwardRef<HTMLDivElement, NoticeProps>(function Notice(
       {IconCmp && <Icon icon={IconCmp} size="md" weight="fill" className={cn('mt-0.5', t.icon)} />}
       <div className="min-w-0 flex-1">
         {title && <p className="font-semibold text-ink">{title}</p>}
-        {children && <div className={cn(tone === 'error' ? 'text-ink' : 'text-ink-muted', title && 'mt-0.5')}>{children}</div>}
+        {children && <div className={cn('text-ink', title && 'mt-0.5')}>{children}</div>}
       </div>
       {onDismiss && (
         <button
