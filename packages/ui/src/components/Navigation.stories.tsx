@@ -42,6 +42,27 @@ export const UnderlineTabs: Story = {
   ),
 };
 
+export const UnderlineOnSurfaces: Story = {
+  name: 'Underline on window and card',
+  render: () => {
+    const items = [
+      { value: 'a', label: 'Company' },
+      { value: 'b', label: 'Schedule' },
+      { value: 'c', label: 'Account' },
+    ];
+    return (
+      <div className="flex flex-col gap-6">
+        <div data-testid="tabs-window" className="rounded-md bg-surface-canvas p-6">
+          <Tabs items={items} />
+        </div>
+        <div data-testid="tabs-card" className="rounded-md border border-border bg-surface p-6">
+          <Tabs items={items} />
+        </div>
+      </div>
+    );
+  },
+};
+
 export const PillTabs: Story = {
   render: () => (
     <Tabs

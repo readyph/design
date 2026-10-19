@@ -38,7 +38,7 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
       className={cn('flex flex-col gap-4', className)}
     >
       <RadixTabs.List
-        className={cn('flex items-center gap-1 overflow-x-auto', variant === 'underline' && 'border-b border-border')}
+        className={cn('flex items-center gap-1 overflow-x-auto', variant === 'underline' && 'border-b border-border-strong')}
         aria-label="Tabs"
       >
         {items.map((item) => (
