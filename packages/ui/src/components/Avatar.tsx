@@ -45,7 +45,7 @@ export const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(function Avatar(
     <span ref={ref} className={cn('relative inline-flex shrink-0', className)}>
       <RadixAvatar.Root
         className={cn(
-          'inline-flex select-none items-center justify-center overflow-hidden bg-primary-100 font-medium text-primary-700',
+          'inline-flex select-none items-center justify-center overflow-hidden bg-primary-100 font-medium text-primary-800',
           shape === 'circle' ? 'rounded-full' : 'rounded-md',
           sizes[size],
         )}
