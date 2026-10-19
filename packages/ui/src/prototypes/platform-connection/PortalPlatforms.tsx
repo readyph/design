@@ -15,7 +15,7 @@ import { toast } from '../../components/toast/toastStore';
 import { Page, RetryNotice } from '../repair-shop/Page';
 import { AddPlatformModal, ConnShell } from './ConnShell';
 import { HANDOFF_OPENING, PLATFORMS, type DemoPlatform } from './data';
-import { LinkButton } from './LinkButton';
+import { ButtonLink as LinkButton } from '../../components/ButtonLink';
 
 export type Launch = 'idle' | 'unreachable';
 export type PlatformsState = 'default' | 'loading' | 'empty' | 'error';

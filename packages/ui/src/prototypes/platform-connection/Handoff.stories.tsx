@@ -4,7 +4,7 @@ import { Card } from '../../components/Card';
 import { Icon } from '../../components/Icon';
 import { Spinner } from '../../components/Spinner';
 import { HANDOFF_OPENING, PORTAL } from './data';
-import { LinkButton } from './LinkButton';
+import { ButtonLink as LinkButton } from '../../components/ButtonLink';
 
 /** PROTOTYPE (RDY-120) - what a user sees when a Portal link opens another app: signing in, session expired, app unreachable, no access. */
 const meta: Meta = { title: 'Portal/App handoff', tags: ['!autodocs'], parameters: { layout: 'fullscreen' } };

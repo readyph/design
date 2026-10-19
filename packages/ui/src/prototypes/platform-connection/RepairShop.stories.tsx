@@ -11,7 +11,7 @@ import { mobile } from '../repair-shop/params';
 import { RepairFlow } from '../repair-shop/Flow';
 import { ConnShell } from './ConnShell';
 import { PORTAL } from './data';
-import { LinkButton } from './LinkButton';
+import { ButtonLink as LinkButton } from '../../components/ButtonLink';
 
 /** PROTOTYPE (RDY-120) - Repair shop branch Settings (new), the Parts empty state with a working action, and New quotation opening the intake from Today and Jobs. */
 const meta: Meta = { title: 'Repair shop/Settings and parts', tags: ['!autodocs'], parameters: { layout: 'fullscreen' } };

@@ -34,23 +34,23 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 // the filled variants use a transparent border, `secondary` colours it. Without
 // this, `secondary`'s border would inset its fill and make it render a hair
 // smaller than the borderless primary/danger/subtle buttons.
-const base =
+export const base =
   'relative inline-flex items-center justify-center gap-2 whitespace-nowrap border border-transparent rounded-base font-medium transition-colors duration-DEFAULT ease-standard disabled:cursor-not-allowed disabled:opacity-50';
 
-const variants: Record<ButtonVariant, string> = {
+export const variants: Record<ButtonVariant, string> = {
   primary: 'bg-primary-600 text-white hover:bg-primary-700',
   secondary: 'border-border-strong bg-surface text-ink hover:bg-surface-subtle active:bg-surface-muted',
   subtle: 'bg-transparent text-ink hover:bg-surface-muted active:bg-neutral-200',
   danger: 'bg-error text-white hover:brightness-95 active:brightness-90',
 };
 
-const sizes: Record<ButtonSize, string> = {
+export const sizes: Record<ButtonSize, string> = {
   sm: 'h-sm px-3 text-sm',
   md: 'h-md px-4 text-sm',
   lg: 'h-lg px-5 text-base',
 };
 
-const iconSizeFor: Record<ButtonSize, 'sm' | 'md'> = { sm: 'sm', md: 'sm', lg: 'md' };
+export const iconSizeFor: Record<ButtonSize, 'sm' | 'md'> = { sm: 'sm', md: 'sm', lg: 'md' };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   {
