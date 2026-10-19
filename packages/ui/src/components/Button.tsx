@@ -38,8 +38,8 @@ const base =
   'relative inline-flex items-center justify-center gap-2 whitespace-nowrap border border-transparent rounded-base font-medium transition-colors duration-DEFAULT ease-standard disabled:cursor-not-allowed disabled:opacity-50';
 
 const variants: Record<ButtonVariant, string> = {
-  primary: 'bg-primary-500 text-white hover:bg-primary-600',
-  secondary: 'border-border bg-transparent text-ink hover:bg-surface-subtle active:bg-surface-muted',
+  primary: 'bg-primary-600 text-white hover:bg-primary-700',
+  secondary: 'border-border-strong bg-surface text-ink hover:bg-surface-subtle active:bg-surface-muted',
   subtle: 'bg-transparent text-ink hover:bg-surface-muted active:bg-neutral-200',
   danger: 'bg-error text-white hover:brightness-95 active:brightness-90',
 };
