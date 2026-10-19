@@ -1,5 +1,13 @@
 # @readyph/ui
 
+## 0.5.3
+
+### Patch Changes
+
+- b3381e2: Fix colour contrast: Notice info, success and warning body text now uses text-ink (as error already did), and the MainNav and PlatformShell brand-mark active label uses text-primary-900 in the dark theme, so axe reports 0 colour-contrast violations in light and dark.
+- c40593e: Fix colour contrast through tokens. ink-subtle and ink-muted are darker in light and lighter in dark so secondary text passes 4.5:1 on canvas, surface and muted surfaces. New success-fg, warning-fg and error-fg text tokens (text-success-fg etc.) replace text-success, text-warning and text-error for text on tinted backgrounds; the base colors stay for fills and dots. Tabs pill active label gets a dark-theme override. axe reports 0 colour-contrast violations in the repair-shop prototype stories, light and dark.
+- 4717ff5: Fix remaining colour contrast failures. The link token is now #1d4ed8 in light so links pass 4.5:1 on the canvas. Disabled Checkbox, Switch and RadioGroup labels use text-ink-muted instead of fading the whole label with opacity. Portal dashboard, portal reports and inventory reports stories no longer fail in light or dark. axe reports 0 colour-contrast violations across all 267 stories, light and dark.
+
 ## 0.5.2
 
 ### Patch Changes
