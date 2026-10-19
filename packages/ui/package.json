@@ -1,6 +1,6 @@
 {
   "name": "@readyph/ui",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "ReadyPH design system — React components, design tokens, Tailwind preset and theme (Tailwind + Radix + Phosphor).",
   "repository": {
     "type": "git",
