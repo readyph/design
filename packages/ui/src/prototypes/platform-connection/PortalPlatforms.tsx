@@ -35,7 +35,7 @@ function PlatformCard({ p, launch, onConnect }: { p: DemoPlatform; launch: Launc
             <span className="flex items-center gap-1 text-xs text-ink-muted"><StatusDot status={p.status} /> {p.setupNeeded ? 'Setup needed' : STATUS_LABEL[p.status]}</span>
           </div>
           <p className="text-sm">{p.setupNeeded ? 'No data source linked yet' : p.metric}</p>
-          <p className="text-xs text-ink-subtle">{p.kind === 'inventory' ? 'Inventory' : 'Repair shop'} - {p.appUrl}</p>
+          <p className="text-xs text-ink-muted">{p.kind === 'inventory' ? 'Inventory' : 'Repair shop'} - {p.appUrl}</p>
         </div>
       </div>
       {launch === 'unreachable' && <Notice tone="error" title={`Couldn't open ${p.label}`}>The app didn't respond. Try again in a moment.</Notice>}
@@ -43,7 +43,7 @@ function PlatformCard({ p, launch, onConnect }: { p: DemoPlatform; launch: Launc
         {p.setupNeeded
           ? <Button size="sm" leftIcon={LinkSimple} onClick={() => onConnect(p)}>Finish setup</Button>
           : <LinkButton size="sm" href={HANDOFF_OPENING} leftIcon={ArrowSquareOut}>{launch === 'unreachable' ? 'Try again' : 'Open'}</LinkButton>}
-        {repair && !p.setupNeeded && <Button size="sm" variant="secondary" leftIcon={LinkSimple} onClick={() => onConnect(p)}>Connect data</Button>}
+        {repair && !p.setupNeeded && <Button size="sm" variant="secondary" className="border-border-strong bg-surface" leftIcon={LinkSimple} onClick={() => onConnect(p)}>Connect data</Button>}
       </div>
     </Card>
   );

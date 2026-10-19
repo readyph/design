@@ -105,7 +105,7 @@ function AccountTab({ passwordOpen }: { passwordOpen: boolean }) {
         <Field label="Full name"><Input defaultValue="Maria Santos" /></Field>
         <Field label="Email" hint="Sign-in email. Ask your company owner to change it."><Input defaultValue="maria@sunrise.ph" disabled /></Field>
       </SettingsSection>
-      <SettingsSection title="Password" description="Used across Portal, Inventory and Repair shop." actions={<Button size="sm" variant="secondary" onClick={() => setOpen(true)}>Change password</Button>}>
+      <SettingsSection title="Password" description="Used across Portal, Inventory and Repair shop." actions={<Button size="sm" variant="secondary" className="border-border-strong bg-surface" onClick={() => setOpen(true)}>Change password</Button>}>
         <p className="text-sm text-ink-muted">Last changed 3 months ago.</p>
       </SettingsSection>
       <PasswordModal open={open} onOpenChange={setOpen} />
@@ -139,7 +139,7 @@ function BillingTab({ state, requestOpen }: { state: SettingsState; requestOpen:
   const atLimit = state === 'limit';
   return (
     <Stack>
-      <SettingsSection title="Plan" description="Your current subscription." actions={sent ? undefined : <Button size="sm" variant="secondary" onClick={() => setOpen(true)}>Request plan change</Button>}>
+      <SettingsSection title="Plan" description="Your current subscription." actions={sent ? undefined : <Button size="sm" variant="secondary" className="border-border-strong bg-surface" onClick={() => setOpen(true)}>Request plan change</Button>}>
         <div className="flex items-center gap-3"><span className="text-lg font-semibold">Starter</span><Badge tone="success" size="sm">Active</Badge>{sent && <Badge tone="info" size="sm">Change to Pro requested</Badge>}</div>
         <ul className="flex flex-col gap-1 text-sm text-ink-muted"><li>Up to 3 platforms and 10 team members</li><li>1,000 Leda messages per month</li></ul>
       </SettingsSection>

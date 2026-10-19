@@ -33,15 +33,20 @@ function RepairSettings({ state = 'default' }: { state?: 'default' | 'loading' |
         {state === 'error' && <RetryNotice title="Couldn't load branch settings" />}
         {state === 'default' && (
           <>
-            <SettingsSection title="Branch" description="Name and status are managed in the Portal." actions={<LinkButton size="sm" variant="secondary" rightIcon={ArrowSquareOut} href={`${PORTAL}/platforms`}>Manage in Portal</LinkButton>}>
-              <Row label="Branch name" value="Davao branch" />
-              <Row label="Status" value="Active" />
+            <SettingsSection title="Branch" description="Name and status are managed in the Portal.">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="flex flex-col gap-4"><Row label="Branch name" value="Davao branch" /><Row label="Status" value="Active" /></div>
+                <LinkButton size="sm" variant="secondary" rightIcon={ArrowSquareOut} href={`${PORTAL}/platforms`}>Manage in Portal</LinkButton>
+              </div>
             </SettingsSection>
             <SettingsSection title="Parts source" description="Where parts and stock levels come from.">
-              <div className="flex items-center gap-3 text-sm"><span className="grid h-9 w-9 place-items-center rounded-lg bg-primary-50 text-primary-700"><Icon icon={Package} size="md" /></span><div className="flex flex-1 flex-col gap-1"><p className="font-medium">Main inventory</p><p className="text-xs text-ink-subtle">Linked - 214 products</p></div><Badge tone="success" size="sm">Linked</Badge></div>
+              <div className="flex items-center gap-3 text-sm"><span className="grid h-9 w-9 place-items-center rounded-lg bg-primary-50 text-primary-700"><Icon icon={Package} size="md" /></span><div className="flex flex-1 flex-col gap-1"><p className="font-medium">Main inventory</p><p className="flex items-center gap-2 text-xs text-ink-muted">214 products <Badge tone="success" size="sm">Linked</Badge></p></div></div>
             </SettingsSection>
-            <SettingsSection title="Team access" description="Who can use this branch." actions={<LinkButton size="sm" variant="secondary" rightIcon={ArrowSquareOut} href={`${PORTAL}/team`}>Manage team</LinkButton>}>
-              <p className="text-sm text-ink-muted">4 members. Invite or change access from Portal &gt; Team.</p>
+            <SettingsSection title="Team access" description="Who can use this branch.">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <p className="text-sm text-ink-muted">4 members. Invite or change access from Portal &gt; Team.</p>
+                <LinkButton size="sm" variant="secondary" rightIcon={ArrowSquareOut} href={`${PORTAL}/team`}>Manage team</LinkButton>
+              </div>
             </SettingsSection>
           </>
         )}

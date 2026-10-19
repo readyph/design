@@ -62,7 +62,7 @@ function TeamPage({ open = false, error = false, state = 'default' }: { open?: b
     { key: 'role', header: 'Role', render: (m) => m.role },
     { key: 'access', header: 'Access', className: 'hidden md:table-cell', render: (m) => m.access },
     { key: 'status', header: '', align: 'right', render: (m) => m.pending
-      ? <div className="flex items-center justify-end gap-2"><Badge tone="warning" size="sm">Invited</Badge><Button size="sm" variant="secondary" onClick={() => toast.success(`Invitation re-sent to ${m.email}.`)}>Resend</Button></div>
+      ? <div className="flex items-center justify-end gap-2"><Badge tone="warning" size="sm">Invited</Badge><Button size="sm" variant="secondary" className="border-border-strong bg-surface" onClick={() => toast.success(`Invitation re-sent to ${m.email}.`)}>Resend</Button></div>
       : <Badge tone="success" size="sm">Active</Badge> },
   ];
   return (

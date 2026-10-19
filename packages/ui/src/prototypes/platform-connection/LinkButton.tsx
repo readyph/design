@@ -12,8 +12,8 @@ type Size = 'sm' | 'md';
 
 const base = 'inline-flex items-center justify-center gap-2 whitespace-nowrap border border-transparent rounded-base font-medium transition-colors duration-DEFAULT ease-standard';
 const variants: Record<Variant, string> = {
-  primary: 'bg-primary-500 text-white hover:bg-primary-600',
-  secondary: 'border-border bg-transparent text-ink hover:bg-surface-subtle active:bg-surface-muted',
+  primary: 'bg-primary-600 text-white hover:bg-primary-700',
+  secondary: 'border-border-strong bg-surface text-ink hover:bg-surface-subtle active:bg-surface-muted',
 };
 const sizes: Record<Size, string> = { sm: 'h-sm px-3 text-sm', md: 'h-md px-4 text-sm' };
 
