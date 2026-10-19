@@ -132,7 +132,7 @@ export const Notifications = forwardRef<HTMLDivElement, NotificationsProps>(func
       <button
         type="button"
         onClick={onViewAll}
-        className="border-t border-border px-5 py-3.5 text-center text-sm font-semibold text-primary-600 transition-colors hover:bg-surface-subtle"
+        className="border-t border-border px-5 py-3.5 text-center text-sm font-semibold text-link transition-colors hover:bg-surface-subtle"
       >
         View all notifications
       </button>
