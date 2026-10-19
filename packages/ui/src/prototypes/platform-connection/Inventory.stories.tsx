@@ -16,7 +16,7 @@ import { Page, RetryNotice } from '../repair-shop/Page';
 import { mobile } from '../repair-shop/params';
 import { ConnShell } from './ConnShell';
 import { PORTAL } from './data';
-import { LinkButton } from './LinkButton';
+import { ButtonLink as LinkButton } from '../../components/ButtonLink';
 
 /** PROTOTYPE (RDY-120) - Inventory Settings after the cut (Units and Reorder defaults removed), a real Platform tab with a Manage in Portal link, and the shared rail listing real platforms. */
 const meta: Meta = { title: 'Inventory/Connected settings', tags: ['!autodocs'], parameters: { layout: 'fullscreen' } };

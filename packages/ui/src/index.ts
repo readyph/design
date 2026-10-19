@@ -22,6 +22,7 @@ export { Spinner, type SpinnerProps } from './components/Spinner';
 
 // Actions
 export { Button, type ButtonProps, type ButtonVariant, type ButtonSize } from './components/Button';
+export { ButtonLink, type ButtonLinkProps } from './components/ButtonLink';
 export { IconButton, type IconButtonProps } from './components/IconButton';
 export { Link, type LinkProps } from './components/Link';
 
