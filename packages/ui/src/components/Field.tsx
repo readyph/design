@@ -55,12 +55,12 @@ export const Field = forwardRef<HTMLDivElement, FieldProps>(function Field(
         {label && (
           <label htmlFor={id} className="text-sm font-medium text-ink">
             {label}
-            {required && <span className="ml-0.5 text-error">*</span>}
+            {required && <span className="ml-0.5 text-error-fg">*</span>}
           </label>
         )}
         {children}
         {error ? (
-          <p id={errorId} className="text-xs text-error">
+          <p id={errorId} className="text-xs text-error-fg">
             {error}
           </p>
         ) : (

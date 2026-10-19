@@ -52,7 +52,7 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
               variant === 'underline' &&
                 '-mb-px border-b-2 border-transparent px-3 py-2 hover:text-ink data-[state=active]:border-primary-500 data-[state=active]:text-ink',
               variant === 'pill' &&
-                'rounded-full px-3 py-1.5 hover:bg-surface-muted hover:text-ink data-[state=active]:bg-primary-50 data-[state=active]:text-primary-700',
+                'rounded-full px-3 py-1.5 hover:bg-surface-muted hover:text-ink data-[state=active]:bg-primary-50 data-[state=active]:text-primary-700 [[data-theme=dark]_&]:data-[state=active]:text-primary-900',
             )}
           >
             {item.icon && <Icon icon={item.icon} size="sm" />}

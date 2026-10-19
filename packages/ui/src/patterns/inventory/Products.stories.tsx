@@ -260,8 +260,8 @@ export const Products: Story = {
                         <span
                           className={
                             m.qty > 0
-                              ? 'grid h-6 w-6 shrink-0 place-items-center rounded-full bg-success/10 text-success'
-                              : 'grid h-6 w-6 shrink-0 place-items-center rounded-full bg-error/10 text-error'
+                              ? 'grid h-6 w-6 shrink-0 place-items-center rounded-full bg-success/10 text-success-fg'
+                              : 'grid h-6 w-6 shrink-0 place-items-center rounded-full bg-error/10 text-error-fg'
                           }
                         >
                           <Icon icon={m.qty > 0 ? ArrowDown : ArrowUp} size="sm" weight="bold" />
@@ -272,7 +272,7 @@ export const Products: Story = {
                           </p>
                           <p className="text-xs text-ink-subtle">{m.time}</p>
                         </div>
-                        <span className={m.qty > 0 ? 'text-sm font-medium tabular-nums text-success' : 'text-sm font-medium tabular-nums text-error'}>
+                        <span className={m.qty > 0 ? 'text-sm font-medium tabular-nums text-success-fg' : 'text-sm font-medium tabular-nums text-error-fg'}>
                           {m.qty > 0 ? `+${m.qty}` : m.qty}
                         </span>
                       </div>

@@ -13,9 +13,9 @@ import { useToasts, dismissToast, type ToastTone } from './toastStore';
 
 const toneIcon: Record<ToastTone, { icon: PhosphorIcon; color: string }> = {
   info: { icon: Info, color: 'text-info' },
-  success: { icon: CheckCircle, color: 'text-success' },
-  warning: { icon: Warning, color: 'text-warning' },
-  error: { icon: WarningOctagon, color: 'text-error' },
+  success: { icon: CheckCircle, color: 'text-success-fg' },
+  warning: { icon: Warning, color: 'text-warning-fg' },
+  error: { icon: WarningOctagon, color: 'text-error-fg' },
 };
 
 export interface ToasterProps {

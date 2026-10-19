@@ -92,8 +92,8 @@ export interface JobFlowProps {
 export type TodayState = 'default' | 'clear' | 'loading' | 'error';
 
 const REASON_ICON: Record<'error' | 'warning' | 'info', { icon: PhosphorIcon; cls: string }> = {
-  error: { icon: Warning, cls: 'bg-error/10 text-error' },
-  warning: { icon: Clock, cls: 'bg-warning/10 text-warning' },
+  error: { icon: Warning, cls: 'bg-error/10 text-error-fg' },
+  warning: { icon: Clock, cls: 'bg-warning/10 text-warning-fg' },
   info: { icon: Hourglass, cls: 'bg-info/10 text-info' },
 };
 
@@ -112,8 +112,8 @@ export function TodayPage({
 
   const tiles: { label: string; value: string | number; delta?: string; icon: PhosphorIcon; tone: string }[] = [
     { label: 'Due today', value: dueToday.length, icon: CalendarCheck, tone: 'text-primary-600' },
-    { label: 'Waiting on customer', value: waiting.length, icon: Hourglass, tone: 'text-warning' },
-    { label: 'Unpaid', value: unpaid.length, delta: unpaid.length ? peso(unpaid.reduce((a, j) => a + j.balance, 0)) : undefined, icon: Receipt, tone: 'text-error' },
+    { label: 'Waiting on customer', value: waiting.length, icon: Hourglass, tone: 'text-warning-fg' },
+    { label: 'Unpaid', value: unpaid.length, delta: unpaid.length ? peso(unpaid.reduce((a, j) => a + j.balance, 0)) : undefined, icon: Receipt, tone: 'text-error-fg' },
   ];
 
   return (
@@ -133,7 +133,7 @@ export function TodayPage({
                 <span className="text-xs leading-tight text-ink-muted">{s.label}</span>
               </div>
               <div className="mt-2 text-xl font-extrabold tabular-nums text-ink">{state === 'loading' ? <Skeleton className="h-7 w-10" /> : s.value}</div>
-              {s.delta && state !== 'loading' && <div className="text-xs font-semibold text-error">{s.delta}</div>}
+              {s.delta && state !== 'loading' && <div className="text-xs font-semibold text-error-fg">{s.delta}</div>}
             </div>
           ))}
         </div>

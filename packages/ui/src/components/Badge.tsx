@@ -22,8 +22,8 @@ const tones: Record<BadgeTone, string> = {
   primary: 'bg-tint-peach-bg text-tint-peach-fg',
   success: 'bg-tint-green-bg text-tint-green-fg',
   info: 'bg-tint-teal-bg text-tint-teal-fg',
-  warning: 'bg-warning/15 text-warning',
-  error: 'bg-error/10 text-error',
+  warning: 'bg-warning/15 text-warning-fg',
+  error: 'bg-error/10 text-error-fg',
 };
 
 const dots: Record<BadgeTone, string> = {

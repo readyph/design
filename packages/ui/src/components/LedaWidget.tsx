@@ -46,17 +46,17 @@ export type LedaTone = 'primary' | 'success' | 'warning' | 'error' | 'info' | 'n
 const toneChip: Record<LedaTone, string> = {
   primary: 'bg-primary-500/15 text-primary-500',
   success: 'bg-tint-green-bg text-tint-green-fg',
-  warning: 'bg-warning/15 text-warning',
-  error: 'bg-error/15 text-error',
+  warning: 'bg-warning/15 text-warning-fg',
+  error: 'bg-error/15 text-error-fg',
   info: 'bg-tint-teal-bg text-tint-teal-fg',
   neutral: 'bg-surface-muted text-ink-muted',
 };
 
 const toneText: Record<LedaTone, string> = {
   primary: 'text-primary-500',
-  success: 'text-success',
-  warning: 'text-warning',
-  error: 'text-error',
+  success: 'text-success-fg',
+  warning: 'text-warning-fg',
+  error: 'text-error-fg',
   info: 'text-info',
   neutral: 'text-ink-subtle',
 };
@@ -229,7 +229,7 @@ function LedaChart({
   const fmt = formatValue ?? ((v: number) => String(v));
 
   const deltaToneClass =
-    delta?.tone === 'error' ? 'text-error' : delta?.tone === 'neutral' ? 'text-ink-subtle' : 'text-success';
+    delta?.tone === 'error' ? 'text-error-fg' : delta?.tone === 'neutral' ? 'text-ink-subtle' : 'text-success-fg';
 
   const header = (total != null || delta) && (
     <div className="mb-3 flex items-baseline gap-2">
@@ -566,7 +566,7 @@ function LedaProposal({
 
   const footer =
     status === 'confirmed' ? (
-      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-success">
+      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-success-fg">
         <Icon icon={CheckCircle} size="sm" weight="fill" />
         {resultText ?? 'Done.'}
       </span>
@@ -608,7 +608,7 @@ function LedaProposal({
                 <span
                   className={cn(
                     'font-semibold tabular-nums',
-                    c.sign === 'in' ? 'text-success' : c.sign === 'out' ? 'text-error' : 'text-ink',
+                    c.sign === 'in' ? 'text-success-fg' : c.sign === 'out' ? 'text-error-fg' : 'text-ink',
                   )}
                 >
                   {c.sign === 'in' ? '+' : c.sign === 'out' ? '−' : ''}
@@ -783,9 +783,9 @@ export interface LedaResultProps extends Omit<HTMLAttributes<HTMLDivElement>, 't
 }
 
 const resultTone: Record<ResultTone, { fill: string; icon: string; defaultIcon: PhosphorIcon }> = {
-  success: { fill: 'bg-success/12', icon: 'text-success', defaultIcon: CheckCircle },
-  error: { fill: 'bg-error/12', icon: 'text-error', defaultIcon: WarningOctagon },
-  warning: { fill: 'bg-warning/12', icon: 'text-warning', defaultIcon: Warning },
+  success: { fill: 'bg-success/12', icon: 'text-success-fg', defaultIcon: CheckCircle },
+  error: { fill: 'bg-error/12', icon: 'text-error-fg', defaultIcon: WarningOctagon },
+  warning: { fill: 'bg-warning/12', icon: 'text-warning-fg', defaultIcon: Warning },
   info: { fill: 'bg-info/12', icon: 'text-info', defaultIcon: Info },
 };
 

@@ -15,8 +15,8 @@ export interface SparklineProps {
 
 const toneClass: Record<SparklineTone, string> = {
   primary: 'text-primary-500',
-  success: 'text-success',
-  error: 'text-error',
+  success: 'text-success-fg',
+  error: 'text-error-fg',
   neutral: 'text-ink-subtle',
 };
 

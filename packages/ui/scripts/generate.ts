@@ -47,6 +47,9 @@ for (const [shade, hex] of Object.entries(colors.neutral)) {
 for (const [name, hex] of Object.entries(colors.semantic)) {
   vars[`--ds-${name}`] = toChannels(hex);
 }
+for (const [name, hex] of Object.entries(colors.semanticText)) {
+  vars[`--ds-${name}-fg`] = toChannels(hex);
+}
 vars['--ds-surface'] = toChannels(colors.surface.DEFAULT);
 vars['--ds-surface-subtle'] = toChannels(colors.surface.subtle);
 vars['--ds-surface-muted'] = toChannels(colors.surface.muted);
@@ -141,9 +144,9 @@ const colorTheme = {
   black: '#000000',
   primary: scale('primary', colors.primary),
   neutral: scale('neutral', colors.neutral),
-  success: c('--ds-success'),
-  warning: c('--ds-warning'),
-  error: c('--ds-error'),
+  success: { DEFAULT: c('--ds-success'), fg: c('--ds-success-fg') },
+  warning: { DEFAULT: c('--ds-warning'), fg: c('--ds-warning-fg') },
+  error: { DEFAULT: c('--ds-error'), fg: c('--ds-error-fg') },
   info: c('--ds-info'),
   surface: {
     DEFAULT: c('--ds-surface'),

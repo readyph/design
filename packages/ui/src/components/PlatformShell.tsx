@@ -275,7 +275,7 @@ export function PlatformShell({
         )}
         {railState === 'error' && (
           <div role="alert" className="flex w-full flex-col items-center gap-1 text-center">
-            <Icon icon={WarningCircle} size="md" className="text-error" />
+            <Icon icon={WarningCircle} size="md" className="text-error-fg" />
             <span className="text-xs leading-tight text-ink-muted">Platforms failed</span>
             <button
               type="button"
