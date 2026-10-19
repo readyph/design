@@ -1,5 +1,18 @@
 # @readyph/ui
 
+## 0.6.0
+
+### Minor Changes
+
+- 094ceae: Add ButtonLink: a real anchor styled as Button (all variants and sizes, focus ring, disabled handling, rel defaults for target=\_blank) so cross-app exits support middle-click and copy-link.
+- ccc1b74: Menu items accept `href` (plus `target` and `rel`) and render a real anchor, so account-menu exits support middle-click and copy-link while arrow, Enter and Esc behaviour is unchanged.
+
+### Patch Changes
+
+- c674f37: Button primary now uses primary-600 (hover primary-700) so white label text passes 4.5:1, and the secondary Button uses border-border-strong on bg-surface so it reads as a button in the light theme.
+- edaf911: Button: the dark theme primary hover now uses primary-200 (the dark-darkened blue) so the white label stays at 4.5:1 or better instead of dropping to 2.5:1; the dark secondary keeps its transparent fill and subtle border while light uses border-border-strong on bg-surface; the label wrapper is no longer display:contents so axe can check Button label contrast.
+- c6850b6: Tabs underline rule uses border-strong so it stays visible on the grey window surface in light and dark; the active indicator is unchanged. Adds an "Underline on window and card" story.
+
 ## 0.5.3
 
 ### Patch Changes
