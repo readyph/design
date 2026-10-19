@@ -48,3 +48,27 @@ export const Basic: Story = {
     </ShortcutModeProvider>
   ),
 };
+
+export const WithLinks: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Items with `href` render a real `<a role="menuitem">`: middle-click and copy-link work, arrows / Enter / Esc behave as for action items. Disabled link items drop the href. `target="_blank"` gets `rel="noopener noreferrer"`.',
+      },
+    },
+  },
+  render: () => (
+    <Menu
+      trigger={<Button variant="secondary">Account ▾</Button>}
+      items={[
+        { type: 'label', label: 'Signed in as maria@readyph.com' },
+        { label: 'Account', icon: User, href: '#account' },
+        { label: 'Billing', icon: CreditCard, href: '#billing', target: '_blank' },
+        { label: 'Settings (unavailable)', icon: Gear, href: '#settings', disabled: true },
+        { type: 'separator' },
+        { label: 'Sign out', icon: SignOut, danger: true },
+      ]}
+    />
+  ),
+};
