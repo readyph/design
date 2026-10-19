@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Package, Wrench, Gauge, ArrowsLeftRight, Receipt, ChartBar, Gear, SquaresFour, Users, BookOpen, House, CalendarCheck, ClipboardText, UsersThree, CreditCard, User, Storefront } from '@phosphor-icons/react';
+import { Toaster } from '../../components/toast/Toaster';
 import { PlatformShell, type PlatformShellPlatform, type PlatformShellSection } from '../../components/PlatformShell';
 import type { StatusTone } from '../../components/StatusDot';
 import { COMPANY, PLATFORMS, type AppKey } from './data';
@@ -81,12 +82,13 @@ export function ConnShell({
         email: 'maria@sunrise.ph',
         items: [
           { label: 'Account', icon: User, onSelect: () => undefined },
-          { label: app === 'portal' ? 'Billing' : 'Billing (opens Portal)', icon: CreditCard, onSelect: () => undefined },
+          { label: 'Billing', icon: CreditCard, onSelect: () => undefined },
         ],
         onSignOut: () => undefined,
       }}
     >
       {children}
+      <Toaster position="bottom-right" />
     </PlatformShell>
   );
 }

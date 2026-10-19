@@ -10,7 +10,7 @@ import { Page } from '../repair-shop/Page';
 import { FINDINGS, type Finding } from './data';
 
 /** PROTOTYPE (RDY-120) - the audit of dead links, no-op buttons and placeholders, with the resolution for each. */
-const meta: Meta = { title: 'Platform connection/Audit and map', tags: ['!autodocs'], parameters: { layout: 'fullscreen' } };
+const meta: Meta = { title: 'Portal/Platform connection audit', tags: ['!autodocs'], parameters: { layout: 'fullscreen' } };
 export default meta;
 type Story = StoryObj;
 
@@ -35,7 +35,7 @@ export const AuditTable: Story = {
   render: () => (
     <div className="ds-root min-h-screen bg-surface-canvas font-sans text-ink">
       <Page className="max-w-7xl">
-        <PageHeader title="Audit: dead links and placeholders" description={`${FINDINGS.length} findings across Portal, Inventory and Repair shop`} />
+        <PageHeader title="Platform connection audit" description={`${FINDINGS.length} findings across Portal, Inventory and Repair shop`} />
         <Table columns={columns} data={FINDINGS} rowKey={(f) => `${f.app}-${f.where}`} />
       </Page>
     </div>
@@ -44,15 +44,15 @@ export const AuditTable: Story = {
 
 function Node({ icon, title, lines }: { icon: typeof Package; title: string; lines: string[] }) {
   return (
-    <Card className="flex-1 space-y-2">
-      <div className="flex items-center gap-2"><span className="grid h-9 w-9 place-items-center rounded-lg bg-primary-50 text-primary-700"><Icon icon={icon} size="md" /></span><h3 className="text-sm font-semibold">{title}</h3></div>
-      <ul className="space-y-1 text-sm text-ink-muted">{lines.map((l) => <li key={l}>{l}</li>)}</ul>
+    <Card className="flex flex-1 flex-col gap-4">
+      <div className="flex items-center gap-3"><span className="grid h-9 w-9 place-items-center rounded-lg bg-primary-50 text-primary-700"><Icon icon={icon} size="md" /></span><h3 className="text-sm font-semibold">{title}</h3></div>
+      <ul className="flex flex-col gap-2 text-sm text-ink-muted">{lines.map((l) => <li key={l}>{l}</li>)}</ul>
     </Card>
   );
 }
 
 function Edge({ label }: { label: string }) {
-  return <div className="flex items-center justify-center gap-2 py-1 text-xs text-ink-subtle"><Icon icon={ArrowsLeftRight} size="sm" />{label}</div>;
+  return <div className="flex items-center justify-center gap-2 text-xs text-ink-subtle"><Icon icon={ArrowsLeftRight} size="sm" />{label}</div>;
 }
 
 export const ConnectionMap: Story = {
@@ -66,7 +66,7 @@ export const ConnectionMap: Story = {
           <Node icon={Package} title="Inventory" lines={['Owns: products, stock, movements, purchase orders, suppliers', 'Provides: stock and catalog to linked Repair shop branches', 'Account and Billing open the Portal']} />
           <Node icon={Wrench} title="Repair shop (per branch)" lines={['Owns: jobs, customers, services catalogue', 'Consumes: parts from a linked Inventory (set in Portal)', 'Account and Billing open the Portal']} />
         </div>
-        <div className="space-y-1">
+        <div className="flex flex-col gap-2">
           <Edge label="Portal to any platform: rail tile or Platforms > Open (signed-in handoff)" />
           <Edge label="Any platform to Portal: R tile, Back to Portal, Account, Billing, Add platform" />
           <Edge label="Repair shop to Inventory: parts picker reads stock; Parts empty state links to Portal > Connect data" />
