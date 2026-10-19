@@ -126,7 +126,7 @@ export function SetPassword({ view: initialView = 'form', initial, loading = fal
       <AuthFrame>
         <Card className={CARD}>
           <div className="flex items-center gap-3">
-            <Icon icon={CheckCircle} size="lg" weight="fill" className="text-success" />
+            <Icon icon={CheckCircle} size="lg" weight="fill" className="text-success-fg" />
             <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-semibold text-ink outline-none">Password updated</h1>
           </div>
           <p className="text-sm text-ink-muted">

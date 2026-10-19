@@ -87,7 +87,7 @@ export function MechanicShell({ tab, hideTabs, offline, counts, onTab, children 
       </header>
       {offline && (
         <div role="status" className="flex shrink-0 items-center gap-2 bg-warning/15 px-4 py-2 text-sm text-ink">
-          <Icon icon={WifiSlash} size="sm" className="shrink-0 text-warning" />
+          <Icon icon={WifiSlash} size="sm" className="shrink-0 text-warning-fg" />
           <span>You are offline. Updates wait on this phone and send when you reconnect.</span>
         </div>
       )}

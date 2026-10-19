@@ -17,7 +17,7 @@ export interface StatProps {
   className?: string;
 }
 
-const deltaClass = { success: 'text-success', error: 'text-error', neutral: 'text-ink-subtle' };
+const deltaClass = { success: 'text-success-fg', error: 'text-error-fg', neutral: 'text-ink-subtle' };
 
 /**
  * A flat metric: label, big value, optional delta and trend sparkline. No card

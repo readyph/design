@@ -38,6 +38,16 @@ export const colors = {
     error: '#dc2626',
     info: '#2f5bd3',
   },
+  /**
+   * Semantic colors as text on tinted/neutral surfaces (4.5:1 on white,
+   * canvas and the 10-15% tints). Use these for text; keep the base
+   * semantic colors for fills, dots and borders.
+   */
+  semanticText: {
+    success: '#166534',
+    warning: '#92400e',
+    error: '#b91c1c',
+  },
   /** Surfaces (white base). */
   surface: {
     DEFAULT: '#ffffff',
@@ -49,8 +59,8 @@ export const colors = {
   /** Text / ink. */
   ink: {
     DEFAULT: '#171717',
-    muted: '#6b6b6b',
-    subtle: '#a3a3a3',
+    muted: '#525252',
+    subtle: '#6b6b6b',
   },
   /** Borders. */
   border: {

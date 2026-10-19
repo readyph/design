@@ -131,9 +131,9 @@ function AuthNotice({
 }) {
   const toneRing =
     tone === 'success'
-      ? 'bg-success/10 text-success'
+      ? 'bg-success/10 text-success-fg'
       : tone === 'error'
-        ? 'bg-error/10 text-error'
+        ? 'bg-error/10 text-error-fg'
         : 'bg-primary-500/10 text-primary-500';
   return (
     <div className="text-center">

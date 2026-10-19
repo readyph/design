@@ -23,7 +23,7 @@ const variants: Record<IconButtonVariant, string> = {
   primary: 'bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800',
   secondary: 'border-border bg-transparent text-ink hover:bg-surface-subtle',
   subtle: 'bg-transparent text-ink-muted hover:bg-surface-muted hover:text-ink',
-  danger: 'bg-transparent text-error hover:bg-error/10',
+  danger: 'bg-transparent text-error-fg hover:bg-error/10',
 };
 
 const sizes: Record<IconButtonSize, { box: string; icon: 'sm' | 'md' | 'lg' }> = {

@@ -96,7 +96,7 @@ export const Movements: Story = {
         header: 'Change',
         align: 'right',
         render: (m) => (
-          <span className={m.qty > 0 ? 'inline-flex items-center gap-1 font-medium tabular-nums text-success' : 'inline-flex items-center gap-1 font-medium tabular-nums text-error'}>
+          <span className={m.qty > 0 ? 'inline-flex items-center gap-1 font-medium tabular-nums text-success-fg' : 'inline-flex items-center gap-1 font-medium tabular-nums text-error-fg'}>
             <Icon icon={m.qty > 0 ? ArrowDown : ArrowUp} size="sm" weight="bold" />
             {m.qty > 0 ? `+${m.qty}` : m.qty}
           </span>
@@ -122,13 +122,13 @@ export const Movements: Story = {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
             <div className="rounded-lg bg-surface p-4">
               <p className="flex items-center gap-1.5 text-xs text-ink-subtle">
-                <Icon icon={ArrowDown} size="sm" className="text-success" /> In today
+                <Icon icon={ArrowDown} size="sm" className="text-success-fg" /> In today
               </p>
               <p className="mt-1 text-2xl font-semibold tabular-nums text-ink">+55</p>
             </div>
             <div className="rounded-lg bg-surface p-4">
               <p className="flex items-center gap-1.5 text-xs text-ink-subtle">
-                <Icon icon={ArrowUp} size="sm" className="text-error" /> Out today
+                <Icon icon={ArrowUp} size="sm" className="text-error-fg" /> Out today
               </p>
               <p className="mt-1 text-2xl font-semibold tabular-nums text-ink">−8</p>
             </div>

@@ -25,9 +25,9 @@ export interface NoticeProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title
 
 const tones: Record<NoticeTone, { box: string; icon: string; defaultIcon: PhosphorIcon }> = {
   info: { box: 'border-info/30 bg-info/5', icon: 'text-info', defaultIcon: Info },
-  success: { box: 'border-success/30 bg-success/5', icon: 'text-success', defaultIcon: CheckCircle },
-  warning: { box: 'border-warning/40 bg-warning/5', icon: 'text-warning', defaultIcon: Warning },
-  error: { box: 'border-error/30 bg-error/5', icon: 'text-error', defaultIcon: WarningOctagon },
+  success: { box: 'border-success/30 bg-success/5', icon: 'text-success-fg', defaultIcon: CheckCircle },
+  warning: { box: 'border-warning/40 bg-warning/5', icon: 'text-warning-fg', defaultIcon: Warning },
+  error: { box: 'border-error/30 bg-error/5', icon: 'text-error-fg', defaultIcon: WarningOctagon },
   neutral: { box: 'border-border bg-surface-subtle', icon: 'text-ink-muted', defaultIcon: Info },
 };
 

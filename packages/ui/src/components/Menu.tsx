@@ -70,7 +70,7 @@ export function Menu({ trigger, items, side = 'bottom', align = 'end', className
                   'data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-700',
                   'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
                   it.danger
-                    ? 'text-error data-[highlighted]:bg-error/10 data-[highlighted]:text-error'
+                    ? 'text-error-fg data-[highlighted]:bg-error/10 data-[highlighted]:text-error-fg'
                     : 'text-ink',
                   focusRing,
                 )}

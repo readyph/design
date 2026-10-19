@@ -258,7 +258,7 @@ function PlatformLinksPrototype() {
                 </>
               ) : (
                 <>
-                  <Icon icon={Warning} size="sm" className={required ? 'text-warning' : 'text-ink-subtle'} />
+                  <Icon icon={Warning} size="sm" className={required ? 'text-warning-fg' : 'text-ink-subtle'} />
                   <span className="text-ink-muted">{CAP[cap].short}: not connected</span>
                 </>
               )}

@@ -35,13 +35,16 @@
   --ds-warning: 217 119 6;
   --ds-error: 220 38 38;
   --ds-info: 47 91 211;
+  --ds-success-fg: 22 101 52;
+  --ds-warning-fg: 146 64 14;
+  --ds-error-fg: 185 28 28;
   --ds-surface: 255 255 255;
   --ds-surface-subtle: 247 247 247;
   --ds-surface-muted: 239 239 239;
   --ds-canvas: 236 236 237;
   --ds-ink: 23 23 23;
-  --ds-ink-muted: 107 107 107;
-  --ds-ink-subtle: 163 163 163;
+  --ds-ink-muted: 82 82 82;
+  --ds-ink-subtle: 107 107 107;
   --ds-border: 229 229 229;
   --ds-border-strong: 212 212 212;
   --ds-link: 37 99 235;

@@ -111,6 +111,9 @@
   --ds-warning: 240 163 58;
   --ds-error: 242 97 91;
   --ds-info: 91 140 240;
+  --ds-success-fg: 52 210 123;
+  --ds-warning-fg: 240 163 58;
+  --ds-error-fg: 242 97 91;
 
   --ds-surface: 22 22 29;
   --ds-surface-subtle: 28 28 35;
@@ -118,8 +121,8 @@
   --ds-canvas: 10 10 14;
 
   --ds-ink: 243 243 246;
-  --ds-ink-muted: 162 162 173;
-  --ds-ink-subtle: 120 121 132;
+  --ds-ink-muted: 175 175 186;
+  --ds-ink-subtle: 150 150 162;
 
   --ds-border: 38 38 46;
   --ds-border-strong: 60 60 70;

@@ -371,7 +371,7 @@ export function MechanicJobDetail({ job: source = MY_JOBS[0], state = 'default',
                 role="checkbox" aria-checked={t.status === 'done'} disabled={locked} onClick={() => toggleTask(t.id)}
                 className={cn(ROW, 'disabled:cursor-not-allowed disabled:opacity-60', focusRing)}
               >
-                <Icon icon={t.status === 'done' ? CheckCircle : Circle} size="lg" weight={t.status === 'done' ? 'fill' : 'regular'} className={t.status === 'done' ? 'shrink-0 text-success' : 'shrink-0 text-ink-subtle'} />
+                <Icon icon={t.status === 'done' ? CheckCircle : Circle} size="lg" weight={t.status === 'done' ? 'fill' : 'regular'} className={t.status === 'done' ? 'shrink-0 text-success-fg' : 'shrink-0 text-ink-subtle'} />
                 <span className="flex min-w-0 flex-1 flex-col"><span className={cn('text-sm', t.status === 'done' ? 'text-ink-muted line-through' : 'font-medium text-ink')}>{t.name}</span>{t.status === 'in_progress' && <span className="text-xs text-ink-muted">In progress</span>}</span>
                 {unsent.includes(`task${t.id}`) && <Unsent />}
               </button>

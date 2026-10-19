@@ -44,9 +44,18 @@ module.exports = {
           "800": "rgb(var(--ds-neutral-800) / <alpha-value>)",
           "900": "rgb(var(--ds-neutral-900) / <alpha-value>)"
         },
-        "success": "rgb(var(--ds-success) / <alpha-value>)",
-        "warning": "rgb(var(--ds-warning) / <alpha-value>)",
-        "error": "rgb(var(--ds-error) / <alpha-value>)",
+        "success": {
+          "DEFAULT": "rgb(var(--ds-success) / <alpha-value>)",
+          "fg": "rgb(var(--ds-success-fg) / <alpha-value>)"
+        },
+        "warning": {
+          "DEFAULT": "rgb(var(--ds-warning) / <alpha-value>)",
+          "fg": "rgb(var(--ds-warning-fg) / <alpha-value>)"
+        },
+        "error": {
+          "DEFAULT": "rgb(var(--ds-error) / <alpha-value>)",
+          "fg": "rgb(var(--ds-error-fg) / <alpha-value>)"
+        },
         "info": "rgb(var(--ds-info) / <alpha-value>)",
         "surface": {
           "DEFAULT": "rgb(var(--ds-surface) / <alpha-value>)",

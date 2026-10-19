@@ -39,11 +39,11 @@ const suggestions = ['What’s low on stock?', 'Receive a delivery', 'New PO fro
 
 const health: { label: string; value: string; delta?: string; icon: PhosphorIcon; tone: string }[] = [
   { label: 'Total SKUs', value: '128', icon: Package, tone: 'text-primary-600' },
-  { label: 'Low stock', value: '7', delta: '+2', icon: Warning, tone: 'text-warning' },
-  { label: 'Out of stock', value: '2', delta: '+1', icon: XCircle, tone: 'text-error' },
-  { label: 'Stock value', value: '₱482k', delta: '+3%', icon: CurrencyDollar, tone: 'text-success' },
+  { label: 'Low stock', value: '7', delta: '+2', icon: Warning, tone: 'text-warning-fg' },
+  { label: 'Out of stock', value: '2', delta: '+1', icon: XCircle, tone: 'text-error-fg' },
+  { label: 'Stock value', value: '₱482k', delta: '+3%', icon: CurrencyDollar, tone: 'text-success-fg' },
 ];
-const deltaColor = (label: string) => (label === 'Low stock' || label === 'Out of stock' ? 'text-error' : 'text-success');
+const deltaColor = (label: string) => (label === 'Low stock' || label === 'Out of stock' ? 'text-error-fg' : 'text-success-fg');
 
 const attention: { icon: PhosphorIcon; tone: 'error' | 'warning'; title: string; detail: string }[] = [
   { icon: XCircle, tone: 'error', title: 'Mango boxes out of stock', detail: 'Reorder point 10 · 0 on hand' },
@@ -201,7 +201,7 @@ export const Dashboard: Story = {
               <div className="flex flex-col gap-2">
                 {attention.map((a, i) => (
                   <button key={i} className="flex w-full items-start gap-3 rounded-xl bg-surface p-3 text-left transition-colors hover:bg-surface-subtle">
-                    <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${a.tone === 'error' ? 'bg-error/10 text-error' : 'bg-warning/10 text-warning'}`}>
+                    <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${a.tone === 'error' ? 'bg-error/10 text-error-fg' : 'bg-warning/10 text-warning-fg'}`}>
                       <Icon icon={a.icon} size="sm" weight="fill" />
                     </span>
                     <span className="min-w-0 flex-1">
@@ -218,14 +218,14 @@ export const Dashboard: Story = {
               <div className="flex flex-col gap-1">
                 {movements.map((m, i) => (
                   <div key={i} className="flex items-center gap-3 rounded-lg px-1 py-2">
-                    <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg ${m.qty > 0 ? 'bg-success/10 text-success' : 'bg-error/10 text-error'}`}>
+                    <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg ${m.qty > 0 ? 'bg-success/10 text-success-fg' : 'bg-error/10 text-error-fg'}`}>
                       <Icon icon={m.qty > 0 ? ArrowDown : ArrowUp} size="sm" weight="bold" />
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-ink">{m.product}</p>
                       <p className="text-xs text-ink-subtle">{m.reason}</p>
                     </div>
-                    <span className={`text-sm font-semibold tabular-nums ${m.qty > 0 ? 'text-success' : 'text-error'}`}>{m.qty > 0 ? `+${m.qty}` : m.qty}</span>
+                    <span className={`text-sm font-semibold tabular-nums ${m.qty > 0 ? 'text-success-fg' : 'text-error-fg'}`}>{m.qty > 0 ? `+${m.qty}` : m.qty}</span>
                     <span className="w-9 text-right text-xs text-ink-subtle">{m.time}</span>
                   </div>
                 ))}

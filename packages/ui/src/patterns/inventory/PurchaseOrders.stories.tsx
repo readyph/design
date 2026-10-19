@@ -110,7 +110,7 @@ export const List: Story = {
         render: (p) => (
           <div className="text-right">
             <span className="tabular-nums text-ink">{p.received}/{p.ordered}</span>
-            {p.variance && <p className="text-xs text-warning">{p.variance}</p>}
+            {p.variance && <p className="text-xs text-warning-fg">{p.variance}</p>}
           </div>
         ),
       },
@@ -358,7 +358,7 @@ export const Extract: Story = {
                           icon={d.confident ? CheckCircle : WarningCircle}
                           size="sm"
                           weight="fill"
-                          className={d.confident ? 'text-success' : 'text-warning'}
+                          className={d.confident ? 'text-success-fg' : 'text-warning-fg'}
                         />
                         <span className="truncate text-xs text-ink-subtle">read: &ldquo;{d.extracted}&rdquo;</span>
                       </div>
