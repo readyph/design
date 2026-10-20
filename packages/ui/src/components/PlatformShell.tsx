@@ -334,7 +334,7 @@ export function PlatformShell({
               trigger={
                 <button type="button" className={cn('rounded-full', focusRing)}>
                   <Avatar name={account.name} size="sm" />
-                  <span className="sr-only">Account</span>
+                  <span className="sr-only"> Account</span>
                 </button>
               }
               items={accountItems}

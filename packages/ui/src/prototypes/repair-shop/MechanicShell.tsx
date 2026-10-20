@@ -76,7 +76,7 @@ export function MechanicShell({ tab, hideTabs, offline, counts, onTab, children 
           </span>
         </div>
         <Menu
-          trigger={<button className={cn('grid h-11 w-11 shrink-0 place-items-center rounded-full', focusRing)} aria-label="Account"><Avatar name={ME.name} size="sm" /></button>}
+          trigger={<button className={cn('grid h-11 w-11 shrink-0 place-items-center rounded-full', focusRing)}><Avatar name={ME.name} size="sm" /><span className="sr-only"> Account</span></button>}
           items={[
             { type: 'label', label: ME.name },
             { label: 'Switch platform', icon: ArrowsLeftRight },
