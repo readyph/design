@@ -73,8 +73,9 @@ function JobRow({ job, onOpen }: { job: MechanicJob; onOpen?: (j: MechanicJob) =
   const badge = (g === 'now' || g === 'waiting') && due.tone !== 'neutral' ? <Badge tone={due.tone} size="sm">{due.text}</Badge> : <StatusBadge status={job.status} />;
   return (
     <li>
-      <button className={cn(ROW, focusRing)} onClick={() => onOpen?.(job)} aria-label={`Open job ${job.id}, ${job.plate}`}>
+      <button className={cn(ROW, focusRing)} onClick={() => onOpen?.(job)}>
         <span className="flex min-w-0 flex-1 flex-col gap-1">
+          <span className="sr-only">Open job {job.id}: </span>
           <span className="text-sm font-semibold text-ink">{job.plate} · {job.vehicle}</span>
           <span className="flex">{badge}</span>
           <span className="truncate text-xs text-ink-muted">{job.customer} · {g === 'waiting' ? (job.holdReason ?? 'Pending') : currentTask(job)}</span>
@@ -137,8 +138,9 @@ export function MechanicToday({ jobs = MY_JOBS, state = 'default', onOpenJob, on
               return (
                 <li key={j.id}>
                   <Card elevation="flat" className="flex flex-col gap-3 rounded-xl border border-border">
-                    <button className={cn('flex min-h-11 w-full items-start justify-between gap-3 rounded text-left', focusRing)} onClick={() => onOpenJob?.(j)} aria-label={`Open job ${j.id}, ${j.plate}`}>
+                    <button className={cn('flex min-h-11 w-full items-start justify-between gap-3 rounded text-left', focusRing)} onClick={() => onOpenJob?.(j)}>
                       <span className="flex min-w-0 flex-col gap-1">
+                        <span className="sr-only">Open job {j.id}: </span>
                         <span className="text-sm font-semibold text-ink">{j.plate} · {j.vehicle}</span>
                         <span className="flex">{due.tone !== 'neutral' ? <Badge tone={due.tone} size="sm">{due.text}</Badge> : <StatusBadge status={j.status} />}</span>
                         <span className="text-xs text-ink-muted">{j.customer} · {currentTask(j)}</span>
@@ -224,7 +226,8 @@ export function MechanicCustomers({ state = 'default', initialQuery = '', onOpen
         <Group title="Customers" count={visible.length}>
           {visible.map((c) => (
             <li key={c.id} className="flex items-center hover:bg-surface-subtle">
-              <button className={cn('flex min-h-14 min-w-0 flex-1 flex-col justify-center gap-0.5 px-4 py-3 text-left', focusRing)} onClick={() => onOpen?.(c)} aria-label={`Open ${c.name}`}>
+              <button className={cn('flex min-h-14 min-w-0 flex-1 flex-col justify-center gap-0.5 px-4 py-3 text-left', focusRing)} onClick={() => onOpen?.(c)}>
+                <span className="sr-only">Open </span>
                 <span className="truncate text-sm font-medium text-ink">{c.name}</span>
                 <span className="truncate text-xs text-ink-muted">{c.vehicles.map((v) => v.plate).join(', ')}</span>
               </button>
