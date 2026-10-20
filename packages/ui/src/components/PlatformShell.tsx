@@ -125,6 +125,7 @@ function RailPlatform({ p }: { p: PlatformShellPlatform }) {
           </span>
         )}
       </span>
+      <span className="sr-only">{p.label}</span>
       {p.status && (
         <span className="absolute -bottom-0.5 -right-0.5">
           <StatusDot status={p.status} />
@@ -133,7 +134,6 @@ function RailPlatform({ p }: { p: PlatformShellPlatform }) {
     </>
   );
   const common = {
-    'aria-label': p.label,
     title: p.label,
     'aria-current': p.active ? ('page' as const) : undefined,
     className: cn('relative rounded-lg', focusRing),
