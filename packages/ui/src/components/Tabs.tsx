@@ -1,4 +1,4 @@
-import { forwardRef, type ReactNode } from 'react';
+import { forwardRef, useCallback, useEffect, useRef, type ReactNode } from 'react';
 import * as RadixTabs from '@radix-ui/react-tabs';
 import type { Icon as PhosphorIcon } from '@phosphor-icons/react';
 import { cn, focusRing } from '../utils/cn';
@@ -24,14 +24,50 @@ export interface TabsProps {
   className?: string;
 }
 
+const CONTROLS_KEY = 'tabControls';
+
+/**
+ * Radix always sets `aria-controls` on a trigger, even when no `TabPanel` is
+ * rendered for it (tabs used purely as navigation). A dangling reference is an
+ * invalid ARIA value, so drop it while the panel is absent and restore it when
+ * the panel mounts.
+ */
+function syncControls(root: HTMLElement) {
+  root.querySelectorAll<HTMLElement>('[role="tab"]').forEach((tab) => {
+    const id = tab.getAttribute('aria-controls') ?? tab.dataset[CONTROLS_KEY];
+    if (!id) return;
+    tab.dataset[CONTROLS_KEY] = id;
+    const present = tab.ownerDocument.getElementById(id) !== null;
+    if (present && tab.getAttribute('aria-controls') !== id) tab.setAttribute('aria-controls', id);
+    if (!present && tab.hasAttribute('aria-controls')) tab.removeAttribute('aria-controls');
+  });
+}
+
 /** Keyboard-navigable tabs (arrow keys, Home/End) built on Radix Tabs. */
 export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
   { items, value, defaultValue, onValueChange, variant = 'underline', children, className },
   ref,
 ) {
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const setRefs = useCallback(
+    (node: HTMLDivElement | null) => {
+      rootRef.current = node;
+      if (typeof ref === 'function') ref(node);
+      else if (ref) ref.current = node;
+    },
+    [ref],
+  );
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return undefined;
+    syncControls(root);
+    const observer = new MutationObserver(() => syncControls(root));
+    observer.observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: ['aria-selected', 'id'] });
+    return () => observer.disconnect();
+  }, []);
   return (
     <RadixTabs.Root
-      ref={ref}
+      ref={setRefs}
       value={value}
       defaultValue={defaultValue ?? items[0]?.value}
       onValueChange={onValueChange}
