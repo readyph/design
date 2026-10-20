@@ -120,7 +120,9 @@ function RailPlatform({ p }: { p: PlatformShellPlatform }) {
         {p.icon ? (
           <Icon icon={p.icon} size="md" weight={p.active ? 'fill' : 'regular'} />
         ) : (
-          <Avatar name={p.avatar ?? p.label} size="sm" shape="square" />
+          <span aria-hidden="true">
+            <Avatar name={p.avatar ?? p.label} size="sm" shape="square" />
+          </span>
         )}
       </span>
       {p.status && (
