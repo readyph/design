@@ -82,7 +82,7 @@ export function Menu({ trigger, items, side = 'bottom', align = 'end', className
             );
             const itemClass = cn(
               'flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none',
-              'data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-700',
+              'data-[highlighted]:bg-primary-50 data-[highlighted]:text-primary-800',
               'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
               it.danger
                 ? 'text-error-fg data-[highlighted]:bg-error/10 data-[highlighted]:text-error-fg'
