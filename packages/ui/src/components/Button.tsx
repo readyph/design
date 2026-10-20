@@ -41,7 +41,9 @@ export const variants: Record<ButtonVariant, string> = {
   primary: 'bg-primary-600 text-white hover:bg-primary-700 [[data-theme=dark]_&]:hover:bg-primary-200',
   secondary: 'border-border-strong bg-surface text-ink [[data-theme=dark]_&]:border-border [[data-theme=dark]_&]:bg-transparent hover:bg-surface-subtle active:bg-surface-muted [[data-theme=dark]_&]:hover:bg-surface-subtle [[data-theme=dark]_&]:active:bg-surface-muted',
   subtle: 'bg-transparent text-ink hover:bg-surface-muted active:bg-neutral-200',
-  danger: 'bg-error text-white hover:brightness-95 active:brightness-90',
+  // Dark theme's --ds-error is a light coral (white on it = 3.16:1), so the filled danger
+  // button pins the light-theme red (#dc2626, white = 4.83:1) in both themes.
+  danger: 'bg-[#dc2626] text-white hover:brightness-95 active:brightness-90',
 };
 
 export const sizes: Record<ButtonSize, string> = {
