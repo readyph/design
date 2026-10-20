@@ -17,7 +17,7 @@ import { IconButton } from './IconButton';
 import { Avatar } from './Avatar';
 import { Icon } from './Icon';
 import { LedaLauncher } from './LedaLauncher';
-import { Menu, type MenuItem } from './Menu';
+import { Menu, type MenuItem, type MenuActionItem } from './Menu';
 import { OffCanvas, OffCanvasHeader } from './Drawer';
 import { StatusDot, type StatusTone } from './StatusDot';
 
@@ -176,7 +176,7 @@ export function PlatformShell({
     onMenuOpenChange?.(v);
   };
 
-  const sidebarBody = (
+  const sidebarBody = (mobile = false) => (
     <>
       <div className="mb-2 flex items-center gap-2 px-2 pt-1">
         <span className="grid h-6 w-6 shrink-0 place-items-center rounded-base bg-primary-50 text-primary-700 [[data-theme=dark]_&]:text-primary-900">
@@ -213,6 +213,34 @@ export function PlatformShell({
           ))}
         </SidebarSection>
       ))}
+      {mobile && account && (
+        <SidebarSection title={account.email ?? account.name} className={footerLink ? undefined : 'mt-auto'}>
+          {(account.items ?? []).map((it, i) =>
+            'type' in it && it.type !== 'item' ? null : (
+              <SidebarItem
+                key={i}
+                icon={(it as MenuActionItem).icon}
+                href={(it as MenuActionItem).href}
+                onClick={() => {
+                  (it as MenuActionItem).onSelect?.();
+                  setOpen(false);
+                }}
+              >
+                {(it as MenuActionItem).label}
+              </SidebarItem>
+            ),
+          )}
+          <SidebarItem
+            icon={SignOut}
+            onClick={() => {
+              account.onSignOut?.();
+              setOpen(false);
+            }}
+          >
+            Sign out
+          </SidebarItem>
+        </SidebarSection>
+      )}
       {footerLink && (
         <div className="mt-auto px-1 pb-1 pt-3">
           {footerLink.href ? (
@@ -314,7 +342,7 @@ export function PlatformShell({
 
       {/* Window */}
       <div className="flex min-w-0 flex-1 overflow-hidden bg-transparent">
-        <Sidebar className="hidden lg:flex">{sidebarBody}</Sidebar>
+        <Sidebar className="hidden lg:flex">{sidebarBody()}</Sidebar>
 
         <div className="relative flex min-w-0 flex-1 flex-col">
           <TopBar
@@ -352,7 +380,7 @@ export function PlatformShell({
       <OffCanvas open={open} onOpenChange={setOpen} side="left" width="288px">
         {/* Accessible dialog title only: the sidebar brand already shows the company name. */}
         <OffCanvasHeader className="sr-only">{company ?? platform.name}</OffCanvasHeader>
-        <Sidebar className="flex p-0">{sidebarBody}</Sidebar>
+        <Sidebar className="flex p-0">{sidebarBody(true)}</Sidebar>
       </OffCanvas>
     </div>
   );
