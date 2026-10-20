@@ -13,7 +13,7 @@ interface Member {
 }
 
 const data: Member[] = [
-  { id: '1', name: 'Maria Santos', email: 'maria@readyph.com', role: 'owner', status: 'active' },
+  { id: '1', name: 'Maria Santos', email: 'maria@readyph.com', role: 'admin', status: 'active' },
   { id: '2', name: 'John Lim', email: 'john@readyph.com', role: 'admin', status: 'active' },
   { id: '3', name: 'Ana Reyes', email: 'ana@readyph.com', role: 'member', status: 'invited' },
   { id: '4', name: 'Paolo Cruz', email: 'paolo@readyph.com', role: 'viewer', status: 'suspended' },

@@ -22,7 +22,7 @@ type Story = StoryObj;
 
 interface Member { name: string; email: string; role: string; access: string; pending?: boolean }
 const MEMBERS: Member[] = [
-  { name: 'Maria Santos', email: 'maria@sunrise.ph', role: 'Owner', access: 'All platforms' },
+  { name: 'Maria Santos', email: 'maria@sunrise.ph', role: 'Administrator', access: 'All platforms' },
   { name: 'Jun dela Cruz', email: 'jun@sunrise.ph', role: 'Admin', access: 'Main inventory' },
   { name: 'Ramil Bautista', email: 'ramil@sunrise.ph', role: 'Mechanic', access: 'Davao branch' },
   { name: 'Liza Mercado', email: 'liza.mercado@gmail.com', role: 'Staff', access: 'Main inventory', pending: true },

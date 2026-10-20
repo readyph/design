@@ -426,13 +426,13 @@ export const TeamTable: Story = {
       status: 'active' | 'invited';
     }
     const members: Member[] = [
-      { name: 'Maria Santos', email: 'maria@kapetiryaluna.ph', role: 'Owner', status: 'active' },
+      { name: 'Maria Santos', email: 'maria@kapetiryaluna.ph', role: 'Administrator', status: 'active' },
       { name: 'Ana Cruz', email: 'ana@kapetiryaluna.ph', role: 'Manager', status: 'active' },
       { name: 'Miguel Reyes', email: 'miguel@kapetiryaluna.ph', role: 'User', status: 'invited' },
     ];
     const cols: LedaTableColumn<Member>[] = [
       { key: 'name', header: 'Member', render: (r) => <span className="font-medium text-ink">{r.name}</span> },
-      { key: 'role', header: 'Role', render: (r) => <Badge tone={r.role === 'Owner' ? 'primary' : 'neutral'} size="sm">{r.role}</Badge> },
+      { key: 'role', header: 'Role', render: (r) => <Badge tone={r.role === 'Administrator' ? 'primary' : 'neutral'} size="sm">{r.role}</Badge> },
       {
         key: 'status',
         header: 'Status',

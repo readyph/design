@@ -31,10 +31,11 @@ interface Member {
   role: string;
   status: 'active' | 'suspended';
   lastActive: string;
+  creator?: boolean;
 }
 
 const members: Member[] = [
-  { id: '1', name: 'Maria Santos', email: 'maria@readyph.com', role: 'owner', status: 'active', lastActive: 'now' },
+  { id: '1', name: 'Maria Santos', email: 'maria@readyph.com', role: 'admin', status: 'active', lastActive: 'now', creator: true },
   { id: '2', name: 'John Lim', email: 'john@readyph.com', role: 'admin', status: 'active', lastActive: '2h ago' },
   { id: '3', name: 'Ana Reyes', email: 'ana@readyph.com', role: 'manager', status: 'active', lastActive: 'yesterday' },
   { id: '4', name: 'Paolo Cruz', email: 'paolo@readyph.com', role: 'member', status: 'active', lastActive: '3d ago' },
@@ -49,7 +50,14 @@ const columns: TableColumn<Member>[] = [
       <div className="flex items-center gap-3">
         <Avatar name={m.name} size="sm" />
         <div>
-          <div className="font-medium text-ink">{m.name}</div>
+          <div className="flex items-center gap-2 font-medium text-ink">
+            {m.name}
+            {m.creator && (
+              <Badge tone="neutral" size="sm">
+                Creator
+              </Badge>
+            )}
+          </div>
           <div className="text-xs text-ink-subtle">{m.email}</div>
         </div>
       </div>
@@ -90,8 +98,7 @@ const invites = [
 ];
 
 const roles = [
-  { name: 'Owner', desc: 'Full access, billing, and ownership transfer.', count: 1 },
-  { name: 'Admin', desc: 'Manage platforms, team, and settings.', count: 1 },
+  { name: 'Administrator', desc: 'Full access: platforms, team, billing, and settings.', count: 2 },
   { name: 'Manager', desc: 'Run operations; no billing or team removal.', count: 2 },
   { name: 'Member', desc: 'Day-to-day tasks on assigned platforms.', count: 4 },
 ];
