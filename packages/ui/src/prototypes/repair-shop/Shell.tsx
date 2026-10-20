@@ -130,7 +130,7 @@ export function RepairShell({ active, title, branchId = 'davao', platforms, menu
         </span>
         <div className="mt-auto">
           <Menu
-            trigger={<button className="rounded-full focus:outline-none" aria-label="Account"><Avatar name="Maricel Santos" size="sm" /></button>}
+            trigger={<button className="rounded-full focus:outline-none"><Avatar name="Maricel Santos" size="sm" /><span className="sr-only"> Account</span></button>}
             items={[
               { type: 'label', label: 'maricel@montauto.ph' },
               { label: 'Account', icon: User },

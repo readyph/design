@@ -96,7 +96,7 @@ export function InventoryShell({ active, title, actions, scroll = true, hideLeda
         </span>
         <div className="mt-auto">
           <Menu
-            trigger={<button className="rounded-full focus:outline-none" aria-label="Account"><Avatar name="Maria Santos" size="sm" /></button>}
+            trigger={<button className="rounded-full focus:outline-none"><Avatar name="Maria Santos" size="sm" /><span className="sr-only"> Account</span></button>}
             items={[
               { type: 'label', label: 'maria@readyph.com' },
               { label: 'Account', icon: User },
