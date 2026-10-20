@@ -1,5 +1,23 @@
 # @readyph/ui
 
+## 0.6.1
+
+### Patch Changes
+
+- a50c1d9: Button `danger` label now meets 4.5:1 in the dark theme. The filled background uses the light-theme red (#dc2626, 4.83:1 with white) in both themes instead of the lighter dark-theme error coral (3.16:1).
+- 94e97e8: Menu: highlighted item label uses primary-800 so it meets 4.5:1 AA in dark (was 4.07:1) and light themes.
+- 4598a62: Tabs omits `aria-controls` on a trigger while no matching `TabPanel` is rendered, so navigation-only tabs no longer report an invalid ARIA reference.
+- 32da531: PlatformShell rail: hide the initials avatar from assistive tech so the platform aria-label matches the visible content (fixes axe label-content-name-mismatch).
+- e56cead: PlatformShell rail platform links are now named by visually-hidden text instead of aria-label, so axe label-content-name-mismatch no longer flags the avatar initials.
+- ce2f22c: Notifications unread badge pins the light-theme red (#dc2626) behind white text in both themes, so it meets WCAG AA (4.83:1) in dark
+- a889238: PlatformShell's mobile off-canvas menu now lists the `account` entries (for example Account and Billing) and Sign out, matching the desktop account menu, so they are reachable below 640px.
+- 5fe4500: Select forwards `aria-label` and `aria-labelledby` to its trigger, so selects without a visible label have an accessible name (axe `button-name`).
+- 5277b5e: Repair shop prototype shell mobile menu now lists Account, Billing and Sign out under the email, each closing the menu, matching PlatformShell.
+- 841bf7e: PlatformShell account button no longer overrides its name with aria-label "Account", which did not contain the visible initials (axe label-content-name-mismatch). The name now comes from content: the initials plus visually hidden "Account".
+- 518acb8: Account buttons in the portal, inventory and repair-shop shells (and the mechanic shell) no longer override their name with aria-label "Account", which did not contain the visible initials (axe label-content-name-mismatch). The name now comes from content: the initials, a space, and visually hidden "Account". PlatformShell gets the same space so the name no longer reads "MSAccount".
+- 540a4b8: Mechanic row buttons (job rows, Today "Needs you now" cards, customer rows) no longer override their name with an `aria-label`; an sr-only "Open" prefix plus the visible text forms the accessible name, so it contains the visible label (axe `label-content-name-mismatch`).
+- 8cf238c: RoleBadge: remove the `owner` role from the tone map (there is no Owner role) and show `admin` as "Administrator". Team and related stories show a Creator badge instead of an Owner role.
+
 ## 0.6.0
 
 ### Minor Changes
