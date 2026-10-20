@@ -23,6 +23,9 @@ export interface SelectProps {
   disabled?: boolean;
   name?: string;
   className?: string;
+  /** Accessible name for the trigger when there is no visible <label>/Field. */
+  'aria-label'?: string;
+  'aria-labelledby'?: string;
 }
 
 const sizes: Record<InputSize, string> = {
@@ -33,7 +36,7 @@ const sizes: Record<InputSize, string> = {
 
 /** Single-select dropdown built on Radix Select (full keyboard + ARIA). */
 export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select(
-  { options, value, defaultValue, onValueChange, placeholder = 'Select…', size = 'md', invalid, disabled, name, className },
+  { options, value, defaultValue, onValueChange, placeholder = 'Select…', size = 'md', invalid, disabled, name, className, 'aria-label': ariaLabel, 'aria-labelledby': ariaLabelledBy },
   ref,
 ) {
   const field = useField();
@@ -43,6 +46,8 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
       <RadixSelect.Trigger
         ref={ref}
         id={field?.id}
+        aria-label={ariaLabel}
+        aria-labelledby={ariaLabelledBy}
         aria-invalid={isInvalid || undefined}
         aria-describedby={field?.describedBy}
         className={cn(
