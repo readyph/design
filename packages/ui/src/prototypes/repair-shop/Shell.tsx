@@ -65,7 +65,7 @@ export function RepairShell({ active, title, branchId = 'davao', platforms, menu
     <SidebarItem key={n.key} icon={n.icon} active={active === n.key} onClick={() => { setMenu(false); onNavigate?.(n.key); }}>{n.label}</SidebarItem>
   );
 
-  const sidebarBody = (
+  const sidebarBody = (mobile: boolean) => (
     <>
       <div className="mb-2 flex items-center gap-2 px-2 pt-1">
         <span className="grid h-6 w-6 shrink-0 place-items-center rounded-base bg-primary-50 text-primary-700">
@@ -78,7 +78,14 @@ export function RepairShell({ active, title, branchId = 'davao', platforms, menu
       </div>
       <SidebarSection>{MAIN_NAV.map(item)}</SidebarSection>
       <SidebarSection title="Manage">{MANAGE_NAV.map(item)}</SidebarSection>
-      <div className="mt-auto px-1 pb-1 pt-3">
+      {mobile && (
+        <SidebarSection title="maricel@montauto.ph" className="mt-auto">
+          <SidebarItem icon={User} onClick={() => setMenu(false)}>Account</SidebarItem>
+          <SidebarItem icon={CreditCard} onClick={() => setMenu(false)}>Billing</SidebarItem>
+          <SidebarItem icon={SignOut} onClick={() => setMenu(false)}>Sign out</SidebarItem>
+        </SidebarSection>
+      )}
+      <div className={mobile ? 'px-1 pb-1 pt-3' : 'mt-auto px-1 pb-1 pt-3'}>
         <button
           onClick={() => goToStory(routes.portalHome)}
           className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-ink-subtle hover:bg-surface-muted hover:text-ink focus:outline-none"
@@ -137,7 +144,7 @@ export function RepairShell({ active, title, branchId = 'davao', platforms, menu
 
       {/* Window */}
       <div className="flex min-w-0 flex-1 overflow-hidden bg-transparent">
-        <Sidebar className="hidden lg:flex">{sidebarBody}</Sidebar>
+        <Sidebar className="hidden lg:flex">{sidebarBody(false)}</Sidebar>
 
         <div className="relative flex min-w-0 flex-1 flex-col">
           <TopBar
@@ -164,7 +171,7 @@ export function RepairShell({ active, title, branchId = 'davao', platforms, menu
       </div>
 
       <OffCanvas open={menu} onOpenChange={setMenu} side="left" title={COMPANY.name} width="288px">
-        <Sidebar className="flex p-0">{sidebarBody}</Sidebar>
+        <Sidebar className="flex p-0">{sidebarBody(true)}</Sidebar>
       </OffCanvas>
       <Toaster position="bottom-right" />
     </div>
