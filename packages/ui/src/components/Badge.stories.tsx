@@ -62,7 +62,7 @@ export const WithDot: Story = {
 export const Roles: Story = {
   render: () => (
     <div className="flex flex-wrap gap-2">
-      {['owner', 'admin', 'manager', 'member', 'viewer', 'suspended'].map((r) => (
+      {['admin', 'manager', 'member', 'viewer', 'suspended'].map((r) => (
         <RoleBadge key={r} role={r} />
       ))}
     </div>
