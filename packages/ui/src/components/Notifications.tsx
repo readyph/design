@@ -114,7 +114,7 @@ export const Notifications = forwardRef<HTMLDivElement, NotificationsProps>(func
                 </span>
               )}
               {typeof n.count === 'number' && (
-                <span className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-error px-1 text-[0.6875rem] font-bold text-white ring-2 ring-surface">
+                <span className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-[#dc2626] px-1 text-[0.6875rem] font-bold text-white ring-2 ring-surface">
                   {n.count}
                 </span>
               )}
