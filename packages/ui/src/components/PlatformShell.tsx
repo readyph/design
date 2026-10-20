@@ -332,8 +332,9 @@ export function PlatformShell({
           <div className="mt-auto">
             <Menu
               trigger={
-                <button type="button" className={cn('rounded-full', focusRing)} aria-label="Account">
+                <button type="button" className={cn('rounded-full', focusRing)}>
                   <Avatar name={account.name} size="sm" />
+                  <span className="sr-only">Account</span>
                 </button>
               }
               items={accountItems}
