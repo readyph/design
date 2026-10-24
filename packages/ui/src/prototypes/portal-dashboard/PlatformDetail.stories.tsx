@@ -94,7 +94,7 @@ const viewports = {
 };
 
 const meta: Meta<DemoProps> = {
-  title: 'Prototypes/Portal/PlatformDetail',
+  title: 'Prototypes/Portal/[For Review] PlatformDetail',
   tags: ['!autodocs'],
   parameters: { layout: 'fullscreen', viewport: { viewports, defaultViewport: 'desktop1440' } },
   args: { initialId: 'inv-central', ledaOpen: true },
@@ -130,7 +130,7 @@ export const Degraded: Story = { name: '1440 · Degraded (provider failed)', arg
 export const Offline: Story = { name: '1440 · Offline', args: { initialId: 'st-cebu' }, ...at('desktop1440', 'light') };
 export const Restricted: Story = { name: '1440 · Permission-limited', args: { state: 'restricted' }, ...at('desktop1440', 'dark') };
 export const EmptyLists: Story = { name: '1440 · Empty lists', args: { initialId: 'st-bgc' }, ...at('desktop1440', 'light') };
-export const LedaCollapsed: Story = { name: '1440 · Leda collapsed', args: { ledaOpen: false }, ...at('desktop1440', 'dark') };
+export const LedaCollapsed: Story = { name: '1440 · Leda hidden', args: { ledaOpen: false }, ...at('desktop1440', 'dark') };
 export const AskLeda: Story = { name: '1440 · Ask Leda (prefilled)', play: askLeda, ...at('desktop1440', 'dark') };
 
 // Laptop 1024 (content area 584px beside the 24rem Leda column)
