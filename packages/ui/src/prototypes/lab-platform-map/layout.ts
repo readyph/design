@@ -23,15 +23,17 @@ export type BuildingArt = 'warehouse' | 'shop' | 'store';
 
 export interface PlacedBuilding extends TownBuilding {
   art: BuildingArt;
-  /** World position of the footprint centre on the ground plane. */
+  /** World position of the lot centre on the ground plane. */
   x: number;
   z: number;
 }
 
-/** One grid cell in world units (Zdog px before zoom). */
-export const CELL = 122;
-/** Grass margin around the outer ring of cells. */
-export const PLOT_MARGIN = 24;
+/** One lot (building plot plus its share of the street) in world units, before zoom. */
+export const CELL = 150;
+/** Street width between lots. */
+export const STREET = 34;
+/** Scenery band (houses, trees, pond) around the streets. */
+export const PLOT_MARGIN = 56;
 
 const KIND_ORDER = ['inventory', 'sms'];
 
@@ -56,46 +58,31 @@ export function sortBuildings(buildings: readonly TownBuilding[]): TownBuilding[
   );
 }
 
-/** Near-square grid with one extra cell for Portal HQ: 1 platform = 2x1, 5 = 3x2, 20 = 5x5. */
+/** Near-square grid: 1 platform = 1x1, 5 = 3x2, 8 = 3x3, 20 = 5x4. */
 export function gridSize(count: number): { cols: number; rows: number } {
-  const cells = count + 1;
-  const cols = Math.ceil(Math.sqrt(cells));
-  return { cols, rows: Math.ceil(cells / cols) };
+  const cols = Math.max(1, Math.ceil(Math.sqrt(count)));
+  return { cols, rows: Math.max(1, Math.ceil(count / cols)) };
 }
 
 export interface TownLayout {
   cols: number;
   rows: number;
-  /** Portal HQ position (the cell nearest the plot centre). */
-  hq: { x: number; z: number };
   placed: PlacedBuilding[];
+  /** Spare lots in the last row: the scene turns them into small parks. */
+  empty: { x: number; z: number }[];
 }
 
 /**
- * Places buildings on a compact grid around Portal HQ, which takes the cell
- * nearest the plot centre. Cells are filled nearest-to-HQ first and, at equal
- * distance, front first (+x, +z face the viewer), so any spare cells end up at
- * the back of the plot and the grass never looks empty up front.
+ * Fills the grid row by row from the back-left lot, in sorted order, so kinds
+ * sit together. Spare lots stay in the last row (front-right).
  */
 export function placeBuildings(buildings: readonly TownBuilding[]): TownLayout {
   const { cols, rows } = gridSize(buildings.length);
-  const cx = (cols - 1) / 2;
-  const cz = (rows - 1) / 2;
-  const hi = Math.floor(cx);
-  const hj = Math.floor(cz);
-  const cells: { i: number; j: number; dist: number; front: number; dx: number }[] = [];
-  for (let j = 0; j < rows; j++) {
-    for (let i = 0; i < cols; i++) {
-      if (i === hi && j === hj) continue;
-      const dx = i - hi;
-      const dz = j - hj;
-      cells.push({ i, j, dist: Math.max(Math.abs(dx), Math.abs(dz)), front: dx + dz, dx });
-    }
-  }
-  cells.sort((p, q) => p.dist - q.dist || q.front - p.front || q.dx - p.dx);
-  const at = (i: number, j: number) => ({ x: (i - cx) * CELL, z: (j - cz) * CELL });
-  const placed = sortBuildings(buildings).map((b, k) => ({ ...b, art: artFor(b.kind), ...at(cells[k].i, cells[k].j) }));
-  return { cols, rows, hq: at(hi, hj), placed };
+  const at = (i: number, j: number) => ({ x: (i - (cols - 1) / 2) * CELL, z: (j - (rows - 1) / 2) * CELL });
+  const placed = sortBuildings(buildings).map((b, k) => ({ ...b, art: artFor(b.kind), ...at(k % cols, Math.floor(k / cols)) }));
+  const empty: { x: number; z: number }[] = [];
+  for (let k = buildings.length; k < cols * rows; k++) empty.push(at(k % cols, Math.floor(k / cols)));
+  return { cols, rows, placed, empty };
 }
 
 /** One road per platform pair: drops self-links, reversed duplicates and links to unknown ids. */
@@ -118,7 +105,13 @@ export function defaultLights(buildings: readonly TownBuilding[]): Record<string
   return Object.fromEntries(buildings.map((b) => [b.id, b.status !== 'OFFLINE']));
 }
 
-/** Grass plot size in world units. */
+/** Street area (all lots plus the outer street edge) in world units. */
+export function streetSize(cols: number, rows: number): { width: number; depth: number } {
+  return { width: cols * CELL + STREET, depth: rows * CELL + STREET };
+}
+
+/** Whole island (streets plus scenery band) in world units. */
 export function plotSize(cols: number, rows: number): { width: number; depth: number } {
-  return { width: cols * CELL + PLOT_MARGIN * 2, depth: rows * CELL + PLOT_MARGIN * 2 };
+  const s = streetSize(cols, rows);
+  return { width: s.width + PLOT_MARGIN * 2, depth: s.depth + PLOT_MARGIN * 2 };
 }

@@ -1,5 +1,5 @@
 /**
- * PROTOTYPE (RDY-224) - Lab platform map: the 3D boxy town scene (Zdog).
+ * PROTOTYPE (RDY-224) - Lab platform map: the isometric pastel town scene (Zdog).
  *
  * One canvas, fixed bird's-eye isometric camera (no rotate / drag / zoom),
  * scaled to fit the container width. Renders on demand only: on load, resize,
@@ -13,8 +13,8 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import * as Zdog from 'zdog';
 import { cn } from '../../utils/cn';
-import { buildBuilding, buildGround, buildHq, type BuildingModel, type Projected } from './art';
-import { CELL, dedupeLinks, defaultLights, placeBuildings, plotSize, type TownBuilding, type TownLink } from './layout';
+import { buildBuilding, buildGround, buildScenery, type BuildingModel, type Projected } from './art';
+import { CELL, dedupeLinks, defaultLights, placeBuildings, plotSize, streetSize, type TownBuilding, type TownLink } from './layout';
 import { css, readPalette, type TownPalette } from './palette';
 
 export type { TownBuilding, TownLink, TownStatus } from './layout';
@@ -43,8 +43,6 @@ export interface TownSceneProps {
   onHover?: (id: string | null, point: ScreenPoint | null) => void;
   /** Click, tap, Enter or Space on a building. */
   onSelect?: (id: string) => void;
-  /** Portal HQ in the centre with footpaths to every platform. Default on. */
-  showHq?: boolean;
   /** Accessible name of the scene. */
   label?: string;
   /** Build / draw timings, reported after each rebuild (perf check). */
@@ -56,16 +54,16 @@ const STATUS_TEXT = { ACTIVE: 'Active', DEGRADED: 'Degraded', OFFLINE: 'Offline'
 const KIND_TEXT: Record<string, string> = { inventory: 'Warehouse', sms: 'Service shop' };
 
 /** Camera: fixed isometric tilt and 45 degree turn. */
-const TILT = 0.62;
+const TILT = Math.atan(1 / Math.SQRT2);
 const TURN = Zdog.TAU / 8;
 /** Canvas padding in CSS px; the bottom leaves room for the front row's signs. */
 const PAD_X = 12;
-const PAD_TOP = 16;
+const PAD_TOP = 64;
 const PAD_BOTTOM = 12;
 /** Small tenants stop growing here so outlines and signs keep their weight. */
 const MAX_ZOOM = 1.5;
 /** Labels show when a grid cell is at least this wide on screen; otherwise only on hover / focus. */
-const LABEL_MIN_CELL = 170;
+const LABEL_MIN_CELL = 120;
 const FADE_MS = 250;
 
 /** Zdog runtime members that @types/zdog does not declare. */
@@ -75,7 +73,6 @@ type Sortable = Zdog.Group & { updateSortValue: () => void; sortValue: number };
 interface Scene {
   illo: Illo;
   models: BuildingModel[];
-  hqSign: Projected | null;
   zoom: number;
   dx: number;
   dy: number;
@@ -105,7 +102,6 @@ export function TownScene({
   lights,
   onHover,
   onSelect,
-  showHq = true,
   label = 'Platform town map',
   onRenderStats,
   className,
@@ -118,7 +114,7 @@ export function TownScene({
   const [hoverId, setHoverId] = useState<string | null>(null);
   const [focusId, setFocusId] = useState<string | null>(null);
 
-  const { cols, rows, hq: hqAt, placed } = useMemo(() => placeBuildings(buildings), [buildings]);
+  const { cols, rows, placed, empty } = useMemo(() => placeBuildings(buildings), [buildings]);
   const roads = useMemo(() => dedupeLinks(links, new Set(buildings.map((b) => b.id))), [links, buildings]);
   const lightsOn = useMemo(() => ({ ...defaultLights(buildings), ...lights }), [buildings, lights]);
   const glowRef = useRef<Record<string, number>>({});
@@ -195,7 +191,6 @@ export function TownScene({
       ctx.fillStyle = css(palette.signText);
       ctx.fillText(t, at.x, y + h / 2 + 0.5);
     };
-    if (showHq && s.hqSign && showAll) sign('Portal HQ', toScreen(s.hqSign), false, cellPx - 8);
     const byId = new Map(pl.map((b) => [b.id, b]));
     // Back-to-front so nearer signs sit on top.
     const order = [...s.models].sort((a, b) => a.signAt.renderOrigin.z - b.signAt.renderOrigin.z);
@@ -233,7 +228,7 @@ export function TownScene({
     }
     ctx.restore();
     return performance.now() - t0;
-  }, [palette, showHq, toScreen, bounds]);
+  }, [palette, toScreen, bounds]);
 
   /** (Re)builds the scene graph from the current glow values. */
   const build = useCallback(() => {
@@ -243,20 +238,21 @@ export function TownScene({
     let s = sceneRef.current;
     if (!s || s.illo.element !== canvas) {
       const illo = new Zdog.Illustration({ element: canvas, rotate: { x: -TILT, y: TURN } }) as Illo;
-      s = { illo, models: [], hqSign: null, zoom: 1, dx: 0, dy: 0, width, height: 0 };
+      s = { illo, models: [], zoom: 1, dx: 0, dy: 0, width, height: 0 };
       sceneRef.current = s;
     }
     const scene = s;
     const { illo } = scene;
     [...illo.children].forEach((c) => c.remove());
-    const { ground, extent } = buildGround(illo, palette, plotSize(cols, rows), placed, roads, showHq ? hqAt : null);
+    const island = plotSize(cols, rows);
+    const streets = streetSize(cols, rows);
+    const { ground, extent } = buildGround(illo, palette, island, streets, placed, empty, roads);
     pinBehind(ground, -1e9);
-    const hq = showHq ? buildHq(illo, palette, hqAt) : null;
-    scene.hqSign = hq?.signAt ?? null;
+    buildScenery(illo, palette, island, streets, empty);
     scene.models = placed.map((b) => buildBuilding(illo, palette, b, glowRef.current[b.id] ?? (latest.current.lightsOn[b.id] ? 1 : 0)));
     // Fit: projected extents are zoom-independent, so measure them, then size the canvas tightly.
     illo.updateGraph();
-    const pts = [...extent, ...(hq?.corners ?? []), ...scene.models.flatMap((m) => [...m.corners, m.lampAt])];
+    const pts = [...extent, ...scene.models.flatMap((m) => [...m.corners, m.lampAt])];
     const xs = pts.map((q) => q.renderOrigin.x);
     const ys = pts.map((q) => q.renderOrigin.y);
     const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
@@ -272,7 +268,7 @@ export function TownScene({
     const buildMs = performance.now() - t0;
     const drawMs = draw();
     latest.current.onRenderStats?.({ buildMs, drawMs, items: illo.flatGraph.length });
-  }, [palette, width, cols, rows, hqAt, placed, roads, showHq, draw]);
+  }, [palette, width, cols, rows, empty, placed, roads, draw]);
 
   useLayoutEffect(build, [build]);
 
@@ -355,7 +351,13 @@ export function TownScene({
   const summary = `${label}: ${buildings.length} platform${buildings.length === 1 ? '' : 's'}, ${roads.length} road${roads.length === 1 ? '' : 's'}.`;
 
   return (
-    <div ref={wrapRef} className={cn('relative w-full', className)} role="group" aria-label={label}>
+    <div
+      ref={wrapRef}
+      className={cn('relative w-full', className)}
+      style={palette ? { backgroundImage: `linear-gradient(${css(palette.skyTop)}, ${css(palette.skyBottom)})` } : undefined}
+      role="group"
+      aria-label={label}
+    >
       <canvas
         ref={canvasRef}
         aria-hidden="true"
