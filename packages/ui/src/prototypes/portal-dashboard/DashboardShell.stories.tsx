@@ -3,12 +3,12 @@ import { DashboardShell, type DashboardShellProps } from './DashboardShell';
 import { ConnectionsOverview } from './ConnectionsOverview';
 
 /**
- * RDY-213 (epic RDY-212): Portal shell with the rail Menu dropdown, the slim top bar and Leda as a
- * fixed right column (24rem at lg, 28rem from xl) behind one separator. The chat inside is the
+ * RDY-213 (epic RDY-212): Portal shell with the rail Menu dropdown, no top bar, and Leda as a
+ * full-height fixed right column (24rem at lg, 28rem from xl) behind one separator. The chat inside is the
  * previous Portal Leda chat, unchanged. Content shows the platform connections diagram, flat (no
  * cards). Review at 1440, 1024 and 390 in light and dark.
  *
- * Leda entry points: top-bar Leda toggle (every page), the collapsed edge tab, quick actions in
+ * Leda entry points: the small "Leda" tag shown when the panel is hidden (every page), quick actions in
  * the empty panel, and the confirm-before-write proposal for a connection change.
  */
 const viewports = {
@@ -18,7 +18,7 @@ const viewports = {
 };
 
 const meta: Meta<DashboardShellProps> = {
-  title: 'Prototypes/Portal/DashboardShell',
+  title: 'Prototypes/Portal/[For Review] DashboardShell',
   tags: ['!autodocs'],
   parameters: { layout: 'fullscreen', viewport: { viewports, defaultViewport: 'desktop1440' } },
   args: { active: 'home', member: false, ledaOpen: true, ledaView: 'empty' },
@@ -51,7 +51,7 @@ const openMenu: Story['play'] = async ({ canvasElement }) => {
 export const DesktopLedaEmpty: Story = { name: '1440 · Leda open, empty', ...at('desktop1440', 'dark') };
 export const DesktopLedaConversation: Story = { name: '1440 · Leda conversation', args: { ledaView: 'conversation' }, ...at('desktop1440', 'dark') };
 export const DesktopConfirmAction: Story = { name: '1440 · Confirm-before-write', args: { ledaView: 'confirm' }, ...at('desktop1440', 'dark') };
-export const DesktopLedaCollapsed: Story = { name: '1440 · Leda collapsed (edge tab)', args: { ledaOpen: false }, ...at('desktop1440', 'dark') };
+export const DesktopLedaCollapsed: Story = { name: '1440 · Leda hidden (small tag)', args: { ledaOpen: false }, ...at('desktop1440', 'dark') };
 export const DesktopMenuOpen: Story = { name: '1440 · Menu dropdown', play: openMenu, ...at('desktop1440', 'dark') };
 export const DesktopMemberMenu: Story = { name: '1440 · Menu dropdown, member', args: { member: true, active: 'reports' }, play: openMenu, ...at('desktop1440', 'dark') };
 export const DesktopLight: Story = { name: '1440 · Light, conversation', args: { ledaView: 'conversation' }, ...at('desktop1440', 'light') };
@@ -59,7 +59,7 @@ export const DesktopLightMenu: Story = { name: '1440 · Light, Menu dropdown', p
 
 // Laptop 1024
 export const LaptopLedaOpen: Story = { name: '1024 · Leda open', args: { ledaView: 'conversation' }, ...at('laptop1024', 'dark') };
-export const LaptopLedaCollapsed: Story = { name: '1024 · Leda collapsed', args: { ledaOpen: false }, ...at('laptop1024', 'light') };
+export const LaptopLedaCollapsed: Story = { name: '1024 · Leda hidden (tag)', args: { ledaOpen: false }, ...at('laptop1024', 'light') };
 export const LaptopLight: Story = { name: '1024 · Light, confirm', args: { ledaView: 'confirm' }, ...at('laptop1024', 'light') };
 
 // Phone 390 (below lg: no rail, off-canvas nav, Leda as overlay drawer)

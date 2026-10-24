@@ -1,5 +1,5 @@
 /**
- * RDY-214 mock data: the shared ConnectionsMap datasets and the Needs attention strip.
+ * RDY-214 mock data: the shared ConnectionsMap datasets (Needs attention data removed in revision 2).
  * Kept apart from data.ts so sibling tickets (RDY-215..217) editing data.ts do not conflict.
  */
 import { Package, Storefront, Wrench, type Icon as PhosphorIcon } from '@phosphor-icons/react';
@@ -126,38 +126,8 @@ export const MAP_MANY: MapData = {
 
 export const MAP_EMPTY: MapData = { platforms: [], links: [] };
 
-/* ------------------------------------------------------- needs attention -- */
+/* ------------------------------------------------------------- leda hooks -- */
 
 export type Severity = 'critical' | 'warning' | 'info';
-
-export interface AttentionItem {
-  id: string;
-  severity: Severity;
-  platformId: string;
-  platform: string;
-  title: string;
-  /** Deep link into the owning platform (`/open/:id`). */
-  href: string;
-}
-
-const RANK: Record<Severity, number> = { critical: 0, warning: 1, info: 2 };
-
-const ALL_ITEMS: AttentionItem[] = [
-  { id: 'att-401', severity: 'warning', platformId: 'inv-central', platform: 'Central stock', title: '7 products below reorder level', href: '/open/att-401' },
-  { id: 'att-398', severity: 'critical', platformId: 'st-cebu', platform: 'Cebu branch', title: 'Offline since 9:12 AM; web orders are paused', href: '/open/att-398' },
-  { id: 'att-402', severity: 'warning', platformId: 'sms-makati', platform: 'Repair shop Makati', title: '3 job orders waiting for parts', href: '/open/att-402' },
-  { id: 'att-399', severity: 'critical', platformId: 'st-cebu', platform: 'Cebu branch', title: 'No stock source, so it cannot take orders', href: '/open/att-399' },
-  { id: 'att-405', severity: 'warning', platformId: 'inv-davao', platform: 'Davao stock', title: 'Sync is 40 minutes behind', href: '/open/att-405' },
-  { id: 'att-403', severity: 'warning', platformId: 'inv-central', platform: 'Central stock', title: '2 stock transfers awaiting approval', href: '/open/att-403' },
-  { id: 'att-404', severity: 'warning', platformId: 'inv-central', platform: 'Central stock', title: 'Stock count for Aisle 4 is overdue', href: '/open/att-404' },
-  { id: 'att-406', severity: 'info', platformId: 'st-makati', platform: 'Makati branch', title: '12 orders ready for pickup', href: '/open/att-406' },
-  { id: 'att-407', severity: 'info', platformId: 'st-bgc', platform: 'BGC branch', title: 'New staff invite not yet accepted', href: '/open/att-407' },
-];
-
-/** All open items across platforms, most severe first (stable within a severity). */
-export const ATTENTION_ITEMS: AttentionItem[] = [...ALL_ITEMS].sort((a, b) => RANK[a.severity] - RANK[b.severity]);
-
-/** Items when the Repair shop provider is not responding: its rows are missing. */
-export const ATTENTION_WITHOUT_SMS = ATTENTION_ITEMS.filter((i) => !i.platformId.startsWith('sms-'));
 
 export const HOME_LEDA_SUGGESTIONS = ['What needs my attention?', 'Why is Cebu branch offline?', 'Summarize this week'];
