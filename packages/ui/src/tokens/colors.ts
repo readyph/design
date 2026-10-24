@@ -79,6 +79,33 @@ export const colors = {
     teal: { bg: '#ddf0f1', fg: '#1f6a73' },
     gray: { bg: '#efefef', fg: '#404040' },
   },
+  /**
+   * Scene colours for illustrated maps (the Lab town map): each token has a
+   * light and a dark value, emitted as `--ds-scene-*`. Values are mixes of
+   * existing palette families only (green tint/success, neutral, warning,
+   * teal, peach, primary, error, surface). Dark `window-glow` is the plain
+   * warning amber: the prototype's 45% mix is indistinguishable from the dark
+   * shop wall.
+   */
+  scene: {
+    'grass': { light: '#a3d9b1', dark: '#1b5d3a' },
+    'grass-edge': { light: '#7ca386', dark: '#15402b' },
+    'road': { light: '#a3a3a3', dark: '#373740' },
+    'road-marking': { light: '#ffffff', dark: '#b4b4c0' },
+    'footpath': { light: '#d6eedc', dark: '#4b7e63' },
+    'window-glow': { light: '#eab476', dark: '#f0a33a' },
+    'window-off': { light: '#292929', dark: '#26262c' },
+    'warehouse-wall': { light: '#ddf0f1', dark: '#5eead4' },
+    'warehouse-roof': { light: '#1f6a73', dark: '#38857b' },
+    'shop-wall': { light: '#fbe5de', dark: '#f5be96' },
+    'shop-roof': { light: '#8f3d28', dark: '#8b6d59' },
+    'store-wall': { light: '#efefef', dark: '#cdcdd6' },
+    'store-roof': { light: '#737373', dark: '#787884' },
+    'hq-wall': { light: '#ffffff', dark: '#e4e4eb' },
+    'hq-roof': { light: '#2563eb', dark: '#2563eb' },
+    'awning': { light: '#dc2626', dark: '#f2615b' },
+    'awning-stripe': { light: '#ffffff', dark: '#f3f3f6' },
+  },
   /** Modal / drawer backdrop. */
   overlay: 'rgba(10, 10, 10, 0.4)',
 } as const;

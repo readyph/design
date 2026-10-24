@@ -73,6 +73,25 @@ module.exports = {
           "strong": "rgb(var(--ds-border-strong) / <alpha-value>)"
         },
         "link": "rgb(var(--ds-link) / <alpha-value>)",
+        "scene": {
+          "grass": "rgb(var(--ds-scene-grass) / <alpha-value>)",
+          "grass-edge": "rgb(var(--ds-scene-grass-edge) / <alpha-value>)",
+          "road": "rgb(var(--ds-scene-road) / <alpha-value>)",
+          "road-marking": "rgb(var(--ds-scene-road-marking) / <alpha-value>)",
+          "footpath": "rgb(var(--ds-scene-footpath) / <alpha-value>)",
+          "window-glow": "rgb(var(--ds-scene-window-glow) / <alpha-value>)",
+          "window-off": "rgb(var(--ds-scene-window-off) / <alpha-value>)",
+          "warehouse-wall": "rgb(var(--ds-scene-warehouse-wall) / <alpha-value>)",
+          "warehouse-roof": "rgb(var(--ds-scene-warehouse-roof) / <alpha-value>)",
+          "shop-wall": "rgb(var(--ds-scene-shop-wall) / <alpha-value>)",
+          "shop-roof": "rgb(var(--ds-scene-shop-roof) / <alpha-value>)",
+          "store-wall": "rgb(var(--ds-scene-store-wall) / <alpha-value>)",
+          "store-roof": "rgb(var(--ds-scene-store-roof) / <alpha-value>)",
+          "hq-wall": "rgb(var(--ds-scene-hq-wall) / <alpha-value>)",
+          "hq-roof": "rgb(var(--ds-scene-hq-roof) / <alpha-value>)",
+          "awning": "rgb(var(--ds-scene-awning) / <alpha-value>)",
+          "awning-stripe": "rgb(var(--ds-scene-awning-stripe) / <alpha-value>)"
+        },
         "focus": "rgb(var(--ds-focus) / <alpha-value>)",
         "tint": {
           "peach-bg": "rgb(var(--ds-tint-peach-bg) / <alpha-value>)",
