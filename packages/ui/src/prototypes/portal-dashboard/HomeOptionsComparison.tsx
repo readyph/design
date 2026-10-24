@@ -61,7 +61,7 @@ export function HomeOptionsComparison() {
         </p>
       </header>
 
-      <section aria-labelledby="rec-heading" className="flex flex-col gap-2 border-y border-border py-5">
+      <section aria-labelledby="rec-heading" className="flex flex-col gap-2 rounded-lg bg-surface-muted px-4 py-5">
         <h2 id="rec-heading" className="flex items-center gap-2 text-base font-semibold">
           Recommendation <Badge tone="success" size="sm">Option C</Badge> <Badge tone="warning" size="sm">Needs re-framing</Badge>
         </h2>
@@ -80,7 +80,7 @@ export function HomeOptionsComparison() {
         <table className="w-full min-w-[64rem] border-collapse text-left text-sm">
           <caption className="sr-only">Home content options compared</caption>
           <thead>
-            <tr className="border-b border-border">
+            <tr>
               <th scope="col" className="w-40 py-3 pr-4 text-xs font-medium uppercase tracking-wide text-ink-subtle">
                 &nbsp;
               </th>
@@ -90,7 +90,7 @@ export function HomeOptionsComparison() {
                 </th>
               ))}
             </tr>
-            <tr className="border-b border-border">
+            <tr>
               <th scope="row" className="py-3 pr-4 text-xs font-medium text-ink-subtle">
                 Layout
               </th>
@@ -101,7 +101,7 @@ export function HomeOptionsComparison() {
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-border">
+          <tbody>
             {ROWS.map((r) => (
               <tr key={r.label} className="align-top">
                 <th scope="row" className="py-3 pr-4 text-xs font-medium text-ink-subtle">

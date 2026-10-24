@@ -38,9 +38,9 @@ export const OPTION_META: Record<HomeOption, { name: string; note?: string }> = 
 export function KpiStrip() {
   return (
     <section aria-label="Today across your platforms" className="px-4 pt-5 sm:px-6">
-      <ul className={'grid grid-cols-2 gap-x-6 gap-y-5 border-y border-border py-4 [@container(min-width:40rem)]:grid-cols-4 [@container(min-width:40rem)]:gap-x-0'}>
+      <ul className={'grid grid-cols-2 gap-x-6 gap-y-5 py-4 [@container(min-width:40rem)]:grid-cols-4 [@container(min-width:40rem)]:gap-x-0'}>
         {KPIS.map((k) => (
-          <li key={k.id} className={'min-w-0 [@container(min-width:40rem)]:border-l [@container(min-width:40rem)]:border-border [@container(min-width:40rem)]:px-5 [@container(min-width:40rem)]:first:border-l-0 [@container(min-width:40rem)]:first:pl-0'}>
+          <li key={k.id} className={'min-w-0  [@container(min-width:40rem)]:px-5 [@container(min-width:40rem)]:first:pl-0'}>
             <Link href={k.href} underline="none" className="flex w-full flex-col items-stretch rounded-md hover:text-ink">
               <Stat label={k.label} value={k.value} delta={k.delta} deltaTone={k.deltaTone} />
             </Link>
@@ -127,7 +127,7 @@ export function PendingApprovals({ onAskLeda, empty = false }: { onAskLeda: (ite
       {items.length === 0 ? (
         <EmptyState icon={CheckCircle} title="Nothing to approve" description="Requests from your platforms that need a decision show up here." className="max-w-none border-y border-border py-8" />
       ) : (
-        <ul className="divide-y divide-border border-y border-border">
+        <ul className="flex flex-col">
           {items.map((it) => (
             <ApprovalRow
               key={it.id}
@@ -157,7 +157,7 @@ export function RecentActivity() {
           View all
         </Link>
       </header>
-      <ul className="divide-y divide-border border-y border-border">
+      <ul className="flex flex-col">
         {ACTIVITY.map((e) => (
           <li key={e.id} className={'grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-4 gap-y-1 py-3'}>
             <div className="min-w-0">
@@ -185,7 +185,7 @@ export function RecentActivity() {
 function OptionLabel({ option }: { option: HomeOption }) {
   const m = OPTION_META[option];
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-border bg-surface-muted px-4 py-2 text-xs text-ink-muted sm:px-6">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 bg-surface-muted px-4 py-2 text-xs text-ink-muted sm:px-6">
       <span className="font-medium text-ink">{m.name}</span>
       {m.note && (
         <Badge tone="warning" size="sm">
