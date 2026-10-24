@@ -11,7 +11,7 @@
  * is the only thing Zdog depth-sorts.
  */
 import * as Zdog from 'zdog';
-import { CELL, STREET, TURN_DEG, type PlacedBuilding, type TownLink } from './layout';
+import { DRIVE_HALF, ROAD_HALF, rotY, routeFor, type PlacedBuilding, type Pt, type TownLink, type TownPlan } from './layout';
 import { mix, css, type RGB, type TownPalette } from './palette';
 
 const TAU = Zdog.TAU;
@@ -40,8 +40,6 @@ type P = Zdog.VectorOptions;
 
 /** Height of the sidewalk pad every lot stands on. */
 export const PAD_H = 4;
-/** Sidewalk pad edge length. */
-export const PAD = CELL - STREET;
 /** Buildings are modelled small and scaled up to fill their lot. */
 const BUILDING_SCALE = 1.25;
 /** Shifts each model so the building plus its oversized prop sits centred on the pad (model units). */
@@ -243,20 +241,29 @@ function store(g: Zdog.Group, look: Look, b: PlacedBuilding): Omit<BuildingModel
 }
 
 
-/** One building as a painter-ordered Zdog group standing on its lot's pad. */
-export function buildBuilding(addTo: Zdog.Anchor, p: TownPalette, b: PlacedBuilding, glow: number): BuildingModel {
-  const look: Look = { p, glow };
-  const group = new Zdog.Group({ addTo, translate: { x: b.x + FIT_DX[b.art] * BUILDING_SCALE, y: -PAD_H - b.lift, z: b.z }, scale: BUILDING_SCALE, updateSort: false });
-  // A small tree in the back-left corner of the pad, behind the building.
-  tree(group, look, -PAD / 2 / BUILDING_SCALE + 8, -PAD / 2 / BUILDING_SCALE + 8, 0.7);
-  const art = b.art === 'warehouse' ? warehouse(group, look, b) : b.art === 'shop' ? shop(group, look, b) : store(group, look, b);
-  return { id: b.id, group, ...art };
+/** Footprint of the blockout massing box per art (model units, before BUILDING_SCALE). */
+const MASS = { warehouse: { w: 70, h: 40, d: 50 }, shop: { w: 56, h: 52, d: 48 }, store: { w: 56, h: 40, d: 46 } } as const;
+
+/** Blockout: a plain massing box in the building footprint, with the status lamp and hit markers. */
+function massing(g: Zdog.Group, look: Look, b: PlacedBuilding): Omit<BuildingModel, 'id' | 'group'> {
+  const { p } = look;
+  const m = MASS[b.art];
+  const c = b.art === 'warehouse' ? p.warehouseWall : b.art === 'shop' ? p.shopWall : p.storeWall;
+  block(g, look, c, m.w, m.h, m.d);
+  const lampAt = lamp(g, look, b, 0, -m.h, 0);
+  return { signAt: marker(g, 0, 0, m.d / 2 + 12), lampAt, corners: corners(g, m.w, -m.h - 18, m.d) };
 }
 
-/** Deterministic 0..1 noise, so scenery never shuffles between renders. */
-function rnd(i: number): number {
-  const s = Math.sin(i * 127.1 + 311.7) * 43758.5453;
-  return s - Math.floor(s);
+export type SceneDetail = 'blockout' | 'full';
+
+/** One building as a painter-ordered Zdog group standing on its site, turned by the site yaw. */
+export function buildBuilding(addTo: Zdog.Anchor, p: TownPalette, b: PlacedBuilding, glow: number, detail: SceneDetail = 'full'): BuildingModel {
+  const look: Look = { p, glow };
+  const outer = new Zdog.Group({ addTo, translate: { x: b.x, y: -PAD_H - b.lift, z: b.z }, rotate: { y: b.yaw }, updateSort: false });
+  const full = detail === 'full';
+  const group = new Zdog.Group({ addTo: outer, translate: { x: full ? FIT_DX[b.art] * BUILDING_SCALE : 0 }, scale: full ? BUILDING_SCALE : BUILDING_SCALE, updateSort: false });
+  const art = !full ? massing(group, look, b) : b.art === 'warehouse' ? warehouse(group, look, b) : b.art === 'shop' ? shop(group, look, b) : store(group, look, b);
+  return { id: b.id, group: outer, ...art };
 }
 
 /** Round hedge: three stacked balls (as in the Zdog town). */
@@ -271,68 +278,38 @@ function streetLamp(addTo: Zdog.Anchor, look: Look, x: number, z: number, y = 0)
   ball(addTo, css(mix(look.p.windowOff, look.p.windowOn, look.glow)), 6, x, y - 26, z);
 }
 
-/** Scenery: open grass with a few trees, hedges and street lamps, so the town stays calm and scenic. */
-export function buildScenery(addTo: Zdog.Anchor, p: TownPalette, island: { width: number; depth: number }, streets: { width: number; depth: number }, empty: readonly { x: number; z: number }[]) {
+/** Scenery from the plan: trees, hedges, street lamps along the road and the pond. */
+export function buildScenery(addTo: Zdog.Anchor, p: TownPalette, plan: TownPlan) {
   const look: Look = { p, glow: 1 };
-  const sx = streets.width / 2, sz = streets.depth / 2;
-  const o = (island.width - streets.width) / 4 + 2;
-  const put = (x: number, z: number, s: number, k: number, y = 0) => {
-    const g = new Zdog.Group({ addTo, translate: { x, y, z }, updateSort: false });
-    if (rnd(k) > 0.3) tree(g, look, 0, 0, s);
-    else hedge(g, look, 0, 0);
-  };
-  let k = 0;
-  // Sparse trees around the rim, none on the pond corner.
-  for (let x = -sx + 20; x <= sx - 20; x += 120, k++) put(x, -sz - o, 1.2, k);
-  for (let z = -sz + 70; z <= sz - 30; z += 120, k++) put(-sx - o, z, 1.2, k + 7);
-  for (let z = -sz + 20; z <= sz - 90; z += 120, k++) put(sx + o, z, 1.1, k + 3);
-  for (let x = -sx + 50; x <= sx - 100; x += 130, k++) put(x, sz + o, 1.1, k + 5);
-  // Street lamps at the outer street corners.
-  for (const [lx, lz] of [[-sx + 6, -sz + 6], [sx - 6, -sz + 6], [-sx + 6, sz - 6]]) streetLamp(addTo, look, lx, lz);
-  // Parks on the spare lots.
-  empty.forEach((e, i) => {
-    put(e.x - 22, e.z - 12, 1.2, 100 + i, -PAD_H);
-    put(e.x + 18, e.z + 14, 1, 120 + i, -PAD_H);
+  for (const t of plan.scenery.trees) {
+    const g = new Zdog.Group({ addTo, translate: { x: t.x, z: t.z }, updateSort: false });
+    if (t.hedge) hedge(g, look, 0, 0);
+    else tree(g, look, 0, 0, t.s);
+  }
+  plan.road.forEach((r, i) => {
+    if (i % 40 !== 20) return;
+    const nx = plan.road[Math.min(i + 1, plan.road.length - 1)], pv = plan.road[Math.max(i - 1, 0)];
+    const len = Math.hypot(nx.x - pv.x, nx.z - pv.z) || 1;
+    const side = (i / 40) % 2 < 1 ? 1 : -1;
+    streetLamp(addTo, look, r.x - ((nx.z - pv.z) / len) * (ROAD_HALF + 6) * side, r.z + ((nx.x - pv.x) / len) * (ROAD_HALF + 6) * side);
   });
 }
 
-
-/** Distance toward the viewer for the camera turn: larger = nearer, so nearer pads draw later. */
-function depthKey(q: { x: number; z: number }): number {
-  const t = (TURN_DEG * Math.PI) / 180;
-  return q.z * Math.cos(t) + q.x * Math.sin(t);
-}
-
-/** Where a road meets a building: the street in front of its lot. */
-function streetFront(b: PlacedBuilding): { x: number; z: number }[] {
-  return [{ x: b.x, z: b.z + (CELL - STREET) / 2 }, { x: b.x, z: b.nz + CELL / 2 }];
-}
-
-/** Manhattan route between two lots along the streets: out the front, along one cross street, in the front. */
-function route(a: PlacedBuilding, b: PlacedBuilding): { x: number; z: number }[] {
-  const [a0, a1] = streetFront(a), [b0, b1] = streetFront(b);
-  const xv = Math.min(a.nx, b.nx) + CELL / 2;
-  const pts = [a0, a1, { x: xv, z: a1.z }, { x: xv, z: b1.z }, b1, b0];
-  return pts.filter((q, i) => i === 0 || q.x !== pts[i - 1].x || q.z !== pts[i - 1].z);
-}
+const polyline = (pts: readonly Pt[], y: number): Zdog.PathCommand[] => pts.map((pt, i) => (i === 0 ? { x: pt.x, y, z: pt.z } : { line: { x: pt.x, y, z: pt.z } }));
 
 /**
- * Ground layer: island slab, street grid, link routes, sidewalk pads and the
- * scenery. The slab is inserted first, so painter order keeps it behind everything.
+ * Ground layer: island slab, the winding road and driveways, link routes, raised
+ * sites and the pond. The slab is inserted first, so painter order keeps it behind everything.
  */
 export function buildGround(
   addTo: Zdog.Anchor,
   p: TownPalette,
-  island: { width: number; depth: number },
-  streets: { width: number; depth: number },
-  placed: readonly PlacedBuilding[],
-  empty: readonly { x: number; z: number }[],
+  plan: TownPlan,
   links: readonly TownLink[],
 ): { ground: Zdog.Group; extent: Projected[] } {
   const ground = new Zdog.Group({ addTo, updateSort: false });
   const look: Look = { p, glow: 1 };
-  const r = island.width / 2, q = island.depth / 2, t = 20, lip = 5;
-  // Slab: grass-coloured lip over a beige body, then the grass top.
+  const r = plan.island.width / 2, q = plan.island.depth / 2, t = 20, lip = 5;
   const side = (x0: number, z0: number, x1: number, z1: number, y0: number, y1: number, c: RGB, k: number) =>
     poly(ground, [{ x: x0, y: y0, z: z0 }, { x: x1, y: y0, z: z1 }, { x: x1, y: y1, z: z1 }, { x: x0, y: y1, z: z0 }], tone(c, look, k));
   side(-r, q, r, q, 0, t, p.earth, -0.04);
@@ -341,43 +318,44 @@ export function buildGround(
   side(r, q, r, -q, 0, lip, p.grassSide, -0.2);
   flat(ground, tone(p.grass, look), -r, -q, r, q);
   const extent = [marker(ground, -r, 0, -q), marker(ground, r, t, q), marker(ground, -r, t, q), marker(ground, r, t, -q)];
-  // Streets (the area under and between the lots).
-  const sx = streets.width / 2, sz = streets.depth / 2;
-  flat(ground, tone(p.sidewalk, look, -0.04), -sx - 6, -sz - 6, sx + 6, sz + 6, -0.3);
-  flat(ground, tone(p.street, look), -sx, -sz, sx, sz, -0.6);
-  // Link routes along the street centre lines.
-  const byId = new Map(placed.map((b) => [b.id, b]));
+  const stroke = (pts: readonly Pt[], y: number, width: number, color: string) =>
+    new Zdog.Shape({ addTo: ground, path: polyline(pts, y), closed: false, stroke: width, color });
+  // Main road: kerb, tarmac; driveways likewise.
+  stroke(plan.road, -0.3, ROAD_HALF * 2 + 8, tone(p.sidewalk, look, -0.04));
+  for (const dv of Object.values(plan.driveways)) stroke(dv, -0.3, DRIVE_HALF * 2 + 6, tone(p.sidewalk, look, -0.04));
+  stroke(plan.road, -0.6, ROAD_HALF * 2, tone(p.street, look));
+  for (const dv of Object.values(plan.driveways)) stroke(dv, -0.6, DRIVE_HALF * 2, tone(p.street, look));
+  // Link routes along the road network, with a dashed centre line.
   for (const l of links) {
-    const a = byId.get(l.from), b = byId.get(l.to);
-    if (!a || !b) continue;
-    const pts = route(a, b);
-    const path: Zdog.PathCommand[] = pts.map((pt, i) => (i === 0 ? { x: pt.x, y: -0.9, z: pt.z } : { line: { x: pt.x, y: -0.9, z: pt.z } }));
-    new Zdog.Shape({ addTo: ground, path, closed: false, stroke: 9, color: tone(p.route, look) });
+    const pts = routeFor(plan, l.from, l.to);
+    stroke(pts, -0.9, 9, tone(p.route, look));
     const dashes: Zdog.PathCommand[] = [];
-    for (let i = 1; i < pts.length; i++) {
-      const s = pts[i - 1], e = pts[i];
-      const len = Math.hypot(e.x - s.x, e.z - s.z);
-      const n = Math.max(1, Math.round(len / 18));
-      for (let k = 0; k < n; k++) {
-        const t0 = (k + 0.25) / n, t1 = (k + 0.7) / n;
-        dashes.push(
-          { move: { x: s.x + (e.x - s.x) * t0, y: -1.3, z: s.z + (e.z - s.z) * t0 } },
-          { line: { x: s.x + (e.x - s.x) * t1, y: -1.3, z: s.z + (e.z - s.z) * t1 } },
-        );
-      }
+    for (let i = 1; i < pts.length; i += 3) {
+      const s = pts[i - 1], e = pts[Math.min(i + 1, pts.length - 1)];
+      dashes.push({ move: { x: s.x, y: -1.3, z: s.z } }, { line: { x: e.x, y: -1.3, z: e.z } });
     }
     new Zdog.Shape({ addTo: ground, path: dashes, closed: false, stroke: 1.6, color: tone(p.routeMark, look) });
   }
-  // Pond in the front-right corner of the scenery band.
-  const o = (island.width - streets.width) / 4 + 2;
-  const px = sx + o - 4, pz = sz + o - 4;
-  new Zdog.Ellipse({ addTo: ground, translate: { x: px, y: -0.4, z: pz }, rotate: { x: TAU / 4 }, diameter: 36, stroke: 8, fill: true, color: tone(p.sidewalk, look, 0.1) });
-  new Zdog.Ellipse({ addTo: ground, translate: { x: px, y: -0.8, z: pz }, rotate: { x: TAU / 4 }, diameter: 32, stroke: 2, fill: true, color: tone(p.water, look) });
-  // Pads, back to front, so the kerbs of nearer lots cover the ones behind.
-  const lots = [
-    ...placed.map((b) => ({ x: b.x, z: b.z, c: p.sidewalk, lift: b.lift })),
-    ...empty.map((e) => ({ x: e.x, z: e.z, c: p.grass, lift: 0 })),
-  ].sort((a, b) => depthKey(a) - depthKey(b));
-  for (const lot of lots) block(ground, look, lot.c, PAD, PAD_H + lot.lift, PAD, lot.x, 0, lot.z);
+  // Pond.
+  const pd = plan.scenery.pond;
+  if (pd) {
+    new Zdog.Ellipse({ addTo: ground, translate: { x: pd.x, y: -0.4, z: pd.z }, rotate: { x: TAU / 4 }, diameter: pd.r * 2, stroke: 8, fill: true, color: tone(p.sidewalk, look, 0.1) });
+    new Zdog.Ellipse({ addTo: ground, translate: { x: pd.x, y: -0.8, z: pd.z }, rotate: { x: TAU / 4 }, diameter: pd.r * 2 - 4, stroke: 2, fill: true, color: tone(p.water, look) });
+  }
+  // Sites, far to near, as yawed raised slabs: lawn top in blockout, sidewalk-coloured pad.
+  const order = [...plan.placed].sort((a, b) => a.z - b.z);
+  for (const b of order) slab(ground, look, p.sidewalk, b);
   return { ground, extent };
+}
+
+/** Yawed site slab: top plus the two faces that point at the camera (front, right). */
+function slab(addTo: Zdog.Anchor, look: Look, c: RGB, b: PlacedBuilding) {
+  const h = PAD_H + b.lift;
+  const at = (i: number, j: number, y: number) => {
+    const v = rotY({ x: (i * b.w) / 2, z: (j * b.d) / 2 }, b.yaw);
+    return { x: b.x + v.x, y, z: b.z + v.z };
+  };
+  poly(addTo, [at(-1, 1, 0), at(1, 1, 0), at(1, 1, -h), at(-1, 1, -h)], tone(c, look, 0.02));
+  poly(addTo, [at(1, 1, 0), at(1, -1, 0), at(1, -1, -h), at(1, 1, -h)], tone(c, look, -0.15));
+  poly(addTo, [at(-1, -1, -h), at(1, -1, -h), at(1, 1, -h), at(-1, 1, -h)], tone(c, look, 0.3));
 }

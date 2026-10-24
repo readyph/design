@@ -13,8 +13,8 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import * as Zdog from 'zdog';
 import { cn } from '../../utils/cn';
-import { buildBuilding, buildGround, buildScenery, type BuildingModel, type Projected } from './art';
-import { TURN_DEG, dedupeLinks, defaultLights, placeBuildings, plotSize, streetSize, type TownBuilding, type TownLink } from './layout';
+import { buildBuilding, buildGround, buildScenery, type BuildingModel, type Projected, type SceneDetail } from './art';
+import { TURN_DEG, dedupeLinks, defaultLights, planTown, type TownBuilding, type TownLink } from './layout';
 import { css, readPalette, type TownPalette } from './palette';
 
 export type { TownBuilding, TownLink, TownStatus } from './layout';
@@ -47,6 +47,8 @@ export interface TownSceneProps {
   label?: string;
   /** Build / draw timings, reported after each rebuild (perf check). */
   onRenderStats?: (stats: TownRenderStats) => void;
+  /** `blockout` = massing boxes for the master-plan review; `full` = the finished building art. */
+  detail?: SceneDetail;
   className?: string;
 }
 
@@ -102,6 +104,7 @@ export function TownScene({
   onSelect,
   label = 'Platform town map',
   onRenderStats,
+  detail = 'blockout',
   className,
 }: TownSceneProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -112,7 +115,8 @@ export function TownScene({
   const [hoverId, setHoverId] = useState<string | null>(null);
   const [focusId, setFocusId] = useState<string | null>(null);
 
-  const { cols, rows, placed, empty } = useMemo(() => placeBuildings(buildings), [buildings]);
+  const plan = useMemo(() => planTown(buildings), [buildings]);
+  const placed = plan.placed;
   const roads = useMemo(() => dedupeLinks(links, new Set(buildings.map((b) => b.id))), [links, buildings]);
   const lightsOn = useMemo(() => ({ ...defaultLights(buildings), ...lights }), [buildings, lights]);
   const glowRef = useRef<Record<string, number>>({});
@@ -245,12 +249,10 @@ export function TownScene({
     const scene = s;
     const { illo } = scene;
     [...illo.children].forEach((c) => c.remove());
-    const island = plotSize(cols, rows);
-    const streets = streetSize(cols, rows);
-    const { ground, extent } = buildGround(illo, palette, island, streets, placed, empty, roads);
+    const { ground, extent } = buildGround(illo, palette, plan, roads);
     pinBehind(ground, -1e9);
-    buildScenery(illo, palette, island, streets, empty);
-    scene.models = placed.map((b) => buildBuilding(illo, palette, b, glowRef.current[b.id] ?? (latest.current.lightsOn[b.id] ? 1 : 0)));
+    buildScenery(illo, palette, plan);
+    scene.models = placed.map((b) => buildBuilding(illo, palette, b, glowRef.current[b.id] ?? (latest.current.lightsOn[b.id] ? 1 : 0), detail));
     // Fit: projected extents are zoom-independent, so measure them, then size the canvas tightly.
     illo.updateGraph();
     const pts = [...extent, ...scene.models.flatMap((m) => [...m.corners, m.lampAt])];
@@ -269,7 +271,7 @@ export function TownScene({
     const buildMs = performance.now() - t0;
     const drawMs = draw();
     latest.current.onRenderStats?.({ buildMs, drawMs, items: illo.flatGraph.length });
-  }, [palette, width, cols, rows, empty, placed, roads, draw]);
+  }, [palette, width, plan, placed, roads, detail, draw]);
 
   useLayoutEffect(build, [build]);
 

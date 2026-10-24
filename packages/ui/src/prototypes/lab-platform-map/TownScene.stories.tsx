@@ -29,9 +29,10 @@ interface HarnessProps {
   links: TownLink[];
   allOff?: boolean;
   showStats?: boolean;
+  detail?: 'blockout' | 'full';
 }
 
-function Harness({ buildings, links, allOff, showStats }: HarnessProps) {
+function Harness({ buildings, links, allOff, showStats, detail }: HarnessProps) {
   const [lights, setLights] = useState<Record<string, boolean>>(() =>
     allOff ? Object.fromEntries(buildings.map((b) => [b.id, false])) : defaultLights(buildings),
   );
@@ -48,6 +49,7 @@ function Harness({ buildings, links, allOff, showStats }: HarnessProps) {
           buildings={buildings}
           links={links}
           lights={lights}
+          detail={detail}
           onHover={(id, p) => setHovered(id && p ? { id, ...p } : null)}
           onSelect={(id) => setLights((l) => ({ ...l, [id]: !l[id] }))}
           onRenderStats={showStats ? setStats : undefined}
@@ -85,6 +87,12 @@ const render: Story['render'] = (args) => <Harness {...args} />;
 export const MixedTenant: Story = {
   name: 'Mixed tenant',
   args: { buildings: MIXED, links: MIXED_LINKS },
+  render,
+};
+
+export const MixedTenantFullArt: Story = {
+  name: 'Mixed tenant (full building art)',
+  args: { buildings: MIXED, links: MIXED_LINKS, detail: 'full' },
   render,
 };
 
