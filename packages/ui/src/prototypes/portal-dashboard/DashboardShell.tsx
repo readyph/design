@@ -6,9 +6,9 @@
  * - No top bar / top nav (revision 2, owner feedback). Pages own their heading. Below lg (1024px) the
  *   rail is hidden; a small floating Menu button (bottom-left) opens an off-canvas nav.
  * - Leda is a FIXED column on the right of every page, full height from the very top to the bottom
- *   edge (revisions 1 and 2), one hairline separator (border-l) from the content, no inset
+ *   edge (revisions 1 and 2), separated from the content by a surface-tone shift (no hairline), no inset
  *   card, rounding or shadow. 24rem at lg, 28rem from xl (1280px). When hidden, no sidebar is left behind:
- *   only a small "Leda" tag on the right edge (bottom) brings it back; below lg it opens as an overlay drawer. Remembered in localStorage `readyph.leda_panel`.
+ *   only a small "Leda" tag on the right edge (top, aligned with the close button) brings it back; below lg it opens as an overlay drawer. Remembered in localStorage `readyph.leda_panel`.
  * - The chat inside is the previous Portal Leda chat, unchanged (see LedaChat).
  * - Content area is a size container, so pages lay out from the measured content width
  *   (container queries), not the viewport. Default content: the platform connections diagram.
@@ -56,7 +56,7 @@ import {
 
 /** Kit gaps found while building this prototype (also in the PR body). */
 export const MISSING_IN_KIT = [
-  'LedaSidePanel (RDY-219, revise): docked state = flush full-height column (top to bottom of the viewport, no top bar above it) with border-l separator, no inset or card border; hidden state renders no column, only a small "Leda" tag (right edge, bottom) that reopens it; no visible page-context chip (context is still sent to Leda).',
+  'LedaSidePanel (RDY-219, revise): docked state = flush full-height column (top to bottom of the viewport, no top bar above it) separated from the canvas by surface tone only (no border line), no inset or card border; hidden state renders no column, only a small "Leda" tag (right edge, top, aligned with the panel close button) that reopens it; no visible page-context chip (context is still sent to Leda).',
   'Shell without TopBar (RDY-218/221): no top bar; Leda toggle and Add platform are not in a header (Add platform stays in the rail and mobile nav); below lg a floating Menu button replaces the top-bar menu button. Portal layout must drop TopBar.',
   'Token `width.leda-panel` = 28rem from xl (1280px) and 24rem at lg (1024 to 1279px), replacing 22.5rem; prototype uses w-[24rem] xl:w-[28rem].',
   'Chat `fill` size (h-full w-full, no border/rounding/shadow) for the docked panel; prototype overrides Chat className.',
@@ -156,7 +156,7 @@ function Rail({ active, member, onNavigate, onAddPlatform }: { active: PortalNav
         }
         items={navMenuItems(active, member, onNavigate)}
       />
-      <div aria-hidden="true" className="my-1 h-px w-6 bg-border" />
+      <div aria-hidden="true" className="h-2" />
       {PLATFORMS.map((p) => (
         <Tooltip key={p.id} content={p.label} side="right">
           <button type="button" aria-label={`${p.label}, ${p.status}`} className="relative rounded-lg">
@@ -403,8 +403,8 @@ function LedaChat({
               type="button"
               onClick={() => send(q)}
               className={cn(
-                'inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1 text-xs text-ink',
-                'hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700',
+                'inline-flex items-center gap-1.5 rounded-full bg-surface-muted px-3 py-1 text-xs text-ink',
+                'hover:bg-primary-50 hover:text-primary-700',
                 focusRing,
               )}
             >
@@ -423,6 +423,7 @@ function LedaChat({
           send(text);
           setDraft('');
         }}
+        className="border-transparent bg-surface-muted"
         placeholder={busy ? 'Leda is replying…' : 'Ask Leda…'}
         aria-label="Message Leda"
         autoFocus={overlay}
@@ -493,7 +494,7 @@ export function DashboardShell({
       <main className="min-h-0 min-w-0 flex-1 overflow-y-auto [container-type:inline-size] max-lg:pb-16">{children}</main>
 
       {desktop && docked && (
-        <aside aria-label="Leda panel" className="flex h-full w-[24rem] shrink-0 flex-col border-l border-border bg-surface xl:w-[28rem]">
+        <aside aria-label="Leda panel" className="flex h-full w-[24rem] shrink-0 flex-col bg-surface shadow-sm xl:w-[28rem]">
           <LedaChat view={ledaView} onClose={() => setDockedRemembered(false)} suggestions={ledaSuggestions} prefill={ledaPrefill} />
         </aside>
       )}
@@ -504,7 +505,7 @@ export function DashboardShell({
           onClick={toggleLeda}
           aria-label="Show Leda"
           className={cn(
-            'absolute bottom-6 right-0 flex items-center gap-2 rounded-l-lg border border-r-0 border-border bg-surface py-2 pl-2.5 pr-3',
+            'absolute right-0 top-3 flex items-center gap-2 rounded-l-lg bg-surface py-1.5 pl-2 pr-3',
             'text-sm font-semibold text-ink shadow-sm hover:bg-surface-muted',
             focusRing,
           )}
@@ -523,7 +524,7 @@ export function DashboardShell({
             onClick={() => setNav(true)}
             aria-label="Open menu"
             className={cn(
-              'absolute bottom-6 left-4 grid h-10 w-10 place-items-center rounded-full border border-border bg-surface text-ink shadow-sm hover:bg-surface-muted',
+              'absolute bottom-6 left-4 grid h-10 w-10 place-items-center rounded-full bg-surface text-ink shadow-md hover:bg-surface-muted',
               focusRing,
             )}
           >

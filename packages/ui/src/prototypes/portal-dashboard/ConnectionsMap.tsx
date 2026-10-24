@@ -204,7 +204,7 @@ function Diagram({ platforms, links, onNodeSelect }: ConnectionsMapProps) {
 function PlatformRows({ platforms, links, onNodeSelect, alwaysShow }: ConnectionsMapProps & { alwaysShow?: boolean }) {
   const byId = (id: string) => platforms.find((p) => p.id === id);
   return (
-    <ul className={cn('divide-y divide-border border-y border-border', !alwaysShow && '[@container(min-width:36rem)]:hidden')}>
+    <ul className={cn('flex flex-col', !alwaysShow && '[@container(min-width:36rem)]:hidden')}>
       {platforms.map((p) => {
         const body = (
           <>
