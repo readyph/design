@@ -400,8 +400,8 @@ function LedaChat({ view, onClose, overlay }: { view: LedaView; onClose: () => v
               type="button"
               onClick={() => send(q)}
               className={cn(
-                'inline-flex items-center gap-1.5 rounded-full bg-surface-muted px-3 py-1 text-xs text-ink',
-                'hover:bg-primary-50 hover:text-primary-700',
+                'inline-flex items-center gap-1.5 rounded-full border border-border-strong bg-transparent px-3 py-1 text-xs text-ink',
+                'hover:border-primary-400 hover:text-primary-500',
                 focusRing,
               )}
             >
@@ -419,7 +419,7 @@ function LedaChat({ view, onClose, overlay }: { view: LedaView; onClose: () => v
           setDraft('');
         }}
       >
-        <div className="flex items-center gap-2 rounded-md border border-border bg-surface-muted py-1.5 pl-3 pr-1.5 focus-within:border-primary-400 focus-within:ring-2 focus-within:ring-focus">
+        <div className="flex items-center gap-2 rounded-md border border-border-strong bg-transparent py-1.5 pl-3 pr-1.5 focus-within:border-primary-400 focus-within:ring-2 focus-within:ring-focus">
           <textarea
             rows={1}
             value={draft}
