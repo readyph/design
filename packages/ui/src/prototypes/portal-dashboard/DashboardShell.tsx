@@ -5,10 +5,13 @@
  *   dropdown with every sidebar link (active item marked; members see a shorter list).
  * - Below lg (1024px) the rail is hidden and the top-bar menu button opens an off-canvas nav.
  * - Top bar: page title left; Leda toggle + Add platform right.
- * - Leda fixed right panel on every page: docked (pushes content) at lg+, collapsed to a slim
- *   edge tab, or an overlay drawer below lg. Remembered in localStorage `readyph.leda_panel`.
+ * - Leda is a FIXED column on the right of every page (revision 1, owner feedback): flush with the
+ *   top bar and the bottom edge, one hairline separator (border-l) from the content, no inset
+ *   card, rounding or shadow. 24rem at lg, 28rem from xl (1280px). Collapses to a slim edge tab;
+ *   below lg it opens as an overlay drawer. Remembered in localStorage `readyph.leda_panel`.
+ * - The chat inside is the previous Portal Leda chat, unchanged (see LedaChat).
  * - Content area is a size container, so pages lay out from the measured content width
- *   (container queries), not the viewport.
+ *   (container queries), not the viewport. Default content: the platform connections diagram.
  *
  * Composition only: every piece is an existing @readyph/ui export. Missing kit pieces are listed
  * in MISSING_IN_KIT for Leonardo. Pages in RDY-214..217 render as `children`.
@@ -19,13 +22,11 @@ import {
   Plus,
   Check,
   WaveTriangle,
-  CaretLineRight,
-  NotePencil,
+  Sparkle,
+  Trash,
   SignOut,
   User,
   CreditCard,
-  Package,
-  X,
 } from '@phosphor-icons/react';
 import {
   Avatar,
@@ -39,7 +40,6 @@ import {
   SidebarItem,
   SidebarSection,
   StatusDot,
-  Tag,
   Tooltip,
   TopBar,
   cn,
@@ -49,8 +49,6 @@ import {
 import {
   COMPANY,
   LEDA_PANEL_KEY,
-  LEDA_SUGGESTIONS,
-  PAGE_CONTEXT,
   PLATFORMS,
   USER,
   linksFor,
@@ -59,12 +57,13 @@ import {
 
 /** Kit gaps found while building this prototype (also in the PR body). */
 export const MISSING_IN_KIT = [
-  'LedaSidePanel: collapsible docked Leda panel (open / edge tab / drawer below lg) with page-context chip and persisted state; replaces LedaDock and LedaLauncher in the Portal.',
-  'RailMenuButton (or IconRail `menu` slot): rail tile that opens a nav dropdown; today composed from Menu + a raw button.',
-  'Menu item `active` (aria-current + check mark) and section headings; today the check is drawn inside the label.',
-  'Token `width.leda-panel` = 22.5rem (360px, the agreed Leda fit width); `right-panel` is 18rem and too narrow for proposal cards. Prototype uses w-[22.5rem].',
-  'Container-query support in the preset (@tailwindcss/container-queries or documented arbitrary `[@container(...)]` variants); prototype uses arbitrary variants.',
-  'Chat `fill` size (h-full w-full, no border/shadow) for panels; prototype overrides Chat className.',
+  'LedaSidePanel (RDY-219, revise): docked state = flush full-height column with border-l separator (no mb-2/mr-2 inset, no rounded-lg card border); edge tab the same; no visible page-context chip in the header (context is still sent to Leda).',
+  'Token `width.leda-panel` = 28rem from xl (1280px) and 24rem at lg (1024 to 1279px), replacing 22.5rem; prototype uses w-[24rem] xl:w-[28rem].',
+  'Chat `fill` size (h-full w-full, no border/rounding/shadow) for the docked panel; prototype overrides Chat className.',
+  'Leda chat body stays project-owned (portal LedaDock content); only its container moves into LedaSidePanel.',
+  'RailMenuButton / Menu item `active` and section headings (RDY-218); today composed from Menu + a raw button with the check drawn inside the label.',
+  'Container-query support in the preset (RDY-219); prototype uses arbitrary `[@container(...)]` variants.',
+  'ConnectionsMap (RDY-214): flat diagram (bare icon tiles + labels, no node boxes or wrapping Card) with a divided text list below; prototype positions nodes with arbitrary top/left classes from static data.',
 ];
 
 export type LedaView = 'empty' | 'conversation' | 'confirm';
@@ -230,51 +229,84 @@ function MobileNav({ open, onOpenChange, active, member, onNavigate }: { open: b
 }
 
 /* --------------------------------------------------------------- Leda ----- */
+/*
+ * Owner feedback 4: keep the PREVIOUS Leda chat exactly as the live Portal renders it
+ * (portal/src/modules/leda/LedaDock.tsx on @readyph/ui 0.6.x): Chat header "Leda / Your AI
+ * assistant" with close, centred empty state, Sparkle quick-action pills, primary user bubbles,
+ * assistant rows with the round Leda avatar and plain prose, thinking dots, writes as
+ * LedaWidget.Proposal (LedaActionBlock). Only the container changed: a docked right column with a
+ * hairline separator instead of the floating rounded card.
+ */
+
+const QUICK_ACTIONS = ["What's low on stock?", 'Summarize this week', 'Remember our holiday hours'];
 
 interface Msg {
   id: number;
   role: 'user' | 'assistant';
   text: string;
   pending?: boolean;
-  widget?: 'stats' | 'proposal';
+  status?: string;
+  proposal?: boolean;
 }
 
 const CONVERSATION: Msg[] = [
-  { id: 1, role: 'user', text: 'How did Inventory do this week?' },
-  { id: 2, role: 'assistant', text: 'Sales are up and stock is healthy, except 3 items below reorder point.', widget: 'stats' },
+  { id: 1, role: 'user', text: 'How are my platforms connected?' },
+  {
+    id: 2,
+    role: 'assistant',
+    text: 'Makati and BGC read stock from Central stock, and BGC also reads its catalog from Davao stock. Cebu branch has no stock source yet, so it cannot take orders. Want me to connect it to Central stock?',
+  },
 ];
 
 const CONFIRM: Msg[] = [
   ...CONVERSATION,
-  { id: 3, role: 'user', text: 'Reorder the mango boxes from San Miguel.' },
-  { id: 4, role: 'assistant', text: 'Here is the purchase order. Nothing is created until you confirm.', widget: 'proposal' },
+  { id: 3, role: 'user', text: 'Yes, connect Cebu to Central stock.' },
+  { id: 4, role: 'assistant', text: 'Here is the change. Nothing is linked until you confirm.', proposal: true },
 ];
 
 function initialMessages(view: LedaView): Msg[] {
   return view === 'confirm' ? CONFIRM : view === 'conversation' ? CONVERSATION : [];
 }
 
-function LedaPanelBody({ view, context, onCollapse, overlay }: { view: LedaView; context: string; onCollapse: () => void; overlay?: boolean }) {
+function ThinkingDots() {
+  return (
+    <span className="inline-flex items-center gap-1 py-1" aria-label="Leda is thinking">
+      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current opacity-60" />
+      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current opacity-60 [animation-delay:160ms]" />
+      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current opacity-60 [animation-delay:320ms]" />
+    </span>
+  );
+}
+
+const ledaAvatar = (
+  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-primary-600 text-white">
+    <Icon icon={WaveTriangle} size="sm" weight="bold" />
+  </span>
+);
+
+function LedaChat({ view, onClose, overlay }: { view: LedaView; onClose: () => void; overlay?: boolean }) {
   const [messages, setMessages] = useState<Msg[]>(() => initialMessages(view));
   const [draft, setDraft] = useState('');
+  const [busy, setBusy] = useState(false);
   const [proposal, setProposal] = useState<'pending' | 'applying' | 'confirmed' | 'cancelled'>('pending');
-  const endRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => setMessages(initialMessages(view)), [view]);
   useEffect(() => {
-    endRef.current?.scrollIntoView?.({ block: 'end' });
+    const el = scrollRef.current;
+    el?.scrollTo?.({ top: el.scrollHeight, behavior: 'smooth' });
   }, [messages]);
 
-  const ask = (text: string) => {
+  const send = (text: string) => {
     const t = text.trim();
     if (!t) return;
     const uid = Date.now();
-    setMessages((p) => [...p, { id: uid, role: 'user', text: t }, { id: uid + 1, role: 'assistant', text: '', pending: true }]);
-    setDraft('');
-    window.setTimeout(
-      () => setMessages((p) => p.map((m) => (m.id === uid + 1 ? { ...m, pending: false, text: 'Both platforms are online. Repair shop is slow to sync; I will keep an eye on it.' } : m))),
-      900,
-    );
+    setBusy(true);
+    setMessages((p) => [...p, { id: uid, role: 'user', text: t }, { id: uid + 1, role: 'assistant', text: '', pending: true, status: 'Checking your platforms' }]);
+    window.setTimeout(() => {
+      setMessages((p) => p.map((m) => (m.id === uid + 1 ? { ...m, pending: false, text: 'Both Inventory locations are online. Davao stock is slow to sync; I will keep an eye on it.' } : m)));
+      setBusy(false);
+    }, 900);
   };
 
   const confirm = () => {
@@ -286,72 +318,86 @@ function LedaPanelBody({ view, context, onCollapse, overlay }: { view: LedaView;
     <Chat aria-label="Leda" className="h-full w-full rounded-none border-0 bg-transparent shadow-none">
       <Chat.Header
         title="Leda"
-        subtitle={
-          <span className="inline-flex items-center gap-1.5">
-            On this page <Tag className="py-0">{context}</Tag>
-          </span>
-        }
-        actions={
-          <>
-            <IconButton icon={NotePencil} label="New conversation" variant="subtle" size="sm" onClick={() => setMessages([])} />
-            <IconButton icon={overlay ? X : CaretLineRight} label={overlay ? 'Close Leda' : 'Collapse Leda'} variant="subtle" size="sm" onClick={onCollapse} />
-          </>
-        }
-        className="border-b border-border"
+        subtitle="Your AI assistant"
+        icon={WaveTriangle}
+        onClose={onClose}
+        actions={messages.length > 0 ? <IconButton icon={Trash} label="Clear conversation" variant="subtle" size="sm" onClick={() => setMessages([])} /> : undefined}
       />
-      {messages.length === 0 ? (
-        <div className="flex flex-1 flex-col justify-end gap-4 overflow-y-auto px-4 py-4">
-          <div className="flex flex-col gap-1">
-            <p className="text-base font-semibold text-ink">Good morning, Maria</p>
-            <p className="text-sm text-ink-muted">Ask about your platforms or tell me what to do. I can see the {context} you are on.</p>
+      <Chat.Messages ref={scrollRef} aria-live="polite">
+        {messages.length === 0 ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4 text-center">
+            <span className="grid h-12 w-12 place-items-center rounded-full bg-primary-50 text-primary-600">
+              <Icon icon={WaveTriangle} size="lg" weight="bold" />
+            </span>
+            <p className="text-sm text-ink-muted">Ask me about your company, inventory or team. I answer from your Memory and can draft changes for you to confirm.</p>
           </div>
-          <LedaWidget.Suggestions items={LEDA_SUGGESTIONS} onSelect={ask} />
-        </div>
-      ) : (
-        <Chat.Messages aria-live="polite">
-          {messages.map((m) => (
-            <div key={m.id} className="flex flex-col gap-2">
-              <Chat.Message role={m.role} streaming={m.pending}>
+        ) : (
+          messages.map((m) =>
+            m.role === 'user' ? (
+              <div key={m.id} className="max-w-[85%] self-end whitespace-pre-wrap rounded-lg rounded-br-sm bg-primary-600 px-3 py-2 text-sm text-white">
                 {m.text}
-              </Chat.Message>
-              {m.widget === 'stats' && (
-                <LedaWidget title="Inventory this week" meta="Mon 19 to Sun 25 Oct" icon={Package} className="border border-border shadow-none">
-                  <LedaWidget.StatGrid
-                    columns={2}
-                    items={[
-                      { label: 'Sales', value: '₱184K', delta: '+8%', deltaTone: 'success' },
-                      { label: 'Low stock', value: '3 items', delta: 'Mango boxes out', deltaTone: 'error' },
-                    ]}
-                  />
-                </LedaWidget>
+              </div>
+            ) : (
+              <div key={m.id} className="flex gap-2.5">
+                {ledaAvatar}
+                <div className="min-w-0 flex-1 space-y-2">
+                  {m.text && <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink">{m.text}</p>}
+                  {m.pending && (
+                    <p className="flex items-center gap-2 text-sm text-ink-muted">
+                      {m.status ?? 'Thinking'} <ThinkingDots />
+                    </p>
+                  )}
+                  {m.proposal && (
+                    <LedaWidget.Proposal
+                      title="Connect data"
+                      intent="update"
+                      summary="Cebu branch reads Central stock."
+                      changes={[
+                        { label: 'Stock source', value: 'Central stock', sign: 'in' },
+                        { label: 'Shared with', value: '3 branches' },
+                      ]}
+                      status={proposal}
+                      confirmLabel="Connect"
+                      onConfirm={confirm}
+                      onCancel={() => setProposal('cancelled')}
+                      resultText={proposal === 'confirmed' ? 'Cebu branch now reads stock from Central stock.' : 'Change cancelled.'}
+                    />
+                  )}
+                </div>
+              </div>
+            ),
+          )
+        )}
+      </Chat.Messages>
+      {messages.length === 0 && (
+        <Chat.QuickActions>
+          {QUICK_ACTIONS.map((q) => (
+            <button
+              key={q}
+              type="button"
+              onClick={() => send(q)}
+              className={cn(
+                'inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1 text-xs text-ink',
+                'hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700',
+                focusRing,
               )}
-              {m.widget === 'proposal' && (
-                <LedaWidget.Proposal
-                  title="Create purchase order"
-                  intent="order"
-                  summary="Draft PO-1044 to San Miguel Foods."
-                  changes={[
-                    { label: 'Mango boxes', value: '24 boxes', sign: 'in' },
-                    { label: 'Estimated total', value: '₱8,640' },
-                  ]}
-                  status={proposal}
-                  confirmLabel="Create PO"
-                  onConfirm={confirm}
-                  onCancel={() => setProposal('cancelled')}
-                  resultText={proposal === 'confirmed' ? 'PO-1044 created in Inventory.' : 'Purchase order cancelled.'}
-                />
-              )}
-            </div>
+            >
+              <Icon icon={Sparkle} size="sm" className="text-primary-500" />
+              {q}
+            </button>
           ))}
-          <div ref={endRef} />
-        </Chat.Messages>
+        </Chat.QuickActions>
       )}
       <Chat.Input
-        placeholder="Ask Leda or tell it what to do…"
-        aria-label="Message Leda"
         value={draft}
+        busy={busy}
         onChange={(e) => setDraft(e.target.value)}
-        onSubmit={ask}
+        onSubmit={(text) => {
+          send(text);
+          setDraft('');
+        }}
+        placeholder={busy ? 'Leda is replying…' : 'Ask Leda…'}
+        aria-label="Message Leda"
         autoFocus={overlay}
       />
     </Chat>
@@ -397,7 +443,6 @@ export function DashboardShell({
   const [docked, setDocked] = useState<boolean>(() => ledaOpen ?? readStored() ?? true);
   const [drawer, setDrawer] = useState(ledaDrawerOpen);
   const [nav, setNav] = useState(navOpen);
-  const context = PAGE_CONTEXT[active];
   const label = title ?? linksFor(false).find((l) => l.key === active)?.label;
 
   const setDockedRemembered = (v: boolean) => {
@@ -438,13 +483,13 @@ export function DashboardShell({
           <main className="min-h-0 min-w-0 flex-1 overflow-y-auto [container-type:inline-size]">{children}</main>
 
           {desktop && docked && (
-            <aside aria-label="Leda panel" className="mb-2 mr-2 flex w-[22.5rem] shrink-0 flex-col overflow-hidden rounded-lg border border-border bg-surface">
-              <LedaPanelBody view={ledaView} context={context} onCollapse={() => setDockedRemembered(false)} />
+            <aside aria-label="Leda panel" className="flex w-[24rem] shrink-0 flex-col border-l border-border bg-surface xl:w-[28rem]">
+              <LedaChat view={ledaView} onClose={() => setDockedRemembered(false)} />
             </aside>
           )}
 
           {desktop && !docked && (
-            <aside aria-label="Leda panel, collapsed" className="mb-2 mr-2 flex w-10 shrink-0 flex-col items-center gap-2 rounded-lg border border-border bg-surface py-2">
+            <aside aria-label="Leda panel, collapsed" className="flex w-10 shrink-0 flex-col items-center border-l border-border bg-surface py-2">
               <Tooltip content="Open Leda" side="left">
                 <button
                   type="button"
@@ -452,8 +497,8 @@ export function DashboardShell({
                   aria-label="Open Leda"
                   className={cn('flex flex-col items-center gap-2 rounded-base px-1 py-2 text-ink-muted hover:bg-surface-muted hover:text-ink', focusRing)}
                 >
-                  <span className="grid h-7 w-7 place-items-center rounded-full bg-primary-50 text-primary-600">
-                    <Icon icon={WaveTriangle} size="sm" weight="fill" />
+                  <span className="grid h-7 w-7 place-items-center rounded-full bg-primary-600 text-white">
+                    <Icon icon={WaveTriangle} size="sm" weight="bold" />
                   </span>
                   <span className="text-xs font-semibold [writing-mode:vertical-rl]">Leda</span>
                 </button>
@@ -468,46 +513,10 @@ export function DashboardShell({
           <MobileNav open={nav} onOpenChange={setNav} active={active} member={member} onNavigate={onNavigate} />
           <OffCanvas open={drawer} onOpenChange={setDrawer} side="right" width="100vw" hideClose className="max-w-none sm:max-w-[24rem]">
             <OffCanvas.Header className="sr-only">Leda</OffCanvas.Header>
-            <LedaPanelBody view={ledaView} context={context} onCollapse={() => setDrawer(false)} overlay />
+            <LedaChat view={ledaView} onClose={() => setDrawer(false)} overlay />
           </OffCanvas>
         </>
       )}
-    </div>
-  );
-}
-
-/* ------------------------------------------------- review placeholder ----- */
-
-/** Placeholder page content that shows the measured content width (open vs closed panel). */
-export function ContentProbe() {
-  const ref = useRef<HTMLDivElement>(null);
-  const [w, setW] = useState(0);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el || typeof ResizeObserver === 'undefined') return;
-    const ro = new ResizeObserver(([e]) => setW(Math.round(e.contentRect.width)));
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-  return (
-    <div ref={ref} className="flex flex-col gap-3 px-4 pb-4">
-      <p className="text-xs text-ink-muted">
-        Content area <span className="font-semibold tabular-nums text-ink">{w}px</span> wide. Columns follow this width, not the viewport.
-      </p>
-      <div className="grid grid-cols-1 gap-3 [@container(min-width:36rem)]:grid-cols-2 [@container(min-width:60rem)]:grid-cols-4">
-        {['Platforms online', 'Needs attention', 'Sales today', 'Team active'].map((t, i) => (
-          <div key={t} className="flex flex-col gap-1 rounded-lg border border-border bg-surface p-4">
-            <span className="text-xs text-ink-muted">{t}</span>
-            <span className="text-lg font-semibold tabular-nums text-ink">{['1 of 2', '3', '₱42,180', '6'][i]}</span>
-          </div>
-        ))}
-      </div>
-      <div className="grid min-h-64 place-items-center rounded-lg border border-dashed border-border-strong bg-surface p-6 text-center">
-        <div className="flex max-w-sm flex-col gap-1">
-          <p className="text-sm font-semibold text-ink">Page content</p>
-          <p className="text-sm text-ink-muted">Home (platform map and Needs attention) is designed in RDY-214. This shell wraps every Portal page.</p>
-        </div>
-      </div>
     </div>
   );
 }

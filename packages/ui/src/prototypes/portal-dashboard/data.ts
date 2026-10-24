@@ -11,6 +11,7 @@ import {
   Gear,
   Package,
   Wrench,
+  Storefront,
   type Icon as PhosphorIcon,
 } from '@phosphor-icons/react';
 import type { StatusTone } from '../../index';
@@ -77,3 +78,39 @@ export const LEDA_SUGGESTIONS = [
 
 /** localStorage key and values agreed in the epic (RDY-212). */
 export const LEDA_PANEL_KEY = 'readyph.leda_panel';
+
+/* ------------------------------------------------ platform connections -- */
+/* Same model as the Platforms page Connections view (patterns/portal/Platforms):
+ * consumers read a capability from one provider; one provider serves many. */
+
+export interface MapInstance {
+  id: string;
+  label: string;
+  kind: 'Storefront' | 'Inventory';
+  icon: PhosphorIcon;
+  status: StatusTone;
+}
+
+export interface MapLink {
+  consumerId: string;
+  providerId: string;
+  /** Capability short name, e.g. Stock (inventory.stock). */
+  capability: string;
+}
+
+export const MAP_CONSUMERS: MapInstance[] = [
+  { id: 'st-makati', label: 'Makati branch', kind: 'Storefront', icon: Storefront, status: 'active' },
+  { id: 'st-bgc', label: 'BGC branch', kind: 'Storefront', icon: Storefront, status: 'active' },
+  { id: 'st-cebu', label: 'Cebu branch', kind: 'Storefront', icon: Storefront, status: 'offline' },
+];
+
+export const MAP_PROVIDERS: MapInstance[] = [
+  { id: 'inv-central', label: 'Central stock', kind: 'Inventory', icon: Package, status: 'active' },
+  { id: 'inv-davao', label: 'Davao stock', kind: 'Inventory', icon: Package, status: 'degraded' },
+];
+
+export const MAP_LINKS: MapLink[] = [
+  { consumerId: 'st-makati', providerId: 'inv-central', capability: 'Stock' },
+  { consumerId: 'st-bgc', providerId: 'inv-central', capability: 'Stock' },
+  { consumerId: 'st-bgc', providerId: 'inv-davao', capability: 'Catalog' },
+];

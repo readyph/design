@@ -1,12 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { DashboardShell, ContentProbe, type DashboardShellProps } from './DashboardShell';
+import { DashboardShell, type DashboardShellProps } from './DashboardShell';
+import { ConnectionsOverview } from './ConnectionsOverview';
 
 /**
- * RDY-213 (epic RDY-212): Portal shell with the rail Menu dropdown, the slim top bar and the fixed
- * Leda right panel. Review at 1440, 1024 and 390 in light and dark.
+ * RDY-213 (epic RDY-212): Portal shell with the rail Menu dropdown, the slim top bar and Leda as a
+ * fixed right column (24rem at lg, 28rem from xl) behind one separator. The chat inside is the
+ * previous Portal Leda chat, unchanged. Content shows the platform connections diagram, flat (no
+ * cards). Review at 1440, 1024 and 390 in light and dark.
  *
- * Leda entry points: top-bar Leda toggle (every page), the collapsed edge tab, suggestions in the
- * empty panel; the panel header shows the page context chip Leda receives.
+ * Leda entry points: top-bar Leda toggle (every page), the collapsed edge tab, quick actions in
+ * the empty panel, and the confirm-before-write proposal for a connection change.
  */
 const viewports = {
   desktop1440: { name: 'Desktop 1440', styles: { width: '1440px', height: '900px' } },
@@ -15,7 +18,7 @@ const viewports = {
 };
 
 const meta: Meta<DashboardShellProps> = {
-  title: 'Prototypes/Portal/DashboardShell',
+  title: 'Prototypes/Portal/[For Review] DashboardShell',
   tags: ['!autodocs'],
   parameters: { layout: 'fullscreen', viewport: { viewports, defaultViewport: 'desktop1440' } },
   args: { active: 'home', member: false, ledaOpen: true, ledaView: 'empty' },
@@ -26,7 +29,7 @@ const meta: Meta<DashboardShellProps> = {
   render: (args) => (
     // Remount when args change so review controls reset the shell state.
     <DashboardShell key={JSON.stringify(args)} {...args}>
-      <ContentProbe />
+      <ConnectionsOverview />
     </DashboardShell>
   ),
 };
