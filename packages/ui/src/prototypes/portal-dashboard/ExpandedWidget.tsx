@@ -9,7 +9,7 @@
  *   chat is marked "Expanded"; follow-up prompts can refer to it (composer placeholder names it).
  * - Below lg the Leda drawer closes on Expand so the widget fills the content.
  * - Owner direction (RDY-213 review): the content panel is flat. No cards and no stat tiles; the
- *   expanded views use summary lines, hairline rows and dividers. The chat keeps the previous Portal
+ *   expanded views use summary lines, spacing-separated rows (no hairlines). The chat keeps the previous Portal
  *   Leda chat (widgets render as today's LedaWidget blocks, plus the Expand control).
  *
  * Composition only: every piece is an existing @readyph/ui export; gaps are in MISSING_IN_KIT_216.
@@ -37,7 +37,7 @@ import {
 export const MISSING_IN_KIT_216 = [
   'LedaWidget `onExpand` + `expanded` props: header Expand control (ArrowsOutSimple IconButton, label "Expand <title>") and an "Expanded" marker on the source widget; prototype passes both through `headerActions`.',
   'LedaWidget.Table `limit` + `total`: inline row cap with "Showing top N of M" meta and a "Show all M" footer that expands (replaces the planned fullscreen modal in portal LedaActionBlock).',
-  'Expanded widget view (page pattern, project-owned in Portal): back control + source line + flat body; LedaStatGrid needs a `flat` variant (hairline rows, no tile fill) for the content panel, prototype uses Stat in a divided grid.',
+  'Expanded widget view (page pattern, project-owned in Portal): back control + source line + flat body; LedaStatGrid needs a `flat` variant (rows without hairlines, no tile fill) for the content panel, prototype uses Stat in a divided grid.',
   'Chart x labels: LedaChart truncates "Oct 10" style labels at phone width; prototype passes day numbers and names the month in the summary line.',
   'Shell (RDY-219/221): LedaSidePanel needs page-owned message attachments and a composer placeholder override, plus a way to close the drawer from an attachment (prototype adds ledaMessages / renderLedaAttachment / ledaPlaceholder to DashboardShell).',
 ];
@@ -128,7 +128,7 @@ function ChatWidget({ id, expanded, onExpand }: { id: WidgetId; expanded: boolea
         {/* Owner direction: no stat tiles, even in the chat. Flat 2-up metrics on hairlines. */}
         <dl className="grid grid-cols-2 gap-x-4">
           {WEEK_STATS.slice(0, 4).map((st) => (
-            <div key={st.label} className="border-b border-border/50 py-3">
+            <div key={st.label} className="py-3">
               <dt className="sr-only">{st.label}</dt>
               <dd>
                 <Stat label={st.label} value={st.value} delta={st.delta} deltaTone={st.deltaTone} />
@@ -194,7 +194,7 @@ function LowStockView() {
       <p className="text-sm text-ink-muted">
         {LOW_STOCK.length} items at or below their reorder point · <span className="text-error-fg">{URGENT} run out within 2 days</span>
       </p>
-      {/* Wide content: the full table, flat (hairline rows, no outer box). */}
+      {/* Wide content: the full table, flat (rows without hairlines, no outer box). */}
       <div className={cn('hidden', '[@container(min-width:40rem)]:block')}>
         <LedaWidget.Table<LowStockRow>
           columns={[
