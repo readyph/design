@@ -3,12 +3,12 @@
  *
  * - Menu sidebar removed. The platform rail stays; its top tile is a Menu button that opens a
  *   dropdown with every sidebar link (active item marked; members see a shorter list).
- * - Below lg (1024px) the rail is hidden and the top-bar menu button opens an off-canvas nav.
- * - Top bar: page title left; Leda toggle + Add platform right.
- * - Leda is a FIXED column on the right of every page (revision 1, owner feedback): flush with the
- *   top bar and the bottom edge, one hairline separator (border-l) from the content, no inset
- *   card, rounding or shadow. 24rem at lg, 28rem from xl (1280px). Collapses to a slim edge tab;
- *   below lg it opens as an overlay drawer. Remembered in localStorage `readyph.leda_panel`.
+ * - No top bar / top nav (revision 2, owner feedback). Pages own their heading. Below lg (1024px) the
+ *   rail is hidden; a small floating Menu button (bottom-left) opens an off-canvas nav.
+ * - Leda is a FIXED column on the right of every page, full height from the very top to the bottom
+ *   edge (revisions 1 and 2), one hairline separator (border-l) from the content, no inset
+ *   card, rounding or shadow. 24rem at lg, 28rem from xl (1280px). When hidden, no sidebar is left behind:
+ *   only a small "Leda" tag on the right edge (bottom) brings it back; below lg it opens as an overlay drawer. Remembered in localStorage `readyph.leda_panel`.
  * - The chat inside is the previous Portal Leda chat, unchanged (see LedaChat).
  * - Content area is a size container, so pages lay out from the measured content width
  *   (container queries), not the viewport. Default content: the platform connections diagram.
@@ -41,7 +41,6 @@ import {
   SidebarSection,
   StatusDot,
   Tooltip,
-  TopBar,
   cn,
   focusRing,
   type MenuItem,
@@ -57,7 +56,8 @@ import {
 
 /** Kit gaps found while building this prototype (also in the PR body). */
 export const MISSING_IN_KIT = [
-  'LedaSidePanel (RDY-219, revise): docked state = flush full-height column with border-l separator (no mb-2/mr-2 inset, no rounded-lg card border); edge tab the same; no visible page-context chip in the header (context is still sent to Leda).',
+  'LedaSidePanel (RDY-219, revise): docked state = flush full-height column (top to bottom of the viewport, no top bar above it) with border-l separator, no inset or card border; hidden state renders no column, only a small "Leda" tag (right edge, bottom) that reopens it; no visible page-context chip (context is still sent to Leda).',
+  'Shell without TopBar (RDY-218/221): no top bar; Leda toggle and Add platform are not in a header (Add platform stays in the rail and mobile nav); below lg a floating Menu button replaces the top-bar menu button. Portal layout must drop TopBar.',
   'Token `width.leda-panel` = 28rem from xl (1280px) and 24rem at lg (1024 to 1279px), replacing 22.5rem; prototype uses w-[24rem] xl:w-[28rem].',
   'Chat `fill` size (h-full w-full, no border/rounding/shadow) for the docked panel; prototype overrides Chat className.',
   'Leda chat body stays project-owned (portal LedaDock content); only its container moves into LedaSidePanel.',
@@ -436,8 +436,6 @@ function LedaChat({
 export interface DashboardShellProps {
   /** Active nav item (marked in the Menu dropdown and the mobile nav). */
   active?: PortalNavKey;
-  /** Top-bar page title; defaults to the active link label. */
-  title?: ReactNode;
   /** Member variant: permission-limited links. */
   member?: boolean;
   /** Leda panel open on desktop. Omit to use the remembered value (default open). */
@@ -460,7 +458,6 @@ export interface DashboardShellProps {
 
 export function DashboardShell({
   active = 'home',
-  title,
   member = false,
   ledaOpen,
   ledaView = 'empty',
@@ -476,7 +473,6 @@ export function DashboardShell({
   const [docked, setDocked] = useState<boolean>(() => ledaOpen ?? readStored() ?? true);
   const [drawer, setDrawer] = useState(ledaDrawerOpen);
   const [nav, setNav] = useState(navOpen);
-  const label = title ?? linksFor(false).find((l) => l.key === active)?.label;
 
   const setDockedRemembered = (v: boolean) => {
     setDocked(v);
@@ -491,63 +487,48 @@ export function DashboardShell({
   const toggleLeda = () => (desktop ? setDockedRemembered(!docked) : setDrawer(!drawer));
 
   return (
-    <div className="ds-root flex h-screen w-full overflow-hidden bg-surface-canvas font-sans text-ink">
+    <div className="ds-root relative flex h-screen w-full overflow-hidden bg-surface-canvas font-sans text-ink">
       <Rail active={active} member={member} onNavigate={onNavigate} onAddPlatform={onAddPlatform} />
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <TopBar
-          start={
-            <>
-              <IconButton icon={List} label="Open menu" variant="subtle" className="lg:hidden" onClick={() => setNav(true)} />
-              {typeof label === 'string' ? <h1 className="truncate text-sm font-semibold text-ink">{label}</h1> : label}
-            </>
-          }
-          end={
-            <>
-              <IconButton
-                icon={WaveTriangle}
-                label={ledaShown ? 'Hide Leda' : 'Show Leda'}
-                aria-pressed={ledaShown}
-                variant="subtle"
-                className={cn(ledaShown && 'bg-primary-50 text-primary-700 hover:bg-primary-50 hover:text-primary-700')}
-                onClick={toggleLeda}
-              />
-              <IconButton icon={Plus} label="Add platform" variant="subtle" onClick={onAddPlatform} />
-            </>
-          }
-        />
+      <main className="min-h-0 min-w-0 flex-1 overflow-y-auto [container-type:inline-size] max-lg:pb-16">{children}</main>
 
-        <div className="flex min-h-0 flex-1">
-          <main className="min-h-0 min-w-0 flex-1 overflow-y-auto [container-type:inline-size]">{children}</main>
+      {desktop && docked && (
+        <aside aria-label="Leda panel" className="flex h-full w-[24rem] shrink-0 flex-col border-l border-border bg-surface xl:w-[28rem]">
+          <LedaChat view={ledaView} onClose={() => setDockedRemembered(false)} suggestions={ledaSuggestions} prefill={ledaPrefill} />
+        </aside>
+      )}
 
-          {desktop && docked && (
-            <aside aria-label="Leda panel" className="flex w-[24rem] shrink-0 flex-col border-l border-border bg-surface xl:w-[28rem]">
-              <LedaChat view={ledaView} onClose={() => setDockedRemembered(false)} suggestions={ledaSuggestions} prefill={ledaPrefill} />
-            </aside>
+      {!ledaShown && (
+        <button
+          type="button"
+          onClick={toggleLeda}
+          aria-label="Show Leda"
+          className={cn(
+            'absolute bottom-6 right-0 flex items-center gap-2 rounded-l-lg border border-r-0 border-border bg-surface py-2 pl-2.5 pr-3',
+            'text-sm font-semibold text-ink shadow-sm hover:bg-surface-muted',
+            focusRing,
           )}
-
-          {desktop && !docked && (
-            <aside aria-label="Leda panel, collapsed" className="flex w-10 shrink-0 flex-col items-center border-l border-border bg-surface py-2">
-              <Tooltip content="Open Leda" side="left">
-                <button
-                  type="button"
-                  onClick={() => setDockedRemembered(true)}
-                  aria-label="Open Leda"
-                  className={cn('flex flex-col items-center gap-2 rounded-base px-1 py-2 text-ink-muted hover:bg-surface-muted hover:text-ink', focusRing)}
-                >
-                  <span className="grid h-7 w-7 place-items-center rounded-full bg-primary-600 text-white">
-                    <Icon icon={WaveTriangle} size="sm" weight="bold" />
-                  </span>
-                  <span className="text-xs font-semibold [writing-mode:vertical-rl]">Leda</span>
-                </button>
-              </Tooltip>
-            </aside>
-          )}
-        </div>
-      </div>
+        >
+          <span className="grid h-6 w-6 place-items-center rounded-full bg-primary-600 text-white">
+            <Icon icon={WaveTriangle} size="sm" weight="bold" />
+          </span>
+          Leda
+        </button>
+      )}
 
       {!desktop && (
         <>
+          <button
+            type="button"
+            onClick={() => setNav(true)}
+            aria-label="Open menu"
+            className={cn(
+              'absolute bottom-6 left-4 grid h-10 w-10 place-items-center rounded-full border border-border bg-surface text-ink shadow-sm hover:bg-surface-muted',
+              focusRing,
+            )}
+          >
+            <Icon icon={List} size="md" weight="bold" />
+          </button>
           <MobileNav open={nav} onOpenChange={setNav} active={active} member={member} onNavigate={onNavigate} />
           <OffCanvas open={drawer} onOpenChange={setDrawer} side="right" width="100vw" hideClose className="max-w-none sm:max-w-[24rem]">
             <OffCanvas.Header className="sr-only">Leda</OffCanvas.Header>

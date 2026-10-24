@@ -8,15 +8,15 @@ import { MAP_DEFAULT, MAP_EMPTY } from './home-data';
  * "Overview" first.
  *
  * Shared rules: connections map stays the main content; no cards, and the KPI strip is flat
- * typography on hairline dividers (no tiles); Leda stays the fixed flush right column with the
- * previous chat. Built on the RDY-214 Home (shared ConnectionsMap, Needs attention strip) and the
- * revised RDY-213 shell.
+ * typography on hairline dividers (no tiles); Leda stays the full-height right column with the
+ * previous chat. Built on the RDY-214 Home (shared ConnectionsMap) and the revised RDY-213 shell.
+ * Revision 2: Needs attention is removed from every option, so the options need re-framing (see Overview).
  *
  * A baseline (RDY-214), B KPI strip, C Pending approvals, D Recent activity (needs a new activity API,
  * out of scope for v1), E Combined. The slim label at the top of each page names the option; it is review-only.
  *
  * Leda entry points: option-specific suggested prompts in the panel; "Ask Leda" on every approval
- * and attention row prefills the panel; KPIs link into their platform.
+ * row prefills the panel; KPIs link into their platform.
  */
 const viewports = {
   desktop1440: { name: 'Desktop 1440', styles: { width: '1440px', height: '900px' } },
@@ -32,10 +32,9 @@ const meta: Meta<HomeContentOptionsProps> = {
   title: 'Prototypes/Portal/[For Review] HomeContentOptions',
   tags: ['!autodocs'],
   parameters: { layout: 'fullscreen', viewport: { viewports, defaultViewport: 'desktop1440' } },
-  args: { option: 'combined', map: MAP_DEFAULT, attention: 'ready', ledaOpen: true, ledaView: 'empty', member: false },
+  args: { option: 'combined', map: MAP_DEFAULT, ledaOpen: true, ledaView: 'empty', member: false },
   argTypes: {
     option: { control: 'inline-radio', options: ['baseline', 'kpi', 'approvals', 'combined', 'activity'] },
-    attention: { control: 'inline-radio', options: ['ready', 'loading', 'empty', 'degraded'] },
     map: { control: false },
     onNodeSelect: { action: 'node selected (opens platform detail, RDY-215)' },
   },
@@ -67,7 +66,7 @@ export const C_ApprovalsEmpty: Story = { name: 'C · State, nothing to approve',
 
 // Option E
 export const E_Combined: Story = { name: 'E · Combined, 1440 light', args: { option: 'combined' }, ...at('desktop1440', 'light') };
-export const E_CombinedDark: Story = { name: 'E · Combined, 1440 dark, Leda collapsed', args: { option: 'combined', ledaOpen: false }, ...at('desktop1440', 'dark') };
+export const E_CombinedDark: Story = { name: 'E · Combined, 1440 dark, Leda hidden', args: { option: 'combined', ledaOpen: false }, ...at('desktop1440', 'dark') };
 export const E_CombinedLaptop: Story = { name: 'E · Combined, 1024', args: { option: 'combined' }, ...at('laptop1024', 'light') };
 export const E_CombinedPhone: Story = { name: 'E · Combined, 390', args: { option: 'combined' }, ...at('phone390', 'light') };
 

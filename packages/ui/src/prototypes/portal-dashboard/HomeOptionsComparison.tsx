@@ -31,22 +31,22 @@ interface Row {
 }
 
 const ROWS: Row[] = [
-  { label: 'What it adds', cells: ['Nothing: the map and the Needs attention strip.', 'Four numbers above the map: sales today, open jobs, low stock, unpaid invoices.', 'A list of decisions waiting on the owner: transfers, purchase orders, repair quotes, Leda proposals.', 'A time-ordered list of what happened across platforms.', 'The KPI strip, plus Needs attention beside Pending approvals.'] },
+  { label: 'What it adds', cells: ['Nothing: the map alone (Needs attention was removed for now).', 'Four numbers above the map: sales today, open jobs, low stock, unpaid invoices.', 'A list of decisions waiting on the owner: transfers, purchase orders, repair quotes, Leda proposals.', 'A time-ordered list of what happened across platforms.', 'The KPI strip above the map, plus Pending approvals below it.'] },
   { label: 'Helps the owner', cells: ['See what is wrong.', 'See the day at a glance.', 'Decide without leaving Home.', 'Catch up after being away.', 'All three.'] },
-  { label: 'Data and API', cells: ['Attention feed (RDY-241).', 'One small aggregate endpoint per platform kind (a count and one delta).', 'Each platform already has approvals; Portal aggregates them like Needs attention. Leda proposals come from Leda.', 'New merged, time-ordered activity API across platforms. Not available.', 'Both of B and C.'] },
-  { label: 'Live and actionable', cells: ['Live; Open and Ask Leda.', 'Live; each figure links to its source. Read only.', 'Live and actionable: Approve, Decline, Review in Leda.', 'Read only; links to the source.', 'Live; actionable in the approvals column.'] },
+  { label: 'Data and API', cells: ['None.', 'One small aggregate endpoint per platform kind (a count and one delta).', 'Each platform already has approvals; Portal aggregates them per platform. Leda proposals come from Leda.', 'New merged, time-ordered activity API across platforms. Not available.', 'Both of B and C.'] },
+  { label: 'Live and actionable', cells: ['Live; the map nodes link to platform detail.', 'Live; each figure links to its source. Read only.', 'Live and actionable: Approve, Decline, Review in Leda.', 'Read only; links to the source.', 'Live; actionable in the approvals list.'] },
   { label: 'Fits v1', cells: ['Yes.', 'Yes, with 3 small endpoints.', 'Yes.', 'No. Out of scope for v1.', 'Yes, but the heaviest v1 page.'] },
-  { label: 'Pushed below the fold (laptop)', cells: ['Nothing.', 'Map moves down about 72px.', 'Needs attention moves below the approvals.', 'Activity sits below attention, mostly unseen.', 'Map moves down; two columns stay narrow at 1024.'] },
-  { label: 'Overlap with Needs attention', cells: ['n/a', 'Same numbers, summarized.', 'Approval items leave Needs attention so nothing shows twice.', 'Repeats items already in the strip.', 'Handled as in C.'] },
-  { label: 'Leda hook', cells: ['"What needs my attention?"; Ask Leda per row.', 'Figures link to platforms; prompt "Why are sales up today?".', 'Ask Leda per request; Review in Leda opens the proposal confirm card.', 'Prompt "What happened today?".', 'Both of B and C.'] },
+  { label: 'Pushed below the fold (laptop)', cells: ['Nothing.', 'Map moves down about 72px.', 'Approvals sit under the map; part of the list needs a scroll.', 'Activity sits under the map, mostly unseen.', 'Map moves down about 72px, approvals below.'] },
+  { label: 'Overlap with the map', cells: ['n/a', 'Same numbers as the map node badges, summarized.', 'None: approvals are not on the map.', 'Some: offline and sync events also colour map nodes.', 'As B and C.'] },
+  { label: 'Leda hook', cells: ['Prompt "What needs my attention?".', 'Figures link to platforms; prompt "Why are sales up today?".', 'Ask Leda per request; Review in Leda opens the proposal confirm card.', 'Prompt "What happened today?".', 'Both of B and C.'] },
 ];
 
 const SCHEMATICS: [string, Bar[]][] = [
-  ['Map, then attention list', ['map', 'list-short']],
-  ['Strip, then map, then attention list', ['strip', 'map', 'list-short']],
-  ['Map, then approvals list, then attention list', ['map', 'list', 'list-short']],
-  ['Map, then attention list, then activity list', ['map', 'list-short', 'list']],
-  ['Strip, then map, then attention beside approvals', ['strip', 'map', 'list']],
+  ['Map only', ['map']],
+  ['Strip, then map', ['strip', 'map']],
+  ['Map, then approvals list', ['map', 'list']],
+  ['Map, then activity list', ['map', 'list']],
+  ['Strip, then map, then approvals list', ['strip', 'map', 'list']],
 ];
 
 const HEADS = ['A · Baseline', 'B · KPI strip', 'C · Pending approvals', 'D · Activity feed', 'E · Combined'];
@@ -57,21 +57,22 @@ export function HomeOptionsComparison() {
       <header className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold">Portal Home: content options</h1>
         <p className="max-w-3xl text-sm text-ink-muted">
-          Every option keeps the connections map as the main content, the fixed flush Leda column with the previous chat, and no cards. Pick one for v1; the choice is the owner&apos;s.
+          Every option keeps the connections map as the main content, the full-height Leda column with the previous chat, and no cards. Pick one for v1; the choice is the owner&apos;s.
         </p>
       </header>
 
       <section aria-labelledby="rec-heading" className="flex flex-col gap-2 border-y border-border py-5">
         <h2 id="rec-heading" className="flex items-center gap-2 text-base font-semibold">
-          Recommendation <Badge tone="success" size="sm">Option C</Badge>
+          Recommendation <Badge tone="success" size="sm">Option C</Badge> <Badge tone="warning" size="sm">Needs re-framing</Badge>
         </h2>
         <p className="max-w-3xl text-sm text-ink">
-          Ship Option C, Pending approvals under the map, for v1. It is the only addition that lets the owner finish a job from Home, it needs no new capability beyond what Needs attention already aggregates, and it leaves the map in view on a laptop.
+          The owner removed the Needs attention strip, which was the baseline and the thing Option C was weighed against. Home is now the map alone, so the question is what, if anything, to add. Still lean Option C, Pending approvals under the map: it is the only addition that lets the owner finish a job from Home and it keeps the map in view on a laptop. Its rows were previously de-duplicated against Needs attention; that rule is gone.
         </p>
         <ul className="max-w-3xl list-disc space-y-1 pl-5 text-sm text-ink-muted">
           <li>Keep the KPI strip (B) as a follow-up once the three aggregate endpoints exist; it is cheap but repeats what the platforms already show.</li>
-          <li>Skip the combined page (E) for v1: it pushes the map down, and its two columns are cramped at 1024.</li>
+          <li>Skip the combined page (E) for v1: it pushes the map down.</li>
           <li>Defer the activity feed (D) until a tenant activity API exists.</li>
+          <li>Decision for the owner: stay with the map alone (A), or add one of B, C, D, E.</li>
         </ul>
       </section>
 

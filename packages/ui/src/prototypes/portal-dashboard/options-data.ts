@@ -47,9 +47,6 @@ export const APPROVALS: Approval[] = [
   { id: 'apr-5', title: 'Leda proposes a reorder draft for 7 low stock products', detail: 'Draft purchase order, PHP 31,500', platform: 'Central stock', requestedBy: 'Leda', requestedAgo: '10 minutes ago', kind: 'leda', approvedNote: '' },
 ];
 
-/** The attention item that duplicates two of the approvals; hidden from Needs attention when approvals show. */
-export const APPROVAL_ATTENTION_IDS = ['att-403'];
-
 export interface ActivityEvent {
   id: string;
   actor: string;

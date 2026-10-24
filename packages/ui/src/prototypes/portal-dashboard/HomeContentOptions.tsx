@@ -1,35 +1,35 @@
 /**
  * RDY-217 prototype: owner-choice content options for Portal Home, all inside the RDY-213 shell and
- * built on the RDY-214 pieces (shared ConnectionsOverview map, flat Needs attention strip).
+ * built on the RDY-214 pieces (shared ConnectionsOverview map). Revision 2: the Needs attention strip
+ * is removed from every option, so each option now adds one thing (or nothing) around the map.
  *
  * Owner direction applied to every option: no cards, no stats in cards (the KPI strip is flat
  * typography on dividers), the connections map stays the main content, the Leda column stays the
- * fixed flush column with the previous chat.
+ * full-height column with the previous chat.
  *
  * Options: A baseline (RDY-214, reference), B KPI strip, C Pending approvals, D Activity feed (needs a
- * new API, out of scope for v1), E Combined (KPI strip + two-column attention / approvals).
+ * new API, out of scope for v1), E Combined (KPI strip + approvals).
  *
- * Leda entry points: per-option suggested prompts in the panel; "Ask Leda" on every approval and
- * attention row (prefills the panel); each KPI is a link into its platform; activity rows link to
+ * Leda entry points: per-option suggested prompts in the panel; "Ask Leda" on every approval row
+ * (prefills the panel); each KPI is a link into its platform; activity rows link to
  * the source platform.
  */
 import { useState } from 'react';
 import { ArrowRight, CheckCircle, Sparkle } from '@phosphor-icons/react';
-import { Badge, Button, ButtonLink, EmptyState, Icon, Link, Stat, cn } from '../../index';
+import { Badge, Button, ButtonLink, EmptyState, Icon, Link, Stat } from '../../index';
 import { DashboardShell, type DashboardShellProps, type LedaPrefill } from './DashboardShell';
 import { ConnectionsOverview } from './ConnectionsOverview';
-import { NeedsAttention, type AttentionState } from './DashboardHome';
-import { HOME_LEDA_SUGGESTIONS, MAP_DEFAULT, type AttentionItem, type MapData } from './home-data';
-import { ACTIVITY, APPROVALS, APPROVAL_ATTENTION_IDS, KPIS, OPTION_LEDA_SUGGESTIONS, type Approval } from './options-data';
+import { HOME_LEDA_SUGGESTIONS, MAP_DEFAULT, type MapData } from './home-data';
+import { ACTIVITY, APPROVALS, KPIS, OPTION_LEDA_SUGGESTIONS, type Approval } from './options-data';
 
 export type HomeOption = 'baseline' | 'kpi' | 'approvals' | 'combined' | 'activity';
 
 export const OPTION_META: Record<HomeOption, { name: string; note?: string }> = {
-  baseline: { name: 'Option A · Baseline (RDY-214): map and Needs attention' },
+  baseline: { name: 'Option A · Baseline (RDY-214): the map only' },
   kpi: { name: 'Option B · KPI strip above the map' },
   approvals: { name: 'Option C · Pending approvals under the map' },
   activity: { name: 'Option D · Recent activity under the map', note: 'Needs a new tenant activity feed API. Out of scope for v1.' },
-  combined: { name: 'Option E · Combined: KPI strip, map, attention beside approvals' },
+  combined: { name: 'Option E · Combined: KPI strip above the map, approvals below' },
 };
 
 /* ------------------------------------------------------------ Option A -- */
@@ -199,16 +199,14 @@ function OptionLabel({ option }: { option: HomeOption }) {
 export interface HomeContentOptionsProps extends Omit<DashboardShellProps, 'children' | 'active' | 'ledaSuggestions' | 'ledaPrefill'> {
   option?: HomeOption;
   map?: MapData;
-  attention?: AttentionState;
   /** Show the empty state of the approvals section. */
   approvalsEmpty?: boolean;
   onNodeSelect?: (id: string) => void;
 }
 
-export function HomeContentOptions({ option = 'combined', map = MAP_DEFAULT, attention = 'ready', approvalsEmpty = false, onNodeSelect, ...shell }: HomeContentOptionsProps) {
+export function HomeContentOptions({ option = 'combined', map = MAP_DEFAULT, approvalsEmpty = false, onNodeSelect, ...shell }: HomeContentOptionsProps) {
   const [prefill, setPrefill] = useState<LedaPrefill | undefined>();
   const ask = (text: string) => setPrefill({ text, key: Date.now() });
-  const askAttention = (i: AttentionItem) => ask(`Help me with "${i.title}" on ${i.platform}.`);
   const askApproval = (i: Approval) => ask(i.kind === 'leda' ? `Open your proposal: ${i.title}.` : `Should I approve "${i.title}"?`);
   const hasKpi = option === 'kpi' || option === 'combined';
   const hasApprovals = option === 'approvals' || option === 'combined';
@@ -220,18 +218,8 @@ export function HomeContentOptions({ option = 'combined', map = MAP_DEFAULT, att
       <OptionLabel option={option} />
       {hasKpi && showLower && <KpiStrip />}
       <ConnectionsOverview data={map} onNodeSelect={onNodeSelect} onAddPlatform={shell.onAddPlatform} />
-      {showLower && (
-        <div className={cn('flex flex-col gap-2', option === 'combined' && 'items-stretch [@container(min-width:60rem)]:grid [@container(min-width:60rem)]:grid-cols-2 [@container(min-width:60rem)]:items-start [@container(min-width:60rem)]:gap-x-2')}>
-          {/* Each column is its own size container, so rows pick the stacked layout when the column is narrow. */}
-          <div className={cn('min-w-0 [container-type:inline-size]', option === 'combined' && '[@container(min-width:60rem)]:order-2')}>
-            {hasApprovals && <PendingApprovals onAskLeda={askApproval} empty={approvalsEmpty} />}
-          </div>
-          <div className={cn('min-w-0 [container-type:inline-size]', option === 'combined' && '[@container(min-width:60rem)]:order-1')}>
-            <NeedsAttention state={attention} onAskLeda={askAttention} exclude={hasApprovals && !approvalsEmpty ? APPROVAL_ATTENTION_IDS : []} />
-          </div>
-          {option === 'activity' && <RecentActivity />}
-        </div>
-      )}
+      {showLower && hasApprovals && <PendingApprovals onAskLeda={askApproval} empty={approvalsEmpty} />}
+      {showLower && option === 'activity' && <RecentActivity />}
     </DashboardShell>
   );
 }
