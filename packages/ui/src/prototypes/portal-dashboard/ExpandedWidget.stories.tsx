@@ -25,7 +25,7 @@ const viewports = {
 };
 
 const meta: Meta<ExpandedWidgetPrototypeProps> = {
-  title: 'Prototypes/Portal/[For Review] ExpandedWidget',
+  title: 'Prototypes/Portal/ExpandedWidget',
   tags: ['!autodocs'],
   parameters: {
     layout: 'fullscreen',
