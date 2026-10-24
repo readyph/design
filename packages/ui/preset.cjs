@@ -72,11 +72,19 @@ module.exports = {
           "DEFAULT": "rgb(var(--ds-border) / <alpha-value>)",
           "strong": "rgb(var(--ds-border-strong) / <alpha-value>)"
         },
+        "chrome": {
+          "DEFAULT": "rgb(var(--ds-chrome) / <alpha-value>)",
+          "fg": "rgb(var(--ds-chrome-fg) / <alpha-value>)",
+          "muted": "rgb(var(--ds-chrome-muted) / <alpha-value>)",
+          "hover": "rgb(var(--ds-chrome-hover) / <alpha-value>)",
+          "active": "rgb(var(--ds-chrome-active) / <alpha-value>)",
+          "border": "rgb(var(--ds-chrome-border) / <alpha-value>)"
+        },
         "link": "rgb(var(--ds-link) / <alpha-value>)",
         "focus": "rgb(var(--ds-focus) / <alpha-value>)",
         "tint": {
-          "peach-bg": "rgb(var(--ds-tint-peach-bg) / <alpha-value>)",
-          "peach-fg": "rgb(var(--ds-tint-peach-fg) / <alpha-value>)",
+          "blue-bg": "rgb(var(--ds-tint-blue-bg) / <alpha-value>)",
+          "blue-fg": "rgb(var(--ds-tint-blue-fg) / <alpha-value>)",
           "green-bg": "rgb(var(--ds-tint-green-bg) / <alpha-value>)",
           "green-fg": "rgb(var(--ds-tint-green-fg) / <alpha-value>)",
           "teal-bg": "rgb(var(--ds-tint-teal-bg) / <alpha-value>)",
@@ -141,7 +149,8 @@ module.exports = {
         "0.5": "0.125rem",
         "1.5": "0.375rem",
         "2.5": "0.625rem",
-        "3.5": "0.875rem"
+        "3.5": "0.875rem",
+        "gutter": "var(--ds-gutter)"
       },
       "borderRadius": {
         "none": "0",
@@ -193,7 +202,11 @@ module.exports = {
       "height": {
         "sm": "2rem",
         "md": "2.25rem",
-        "lg": "2.5rem"
+        "lg": "2.5rem",
+        "control": "var(--ds-density-control)",
+        "sidebar-item": "var(--ds-density-sidebar-item)",
+        "row": "var(--ds-density-table-row)",
+        "row-dense": "var(--ds-density-table-row-dense)"
       },
       "width": {
         "rail": "3.5rem",

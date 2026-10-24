@@ -46,10 +46,10 @@ export function LedaLauncher({ className, ...rest }: LedaLauncherProps) {
   return (
     <div className={cn('absolute bottom-6 right-6 z-40 flex flex-col items-end gap-3', className)} {...rest}>
       {open && (
-        <div className="flex h-[36rem] max-h-[calc(100vh-6rem)] w-[26rem] max-w-[calc(100vw-2rem)] origin-bottom-right animate-[ds-popover-in_140ms_ease] flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-xl motion-reduce:animate-none">
+        <div className="flex h-[36rem] max-h-[calc(100vh-6rem)] w-[26rem] max-w-[calc(100vw-2rem)] origin-bottom-right animate-[ds-popover-in_140ms_ease] flex-col overflow-hidden rounded-base border border-border bg-surface shadow-lg motion-reduce:animate-none">
           {/* Header */}
           <div className="flex items-center gap-3 px-4 py-3.5">
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-primary-400 to-primary-600 text-white">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-base bg-primary-600 text-white">
               <Icon icon={WaveTriangle} size="sm" weight="bold" />
             </span>
             <div className="min-w-0 flex-1">
@@ -73,7 +73,7 @@ export function LedaLauncher({ className, ...rest }: LedaLauncherProps) {
                       key={s}
                       type="button"
                       onClick={() => ask(s)}
-                      className="rounded-lg border border-border bg-surface px-3 py-2 text-left text-sm text-ink transition-colors hover:border-primary-300 hover:text-primary-600"
+                      className="rounded-base border border-border bg-surface px-3 py-2 text-left text-sm text-ink transition-colors hover:border-primary-300 hover:text-primary-600"
                     >
                       {s}
                     </button>
@@ -84,15 +84,15 @@ export function LedaLauncher({ className, ...rest }: LedaLauncherProps) {
               <div className="flex flex-col gap-3 pt-2">
                 {messages.map((m) =>
                   m.role === 'user' ? (
-                    <div key={m.id} className="max-w-[85%] self-end rounded-2xl rounded-br-sm bg-primary-600 px-3 py-2 text-sm text-white">
+                    <div key={m.id} className="max-w-[85%] self-end rounded-base rounded-br-sm bg-primary-600 px-3 py-2 text-sm text-white">
                       {m.text}
                     </div>
                   ) : (
                     <div key={m.id} className="flex gap-2">
-                      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-primary-50 text-primary-600">
+                      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-sm bg-primary-50 text-primary-600">
                         <Icon icon={WaveTriangle} size="sm" weight="bold" />
                       </span>
-                      <div className="max-w-[85%] rounded-2xl rounded-bl-sm bg-surface-subtle px-3 py-2 text-sm text-ink">
+                      <div className="max-w-[85%] rounded-base rounded-bl-sm bg-surface-subtle px-3 py-2 text-sm text-ink">
                         {m.pending ? <span className="text-ink-muted">Thinking…</span> : m.text}
                       </div>
                     </div>
@@ -104,7 +104,7 @@ export function LedaLauncher({ className, ...rest }: LedaLauncherProps) {
 
           {/* Composer */}
           <form onSubmit={submit} className="p-3">
-            <div className="flex items-center gap-2 rounded-xl border border-border bg-surface pl-3.5 pr-2 transition-colors focus-within:border-primary-300">
+            <div className="flex items-center gap-2 rounded-base border border-border bg-surface pl-3.5 pr-2 transition-colors focus-within:border-primary-300">
               <input
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
@@ -114,7 +114,7 @@ export function LedaLauncher({ className, ...rest }: LedaLauncherProps) {
               <button
                 type="submit"
                 aria-label="Send"
-                className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ink-muted transition-colors hover:bg-surface-muted hover:text-primary-600 focus:outline-none"
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-sm text-ink-muted transition-colors hover:bg-surface-muted hover:text-primary-600 focus:outline-none"
               >
                 <Icon icon={ArrowElbowDownLeft} size="sm" />
               </button>

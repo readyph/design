@@ -10,4 +10,14 @@ export const radius = {
   full: '9999px',
 } as const;
 
+/**
+ * Semantic radius roles: controls 4, cards and panels 6, modals 8. Pills
+ * (`full`) are only for avatars, status dots and count badges.
+ */
+export const radiusRole = {
+  control: radius.sm,
+  panel: radius.base,
+  modal: radius.md,
+} as const;
+
 export type Radius = typeof radius;

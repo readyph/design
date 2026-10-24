@@ -36,7 +36,7 @@ const sizes: Record<InputSize, string> = {
 
 /** Single-select dropdown built on Radix Select (full keyboard + ARIA). */
 export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select(
-  { options, value, defaultValue, onValueChange, placeholder = 'Select…', size = 'md', invalid, disabled, name, className, 'aria-label': ariaLabel, 'aria-labelledby': ariaLabelledBy },
+  { options, value, defaultValue, onValueChange, placeholder = 'Select…', size = 'sm', invalid, disabled, name, className, 'aria-label': ariaLabel, 'aria-labelledby': ariaLabelledBy },
   ref,
 ) {
   const field = useField();

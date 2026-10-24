@@ -31,7 +31,7 @@ export function inputState(invalid: boolean): string {
 
 /** Text input. Reads id/aria/invalid from a surrounding `<Field>` when present. */
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
-  { inputSize = 'md', invalid, leftIcon, rightIcon, className, id, ...rest },
+  { inputSize = 'sm', invalid, leftIcon, rightIcon, className, id, ...rest },
   ref,
 ) {
   const field = useField();

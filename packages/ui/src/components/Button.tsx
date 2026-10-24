@@ -57,7 +57,7 @@ export const iconSizeFor: Record<ButtonSize, 'sm' | 'md'> = { sm: 'sm', md: 'sm'
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   {
     variant = 'primary',
-    size = 'md',
+    size = 'sm',
     loading = false,
     fullWidth = false,
     leftIcon,
