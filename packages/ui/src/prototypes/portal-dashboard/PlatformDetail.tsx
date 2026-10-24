@@ -55,7 +55,7 @@ export const MISSING_IN_KIT = [
   'Modal `placement="content"` (or a `container` prop): centre and size the dialog over the shell content area beside the fixed Leda column; prototype uses arbitrary lg:/xl: left and max-w calc() classes with the rail (3.5rem) and leda-panel widths.',
   'Modal `sheetBelow="sm"`: full-screen sheet on phones (inset-0, no rounding/border, fade instead of the translate-based scale keyframe); prototype overrides with max-sm: classes.',
   'StatRow (flat key numbers): plain figures in one row split by hairline dividers, 4 up / 2 up by container width, `warn` and `stale` tones, skeleton variant. Today `Stat` is a tile, which the owner ruled out.',
-  'ListSection + ListRow: section heading with count, border-y divided rows, row as a link with leading severity, trailing caret, empty-row copy. Composed by hand here and in ConnectionsOverview.',
+  'ListSection + ListRow: section heading with count, rows separated by spacing, row as a link with leading severity, trailing caret, empty-row copy. Composed by hand here and in ConnectionsOverview.',
   'LiveStamp: "Updated 4s ago" with a quiet live dot that ticks and resets on refetch, stale tone when the provider fails.',
   'LedaSidePanel `prefill(text, context)` API so a page can open the column with a drafted question and silent context; prototype writes to the composer through the DOM.',
   'Notice `action` slot (Retry now); prototype places the button inside children.',
@@ -116,20 +116,15 @@ function LiveStamp({ seconds, state, onRefresh }: { seconds: number; state: Deta
 
 /* --------------------------------------------------------- key numbers -- */
 
-/** Divider and padding per cell: 2 up below a 40rem body, 4 up above (hairlines, no tiles). */
-const CELL = [
-  'pr-4',
-  'border-l pl-4 pr-4',
-  'border-t pr-4 [@container(min-width:40rem)]:border-l [@container(min-width:40rem)]:border-t-0 [@container(min-width:40rem)]:pl-4',
-  'border-l border-t pl-4 pr-4 [@container(min-width:40rem)]:border-t-0',
-];
+/** Padding per cell: 2 up below a 40rem body, 4 up above (spacing only, no lines or tiles). */
+const CELL = ['pr-4', 'pr-4', 'pr-4', 'pr-4'];
 
 function KeyNumbers({ numbers, state }: { numbers: KeyNumber[]; state: DetailState }) {
   const stale = state === 'degraded' || state === 'offline';
   return (
-    <dl className="grid grid-cols-2 border-y border-border [@container(min-width:40rem)]:grid-cols-4">
+    <dl className="grid grid-cols-2 gap-y-1 [@container(min-width:40rem)]:grid-cols-4">
       {numbers.map((n, i) => (
-        <div key={n.label} className={cn('flex min-w-0 flex-col gap-0.5 border-border py-3', CELL[i])}>
+        <div key={n.label} className={cn('flex min-w-0 flex-col gap-0.5 py-3', CELL[i])}>
           <dt className="truncate text-xs text-ink-muted">{n.label}</dt>
           <dd className={cn('text-xl font-semibold tabular-nums', stale ? 'text-ink-muted' : n.warn ? 'text-warning-fg' : 'text-ink')}>{n.value}</dd>
           {n.hint && <dd className="truncate text-xs text-ink-subtle">{n.hint}</dd>}
@@ -141,9 +136,9 @@ function KeyNumbers({ numbers, state }: { numbers: KeyNumber[]; state: DetailSta
 
 function KeyNumbersSkeleton() {
   return (
-    <div className="grid grid-cols-2 border-y border-border [@container(min-width:40rem)]:grid-cols-4" aria-hidden="true">
+    <div className="grid grid-cols-2 gap-y-1 [@container(min-width:40rem)]:grid-cols-4" aria-hidden="true">
       {CELL.map((c, i) => (
-        <div key={i} className={cn('flex flex-col gap-2 border-border py-3', c)}>
+        <div key={i} className={cn('flex flex-col gap-2 py-3', c)}>
           <Skeleton variant="text" className="h-3 w-16" />
           <Skeleton variant="text" className="h-6 w-12" />
           <Skeleton variant="text" className="h-3 w-20" />
@@ -162,7 +157,7 @@ function Section({ id, title, count, children }: { id: string; title: string; co
         {title}
         {count != null && count > 0 && <span className="font-normal normal-case tracking-normal tabular-nums">{count}</span>}
       </h3>
-      <ul className="divide-y divide-border border-y border-border">{children}</ul>
+      <ul className="flex flex-col">{children}</ul>
     </section>
   );
 }
@@ -253,7 +248,7 @@ function ListSkeleton({ title, rows }: { title: string; rows: number }) {
   return (
     <div className="flex flex-col" aria-hidden="true">
       <span className="pb-2 text-xs font-semibold uppercase tracking-wide text-ink-subtle">{title}</span>
-      <div className="divide-y divide-border border-y border-border">
+      <div className="flex flex-col">
         {Array.from({ length: rows }, (_, i) => (
           <div key={i} className="flex items-start gap-3 py-3">
             <Skeleton variant="text" className="h-4 w-14" />
@@ -302,7 +297,7 @@ export function PlatformDetailModal({ overview, open, onOpenChange, state, ledaD
   return (
     <Modal open={open} onOpenChange={onOpenChange} size="2xl" className={cn('[container-type:inline-size]', ledaDocked ? PLACE_DOCKED : PLACE_COLLAPSED, SHEET)}>
       {/* Header */}
-      <div className="flex shrink-0 items-start gap-3 border-b border-border px-5 py-4 pr-14">
+      <div className="flex shrink-0 items-start gap-3 px-5 py-4 pr-14">
         <span className="relative grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-surface-muted text-ink">
           <Icon icon={o.icon} size="md" />
         </span>
@@ -365,7 +360,7 @@ export function PlatformDetailModal({ overview, open, onOpenChange, state, ledaD
       </div>
 
       {/* Footer */}
-      <Modal.Footer className="shrink-0 flex-col-reverse items-stretch border-t border-border sm:flex-row sm:items-center">
+      <Modal.Footer className="shrink-0 flex-col-reverse items-stretch sm:flex-row sm:items-center">
         {restricted ? (
           <Button variant="secondary" onClick={() => onOpenChange(false)}>
             Close
