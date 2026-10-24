@@ -11,12 +11,16 @@ export interface SwitchProps {
   id?: string;
   label?: ReactNode;
   description?: ReactNode;
+  /** Accessible name when there is no visible `label`. */
+  'aria-label'?: string;
+  /** Id of the element naming the switch when there is no visible `label`. */
+  'aria-labelledby'?: string;
   className?: string;
 }
 
 /** On/off toggle built on Radix Switch. */
 export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(function Switch(
-  { checked, defaultChecked, onCheckedChange, disabled, name, id, label, description, className },
+  { checked, defaultChecked, onCheckedChange, disabled, name, id, label, description, className, 'aria-label': ariaLabel, 'aria-labelledby': ariaLabelledby },
   ref,
 ) {
   const control = (
@@ -28,6 +32,8 @@ export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(function Switch
       onCheckedChange={onCheckedChange}
       disabled={disabled}
       name={name}
+      aria-label={label ? undefined : ariaLabel}
+      aria-labelledby={label ? undefined : ariaLabelledby}
       className={cn(
         'relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border border-transparent bg-neutral-300 transition-colors duration-DEFAULT',
         'data-[state=checked]:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50',

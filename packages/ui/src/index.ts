@@ -133,7 +133,8 @@ export {
   type DrawerProps,
   type OffCanvasProps,
 } from './components/Drawer';
-export { Tooltip, TooltipProvider, type TooltipProps } from './components/Tooltip';
+export { Tooltip, TooltipProvider, type TooltipProps, type TooltipTone } from './components/Tooltip';
+export { Anchor, type AnchorProps } from './components/Anchor';
 export { Popover, type PopoverProps } from './components/Popover';
 export { Menu, type MenuProps, type MenuItem } from './components/Menu';
 

@@ -50,3 +50,30 @@ export const Sides: Story = {
     </div>
   ),
 };
+
+export const SurfaceRichContent: Story = {
+  name: 'Surface (rich content)',
+  render: () => (
+    <div className="pt-40">
+      <Tooltip
+        tone="surface"
+        open
+        side="top"
+        content={
+          <div className="flex w-56 flex-col gap-2">
+            <div className="text-sm font-semibold text-ink">Main Lab</div>
+            <div className="text-xs text-ink-muted">Clinic platform, synced 5 min ago</div>
+            <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+              <dt className="text-ink-muted">Status</dt><dd>Online</dd>
+              <dt className="text-ink-muted">Alerts</dt><dd>0</dd>
+              <dt className="text-ink-muted">Lights</dt><dd>On</dd>
+              <dt className="text-ink-muted">Links</dt><dd>3</dd>
+            </dl>
+          </div>
+        }
+      >
+        <Button variant="secondary">Main Lab</Button>
+      </Tooltip>
+    </div>
+  ),
+};

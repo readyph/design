@@ -2,6 +2,13 @@ import { type ReactNode } from 'react';
 import * as RadixTooltip from '@radix-ui/react-tooltip';
 import { cn } from '../utils/cn';
 
+export type TooltipTone = 'inverse' | 'surface';
+
+const toneClasses: Record<TooltipTone, { content: string; arrow: string }> = {
+  inverse: { content: 'bg-ink px-2.5 py-1.5 text-xs text-surface shadow-md rounded-base', arrow: 'fill-ink' },
+  surface: { content: 'bg-surface p-3 text-ink border border-border shadow-lg rounded-md', arrow: 'fill-surface' },
+};
+
 export interface TooltipProps {
   /** The trigger element. */
   children: ReactNode;
@@ -14,6 +21,8 @@ export interface TooltipProps {
   /** Keep content mounted (controlled open). */
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  /** `inverse` (default) is the dark compact hint; `surface` is a rich bubble on the surface colour. */
+  tone?: TooltipTone;
   className?: string;
 }
 
@@ -30,6 +39,7 @@ export function Tooltip({
   delayDuration = 300,
   open,
   onOpenChange,
+  tone = 'inverse',
   className,
 }: TooltipProps) {
   return (
@@ -42,13 +52,14 @@ export function Tooltip({
             align={align}
             sideOffset={6}
             className={cn(
-              'z-tooltip max-w-xs rounded-base bg-ink px-2.5 py-1.5 text-xs text-surface shadow-md',
+              'z-tooltip max-w-xs',
+              toneClasses[tone].content,
               'data-[state=delayed-open]:animate-[ds-popover-in_120ms_ease] motion-reduce:animate-none',
               className,
             )}
           >
             {content}
-            <RadixTooltip.Arrow className="fill-ink" />
+            <RadixTooltip.Arrow className={toneClasses[tone].arrow} />
           </RadixTooltip.Content>
         </RadixTooltip.Portal>
       </RadixTooltip.Root>
