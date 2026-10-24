@@ -6,7 +6,7 @@ import { Icon } from '../../components/Icon';
 import { Notice } from '../../components/Notice';
 import { PageHeader } from '../../components/PageHeader';
 import { Table, type TableColumn } from '../../components/Table';
-import { Page } from '../repair-shop/Page';
+import { Page } from '../sms/Page';
 import { FINDINGS, type Finding } from './data';
 
 /** PROTOTYPE (RDY-120) - the audit of dead links, no-op buttons and placeholders, with the resolution for each. */
@@ -35,7 +35,7 @@ export const AuditTable: Story = {
   render: () => (
     <div className="ds-root min-h-screen bg-surface-canvas font-sans text-ink">
       <Page className="max-w-7xl">
-        <PageHeader title="Platform connection audit" description={`${FINDINGS.length} findings across Portal, Inventory and Repair shop`} />
+        <PageHeader title="Platform connection audit" description={`${FINDINGS.length} findings across Portal, Inventory and SMS`} />
         <Table columns={columns} data={FINDINGS} rowKey={(f) => `${f.app}-${f.where}`} />
       </Page>
     </div>
@@ -60,17 +60,17 @@ export const ConnectionMap: Story = {
   render: () => (
     <div className="ds-root min-h-screen bg-surface-canvas font-sans text-ink">
       <Page>
-        <PageHeader title="How the platforms connect" description="Portal is the control plane. Inventory and each Repair shop branch are platform instances of the same company." />
+        <PageHeader title="How the platforms connect" description="Portal is the control plane. Inventory and each SMS branch are platform instances of the same company." />
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
           <Node icon={House} title="Portal" lines={['Owns: company, team, billing, account, platform connections and data links', 'Opens every platform from Platforms and the rail', 'Shows cross-platform KPIs and Leda']} />
-          <Node icon={Package} title="Inventory" lines={['Owns: products, stock, movements, purchase orders, suppliers', 'Provides: stock and catalog to linked Repair shop branches', 'Account and Billing open the Portal']} />
-          <Node icon={Wrench} title="Repair shop (per branch)" lines={['Owns: jobs, customers, services catalogue', 'Consumes: parts from a linked Inventory (set in Portal)', 'Account and Billing open the Portal']} />
+          <Node icon={Package} title="Inventory" lines={['Owns: products, stock, movements, purchase orders, suppliers', 'Provides: stock and catalog to linked SMS branches', 'Account and Billing open the Portal']} />
+          <Node icon={Wrench} title="SMS (per branch)" lines={['Owns: jobs, customers, services catalogue', 'Consumes: parts from a linked Inventory (set in Portal)', 'Account and Billing open the Portal']} />
         </div>
         <div className="flex flex-col gap-2">
           <Edge label="Portal to any platform: rail tile or Platforms > Open (signed-in handoff)" />
           <Edge label="Any platform to Portal: R tile, Back to Portal, Account, Billing, Add platform" />
-          <Edge label="Repair shop to Inventory: parts picker reads stock; Parts empty state links to Portal > Connect data" />
-          <Edge label="Inventory to Repair shop: branches in rail and switcher (jobs consume stock via the data link)" />
+          <Edge label="SMS to Inventory: parts picker reads stock; Parts empty state links to Portal > Connect data" />
+          <Edge label="Inventory to SMS: branches in rail and switcher (jobs consume stock via the data link)" />
         </div>
         <Notice tone="neutral" title="Rules">
           One rail from GET /platforms on every app. A tile is either a working link or absent: no decorative tiles, no Coming soon buttons. A feature without a backend is hidden, not shown disabled.

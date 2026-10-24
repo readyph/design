@@ -67,14 +67,26 @@ export const colors = {
     DEFAULT: '#e5e5e5',
     strong: '#d4d4d4',
   },
+  /**
+   * Chrome (rail + sidebar): ink in both themes. A light chrome variant can
+   * override these variables on a scope.
+   */
+  chrome: {
+    DEFAULT: '#111114',
+    fg: '#f3f3f6',
+    muted: '#a0a0ac',
+    hover: '#202026',
+    active: '#2a2a32',
+    border: '#26262e',
+  },
   /** Links carry the brand color. */
   link: '#1d4ed8',
   /**
-   * Pastel status pills: background + readable foreground. Blue / green /
-   * teal / gray round out the status set.
+   * Status pills: background + readable foreground. Blue (primary tint) /
+   * green / teal / gray make up the status set.
    */
   tint: {
-    peach: { bg: '#fbe5de', fg: '#8f3d28' },
+    blue: { bg: '#eff6ff', fg: '#1d4ed8' },
     green: { bg: '#e5f3e2', fg: '#2d6a27' },
     teal: { bg: '#ddf0f1', fg: '#1f6a73' },
     gray: { bg: '#efefef', fg: '#404040' },

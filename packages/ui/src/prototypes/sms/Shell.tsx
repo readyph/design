@@ -45,7 +45,7 @@ const MANAGE_NAV: { key: RepairNav; label: string; icon: typeof Briefcase }[] = 
 const ALL_NAV = [...MAIN_NAV, ...MANAGE_NAV];
 
 /**
- * Repair-shop shell, copied from the shipped InventoryShell structure (rail with R home tile, platform buttons with
+ * SMS shell, copied from the shipped InventoryShell structure (rail with R home tile, platform buttons with
  * StatusDot, "+" and account menu; sidebar with Manage section and Back to Portal; top bar with title, search,
  * notifications). Leda is not integrated, so there is no launcher. Each branch is its own platform in the rail.
  */
@@ -98,7 +98,7 @@ export function RepairShell({ active, title, branchId = 'davao', platforms, menu
 
   return (
     <div className="ds-root flex h-screen w-full overflow-hidden bg-surface-canvas font-sans text-ink">
-      {/* Platforms rail: Portal home, Inventory, and one platform per repair-shop branch */}
+      {/* Platforms rail: Portal home, Inventory, and one platform per sms branch */}
       <div className="hidden w-rail shrink-0 flex-col items-center gap-2 py-3 sm:flex">
         <button
           onClick={() => goToStory(routes.portalHome)}
@@ -117,7 +117,7 @@ export function RepairShell({ active, title, branchId = 'davao', platforms, menu
         {branchPlatforms.map((b) => {
           const on = b.id === branch.id;
           return (
-            <button key={b.id} aria-label={`Repair shop - ${b.name}`} aria-current={on ? 'page' : undefined} className="relative focus:outline-none">
+            <button key={b.id} aria-label={`SMS - ${b.name}`} aria-current={on ? 'page' : undefined} className="relative focus:outline-none">
               <span className={on ? 'grid h-9 w-9 place-items-center rounded-lg bg-primary-50 text-primary-700' : 'grid h-9 w-9 place-items-center rounded-lg text-ink-subtle hover:bg-surface-muted hover:text-ink'}>
                 <Icon icon={Wrench} size="md" weight={on ? 'fill' : 'regular'} />
               </span>

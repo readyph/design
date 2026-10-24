@@ -37,7 +37,7 @@ const ChatRoot = forwardRef<HTMLDivElement, ChatProps>(function Chat(
     <div
       ref={ref}
       className={cn(
-        'flex flex-col overflow-hidden rounded-lg border border-border bg-surface shadow-lg',
+        'flex flex-col overflow-hidden rounded-base border border-border bg-surface',
         chatSizes[size],
         className,
       )}
@@ -129,7 +129,7 @@ const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(function ChatMe
     <div
       ref={ref}
       className={cn(
-        'max-w-[80%] rounded-lg px-3 py-2 text-sm',
+        'max-w-[80%] rounded-base px-3 py-2 text-sm',
         isUser
           ? 'self-end bg-primary-600 text-white rounded-br-sm'
           : 'self-start bg-surface-muted text-ink rounded-bl-sm',
@@ -215,7 +215,7 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(function ChatI
     >
       <div
         className={cn(
-          'flex items-end gap-2 rounded-md border border-border bg-surface px-3 py-2',
+          'flex items-end gap-2 rounded-base border border-border bg-surface px-3 py-2',
           'focus-within:border-primary-400 focus-within:ring-2 focus-within:ring-focus focus-within:ring-offset-0',
           className,
         )}

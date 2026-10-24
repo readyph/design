@@ -3,7 +3,7 @@ import { MechanicFlow } from './MechanicFlow';
 import { mechanic } from './params';
 
 /** PROTOTYPE (RDY-63) - Jobs assigned to the mechanic as a grouped list (System Settings style): Needs you now, Waiting, Ready for pick-up, Completed. Rows open the job. */
-const meta: Meta = { title: 'Repair shop/Mechanic jobs', tags: ['!autodocs'], parameters: { layout: 'fullscreen' } };
+const meta: Meta = { title: 'SMS/Mechanic jobs', tags: ['!autodocs'], parameters: { layout: 'fullscreen' } };
 export default meta;
 type Story = StoryObj;
 

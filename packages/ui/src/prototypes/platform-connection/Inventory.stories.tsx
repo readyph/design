@@ -12,8 +12,8 @@ import { Skeleton } from '../../components/Skeleton';
 import { StatusDot } from '../../components/StatusDot';
 import { Tabs, TabPanel } from '../../components/Tabs';
 import { toast } from '../../components/toast/toastStore';
-import { Page, RetryNotice } from '../repair-shop/Page';
-import { mobile } from '../repair-shop/params';
+import { Page, RetryNotice } from '../sms/Page';
+import { mobile } from '../sms/params';
 import { ConnShell } from './ConnShell';
 import { PORTAL } from './data';
 import { ButtonLink as LinkButton } from '../../components/ButtonLink';
@@ -85,7 +85,7 @@ export const SettingsPlatform: Story = { name: 'Settings, Platform tab', render:
 export const SettingsPlatformLoading: Story = { name: 'Settings, Platform tab (loading)', render: () => <InventorySettings tab="platform" state="loading" /> };
 export const SettingsPlatformError: Story = { name: 'Settings, Platform tab (error)', render: () => <InventorySettings tab="platform" state="error" /> };
 export const RailWithBranches: Story = {
-  name: 'Rail lists real platforms and Repair shop branches',
+  name: 'Rail lists real platforms and SMS branches',
   render: () => (
     <ConnShell app="inventory" activeKey="dashboard" activeId="inv" title={<span className="text-sm font-semibold">Dashboard</span>}>
       <Page><PageHeader title="Dashboard" description="214 products - 6 low stock" /></Page>

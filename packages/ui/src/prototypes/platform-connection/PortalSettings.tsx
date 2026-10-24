@@ -16,7 +16,7 @@ import { Skeleton } from '../../components/Skeleton';
 import { Tabs, TabPanel } from '../../components/Tabs';
 import { Textarea } from '../../components/Textarea';
 import { toast } from '../../components/toast/toastStore';
-import { Page, RetryNotice } from '../repair-shop/Page';
+import { Page, RetryNotice } from '../sms/Page';
 import { ConnShell } from './ConnShell';
 
 export type SettingsState = 'default' | 'loading' | 'error' | 'saved' | 'validation' | 'limit' | 'requested';
@@ -86,7 +86,7 @@ function ScheduleTab() {
 
 function PasswordModal({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   return (
-    <Modal open={open} onOpenChange={onOpenChange} title="Change password" description="You will be signed out of Portal, Inventory and Repair shop, then sign in with the new password."
+    <Modal open={open} onOpenChange={onOpenChange} title="Change password" description="You will be signed out of Portal, Inventory and SMS, then sign in with the new password."
       footer={<><Button variant="subtle" onClick={() => onOpenChange(false)}>Cancel</Button><Button onClick={() => { onOpenChange(false); toast.success('Password changed. Signing you out.'); }}>Change password</Button></>}>
       <div className="flex flex-col gap-4">
         <Field label="Current password"><Input type="password" autoFocus autoComplete="current-password" /></Field>
@@ -105,7 +105,7 @@ function AccountTab({ passwordOpen }: { passwordOpen: boolean }) {
         <Field label="Full name"><Input defaultValue="Maria Santos" /></Field>
         <Field label="Email" hint="Sign-in email. Ask your company owner to change it."><Input defaultValue="maria@sunrise.ph" disabled /></Field>
       </SettingsSection>
-      <SettingsSection title="Password" description="Used across Portal, Inventory and Repair shop." actions={<Button size="sm" variant="secondary" className="border-border-strong bg-surface" onClick={() => setOpen(true)}>Change password</Button>}>
+      <SettingsSection title="Password" description="Used across Portal, Inventory and SMS." actions={<Button size="sm" variant="secondary" className="border-border-strong bg-surface" onClick={() => setOpen(true)}>Change password</Button>}>
         <p className="text-sm text-ink-muted">Last changed 3 months ago.</p>
       </SettingsSection>
       <PasswordModal open={open} onOpenChange={setOpen} />

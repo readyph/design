@@ -21,7 +21,7 @@ const sizes: Record<InputSize, string> = {
 };
 
 export const inputBase =
-  'w-full rounded-base border bg-surface text-ink placeholder:text-ink-subtle transition-colors duration-DEFAULT outline-none disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-ink-subtle';
+  'w-full rounded-control border bg-surface text-ink placeholder:text-ink-subtle transition-colors duration-DEFAULT outline-none disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-ink-subtle';
 
 export function inputState(invalid: boolean): string {
   return invalid
@@ -31,7 +31,7 @@ export function inputState(invalid: boolean): string {
 
 /** Text input. Reads id/aria/invalid from a surrounding `<Field>` when present. */
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
-  { inputSize = 'md', invalid, leftIcon, rightIcon, className, id, ...rest },
+  { inputSize = 'sm', invalid, leftIcon, rightIcon, className, id, ...rest },
   ref,
 ) {
   const field = useField();

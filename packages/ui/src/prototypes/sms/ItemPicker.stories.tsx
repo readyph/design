@@ -22,7 +22,7 @@ import { cn, focusRing } from '../../utils/cn';
  * inventory, stocked) or a manual item (name, price, qty; not stocked). With no inventory linked only the manual form shows.
  */
 const meta: Meta = {
-  title: 'Repair shop/Job item picker',
+  title: 'SMS/Job item picker',
   tags: ['!autodocs'],
   parameters: { layout: 'fullscreen' },
 };

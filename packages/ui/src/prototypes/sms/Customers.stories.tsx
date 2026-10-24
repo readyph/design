@@ -29,7 +29,7 @@ import { mobile } from './params';
  * detail layout. Add and edit open in an off-canvas. Customer delete is a soft delete: job history is kept.
  */
 const meta: Meta = {
-  title: 'Repair shop/Customers',
+  title: 'SMS/Customers',
   tags: ['!autodocs'],
   parameters: { layout: 'fullscreen' },
 };

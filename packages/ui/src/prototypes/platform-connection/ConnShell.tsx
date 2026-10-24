@@ -36,7 +36,7 @@ const NAV: Record<AppKey, { name: string; icon: typeof Package; sections: Platfo
     ],
   },
   repair: {
-    name: 'Repair shop',
+    name: 'Service Management System',
     icon: Wrench,
     footer: 'Back to Portal',
     sections: [
@@ -58,13 +58,13 @@ export function railFor(activeId: string | null): PlatformShellPlatform[] {
     status: tone[p.status],
     active: p.id === activeId,
     href: `https://${p.appUrl}`,
-    ...(p.kind === 'repair_shop' ? { avatar: p.label } : { icon: p.kind === 'storefront' ? Storefront : Package }),
+    ...(p.kind === 'sms' ? { avatar: p.label } : { icon: p.kind === 'storefront' ? Storefront : Package }),
   }));
 }
 
 /** Add platform: pick the kind and name it. Opened by the rail "+" and the Platforms page. */
 export function AddPlatformModal({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
-  const [kind, setKind] = useState('repair_shop');
+  const [kind, setKind] = useState('sms');
   const [name, setName] = useState('');
   const [tried, setTried] = useState(false);
   const close = (o: boolean) => { onOpenChange(o); if (!o) { setName(''); setTried(false); } };
@@ -74,11 +74,11 @@ export function AddPlatformModal({ open, onOpenChange }: { open: boolean; onOpen
     toast.success(`${name.trim()} added. Connect data to finish setup.`);
   };
   return (
-    <Modal open={open} onOpenChange={close} title="Add a platform" description="Add Inventory or a Repair shop branch to Sunrise Auto Parts."
+    <Modal open={open} onOpenChange={close} title="Add a platform" description="Add Inventory or a SMS branch to Sunrise Auto Parts."
       footer={<><Button variant="subtle" onClick={() => close(false)}>Cancel</Button><Button onClick={add}>Add platform</Button></>}>
       <div className="flex flex-col gap-4">
         <Field label="Platform name" required error={tried && !name.trim() ? 'Enter a name.' : undefined}><Input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="Iloilo branch" /></Field>
-        <Field label="Type"><Select value={kind} onValueChange={setKind} options={[{ value: 'repair_shop', label: 'Repair shop branch' }, { value: 'inventory', label: 'Inventory' }]} /></Field>
+        <Field label="Type"><Select value={kind} onValueChange={setKind} options={[{ value: 'sms', label: 'Service Management System' }, { value: 'inventory', label: 'Inventory' }]} /></Field>
       </div>
     </Modal>
   );
@@ -118,7 +118,7 @@ export function ConnShell({
           { label: 'Account', icon: User, onSelect: goTab('account') },
           { label: 'Billing', icon: CreditCard, onSelect: goTab('billing') },
         ],
-        onSignOut: () => toast.success('Signed out of Portal, Inventory and Repair shop.'),
+        onSignOut: () => toast.success('Signed out of Portal, Inventory and SMS.'),
       }}
     >
       {children}
