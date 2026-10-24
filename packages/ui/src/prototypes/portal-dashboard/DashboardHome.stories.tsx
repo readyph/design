@@ -24,7 +24,7 @@ const at = (vp: keyof typeof viewports, theme: 'light' | 'dark') => ({
 });
 
 const meta: Meta<DashboardHomeProps> = {
-  title: 'Prototypes/Portal/[For Review] DashboardHome',
+  title: 'Prototypes/Portal/DashboardHome',
   tags: ['!autodocs'],
   parameters: { layout: 'fullscreen', viewport: { viewports, defaultViewport: 'desktop1440' } },
   args: { map: MAP_DEFAULT, attention: 'ready', ledaOpen: true, ledaView: 'empty', member: false },
