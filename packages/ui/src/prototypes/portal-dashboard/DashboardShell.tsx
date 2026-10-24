@@ -25,7 +25,7 @@ import {
   Sparkle,
   Trash,
   SidebarSimple,
-  PaperPlaneRight,
+  ArrowElbowDownLeft,
   SignOut,
   User,
   CreditCard,
@@ -58,7 +58,7 @@ import {
 
 /** Kit gaps found while building this prototype (also in the PR body). */
 export const MISSING_IN_KIT = [
-  'LedaSidePanel (RDY-219, revise): docked state = flush full-height column (top to bottom of the viewport, no top bar above it) separated from the canvas by surface tone only (no border line), no inset or card border; hidden state renders no column, only a floating circular Leda icon button (right edge, top, aligned with the collapse button, tooltip "Ask Leda") that reopens it; header uses a "Collapse Leda" panel icon instead of X, a round filled Leda logo and a filled send button; no visible page-context chip (context is still sent to Leda).',
+  'LedaSidePanel (RDY-219, revise): docked state = flush full-height column (top to bottom of the viewport, no top bar above it) separated from the canvas by surface tone only (no border line), no inset or card border; hidden state renders no column, only a floating circular Leda icon button (right edge, top, aligned with the collapse button, tooltip "Ask Leda") that reopens it; header uses a "Collapse Leda" panel icon instead of X, a Leda logo (white glyph on solid brand-blue circle) and a subtle return-arrow submit inside the input field (no filled button); no visible page-context chip (context is still sent to Leda).',
   'Shell without TopBar (RDY-218/221): no top bar; Leda toggle and Add platform are not in a header (Add platform stays in the rail and mobile nav); below lg a floating Menu button replaces the top-bar menu button. Portal layout must drop TopBar.',
   'Token `width.leda-panel` = 28rem from xl (1280px) and 24rem at lg (1024 to 1279px), replacing 22.5rem; prototype uses w-[24rem] xl:w-[28rem].',
   'Chat `fill` size (h-full w-full, no border/rounding/shadow) for the docked panel; prototype overrides Chat className.',
@@ -280,11 +280,20 @@ function ThinkingDots() {
   );
 }
 
-const ledaAvatar = (
-  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary-600 text-white">
-    <Icon icon={WaveTriangle} size="sm" weight="bold" />
-  </span>
-);
+/** The Leda mark: white WaveTriangle glyph on a solid brand-blue circle. One treatment everywhere. */
+function LedaLogo({ size = 'md' }: { size?: 'md' | 'lg' }) {
+  return (
+    <span
+      className={cn(
+        'grid shrink-0 place-items-center rounded-full bg-primary-600 text-white ring-2 ring-primary-400/50',
+        size === 'lg' ? 'h-14 w-14' : 'h-8 w-8',
+      )}
+    >
+      <Icon icon={WaveTriangle} size={size === 'lg' ? 'lg' : 'sm'} weight="bold" />
+    </span>
+  );
+}
+const ledaAvatar = <LedaLogo />;
 
 function LedaChat({ view, onClose, overlay }: { view: LedaView; onClose: () => void; overlay?: boolean }) {
   const [messages, setMessages] = useState<Msg[]>(() => initialMessages(view));
@@ -332,9 +341,7 @@ function LedaChat({ view, onClose, overlay }: { view: LedaView; onClose: () => v
       <Chat.Messages ref={scrollRef} aria-live="polite">
         {messages.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4 text-center">
-            <span className="grid h-12 w-12 place-items-center rounded-full bg-primary-50 text-primary-600">
-              <Icon icon={WaveTriangle} size="lg" weight="bold" />
-            </span>
+            <LedaLogo size="lg" />
             <p className="text-sm text-ink-muted">Ask me about your company, inventory or team. I answer from your Memory and can draft changes for you to confirm.</p>
           </div>
         ) : (
@@ -402,7 +409,7 @@ function LedaChat({ view, onClose, overlay }: { view: LedaView; onClose: () => v
           setDraft('');
         }}
       >
-        <div className="flex items-center gap-2 rounded-md border border-transparent bg-surface-muted py-1.5 pl-3 pr-1.5 focus-within:border-primary-400 focus-within:ring-2 focus-within:ring-focus">
+        <div className="flex items-center gap-2 rounded-md border border-border bg-surface-muted py-1.5 pl-3 pr-1.5 focus-within:border-primary-400 focus-within:ring-2 focus-within:ring-focus">
           <textarea
             rows={1}
             value={draft}
@@ -419,7 +426,14 @@ function LedaChat({ view, onClose, overlay }: { view: LedaView; onClose: () => v
             aria-label="Message Leda"
             className="min-h-8 flex-1 resize-none self-center bg-transparent py-1.5 text-sm leading-5 text-ink outline-none placeholder:text-ink-subtle"
           />
-          <IconButton type="submit" icon={PaperPlaneRight} label="Send" variant="primary" size="sm" disabled={busy || !draft.trim()} />
+          <button
+            type="submit"
+            aria-label="Send"
+            disabled={busy || !draft.trim()}
+            className={cn('grid h-8 w-8 shrink-0 place-items-center rounded-base bg-transparent text-ink-muted hover:text-ink disabled:cursor-not-allowed disabled:opacity-40', focusRing)}
+          >
+            <Icon icon={ArrowElbowDownLeft} size="md" />
+          </button>
         </div>
       </form>
     </Chat>
@@ -489,7 +503,7 @@ export function DashboardShell({
             onClick={toggleLeda}
             aria-label="Ask Leda"
             className={cn(
-              'absolute right-3 top-2 grid h-10 w-10 place-items-center rounded-full bg-primary-600 text-white shadow-md hover:bg-primary-700',
+              'absolute right-3 top-2 grid h-10 w-10 place-items-center rounded-full bg-primary-600 text-white shadow-md ring-2 ring-primary-400/50 hover:bg-primary-700',
               focusRing,
             )}
           >
