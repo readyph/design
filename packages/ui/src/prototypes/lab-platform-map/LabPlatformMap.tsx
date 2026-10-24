@@ -1,12 +1,13 @@
 /**
  * PROTOTYPE (RDY-225, epic RDY-222) - Lab platform map page: standalone Portal page `/lab/platform-map`
- * outside the Portal shell. Page chrome and HTML overlays around the Town Scene canvas (RDY-224);
- * the scene here is a neutral placeholder with fixed anchor points.
+ * outside the Portal shell. Page chrome and HTML overlays around the Town Scene (RDY-224, SVG): the scene
+ * reports the hovered or focused building and the point of its label, and the page anchors the bubble there.
  *
  * Leda: none on this page (no shell, no Leda panel). Lights are local view state: no Leda action.
  */
-import { useState, type ReactNode } from 'react';
-import { ArrowLeft, ArrowSquareOut, LinkSimple, MapTrifold, Package, Plus, WarningOctagon, Wrench } from '@phosphor-icons/react';
+import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { ArrowClockwise, ArrowCounterClockwise, ArrowLeft, ArrowSquareOut, LinkSimple, MapTrifold, Plus, WarningOctagon } from '@phosphor-icons/react';
+import { Anchor } from '../../components/Anchor';
 import { Badge } from '../../components/Badge';
 import { Button } from '../../components/Button';
 import { ButtonLink } from '../../components/ButtonLink';
@@ -14,7 +15,6 @@ import { Card } from '../../components/Card';
 import { DataList } from '../../components/DataList';
 import { Divider } from '../../components/Divider';
 import { EmptyState } from '../../components/EmptyState';
-import { Icon } from '../../components/Icon';
 import { Modal } from '../../components/Modal';
 import { Skeleton } from '../../components/Skeleton';
 import { StatusDot } from '../../components/StatusDot';
@@ -23,15 +23,15 @@ import { Tag } from '../../components/Tag';
 import { Tooltip } from '../../components/Tooltip';
 import { TopBar } from '../../components/TopBar';
 import { cn, focusRing } from '../../utils/cn';
+import { TownScene, connectionsFor, type TownBuilding, type TownStatus } from './TownScene';
 import { KIND_LABEL, KIND_SHORT, LAB_PLATFORMS, ROUTES, STATUS_LABEL, STATUS_TONE, plural, type LabPlatform } from './data';
 
 /**
  * Kit gaps for Leonardo (see PR body). The prototype uses the nearest existing piece for each.
  */
 export const MISSING_IN_KIT = [
-  'Tooltip surface tone (rich bubble: bg-surface, border, arrow in surface colour). Prototype overrides Tooltip className.',
-  'Switch aria-label / labelledby prop for label-less switches in lists. Prototype passes an sr-only label.',
-  'Scene anchor overlay: a positioned layer that places focusable hit targets at projected (x, y) points without inline styles (CSS variables set by the scene). Prototype uses fixed Tailwind position classes.',
+  'Scene colours with no token (lamp yellow, amber, peach, teal, clay greys, island, link colours, tree greens): see MISSING_IN_KIT in town/palette.ts.',
+  'Bubble placed over the scene uses Anchor (percent of the scene) with a 1px trigger, because Tooltip anchors to a trigger element, not a point.',
 ] as const;
 
 export type LabState = 'default' | 'loading' | 'error' | 'empty';
@@ -45,8 +45,6 @@ export interface LabPlatformMapProps {
   /** Platforms whose lights start off (view-only local state, resets on reload). */
   lightsOff?: string[];
 }
-
-const KIND_ICON = { inventory: Package, sms: Wrench } as const;
 
 /* ---------- Top bar ---------- */
 
@@ -86,52 +84,41 @@ function BubbleContent({ p, lightsOn }: { p: LabPlatform; lightsOn: boolean }) {
   );
 }
 
-/* ---------- Scene (placeholder) with accessible hit targets ---------- */
-
-const PLOT = 'bg-surface-subtle bg-[radial-gradient(rgb(var(--ds-border-strong))_1px,transparent_1px)] bg-[length:1.5rem_1.5rem]';
+/* ---------- Scene frame, bubble anchor, rotate buttons ---------- */
 
 /** `message` frames a centered state card (error, empty) and grows with it on phones. */
 function SceneFrame({ children, label, message = false }: { children: ReactNode; label: string; message?: boolean }) {
   return (
-    <section aria-label={label} className={cn('relative overflow-hidden rounded-lg border border-border lg:min-h-0', message ? 'grid place-items-center px-4 py-10' : 'aspect-[4/3] lg:aspect-auto', PLOT)}>
+    <section aria-label={label} className={cn('relative overflow-hidden rounded-lg border border-border bg-surface-subtle lg:min-h-0', message ? 'grid place-items-center px-4 py-10' : 'aspect-[4/3] lg:aspect-auto')}>
       {children}
     </section>
   );
 }
 
-function Building({ p, lightsOn, bubbleOpen, onBubble, onSelect }: {
-  p: LabPlatform; lightsOn: boolean; bubbleOpen: boolean; onBubble: (open: boolean) => void; onSelect: () => void;
-}) {
-  return (
-    <div className={cn('absolute -translate-x-1/2 -translate-y-1/2', p.anchor)}>
-      {/* Placeholder for the RDY-224 building art (decorative; the canvas is aria-hidden in the real page). */}
-      <div aria-hidden className={cn(
-        'relative grid h-12 w-12 place-items-center rounded-lg border shadow-sm transition-colors duration-DEFAULT sm:h-16 sm:w-16',
-        lightsOn ? 'border-border-strong bg-surface text-ink' : 'border-border bg-surface-muted text-ink-subtle',
-      )}>
-        <Icon icon={KIND_ICON[p.kind]} size="md" />
-        <StatusDot status={p.status} size="sm" className="absolute -right-1 -top-1 ring-2 ring-surface" />
-      </div>
-      {/* Accessible fallback: visually hidden but focusable button over the building. */}
-      <Tooltip
-        open={bubbleOpen}
-        onOpenChange={onBubble}
-        side="top"
-        delayDuration={150}
-        content={<BubbleContent p={p} lightsOn={lightsOn} />}
-        className="w-60 max-w-[calc(100vw-2rem)] rounded-md border border-border bg-surface p-3 text-ink shadow-lg [&>span>svg]:fill-surface"
-      >
-        <button type="button" onClick={onSelect} className={cn('absolute -inset-1 rounded-lg', focusRing)}>
-          <span className="sr-only">{`${p.label}, ${KIND_LABEL[p.kind]}, ${STATUS_LABEL[p.status]}, ${plural(p.alerts, 'alert')}`}</span>
-        </button>
-      </Tooltip>
-    </div>
-  );
+const STATUS_UP: Record<LabPlatform['status'], TownStatus> = { active: 'ACTIVE', degraded: 'DEGRADED', offline: 'OFFLINE' };
+const toBuilding = (p: LabPlatform): TownBuilding => ({ id: p.id, label: p.label, kind: p.kind, status: STATUS_UP[p.status], alerts: p.alerts });
+const toLinks = (platforms: LabPlatform[]) => platforms.flatMap((p) => p.links.map((l) => ({ from: p.id, to: l.id })));
+
+/** Size of an element in px, kept up to date (used to turn the scene's pixel point into a percent anchor). */
+function useSize<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+  const [size, setSize] = useState({ w: 0, h: 0 });
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([e]) => setSize({ w: e.contentRect.width, h: e.contentRect.height }));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return [ref, size] as const;
 }
 
-function PlaceholderCaption() {
+function RotateButtons({ onTurn }: { onTurn: (quarterTurns: number) => void }) {
   return (
-    <p className="absolute bottom-2 left-3 text-xs text-ink-subtle">Town scene placeholder (RDY-224)</p>
+    <div className="absolute bottom-3 left-3 flex gap-2">
+      <Button variant="secondary" size="sm" leftIcon={ArrowCounterClockwise} onClick={() => onTurn(-1)} aria-label="Rotate map left" />
+      <Button variant="secondary" size="sm" leftIcon={ArrowClockwise} onClick={() => onTurn(1)} aria-label="Rotate map right" />
+    </div>
   );
 }
 
@@ -153,8 +140,36 @@ function LegendRow({ p, lightsOn, onLights, onSelect }: { p: LabPlatform; lights
   );
 }
 
-function SideList({ platforms, lights, setLight, onSelect }: {
-  platforms: LabPlatform[]; lights: Record<string, boolean>; setLight: (id: string, on: boolean) => void; onSelect: (p: LabPlatform) => void;
+function Connections({ platforms, onHilite }: { platforms: LabPlatform[]; onHilite: (id: string | null) => void }) {
+  const conns = useMemo(() => connectionsFor(toLinks(platforms), new Set(platforms.map((p) => p.id))), [platforms]);
+  const name = (id: string) => platforms.find((p) => p.id === id)?.label ?? id;
+  if (conns.length === 0) return null;
+  return (
+    <div className="border-t border-border px-3 py-2">
+      <h3 className="pb-1 text-xs font-semibold text-ink-muted">Connections</h3>
+      <ul className="flex flex-col">
+        {conns.map((c) => (
+          <li key={c.id}>
+            <button
+              type="button"
+              onMouseEnter={() => onHilite(c.id)}
+              onMouseLeave={() => onHilite(null)}
+              onFocus={() => onHilite(c.id)}
+              onBlur={() => onHilite(null)}
+              className={cn('flex w-full items-center gap-2 rounded-base px-1 py-1 text-left text-xs text-ink hover:bg-surface-subtle', focusRing)}
+            >
+              <svg aria-hidden className="h-1.5 w-4 shrink-0" viewBox="0 0 16 6"><rect width="16" height="6" rx="3" fill={c.color} /></svg>
+              <span className="truncate">{name(c.from)} <span className="text-ink-muted">{'\u2194'}</span> {name(c.to)}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function SideList({ platforms, lights, setLight, onSelect, onHilite }: {
+  platforms: LabPlatform[]; lights: Record<string, boolean>; setLight: (id: string, on: boolean) => void; onSelect: (p: LabPlatform) => void; onHilite: (id: string | null) => void;
 }) {
   return (
     <Card padding="none" className="flex min-h-0 flex-col border border-border shadow-none lg:max-h-full lg:self-start">
@@ -167,11 +182,12 @@ function SideList({ platforms, lights, setLight, onSelect }: {
           <LegendRow key={p.id} p={p} lightsOn={lights[p.id]} onLights={(on) => setLight(p.id, on)} onSelect={() => onSelect(p)} />
         ))}
       </ul>
+      <Connections platforms={platforms} onHilite={onHilite} />
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-border px-3 py-2 text-xs text-ink-muted">
         {(['active', 'degraded', 'offline'] as const).map((s) => (
           <span key={s} className="inline-flex items-center gap-1.5"><StatusDot status={s} size="sm" />{STATUS_LABEL[s]}</span>
         ))}
-        <span>Dimmed: lights off</span>
+        <span>Lights off: dark windows</span>
       </div>
     </Card>
   );
@@ -245,10 +261,17 @@ function DetailModal({ p, lightsOn, onLights, onOpenChange }: {
 export function LabPlatformMap({ state = 'default', bubbleFor, modalFor, lightsOff = [] }: LabPlatformMapProps) {
   const platforms = LAB_PLATFORMS;
   const [lights, setLights] = useState<Record<string, boolean>>(() => Object.fromEntries(platforms.map((p) => [p.id, !lightsOff.includes(p.id)])));
-  const [bubble, setBubble] = useState<string | null>(bubbleFor ?? null);
+  const [bubble, setBubble] = useState<{ id: string; x: number; y: number } | null>(null);
+  const [rotation, setRotation] = useState(0);
+  const [hilite, setHilite] = useState<string | null>(null);
+  const [sceneRef, sceneSize] = useSize<HTMLDivElement>();
+  const buildings = useMemo(() => platforms.map(toBuilding), [platforms]);
+  const links = useMemo(() => toLinks(platforms), [platforms]);
+  const turn = (q: number) => setRotation((r) => Math.round(r / (Math.PI / 2) + q) * (Math.PI / 2));
   const [selected, setSelected] = useState<LabPlatform | null>(platforms.find((p) => p.id === modalFor) ?? null);
   const setLight = (id: string, on: boolean) => setLights((cur) => ({ ...cur, [id]: on }));
   const select = (p: LabPlatform) => { setBubble(null); setSelected(p); };
+  const bubblePlatform = bubble ? platforms.find((p) => p.id === bubble.id) : undefined;
   const withList = state === 'default' || state === 'loading';
 
   return (
@@ -290,14 +313,29 @@ export function LabPlatformMap({ state = 'default', bubbleFor, modalFor, lightsO
         {state === 'default' && (
           <>
             <SceneFrame label="Platform map">
-              {platforms.map((p) => (
-                <Building key={p.id} p={p} lightsOn={lights[p.id]} bubbleOpen={bubble === p.id}
-                  onBubble={(open) => setBubble((cur) => (open ? p.id : cur === p.id ? null : cur))}
-                  onSelect={() => select(p)} />
-              ))}
-              <PlaceholderCaption />
+              <div ref={sceneRef} className="absolute inset-0">
+                <TownScene
+                  buildings={buildings}
+                  links={links}
+                  lights={lights}
+                  rotation={rotation}
+                  onRotationChange={setRotation}
+                  highlightLink={hilite}
+                  pinnedId={bubbleFor}
+                  onHover={(id, pt) => setBubble(id && pt ? { id, x: pt.x, y: pt.y } : null)}
+                  onSelect={(id) => { const p = platforms.find((q) => q.id === id); if (p) select(p); }}
+                />
+                {bubblePlatform && bubble && sceneSize.w > 0 && (
+                  <Anchor x={(bubble.x / sceneSize.w) * 100} y={(bubble.y / sceneSize.h) * 100} className="pointer-events-none">
+                    <Tooltip open side="top" tone="surface" content={<BubbleContent p={bubblePlatform} lightsOn={lights[bubblePlatform.id]} />} className="w-60 max-w-[calc(100vw-2rem)]">
+                      <span className="block size-px" />
+                    </Tooltip>
+                  </Anchor>
+                )}
+              </div>
+              <RotateButtons onTurn={turn} />
             </SceneFrame>
-            <SideList platforms={platforms} lights={lights} setLight={setLight} onSelect={select} />
+            <SideList platforms={platforms} lights={lights} setLight={setLight} onSelect={select} onHilite={setHilite} />
           </>
         )}
       </main>

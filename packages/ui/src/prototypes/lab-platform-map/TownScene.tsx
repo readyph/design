@@ -1,383 +1,268 @@
 /**
- * PROTOTYPE (RDY-224) - Lab platform map: the 3D boxy town scene (Zdog).
+ * PROTOTYPE (RDY-224) - Lab platform map: the isometric town scene (SVG).
  *
- * One canvas, fixed bird's-eye isometric camera (no rotate / drag / zoom),
- * scaled to fit the container width. Renders on demand only: on load, resize,
- * theme change, hover / focus and while a light fade runs - never an idle loop.
- *
- * Composable API for the page ticket (RDY-225) and delivery:
- *   buildings, links, lights, onHover(id, screenPoint), onSelect(id)
- * `screenPoint` is in CSS px relative to the scene's top-left corner (the
- * building's roof lamp), so a bubble can be anchored above the building.
+ * Contract for the page (RDY-225) and delivery (RDY-230):
+ *   buildings, links, lights, onHover(id, point), onSelect(id)
+ * `point` is in CSS px relative to the scene's top-left corner: the top centre of the
+ * building's floating label, so a bubble can be anchored above it.
+ * Camera: drag to rotate, or pass `rotation` (radians, controlled) / `defaultRotation`.
+ * Lights default per status (ACTIVE and DEGRADED on, OFFLINE off) and take a `lights` map.
  */
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import * as Zdog from 'zdog';
 import { cn } from '../../utils/cn';
-import { buildBuilding, buildGround, buildHq, type BuildingModel, type Projected } from './art';
-import { CELL, dedupeLinks, defaultLights, placeBuildings, plotSize, type TownBuilding, type TownLink } from './layout';
-import { css, readPalette, type TownPalette } from './palette';
-
-export type { TownBuilding, TownLink, TownStatus } from './layout';
+import './town-scene.css';
+import { Engine, type LabelTokens } from './town/engine';
+import { connectionsFor } from './town/links';
+import type { Plat } from './town/core';
 
 export interface ScreenPoint {
   x: number;
   y: number;
 }
-
+export type TownStatus = 'ACTIVE' | 'DEGRADED' | 'OFFLINE';
+export interface TownBuilding {
+  id: string;
+  label: string;
+  /** Platform kind: `inventory` = warehouse, `sms` = service shop, store kinds = store, anything else = office. */
+  kind: string;
+  status: TownStatus;
+  alerts: number;
+}
+export interface TownLink {
+  from: string;
+  to: string;
+}
 export interface TownRenderStats {
-  /** Scene graph build time (ms). */
+  /** Scene build time (ms). */
   buildMs: number;
   /** One frame draw time (ms). */
   drawMs: number;
-  /** Zdog items in the render graph. */
+  /** Depth-sorted objects in the scene. */
   items: number;
 }
 
 export interface TownSceneProps {
   buildings: readonly TownBuilding[];
-  /** Platform-to-platform links; deduped, one road per pair. */
+  /** Platform-to-platform links; deduped, one connection per pair. */
   links?: readonly TownLink[];
-  /** Lights per building id (view-only). Missing ids: on for ACTIVE / DEGRADED, off for OFFLINE. */
+  /** Lights per building id. Missing ids: on for ACTIVE / DEGRADED, off for OFFLINE. */
   lights?: Readonly<Record<string, boolean>>;
-  /** Hovered (or keyboard-focused) building, with its roof point; `null` when the pointer leaves. */
+  /** Hovered or keyboard-focused building with its label point; `null` when the pointer leaves. */
   onHover?: (id: string | null, point: ScreenPoint | null) => void;
-  /** Click, tap, Enter or Space on a building. */
+  /** Click, tap, Enter or Space on a building or its label. */
   onSelect?: (id: string) => void;
-  /** Portal HQ in the centre with footpaths to every platform. Default on. */
-  showHq?: boolean;
+  /** Camera rotation in radians (controlled). Quarter turns are PI / 2. */
+  rotation?: number;
+  defaultRotation?: number;
+  onRotationChange?: (radians: number) => void;
+  /** Platform whose label point is reported through onHover (a pinned bubble for review). */
+  pinnedId?: string | null;
+  /** Connection id (`from~to`) to emphasise, e.g. the legend row under the pointer. */
+  highlightLink?: string | null;
+  /** `roads` = delivery vans on the roads, `power` = poles and wires. */
+  mode?: 'roads' | 'power';
   /** Accessible name of the scene. */
   label?: string;
-  /** Build / draw timings, reported after each rebuild (perf check). */
   onRenderStats?: (stats: TownRenderStats) => void;
   className?: string;
 }
 
 const STATUS_TEXT = { ACTIVE: 'Active', DEGRADED: 'Degraded', OFFLINE: 'Offline' } as const;
-const KIND_TEXT: Record<string, string> = { inventory: 'Warehouse', sms: 'Service shop' };
+const KIND_TEXT: Record<string, string> = { inventory: 'Inventory platform', sms: 'SMS platform', pos: 'POS platform' };
+const STORE_KINDS = new Set(['pos', 'store', 'storefront', 'other']);
 
-/** Camera: fixed isometric tilt and 45 degree turn. */
-const TILT = 0.62;
-const TURN = Zdog.TAU / 8;
-/** Canvas padding in CSS px; the bottom leaves room for the front row's signs. */
-const PAD_X = 12;
-const PAD_TOP = 16;
-const PAD_BOTTOM = 12;
-/** Small tenants stop growing here so outlines and signs keep their weight. */
-const MAX_ZOOM = 1.5;
-/** Labels show when a grid cell is at least this wide on screen; otherwise only on hover / focus. */
-const LABEL_MIN_CELL = 170;
-const FADE_MS = 250;
+/** Kind to building type: inventory warehouse, sms service shop, store kinds store, anything else office. */
+export function typeFor(kind: string): 'warehouse' | 'service' | 'store' | 'office' {
+  if (kind === 'inventory') return 'warehouse';
+  if (kind === 'sms') return 'service';
+  return STORE_KINDS.has(kind) ? 'store' : 'office';
+}
+export const defaultLights = (buildings: readonly TownBuilding[]): Record<string, boolean> =>
+  Object.fromEntries(buildings.map((b) => [b.id, b.status !== 'OFFLINE']));
+export { connectionsFor };
 
-/** Zdog runtime members that @types/zdog does not declare. */
-type Illo = Zdog.Illustration & { ctx: CanvasRenderingContext2D; pixelRatio: number; children: Zdog.Anchor[]; flatGraph: unknown[] };
-type Sortable = Zdog.Group & { updateSortValue: () => void; sortValue: number };
+const BADGE: Record<string, string> = { inventory: 'IN', sms: 'SM', pos: 'PS', store: 'PS', storefront: 'PS' };
 
-interface Scene {
-  illo: Illo;
-  models: BuildingModel[];
-  hqSign: Projected | null;
-  zoom: number;
-  dx: number;
-  dy: number;
-  width: number;
-  height: number;
+function toPlat(b: TownBuilding, on: boolean): Plat {
+  const kind = KIND_TEXT[b.kind] ?? `${b.kind.charAt(0).toUpperCase()}${b.kind.slice(1)} platform`;
+  return {
+    id: b.id, type: typeFor(b.kind), name: b.label, sub: `${kind} · ${STATUS_TEXT[b.status]}`,
+    badge: BADGE[b.kind] ?? b.kind.slice(0, 2).toUpperCase(), lights: on, alerts: b.alerts, status: b.status,
+  };
 }
 
 function describe(b: TownBuilding, on: boolean): string {
-  const kind = KIND_TEXT[b.kind] ?? `Store (${b.kind})`;
   const alerts = b.alerts > 0 ? `, ${b.alerts} alert${b.alerts === 1 ? '' : 's'}` : '';
-  return `${b.label}: ${kind}, ${STATUS_TEXT[b.status]}${alerts}, lights ${on ? 'on' : 'off'}`;
+  return `${b.label}: ${KIND_TEXT[b.kind] ?? b.kind}, ${STATUS_TEXT[b.status]}${alerts}, lights ${on ? 'on' : 'off'}`;
 }
 
-/** Keeps a ground layer behind every building, whatever its depth. */
-function pinBehind(group: Zdog.Group, value: number) {
-  const g = group as Sortable;
-  const base = g.updateSortValue.bind(g);
-  g.updateSortValue = () => {
-    base();
-    g.sortValue = value;
+const rgbOf = (el: Element, name: string, fallback: string) => {
+  const raw = getComputedStyle(el).getPropertyValue(name).trim();
+  const p = raw.split(/[\s,]+/).map(Number).filter((n) => !Number.isNaN(n));
+  return p.length >= 3 ? `rgb(${p[0]},${p[1]},${p[2]})` : fallback;
+};
+const lum = (c: string) => { const m = c.match(/\d+/g)!.map(Number); return 0.2126 * m[0] + 0.7152 * m[1] + 0.0722 * m[2]; };
+
+function readTokens(el: Element): { tokens: LabelTokens; dark: boolean } {
+  const ink = rgbOf(el, '--ds-ink', 'rgb(23,23,23)'), canvas = rgbOf(el, '--ds-canvas', 'rgb(236,236,237)');
+  return {
+    dark: lum(canvas) < lum(ink),
+    tokens: {
+      ink, inkMuted: rgbOf(el, '--ds-ink-muted', 'rgb(82,82,82)'), surface: rgbOf(el, '--ds-surface', 'rgb(255,255,255)'),
+      border: rgbOf(el, '--ds-border', 'rgb(229,229,229)'), focus: rgbOf(el, '--ds-focus', 'rgb(59,130,246)'),
+      error: rgbOf(el, '--ds-error', 'rgb(220,38,38)'), onError: 'rgb(255,255,255)',
+    },
   };
 }
 
 export function TownScene({
-  buildings,
-  links = [],
-  lights,
-  onHover,
-  onSelect,
-  showHq = true,
-  label = 'Platform town map',
-  onRenderStats,
-  className,
+  buildings, links = [], lights, onHover, onSelect, rotation, defaultRotation = 0, onRotationChange, highlightLink = null, pinnedId = null,
+  mode = 'roads', label = 'Platform town map', onRenderStats, className,
 }: TownSceneProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const sceneRef = useRef<Scene | null>(null);
-  const [width, setWidth] = useState(0);
-  const [palette, setPalette] = useState<TownPalette | null>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const refs = { base: useRef<SVGGElement>(null), links: useRef<SVGGElement>(null), glowl: useRef<SVGGElement>(null), objects: useRef<SVGGElement>(null), labels: useRef<SVGGElement>(null) };
+  const engineRef = useRef<Engine | null>(null);
+  const [viewBox, setViewBox] = useState('-930 -210 1860 1260');
   const [hoverId, setHoverId] = useState<string | null>(null);
-  const [focusId, setFocusId] = useState<string | null>(null);
-
-  const { cols, rows, hq: hqAt, placed } = useMemo(() => placeBuildings(buildings), [buildings]);
-  const roads = useMemo(() => dedupeLinks(links, new Set(buildings.map((b) => b.id))), [links, buildings]);
   const lightsOn = useMemo(() => ({ ...defaultLights(buildings), ...lights }), [buildings, lights]);
-  const glowRef = useRef<Record<string, number>>({});
-  const latest = useRef({ hoverId, focusId, placed, lightsOn, onHover, onRenderStats });
-  latest.current = { hoverId, focusId, placed, lightsOn, onHover, onRenderStats };
+  const latest = useRef({ onHover, onSelect, onRotationChange, onRenderStats, hoverId, lightsOn });
+  latest.current = { onHover, onSelect, onRotationChange, onRenderStats, hoverId, lightsOn };
 
-  // Size: fit the container width.
+  // Engine: created once the layers exist; stopped on unmount.
   useLayoutEffect(() => {
-    const el = wrapRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver(([e]) => setWidth(Math.floor(e.contentRect.width)));
-    ro.observe(el);
-    return () => ro.disconnect();
+    const L = { base: refs.base.current!, links: refs.links.current!, glowl: refs.glowl.current!, objects: refs.objects.current!, labels: refs.labels.current! };
+    const e = new Engine(L);
+    e.onViewBox = setViewBox;
+    e.setTarget(rotation ?? defaultRotation);
+    e.setThetaNow(rotation ?? defaultRotation);
+    engineRef.current = e;
+    e.start();
+    return () => { e.stop(); engineRef.current = null; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Colours: read tokens now and whenever the theme attribute changes.
+  /** Label point (CSS px relative to the scene) for a platform. */
+  const pointFor = useCallback((id: string): ScreenPoint | null => {
+    const e = engineRef.current, svg = svgRef.current, wrap = wrapRef.current;
+    const a = e?.labelAnchor(id);
+    const ctm = svg?.getScreenCTM?.();
+    if (!a || !svg || !wrap || !ctm) return null;
+    const r = wrap.getBoundingClientRect();
+    return { x: ctm.a * a.x + ctm.c * a.y + ctm.e - r.left, y: ctm.b * a.x + ctm.d * a.y + ctm.f - r.top };
+  }, []);
+
+  // Theme: read tokens now and whenever the theme attribute changes.
   useLayoutEffect(() => {
     const el = wrapRef.current;
     if (!el) return;
-    setPalette(readPalette(el));
-    const mo = new MutationObserver(() => setPalette(readPalette(el)));
+    const apply = () => { const t = readTokens(el); engineRef.current?.setDark(t.dark); engineRef.current?.setTokens(t.tokens); };
+    apply();
+    const mo = new MutationObserver(apply);
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] });
     return () => mo.disconnect();
   }, []);
 
-  const toScreen = useCallback((a: Projected): ScreenPoint => {
-    const s = sceneRef.current!;
-    return { x: s.width / 2 + (a.renderOrigin.x + s.dx) * s.zoom, y: s.height / 2 + (a.renderOrigin.y + s.dy) * s.zoom };
-  }, []);
-
-  const bounds = useCallback(
-    (m: BuildingModel) => {
-      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-      for (const c of m.corners) {
-        const p = toScreen(c);
-        x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y);
-      }
-      return { x0, y0, x1, y1 };
-    },
-    [toScreen],
-  );
-
-  /** Draws the Zdog graph, then the 2D overlay (signs, alert badges, focus ring). */
-  const draw = useCallback(() => {
-    const s = sceneRef.current;
-    if (!s || !palette) return 0;
+  // Map: rebuild when the platform list, links or mode change.
+  useLayoutEffect(() => {
+    const e = engineRef.current;
+    if (!e) return;
     const t0 = performance.now();
-    s.illo.updateRenderGraph();
-    const ctx = s.illo.ctx;
-    const pr = s.illo.pixelRatio;
-    const { hoverId: hov, focusId: foc, placed: pl } = latest.current;
-    ctx.save();
-    ctx.setTransform(pr, 0, 0, pr, 0, 0);
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    const cellPx = CELL * s.zoom;
-    const showAll = cellPx >= LABEL_MIN_CELL;
-    const sign = (text: string, at: ScreenPoint, emphasis: boolean, maxW: number) => {
-      ctx.font = `600 11px ${palette.font}`;
-      let t = text;
-      while (t.length > 1 && ctx.measureText(t).width > maxW - 12) t = t.slice(0, -1);
-      if (t !== text) t = `${t.trimEnd()}…`;
-      const w = Math.min(maxW, ctx.measureText(t).width + 12);
-      const h = 18;
-      const x = at.x - w / 2;
-      const y = at.y - 2;
-      ctx.beginPath();
-      ctx.roundRect(x, y, w, h, 4);
-      ctx.fillStyle = css(palette.signFill);
-      ctx.fill();
-      ctx.lineWidth = emphasis ? 2 : 1;
-      ctx.strokeStyle = css(emphasis ? palette.focus : palette.signBorder);
-      ctx.stroke();
-      ctx.fillStyle = css(palette.signText);
-      ctx.fillText(t, at.x, y + h / 2 + 0.5);
-    };
-    if (showHq && s.hqSign && showAll) sign('Portal HQ', toScreen(s.hqSign), false, cellPx - 8);
-    const byId = new Map(pl.map((b) => [b.id, b]));
-    // Back-to-front so nearer signs sit on top.
-    const order = [...s.models].sort((a, b) => a.signAt.renderOrigin.z - b.signAt.renderOrigin.z);
-    for (const m of order) {
-      const b = byId.get(m.id)!;
-      const emphasis = m.id === hov || m.id === foc;
-      if (showAll || emphasis) sign(b.label, toScreen(m.signAt), emphasis, Math.max(cellPx - 8, 96));
-      if (b.alerts > 0) {
-        const p = toScreen(m.lampAt);
-        const text = b.alerts > 9 ? '9+' : String(b.alerts);
-        ctx.font = `700 10px ${palette.font}`;
-        const r = 8;
-        const bx = p.x + 9;
-        const by = p.y - 6;
-        ctx.beginPath();
-        ctx.roundRect(bx - r, by - r, Math.max(r * 2, ctx.measureText(text).width + 8), r * 2, r);
-        ctx.fillStyle = css(palette.badge);
-        ctx.fill();
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = css(palette.signFill);
-        ctx.stroke();
-        ctx.fillStyle = css(palette.badgeText);
-        ctx.textAlign = 'left';
-        ctx.fillText(text, bx - r + 4, by + 0.5);
-        ctx.textAlign = 'center';
-      }
-      if (m.id === foc) {
-        const box = bounds(m);
-        ctx.beginPath();
-        ctx.roundRect(box.x0 - 6, box.y0 - 6, box.x1 - box.x0 + 12, box.y1 - box.y0 + 12, 8);
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = css(palette.focus);
-        ctx.stroke();
-      }
-    }
-    ctx.restore();
-    return performance.now() - t0;
-  }, [palette, showHq, toScreen, bounds]);
-
-  /** (Re)builds the scene graph from the current glow values. */
-  const build = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || !palette || width <= 0) return;
-    const t0 = performance.now();
-    let s = sceneRef.current;
-    if (!s || s.illo.element !== canvas) {
-      const illo = new Zdog.Illustration({ element: canvas, rotate: { x: -TILT, y: TURN } }) as Illo;
-      s = { illo, models: [], hqSign: null, zoom: 1, dx: 0, dy: 0, width, height: 0 };
-      sceneRef.current = s;
-    }
-    const scene = s;
-    const { illo } = scene;
-    [...illo.children].forEach((c) => c.remove());
-    const { ground, extent } = buildGround(illo, palette, plotSize(cols, rows), placed, roads, showHq ? hqAt : null);
-    pinBehind(ground, -1e9);
-    const hq = showHq ? buildHq(illo, palette, hqAt) : null;
-    scene.hqSign = hq?.signAt ?? null;
-    scene.models = placed.map((b) => buildBuilding(illo, palette, b, glowRef.current[b.id] ?? (latest.current.lightsOn[b.id] ? 1 : 0)));
-    // Fit: projected extents are zoom-independent, so measure them, then size the canvas tightly.
-    illo.updateGraph();
-    const pts = [...extent, ...(hq?.corners ?? []), ...scene.models.flatMap((m) => [...m.corners, m.lampAt])];
-    const xs = pts.map((q) => q.renderOrigin.x);
-    const ys = pts.map((q) => q.renderOrigin.y);
-    const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
-    const zoom = Math.min(MAX_ZOOM, (width - PAD_X * 2) / (maxX - minX));
-    const height = Math.ceil((maxY - minY) * zoom + PAD_TOP + PAD_BOTTOM);
-    const dx = -(minX + maxX) / 2;
-    const dy = (PAD_TOP - height / 2) / zoom - minY;
-    illo.zoom = zoom;
-    illo.onPrerender = (ctx) => (ctx as CanvasRenderingContext2D).translate(dx, dy);
-    const pr = window.devicePixelRatio || 1;
-    if (canvas.width !== Math.round(width * pr) || canvas.height !== Math.round(height * pr)) illo.setSize(width, height);
-    Object.assign(scene, { zoom, dx, dy, width, height });
+    e.render(buildings.map((b) => toPlat(b, latest.current.lightsOn[b.id])), links, mode);
     const buildMs = performance.now() - t0;
-    const drawMs = draw();
-    latest.current.onRenderStats?.({ buildMs, drawMs, items: illo.flatGraph.length });
-  }, [palette, width, cols, rows, hqAt, placed, roads, showHq, draw]);
+    const t1 = performance.now();
+    e.frame(performance.now());
+    latest.current.onRenderStats?.({ buildMs, drawMs: performance.now() - t1, items: e.ctx.objects.length });
+  }, [buildings, links, mode]);
 
-  useLayoutEffect(build, [build]);
+  useEffect(() => { engineRef.current?.setLights(lightsOn); }, [lightsOn]);
+  useEffect(() => { engineRef.current?.setHilite(highlightLink); }, [highlightLink]);
+  useEffect(() => { if (rotation !== undefined) engineRef.current?.setTarget(rotation); }, [rotation]);
 
-  // Lights: fade window glow toward the target (instant with reduced motion).
+  // A pinned platform reports its label point after every rebuild and camera settle.
   useEffect(() => {
-    const target = lightsOn;
-    const g = glowRef.current;
-    const reduce = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    const ids = Object.keys(target);
-    const first = ids.every((id) => g[id] === undefined);
-    if (reduce || first) {
-      ids.forEach((id) => (g[id] = target[id] ? 1 : 0));
-      build();
+    if (pinnedId) latest.current.onHover?.(pinnedId, pointFor(pinnedId));
+  }, [pinnedId, pointFor, buildings, viewBox]);
+
+  // Hover point follows the camera once it settles after a rotation.
+  useEffect(() => {
+    const e = engineRef.current;
+    if (!e) return;
+    e.onSettle = () => { const id = latest.current.hoverId; if (id) latest.current.onHover?.(id, pointFor(id)); };
+  }, [pointFor]);
+
+  const emit = (id: string | null) => latest.current.onHover?.(id, id ? pointFor(id) : null);
+  const idAt = (t: EventTarget | null) => (t as Element | null)?.closest?.('.plot-obj, .label')?.getAttribute('data-id') ?? null;
+
+  // Pointer: drag to rotate, click to select, hover to inspect.
+  const drag = useRef<{ x: number; t: number; moved: boolean } | null>(null);
+  const onPointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
+    drag.current = { x: e.clientX, t: engineRef.current?.target ?? 0, moved: false };
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+  };
+  const onPointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
+    const d = drag.current, en = engineRef.current;
+    if (d && en) {
+      const dx = e.clientX - d.x;
+      if (Math.abs(dx) > 4) { d.moved = true; en.dragging = true; svgRef.current?.classList.add('is-dragging'); }
+      if (d.moved) { const t = d.t - dx * 0.008; en.setTarget(t); en.setThetaNow(t); latest.current.onRotationChange?.(t); }
       return;
     }
-    const from = Object.fromEntries(ids.map((id) => [id, g[id] ?? (target[id] ? 1 : 0)]));
-    if (ids.every((id) => from[id] === (target[id] ? 1 : 0))) return;
-    let raf = 0;
-    const start = performance.now();
-    const step = (now: number) => {
-      const t = Math.min(1, (now - start) / FADE_MS);
-      const e = 1 - (1 - t) * (1 - t);
-      ids.forEach((id) => (g[id] = from[id] + ((target[id] ? 1 : 0) - from[id]) * e));
-      build();
-      if (t < 1) raf = requestAnimationFrame(step);
-    };
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-  }, [lightsOn]); // build is read fresh each frame; re-running on build changes would restart the fade
-
-
-  useEffect(() => {
-    draw();
-  }, [hoverId, focusId, draw]);
-
-  const hit = (clientX: number, clientY: number): string | null => {
-    const s = sceneRef.current;
-    const el = canvasRef.current;
-    if (!s || !el) return null;
-    const r = el.getBoundingClientRect();
-    const x = clientX - r.left;
-    const y = clientY - r.top;
-    let best: BuildingModel | null = null;
-    for (const m of s.models) {
-      const b = bounds(m);
-      const sg = toScreen(m.signAt);
-      const inSign = Math.abs(x - sg.x) < 40 && y > sg.y - 4 && y < sg.y + 18;
-      if ((x >= b.x0 && x <= b.x1 && y >= b.y0 && y <= b.y1) || inSign) {
-        if (!best || m.signAt.renderOrigin.z > best.signAt.renderOrigin.z) best = m;
-      }
-    }
-    return best?.id ?? null;
+    const id = idAt(document.elementFromPoint(e.clientX, e.clientY));
+    if (id !== latest.current.hoverId) { setHoverId(id); emit(id); }
   };
-
-  const emitHover = (id: string | null) => {
-    const m = id ? sceneRef.current?.models.find((x) => x.id === id) : undefined;
-    latest.current.onHover?.(id, m ? toScreen(m.lampAt) : null);
+  const onPointerUp = (e: React.PointerEvent<SVGSVGElement>) => {
+    const d = drag.current, en = engineRef.current;
+    svgRef.current?.classList.remove('is-dragging');
+    if (en) en.dragging = false;
+    drag.current = null;
+    if (d && !d.moved) { const id = idAt(document.elementFromPoint(e.clientX, e.clientY)); if (id) latest.current.onSelect?.(id); }
+    else if (d?.moved) emit(latest.current.hoverId);
   };
+  const onLeave = () => { if (latest.current.hoverId !== null) { setHoverId(null); emit(null); } };
 
-  const onMove = (e: React.PointerEvent) => {
-    const id = hit(e.clientX, e.clientY);
-    if (id !== hoverId) {
-      setHoverId(id);
-      emitHover(id);
-    }
-  };
-
-  const onLeave = () => {
-    if (hoverId !== null) {
-      setHoverId(null);
-      emitHover(null);
-    }
-  };
-
-  const onClick = (e: React.MouseEvent) => {
-    const id = hit(e.clientX, e.clientY);
-    if (id) onSelect?.(id);
-  };
-
-  const summary = `${label}: ${buildings.length} platform${buildings.length === 1 ? '' : 's'}, ${roads.length} road${roads.length === 1 ? '' : 's'}.`;
+  const summary = `${label}: ${buildings.length} platform${buildings.length === 1 ? '' : 's'}.`;
 
   return (
-    <div ref={wrapRef} className={cn('relative w-full', className)} role="group" aria-label={label}>
-      <canvas
-        ref={canvasRef}
+    <div ref={wrapRef} className={cn('town-scene relative h-full w-full select-none overflow-hidden', className)} role="group" aria-label={label}>
+      <svg
+        ref={svgRef}
+        viewBox={viewBox}
+        preserveAspectRatio="xMidYMid meet"
         aria-hidden="true"
-        className={cn('block w-full select-none touch-manipulation', hoverId && 'cursor-pointer')}
-        onPointerMove={onMove}
+        className={cn('block h-full w-full cursor-grab touch-none', hoverId && 'cursor-pointer')}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
         onPointerLeave={onLeave}
-        onClick={onClick}
-      />
+      >
+        <defs>
+          <filter id="rph-soft" x="-20%" y="-40%" width="140%" height="180%"><feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#1E3A8A" floodOpacity=".14" /></filter>
+          <filter id="rph-glow" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="3.5" result="b" />
+            <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+          <filter id="rph-blur8" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="6" /></filter>
+          <radialGradient id="rph-pool">
+            <stop offset="0" stopColor="#FFD66B" stopOpacity=".55" />
+            <stop offset=".6" stopColor="#FFD66B" stopOpacity=".2" />
+            <stop offset="1" stopColor="#FFD66B" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        <g ref={refs.base} />
+        <g ref={refs.links} />
+        <g ref={refs.glowl} />
+        <g ref={refs.objects} />
+        <g ref={refs.labels} />
+      </svg>
       <p className="sr-only">{summary}</p>
       <ul className="sr-only">
-        {placed.map((b) => (
+        {buildings.map((b) => (
           <li key={b.id}>
             <button
               type="button"
-              onFocus={() => {
-                setFocusId(b.id);
-                emitHover(b.id);
-              }}
-              onBlur={() => {
-                setFocusId(null);
-                emitHover(null);
-              }}
+              onFocus={() => { engineRef.current?.setFocus(b.id); setHoverId(b.id); emit(b.id); }}
+              onBlur={() => { engineRef.current?.setFocus(null); setHoverId(null); emit(null); }}
               onClick={() => onSelect?.(b.id)}
             >
               {describe(b, lightsOn[b.id])}
