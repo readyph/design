@@ -15,7 +15,7 @@ const viewports = {
 };
 
 const meta: Meta<HomeProps> = {
-  title: 'Prototypes/Portal/[For Review] Home',
+  title: 'Prototypes/Portal/Home',
   component: Home,
   tags: ['!autodocs'],
   parameters: {
