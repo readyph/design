@@ -38,7 +38,6 @@ const preview: Preview = {
           'Portal',
           'Inventory',
           'Patterns',
-          'Prototypes',
         ],
       },
     },
