@@ -18,7 +18,7 @@ export const Sidebar = forwardRef<HTMLElement, SidebarProps>(function Sidebar(
   return (
     <nav
       ref={ref}
-      className={cn('flex w-sidebar flex-col gap-1 bg-chrome p-3 text-chrome-fg', className)}
+      className={cn('flex w-sidebar flex-col gap-1.5 bg-transparent p-3', className)}
       {...rest}
     >
       {children}
@@ -36,8 +36,8 @@ export const SidebarSection = forwardRef<HTMLDivElement, SidebarSectionProps>(fu
   ref,
 ) {
   return (
-    <div ref={ref} className={cn('flex flex-col gap-1 py-2', className)} {...rest}>
-      {title && <p className="px-3 pb-1 text-xs font-medium uppercase tracking-wide text-chrome-muted">{title}</p>}
+    <div ref={ref} className={cn('flex flex-col gap-1.5 py-2', className)} {...rest}>
+      {title && <p className="px-3 pb-1 text-xs font-medium uppercase tracking-wide text-ink-muted">{title}</p>}
       {children}
     </div>
   );
@@ -60,14 +60,14 @@ export const SidebarItem = forwardRef<HTMLElement, SidebarItemProps>(function Si
 ) {
   const { shortcutMode } = useShortcutMode();
   const classes = cn(
-    'group flex w-full items-center gap-2.5 rounded-sm px-3 h-sidebar-item text-sm font-medium transition-colors duration-DEFAULT',
-    active ? 'bg-chrome-active text-chrome-fg' : 'text-chrome-muted hover:bg-chrome-hover hover:text-chrome-fg',
+    'group flex w-full items-center gap-2.5 rounded-base px-3 py-2 text-sm font-medium transition-colors duration-DEFAULT',
+    active ? 'bg-primary-50 text-primary-700 [[data-theme=dark]_&]:text-primary-900' : 'text-ink-muted hover:bg-surface-muted hover:text-ink',
     focusRing,
     className,
   );
   const inner = (
     <>
-      {icon && <Icon icon={icon} size="md" weight={active ? 'fill' : 'regular'} className={active ? 'text-primary-400' : 'text-chrome-muted group-hover:text-chrome-fg'} />}
+      {icon && <Icon icon={icon} size="md" weight={active ? 'fill' : 'regular'} className={active ? 'text-primary-600' : 'text-ink-subtle group-hover:text-ink'} />}
       <span className="flex-1 truncate text-left">{children}</span>
       {shortcut && shortcutMode ? (
         <span className="flex items-center gap-0.5">
@@ -78,7 +78,7 @@ export const SidebarItem = forwardRef<HTMLElement, SidebarItemProps>(function Si
           ))}
         </span>
       ) : (
-        badge != null && <span className="text-xs text-chrome-muted">{badge}</span>
+        badge != null && <span className="text-xs text-ink-muted">{badge}</span>
       )}
     </>
   );

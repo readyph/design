@@ -14,13 +14,11 @@ import {
   typography,
   spacing,
   radius,
-  radiusRole,
   shadows,
   motion,
   breakpoints,
   layout,
   controlHeight,
-  density,
   borderWidth,
   zIndex,
 } from '../src/tokens/index';
@@ -62,9 +60,6 @@ vars['--ds-ink-subtle'] = toChannels(colors.ink.subtle);
 vars['--ds-border'] = toChannels(colors.border.DEFAULT);
 vars['--ds-border-strong'] = toChannels(colors.border.strong);
 vars['--ds-link'] = toChannels(colors.link);
-for (const [name, hex] of Object.entries(colors.chrome)) {
-  vars[name === 'DEFAULT' ? '--ds-chrome' : `--ds-chrome-${name}`] = toChannels(hex);
-}
 for (const [name, pair] of Object.entries(colors.tint)) {
   vars[`--ds-tint-${name}-bg`] = toChannels(pair.bg);
   vars[`--ds-tint-${name}-fg`] = toChannels(pair.fg);
@@ -76,17 +71,6 @@ vars['--ds-focus'] = toChannels(colors.primary[500]);
 vars['--ds-overlay'] = colors.overlay;
 vars['--ds-font-sans'] = typography.fontFamily.base;
 vars['--ds-transition'] = motion.transition.base;
-for (const [name, value] of Object.entries(radius)) {
-  vars[`--ds-radius-${name}`] = value;
-}
-for (const [name, value] of Object.entries(radiusRole)) {
-  vars[`--ds-radius-${name}`] = value;
-}
-vars['--ds-density-control'] = density.control;
-vars['--ds-density-sidebar-item'] = density.sidebarItem;
-vars['--ds-density-table-row'] = density.tableRow;
-vars['--ds-density-table-row-dense'] = density.tableRowDense;
-vars['--ds-gutter'] = density.gutterMobile;
 
 /* -------------------------------------------------------------------------- */
 /* 1. theme.css                                                               */
@@ -108,17 +92,8 @@ const themeCss = `/**
  * [data-theme] — without rebuilding:
  *   .project-x { --ds-primary-500: 230 100 20; }
  */
-:root,
-[data-theme=\"light\"] {
+:root {
 ${cssLines}
-}
-
-/* Page gutter: 12px on mobile, 16px from the sm breakpoint. */
-@media (min-width: ${breakpoints.sm}) {
-  :root,
-  [data-theme=\"light\"] {
-    --ds-gutter: ${density.gutterDesktop};
-  }
 }
 
 /* Base surface + ink for the document. Opt-in: apply to <body> or a root node. */
@@ -188,14 +163,6 @@ const colorTheme = {
     DEFAULT: c('--ds-border'),
     strong: c('--ds-border-strong'),
   },
-  chrome: {
-    DEFAULT: c('--ds-chrome'),
-    fg: c('--ds-chrome-fg'),
-    muted: c('--ds-chrome-muted'),
-    hover: c('--ds-chrome-hover'),
-    active: c('--ds-chrome-active'),
-    border: c('--ds-chrome-border'),
-  },
   link: c('--ds-link'),
   focus: c('--ds-focus'),
   tint: Object.fromEntries(
@@ -216,13 +183,8 @@ const preset = {
       fontSize: typography.fontSize,
       fontWeight: typography.fontWeight,
       lineHeight: typography.lineHeight,
-      spacing: { ...spacing, gutter: 'var(--ds-gutter)' },
-      borderRadius: {
-        ...radius,
-        control: 'var(--ds-radius-control)',
-        panel: 'var(--ds-radius-panel)',
-        modal: 'var(--ds-radius-modal)',
-      },
+      spacing,
+      borderRadius: radius,
       boxShadow: shadows,
       screens: breakpoints,
       zIndex: Object.fromEntries(Object.entries(zIndex).map(([k, v]) => [k, String(v)])),
@@ -233,13 +195,7 @@ const preset = {
         DEFAULT: motion.duration.base,
         slow: motion.duration.slow,
       },
-      height: {
-        ...controlHeight,
-        control: 'var(--ds-density-control)',
-        'sidebar-item': 'var(--ds-density-sidebar-item)',
-        row: 'var(--ds-density-table-row)',
-        'row-dense': 'var(--ds-density-table-row-dense)',
-      },
+      height: controlHeight,
       width: {
         rail: layout.railWidth,
         sidebar: layout.sidebarWidth,

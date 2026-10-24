@@ -17,17 +17,6 @@ export const controlHeight = {
   lg: '2.5rem', // 40px
 } as const;
 
-/** Density: compact, Slack-like. Control 32, sidebar item 28, table row 36 / dense 32. */
-export const density = {
-  control: '2rem', // 32px
-  sidebarItem: '1.75rem', // 28px
-  tableRow: '2.25rem', // 36px
-  tableRowDense: '2rem', // 32px
-  /** Page gutter: mobile (<640px) and desktop. */
-  gutterMobile: '0.75rem', // 12px
-  gutterDesktop: '1rem', // 16px
-} as const;
-
 /** Icon sizes in px (icon components take numbers). */
 export const iconSize = {
   sm: 16,

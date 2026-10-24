@@ -3,7 +3,7 @@ import { cn } from '../utils/cn';
 
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   padding?: 'none' | 'sm' | 'md' | 'lg';
-  /** Elevation; `flat` (default) is a hairline-bordered panel with no shadow. */
+  /** Elevation; `flat` is a plain filled panel. */
   elevation?: 'flat' | 'sm' | 'md';
   /** Hover affordance for clickable cards. */
   interactive?: boolean;
@@ -15,17 +15,17 @@ const elevations = { flat: 'shadow-none', sm: 'shadow-sm', md: 'shadow-md' };
 
 /** A surface container. Compose header/body/footer as children. */
 export const Card = forwardRef<HTMLDivElement, CardProps>(function Card(
-  { padding = 'md', elevation = 'flat', interactive = false, className, children, ...rest },
+  { padding = 'md', elevation = 'sm', interactive = false, className, children, ...rest },
   ref,
 ) {
   return (
     <div
       ref={ref}
       className={cn(
-        'rounded-base border border-border bg-surface',
+        'rounded-lg bg-surface',
         paddings[padding],
         elevations[elevation],
-        interactive && 'transition-colors duration-DEFAULT hover:bg-surface-subtle',
+        interactive && 'transition-shadow duration-DEFAULT hover:shadow-md',
         className,
       )}
       {...rest}

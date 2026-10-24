@@ -40,9 +40,9 @@ export function Table<T>({
   empty = 'No data',
   className,
 }: TableProps<T>) {
-  const cellPad = cn('px-3 py-0', dense ? 'h-row-dense' : 'h-row');
+  const cellPad = dense ? 'px-3 py-2' : 'px-4 py-3';
   return (
-    <div className={cn('overflow-hidden rounded-base border border-border', className)}>
+    <div className={cn('overflow-hidden rounded-lg border border-border', className)}>
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-sm">
           <thead>

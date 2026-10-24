@@ -4,7 +4,7 @@ export { typography } from './typography';
 export type { Typography } from './typography';
 export { spacing, SPACING_UNIT } from './spacing';
 export type { Spacing } from './spacing';
-export { radius, radiusRole } from './radius';
+export { radius } from './radius';
 export type { Radius } from './radius';
 export { shadows } from './shadows';
 export type { Shadows } from './shadows';
@@ -15,7 +15,6 @@ export type { Breakpoint } from './breakpoints';
 export {
   layout,
   controlHeight,
-  density,
   iconSize,
   borderWidth,
   zIndex,

@@ -14,7 +14,7 @@ export const IconRail = forwardRef<HTMLElement, IconRailProps>(function IconRail
   return (
     <nav
       ref={ref}
-      className={cn('flex w-rail flex-col items-center gap-1 border-r border-chrome-border bg-chrome py-3', className)}
+      className={cn('flex w-rail flex-col items-center gap-1 border-r border-border bg-surface py-3', className)}
       {...rest}
     >
       {children}
@@ -37,8 +37,8 @@ export const IconRailItem = forwardRef<HTMLButtonElement, IconRailItemProps>(fun
   ref,
 ) {
   const classes = cn(
-    'relative grid h-10 w-10 place-items-center rounded-sm transition-colors duration-DEFAULT',
-    active ? 'bg-chrome-active text-chrome-fg' : 'text-chrome-muted hover:bg-chrome-hover hover:text-chrome-fg',
+    'relative grid h-10 w-10 place-items-center rounded-base transition-colors duration-DEFAULT',
+    active ? 'bg-primary-50 text-primary-600' : 'text-ink-subtle hover:bg-surface-muted hover:text-ink',
     focusRing,
     className,
   );

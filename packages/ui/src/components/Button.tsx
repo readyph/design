@@ -35,7 +35,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 // this, `secondary`'s border would inset its fill and make it render a hair
 // smaller than the borderless primary/danger/subtle buttons.
 export const base =
-  'relative inline-flex items-center justify-center gap-2 whitespace-nowrap border border-transparent rounded-control font-medium transition-colors duration-DEFAULT ease-standard disabled:cursor-not-allowed disabled:opacity-50';
+  'relative inline-flex items-center justify-center gap-2 whitespace-nowrap border border-transparent rounded-base font-medium transition-colors duration-DEFAULT ease-standard disabled:cursor-not-allowed disabled:opacity-50';
 
 export const variants: Record<ButtonVariant, string> = {
   primary: 'bg-primary-600 text-white hover:bg-primary-700 [[data-theme=dark]_&]:hover:bg-primary-200',
@@ -57,7 +57,7 @@ export const iconSizeFor: Record<ButtonSize, 'sm' | 'md'> = { sm: 'sm', md: 'sm'
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   {
     variant = 'primary',
-    size = 'sm',
+    size = 'md',
     loading = false,
     fullWidth = false,
     leftIcon,
