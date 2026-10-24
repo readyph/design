@@ -294,6 +294,12 @@ const ledaAvatar = (
   </span>
 );
 
+/** Prefill from a page action (RDY-214 "Ask Leda"): a new `key` re-applies the same text. */
+export interface LedaPrefill {
+  text: string;
+  key: number;
+}
+
 interface LedaChatProps {
   view: LedaView;
   onClose: () => void;
@@ -301,9 +307,11 @@ interface LedaChatProps {
   initial?: Msg[];
   renderAttachment?: (m: Msg, ctx: LedaAttachmentContext) => ReactNode;
   placeholder?: string;
+  suggestions?: string[];
+  prefill?: LedaPrefill;
 }
 
-function LedaChat({ view, onClose, overlay = false, initial, renderAttachment, placeholder }: LedaChatProps) {
+function LedaChat({ view, onClose, overlay = false, initial, renderAttachment, placeholder, suggestions = QUICK_ACTIONS, prefill }: LedaChatProps) {
   const [messages, setMessages] = useState<Msg[]>(() => initial ?? initialMessages(view));
   const [draft, setDraft] = useState('');
   const [busy, setBusy] = useState(false);
@@ -424,6 +432,7 @@ function LedaChat({ view, onClose, overlay = false, initial, renderAttachment, p
           send(text);
           setDraft('');
         }}
+        className="border-transparent bg-surface-muted"
         placeholder={busy ? 'Leda is replying…' : (placeholder ?? 'Ask Leda…')}
         aria-label="Message Leda"
         autoFocus={overlay}
@@ -495,7 +504,7 @@ export function DashboardShell({
     else setDrawer(true);
   }, [ledaPrefill]);
   const toggleLeda = () => (desktop ? setDockedRemembered(!docked) : setDrawer(!drawer));
-  const chat = { view: ledaView, initial: ledaMessages, renderAttachment: renderLedaAttachment, placeholder: ledaPlaceholder };
+  const chat = { view: ledaView, initial: ledaMessages, renderAttachment: renderLedaAttachment, placeholder: ledaPlaceholder, suggestions: ledaSuggestions, prefill: ledaPrefill };
 
   return (
     <div className="ds-root relative flex h-screen w-full overflow-hidden bg-surface-canvas font-sans text-ink">
@@ -504,7 +513,7 @@ export function DashboardShell({
       <main className="min-h-0 min-w-0 flex-1 overflow-y-auto [container-type:inline-size] max-lg:pb-16">{children}</main>
 
       {desktop && docked && (
-        <aside aria-label="Leda panel" className="flex h-full w-[24rem] shrink-0 flex-col border-l border-border bg-surface xl:w-[28rem]">
+        <aside aria-label="Leda panel" className="flex h-full w-[24rem] shrink-0 flex-col bg-surface shadow-sm xl:w-[28rem]">
           <LedaChat {...chat} onClose={() => setDockedRemembered(false)} />
         </aside>
       )}

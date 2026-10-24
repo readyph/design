@@ -126,7 +126,7 @@ function ChatWidget({ id, expanded, onExpand }: { id: WidgetId; expanded: boolea
     body = (
       <LedaWidget icon={ChartBar} title={title} meta="Oct 17 to 23 vs the week before" headerActions={headerActions}>
         {/* Owner direction: no stat tiles, even in the chat. Flat 2-up metrics on hairlines. */}
-        <dl className="grid grid-cols-2 gap-x-4 border-t border-border/50">
+        <dl className="grid grid-cols-2 gap-x-4">
           {WEEK_STATS.slice(0, 4).map((st) => (
             <div key={st.label} className="border-b border-border/50 py-3">
               <dt className="sr-only">{st.label}</dt>
@@ -234,11 +234,11 @@ function LowStockView() {
           ]}
           data={LOW_STOCK}
           rowKey={(r) => r.sku}
-          className="border-t border-border"
+          className="pt-1"
         />
       </div>
       {/* Narrow content: divided rows. */}
-      <ul className={cn('divide-y divide-border border-y border-border', '[@container(min-width:40rem)]:hidden')}>
+      <ul className={cn('flex flex-col', '[@container(min-width:40rem)]:hidden')}>
         {LOW_STOCK.map((r) => (
           <li key={r.sku} className="flex items-start gap-3 py-2.5">
             <div className="min-w-0 flex-1">
@@ -260,9 +260,9 @@ function WeekStatsView() {
     <>
       <p className="text-sm text-ink-muted">Oct 17 to 23, compared with Oct 10 to 16 · all platforms</p>
       {/* Flat metrics: no tiles, no fills; hairline rows between them. */}
-      <dl className="grid grid-cols-2 border-t border-border [@container(min-width:48rem)]:grid-cols-3">
+      <dl className="grid grid-cols-2 [@container(min-width:48rem)]:grid-cols-3">
         {WEEK_STATS.map((s) => (
-          <div key={s.label} className="border-b border-border py-4 pr-4">
+          <div key={s.label} className="py-4 pr-4">
             <dt className="sr-only">{s.label}</dt>
             <dd>
               <Stat label={s.label} value={s.value} delta={s.delta} deltaTone={s.deltaTone} points={s.points} />
@@ -272,7 +272,7 @@ function WeekStatsView() {
       </dl>
       <div>
         <h3 className={sectionLabel}>By platform</h3>
-        <ul className="divide-y divide-border border-y border-border">
+        <ul className="flex flex-col">
           {WEEK_BY_PLATFORM.map((p) => (
             <li key={p.platform} className="flex flex-wrap items-center gap-x-4 gap-y-0.5 py-2.5 text-sm">
               <span className="flex min-w-0 flex-1 items-center gap-2 font-medium text-ink">
@@ -297,7 +297,7 @@ function SalesChartView() {
         October 10 to 23 · all storefronts · average {money(Math.round(SALES_TOTAL / SALES_14D.length))} a day, best {SALES_PEAK.label} (
         {money(SALES_PEAK.value)}), lowest {SALES_LOW.label} ({money(SALES_LOW.value)})
       </p>
-      <div className="border-t border-border pt-5">
+      <div className="pt-5">
         <LedaWidget.Chart
           kind="bar"
           data={SALES_14D.map((d) => ({
@@ -320,7 +320,7 @@ function PlatformOverviewView() {
       <p className="text-sm text-ink-muted">
         {PLATFORM_OVERVIEW.length} platforms · <span className="text-warning">{NEEDS_ATTENTION} need attention</span>
       </p>
-      <ul className="divide-y divide-border border-y border-border">
+      <ul className="flex flex-col">
         {PLATFORM_OVERVIEW.map((p) => (
           <li key={p.id} className="py-3 text-sm">
             {/* Wide content: one grid row. */}
