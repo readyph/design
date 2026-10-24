@@ -91,7 +91,7 @@ export const Colors: Story = {
         <h3 className="mb-2 text-sm font-semibold text-ink">Scene (light and dark)</h3>
         <div className="grid gap-4 md:grid-cols-2">
           {(['light', 'dark'] as const).map((mode) => (
-            <div key={mode} className="rounded-md border border-border p-3" data-theme={mode}>
+            <div key={mode} className="rounded-md border border-border bg-surface p-3 text-ink" data-theme={mode}>
               <div className="mb-2 text-xs font-medium capitalize text-ink">{mode}</div>
               <div className="grid grid-cols-3 gap-3" data-testid={`scene-${mode}`}>
                 {Object.keys(colors.scene).map((k) => (
