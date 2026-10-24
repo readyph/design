@@ -15,7 +15,7 @@ const viewports = {
 };
 
 const meta: Meta<ReportsPageProps> = {
-  title: 'Prototypes/Portal/[For Review] Reports',
+  title: 'Prototypes/Portal/Reports',
   component: ReportsPage,
   tags: ['!autodocs'],
   parameters: { layout: 'fullscreen', viewport: { viewports, defaultViewport: 'w1440' } },

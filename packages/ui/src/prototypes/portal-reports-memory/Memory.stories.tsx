@@ -13,7 +13,7 @@ const viewports = {
 };
 
 const meta: Meta<MemoryPageProps> = {
-  title: 'Prototypes/Portal/[For Review] Memory',
+  title: 'Prototypes/Portal/Memory',
   component: MemoryPage,
   tags: ['!autodocs'],
   parameters: { layout: 'fullscreen', viewport: { viewports, defaultViewport: 'w1440' } },
