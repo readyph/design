@@ -76,8 +76,17 @@ function LoadingRows() {
   );
 }
 
-export function NeedsAttention({ state = 'ready', onAskLeda }: { state?: AttentionState; onAskLeda: (item: AttentionItem) => void }) {
-  const all = state === 'degraded' ? ATTENTION_WITHOUT_SMS : state === 'ready' ? ATTENTION_ITEMS : [];
+export function NeedsAttention({
+  state = 'ready',
+  onAskLeda,
+  exclude = [],
+}: {
+  state?: AttentionState;
+  onAskLeda: (item: AttentionItem) => void;
+  /** Item ids shown elsewhere on the page (RDY-217: approvals), so nothing appears twice. */
+  exclude?: string[];
+}) {
+  const all = (state === 'degraded' ? ATTENTION_WITHOUT_SMS : state === 'ready' ? ATTENTION_ITEMS : []).filter((i) => !exclude.includes(i.id));
   const items = all.slice(0, TOP);
   return (
     <section aria-labelledby="attention-heading" className="flex flex-col gap-3 px-4 pb-8 sm:px-6">
