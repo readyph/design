@@ -240,13 +240,22 @@ function MobileNav({ open, onOpenChange, active, member, onNavigate }: { open: b
 
 const QUICK_ACTIONS = ["What's low on stock?", 'Summarize this week', 'Remember our holiday hours'];
 
-interface Msg {
+/** One chat turn. `attachment` names a page-owned widget rendered under the text (RDY-216). */
+export interface LedaMessage {
   id: number;
   role: 'user' | 'assistant';
   text: string;
   pending?: boolean;
   status?: string;
   proposal?: boolean;
+  attachment?: string;
+}
+type Msg = LedaMessage;
+
+/** What a page-owned Leda attachment gets: `dismiss` closes the drawer below lg (no-op when docked). */
+export interface LedaAttachmentContext {
+  overlay: boolean;
+  dismiss: () => void;
 }
 
 const CONVERSATION: Msg[] = [
@@ -284,14 +293,23 @@ const ledaAvatar = (
   </span>
 );
 
-function LedaChat({ view, onClose, overlay }: { view: LedaView; onClose: () => void; overlay?: boolean }) {
-  const [messages, setMessages] = useState<Msg[]>(() => initialMessages(view));
+interface LedaChatProps {
+  view: LedaView;
+  onClose: () => void;
+  overlay?: boolean;
+  initial?: Msg[];
+  renderAttachment?: (m: Msg, ctx: LedaAttachmentContext) => ReactNode;
+  placeholder?: string;
+}
+
+function LedaChat({ view, onClose, overlay = false, initial, renderAttachment, placeholder }: LedaChatProps) {
+  const [messages, setMessages] = useState<Msg[]>(() => initial ?? initialMessages(view));
   const [draft, setDraft] = useState('');
   const [busy, setBusy] = useState(false);
   const [proposal, setProposal] = useState<'pending' | 'applying' | 'confirmed' | 'cancelled'>('pending');
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => setMessages(initialMessages(view)), [view]);
+  useEffect(() => setMessages(initial ?? initialMessages(view)), [view, initial]);
   useEffect(() => {
     const el = scrollRef.current;
     el?.scrollTo?.({ top: el.scrollHeight, behavior: 'smooth' });
@@ -347,6 +365,7 @@ function LedaChat({ view, onClose, overlay }: { view: LedaView; onClose: () => v
                       {m.status ?? 'Thinking'} <ThinkingDots />
                     </p>
                   )}
+                  {m.attachment && renderAttachment?.(m, { overlay, dismiss: overlay ? onClose : () => undefined })}
                   {m.proposal && (
                     <LedaWidget.Proposal
                       title="Connect data"
@@ -396,7 +415,7 @@ function LedaChat({ view, onClose, overlay }: { view: LedaView; onClose: () => v
           send(text);
           setDraft('');
         }}
-        placeholder={busy ? 'Leda is replying…' : 'Ask Leda…'}
+        placeholder={busy ? 'Leda is replying…' : (placeholder ?? 'Ask Leda…')}
         aria-label="Message Leda"
         autoFocus={overlay}
       />
@@ -421,6 +440,12 @@ export interface DashboardShellProps {
   navOpen?: boolean;
   /** Mobile only: open the Leda drawer on mount (for review stories). */
   ledaDrawerOpen?: boolean;
+  /** RDY-216: page-owned conversation (overrides `ledaView`); keep the array identity stable. */
+  ledaMessages?: LedaMessage[];
+  /** RDY-216: renders a message's `attachment` (e.g. an expandable widget). */
+  renderLedaAttachment?: (m: LedaMessage, ctx: LedaAttachmentContext) => ReactNode;
+  /** RDY-216: composer placeholder, e.g. naming the expanded widget. */
+  ledaPlaceholder?: string;
   onNavigate?: (key: PortalNavKey) => void;
   onAddPlatform?: () => void;
   /** Page content; laid out against the measured content width (size container). */
@@ -435,6 +460,9 @@ export function DashboardShell({
   ledaView = 'empty',
   navOpen = false,
   ledaDrawerOpen = false,
+  ledaMessages,
+  renderLedaAttachment,
+  ledaPlaceholder,
   onNavigate,
   onAddPlatform,
   children,
@@ -451,6 +479,7 @@ export function DashboardShell({
   };
   const ledaShown = desktop ? docked : drawer;
   const toggleLeda = () => (desktop ? setDockedRemembered(!docked) : setDrawer(!drawer));
+  const chat = { view: ledaView, initial: ledaMessages, renderAttachment: renderLedaAttachment, placeholder: ledaPlaceholder };
 
   return (
     <div className="ds-root flex h-screen w-full overflow-hidden bg-surface-canvas font-sans text-ink">
@@ -484,7 +513,7 @@ export function DashboardShell({
 
           {desktop && docked && (
             <aside aria-label="Leda panel" className="flex w-[24rem] shrink-0 flex-col border-l border-border bg-surface xl:w-[28rem]">
-              <LedaChat view={ledaView} onClose={() => setDockedRemembered(false)} />
+              <LedaChat {...chat} onClose={() => setDockedRemembered(false)} />
             </aside>
           )}
 
@@ -513,7 +542,7 @@ export function DashboardShell({
           <MobileNav open={nav} onOpenChange={setNav} active={active} member={member} onNavigate={onNavigate} />
           <OffCanvas open={drawer} onOpenChange={setDrawer} side="right" width="100vw" hideClose className="max-w-none sm:max-w-[24rem]">
             <OffCanvas.Header className="sr-only">Leda</OffCanvas.Header>
-            <LedaChat view={ledaView} onClose={() => setDrawer(false)} overlay />
+            <LedaChat {...chat} onClose={() => setDrawer(false)} overlay />
           </OffCanvas>
         </>
       )}
