@@ -13,6 +13,20 @@ export {
   useShortcutMode,
   type ShortcutModeProviderProps,
 } from './providers/ShortcutModeProvider';
+export {
+  ThemeProvider,
+  type ThemeProviderProps,
+  type ThemeContextValue,
+} from './providers/ThemeProvider';
+export { useTheme } from './hooks/useTheme';
+export {
+  themeScript,
+  themeScriptProps,
+  resolveTheme,
+  THEME_STORAGE_KEY,
+  type ThemePreference,
+  type ResolvedTheme,
+} from './utils/themeScript';
 export { useHotkeys, type HotkeyMap, type UseHotkeysOptions } from './hooks/useHotkeys';
 
 // Primitives
