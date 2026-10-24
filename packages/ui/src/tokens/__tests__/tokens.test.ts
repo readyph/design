@@ -35,7 +35,7 @@ const sharedVars = new Set([
 describe('theme scopes', () => {
   const light = varsIn(theme, /:root|\[data-theme="light"\]/);
   const dark = varsIn(globals, /\[data-theme="dark"\]/);
-  const colourVars = [...light].filter((v) => !sharedVars.has(v));
+  const colourVars = [...light].filter((v) => !sharedVars.has(v) && !v.startsWith('--ds-radius-'));
 
   it('declares the light scope on :root and [data-theme="light"]', () => {
     expect(theme).toMatch(/:root,\s*\[data-theme="light"\]\s*\{/);
@@ -73,6 +73,14 @@ describe('radius and density tokens', () => {
     expect(radius.md).toBe('0.5rem');
     expect(radiusRole).toEqual({ control: radius.sm, panel: radius.base, modal: radius.md });
     expect(preset.theme.extend.borderRadius).toMatchObject({ sm: '0.25rem', base: '0.375rem', md: '0.5rem' });
+  });
+
+  it('emits radius as --ds-radius-* CSS variables', () => {
+    expect(theme).toContain('--ds-radius-control: 0.25rem;');
+    expect(theme).toContain('--ds-radius-panel: 0.375rem;');
+    expect(theme).toContain('--ds-radius-modal: 0.5rem;');
+    expect(theme).toContain('--ds-radius-sm: 0.25rem;');
+    expect(preset.theme.extend.borderRadius).toMatchObject({ control: 'var(--ds-radius-control)' });
   });
 
   it('emits density as CSS variables and Tailwind keys', () => {

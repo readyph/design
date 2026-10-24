@@ -14,6 +14,7 @@ import {
   typography,
   spacing,
   radius,
+  radiusRole,
   shadows,
   motion,
   breakpoints,
@@ -75,6 +76,12 @@ vars['--ds-focus'] = toChannels(colors.primary[500]);
 vars['--ds-overlay'] = colors.overlay;
 vars['--ds-font-sans'] = typography.fontFamily.base;
 vars['--ds-transition'] = motion.transition.base;
+for (const [name, value] of Object.entries(radius)) {
+  vars[`--ds-radius-${name}`] = value;
+}
+for (const [name, value] of Object.entries(radiusRole)) {
+  vars[`--ds-radius-${name}`] = value;
+}
 vars['--ds-density-control'] = density.control;
 vars['--ds-density-sidebar-item'] = density.sidebarItem;
 vars['--ds-density-table-row'] = density.tableRow;
@@ -210,7 +217,12 @@ const preset = {
       fontWeight: typography.fontWeight,
       lineHeight: typography.lineHeight,
       spacing: { ...spacing, gutter: 'var(--ds-gutter)' },
-      borderRadius: radius,
+      borderRadius: {
+        ...radius,
+        control: 'var(--ds-radius-control)',
+        panel: 'var(--ds-radius-panel)',
+        modal: 'var(--ds-radius-modal)',
+      },
       boxShadow: shadows,
       screens: breakpoints,
       zIndex: Object.fromEntries(Object.entries(zIndex).map(([k, v]) => [k, String(v)])),

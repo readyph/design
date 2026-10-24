@@ -51,7 +51,7 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
         aria-invalid={isInvalid || undefined}
         aria-describedby={field?.describedBy}
         className={cn(
-          'inline-flex w-full items-center justify-between gap-2 rounded-base border bg-surface px-3 text-ink transition-colors duration-DEFAULT data-[placeholder]:text-ink-subtle disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-ink-subtle',
+          'inline-flex w-full items-center justify-between gap-2 rounded-control border bg-surface px-3 text-ink transition-colors duration-DEFAULT data-[placeholder]:text-ink-subtle disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-ink-subtle',
           isInvalid ? 'border-error' : 'border-border hover:border-border-strong',
           focusRing,
           sizes[size],

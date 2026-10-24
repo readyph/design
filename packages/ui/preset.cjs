@@ -160,7 +160,10 @@ module.exports = {
         "lg": "0.5rem",
         "xl": "0.625rem",
         "2xl": "0.875rem",
-        "full": "9999px"
+        "full": "9999px",
+        "control": "var(--ds-radius-control)",
+        "panel": "var(--ds-radius-panel)",
+        "modal": "var(--ds-radius-modal)"
       },
       "boxShadow": {
         "none": "none",

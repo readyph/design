@@ -21,7 +21,7 @@ const sizes: Record<InputSize, string> = {
 };
 
 export const inputBase =
-  'w-full rounded-base border bg-surface text-ink placeholder:text-ink-subtle transition-colors duration-DEFAULT outline-none disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-ink-subtle';
+  'w-full rounded-control border bg-surface text-ink placeholder:text-ink-subtle transition-colors duration-DEFAULT outline-none disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-ink-subtle';
 
 export function inputState(invalid: boolean): string {
   return invalid
