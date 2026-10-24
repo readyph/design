@@ -44,6 +44,7 @@ import { IconRail, IconRailItem } from '../../components/IconRail';
 import { Input } from '../../components/Input';
 import { LedaLauncher } from '../../components/LedaLauncher';
 import { Menu, type MenuItem } from '../../components/Menu';
+import { PageHeader } from '../../components/PageHeader';
 import { SegmentedControl } from '../../components/SegmentedControl';
 import { Select } from '../../components/Select';
 import { SettingsSection } from '../../components/SettingsSection';
@@ -83,7 +84,7 @@ export function ThemePane({ mode, label, children, className }: { mode: ThemeMod
 
 function SpecBlock({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
   return (
-    <Card elevation="flat" padding="md" className={cn(hairlineCard, 'min-w-0')}>
+    <Card elevation="flat" padding="md" className={hairlineCard}>
       <CardHeader className="flex-col items-start gap-1">
         <h3 className="text-sm font-semibold text-ink">{title}</h3>
         {description && <p className="text-xs text-ink-muted">{description}</p>}
@@ -111,8 +112,8 @@ function Swatch({ name, role, className }: { name: string; role: string; classNa
     <div className="flex items-center gap-3">
       <span className={cn('h-8 w-8 shrink-0 rounded-sm', className)} />
       <div className="min-w-0">
-        <p className="break-words text-xs font-medium text-ink">{name}</p>
-        <p className="text-xs text-ink-muted">{role}</p>
+        <p className="truncate text-xs font-medium text-ink">{name}</p>
+        <p className="truncate text-xs text-ink-muted">{role}</p>
       </div>
     </div>
   );
@@ -133,7 +134,7 @@ const spacingSteps = [
 
 export function TokenBoard() {
   return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+    <div className="grid gap-4 lg:grid-cols-3">
       <SpecBlock title="Colour" description="White content, one neutral grey, hairlines, near-black ink, blue for action only.">
         <div className="grid gap-3">
           {swatches.map((s) => (
@@ -164,7 +165,6 @@ export function TokenBoard() {
 
       <SpecBlock title="Density" description="Compact, Slack-like. Text 14 / 12. Gutter 16 desktop, 12 mobile.">
         <DataList
-          stacked
           items={[
             { label: 'Control', value: '32px (controlHeight.sm)' },
             { label: 'Sidebar item', value: '28px (new)' },
@@ -173,7 +173,7 @@ export function TokenBoard() {
             { label: 'Gutter', value: '16px desktop, 12px mobile (new)' },
           ]}
         />
-        <div className="mt-3 flex flex-wrap items-end gap-4 border-t border-border pt-3">
+        <div className="mt-3 flex items-end gap-4 border-t border-border pt-3">
           {spacingSteps.map((s) => (
             <div key={s.label} className="flex flex-col items-center gap-1">
               <span className={cn('h-4 rounded-sm bg-primary-600', s.className)} />
@@ -182,7 +182,7 @@ export function TokenBoard() {
           ))}
           <span className="text-xs text-ink-muted">Spacing steps (px)</span>
         </div>
-        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">
+        <div className="mt-3 flex items-center gap-2 border-t border-border pt-3">
           <Button size="sm">Save</Button>
           <Input inputSize="sm" placeholder="32px control" aria-label="Density sample" />
         </div>
@@ -216,7 +216,7 @@ const rowMenu: MenuItem[] = [
 
 export function SpecimenBoard() {
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+    <div className="grid gap-4 md:grid-cols-2">
       <SpecBlock title="Button" description="Blue is the only filled colour. 32px default in the new density.">
         <div className="flex flex-wrap items-center gap-2">
           <Button size="sm">Primary</Button>
@@ -228,7 +228,7 @@ export function SpecimenBoard() {
       </SpecBlock>
 
       <SpecBlock title="Input and Select">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Company name">
             <Input inputSize="sm" defaultValue="ReadyPH Motors" />
           </Field>
@@ -256,19 +256,17 @@ export function SpecimenBoard() {
         </div>
       </SpecBlock>
 
-      <div className="min-w-0 md:col-span-2">
       <SpecBlock title="Card and Menu" description="Cards: flat, hairline, 6px. Menus: 4px items.">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2">
           <Stat label="Revenue this month" value="PHP 412,300" delta="+8.2%" deltaTone="success" className={cn(hairlineCard, 'p-3')} />
           <Card elevation="flat" padding="sm" className={cn(hairlineCard, 'flex items-center justify-between gap-2')}>
-            <span className="whitespace-nowrap text-sm text-ink">Row actions</span>
+            <span className="text-sm text-ink">Row actions</span>
             <Menu trigger={<IconButton icon={DotsThree} label="Row actions" size="sm" variant="subtle" />} items={rowMenu} />
           </Card>
         </div>
       </SpecBlock>
-      </div>
 
-      <div className="min-w-0 md:col-span-2">
+      <div className="md:col-span-2">
         <SpecBlock title="Table" description="Rows 36px (dense shown), hairline dividers, hover uses surface-muted.">
           <Table columns={columns} data={rows} rowKey={(r) => r.id} dense />
         </SpecBlock>
@@ -338,12 +336,11 @@ function LedaPanel() {
  */
 export function ChromeFrame({ variant, leda }: { variant: ChromeVariant; leda: 'launcher' | 'panel' }) {
   return (
-    <div className="overflow-x-auto">
-    <div className="relative flex h-[42rem] min-w-[66rem] rounded-md border border-border bg-surface">
+    <div className="relative flex h-96 rounded-md border border-border bg-surface">
       <div data-theme={variant === 'ink' ? 'dark' : undefined} className={cn('flex shrink-0 rounded-l-md', variant === 'ink' ? 'bg-surface-canvas text-ink' : 'bg-surface-subtle')}>
         <ChromeNav />
       </div>
-      <div className="flex min-w-[30rem] flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col">
         <TopBar
           className="border-b border-border"
           start={<span className="text-sm font-semibold text-ink">Home</span>}
@@ -360,7 +357,6 @@ export function ChromeFrame({ variant, leda }: { variant: ChromeVariant; leda: '
         </div>
       </div>
       {leda === 'panel' ? <LedaPanel /> : <LedaLauncher className="bottom-4 right-4" />}
-    </div>
     </div>
   );
 }
@@ -439,8 +435,9 @@ function accountMenuItems(value: ThemePreference, onChange: (v: ThemePreference)
 export function ThemePreferenceScreen() {
   const { preference, resolved, setPreference } = useThemePreference();
   return (
-    <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
+    <div className="grid gap-4 lg:grid-cols-2">
       <SpecBlock title="Account settings > Appearance" description="The same control is used in the account menu.">
+        <PageHeader title="Account settings" description="Personal preferences for this device." />
         <SettingsSection title="Theme" description="System follows your device. Saved on this browser.">
           <div className="flex flex-wrap items-center gap-3">
             <ThemePreferenceControl value={preference} onChange={setPreference} />
@@ -462,7 +459,6 @@ export function ThemePreferenceScreen() {
 
       <SpecBlock title="Behaviour" description="Contract for ThemeProvider / useTheme and the no-flash script.">
         <DataList
-          stacked
           items={[
             { label: 'Storage key', value: <code className="text-xs">{THEME_STORAGE_KEY}</code> },
             { label: 'Values', value: 'system (default), light, dark' },

@@ -28,16 +28,16 @@ type Story = StoryObj;
 
 function Page({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
   return (
-    <div className="ds-root flex min-h-screen min-w-0 flex-col gap-4 bg-surface-canvas p-4 font-sans text-ink">
+    <div className="ds-root flex min-h-screen flex-col gap-4 bg-surface-canvas p-4 font-sans text-ink">
       <PageHeader title={title} description={description} />
       {children}
     </div>
   );
 }
 
-function SideBySide({ children, stack = false }: { children: (mode: 'light' | 'dark') => React.ReactNode; stack?: boolean }) {
+function SideBySide({ children }: { children: (mode: 'light' | 'dark') => React.ReactNode }) {
   return (
-    <div className={stack ? 'grid grid-cols-1 gap-4' : 'grid grid-cols-1 gap-4 xl:grid-cols-2'}>
+    <div className="grid gap-4 xl:grid-cols-2">
       <ThemePane mode="light" label="Light" className="rounded-md border border-border">{children('light')}</ThemePane>
       <ThemePane mode="dark" label="Dark" className="rounded-md border border-border">{children('dark')}</ThemePane>
     </div>
@@ -83,7 +83,7 @@ function ChromeVariants() {
           { value: 'launcher', label: 'Leda launcher' },
         ]}
       />
-      <SideBySide stack>
+      <SideBySide>
         {() => (
           <>
             <p className="text-sm font-semibold text-ink">A. Ink chrome</p>
