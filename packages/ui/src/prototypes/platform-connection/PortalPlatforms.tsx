@@ -12,7 +12,7 @@ import { Select } from '../../components/Select';
 import { Skeleton } from '../../components/Skeleton';
 import { StatusDot } from '../../components/StatusDot';
 import { toast } from '../../components/toast/toastStore';
-import { Page, RetryNotice } from '../repair-shop/Page';
+import { Page, RetryNotice } from '../sms/Page';
 import { AddPlatformModal, ConnShell } from './ConnShell';
 import { HANDOFF_OPENING, PLATFORMS, type DemoPlatform } from './data';
 import { ButtonLink as LinkButton } from '../../components/ButtonLink';
@@ -24,7 +24,7 @@ const STATUS_LABEL = { active: 'Active', degraded: 'Degraded', offline: 'Offline
 
 /** Open is a real link to the handoff page (the opening state), which then lands in the app. */
 function PlatformCard({ p, launch, onConnect }: { p: DemoPlatform; launch: Launch; onConnect: (p: DemoPlatform) => void }) {
-  const repair = p.kind === 'repair_shop';
+  const repair = p.kind === 'sms';
   return (
     <Card className="flex flex-col gap-4">
       <div className="flex items-start gap-3">
@@ -35,7 +35,7 @@ function PlatformCard({ p, launch, onConnect }: { p: DemoPlatform; launch: Launc
             <span className="flex items-center gap-1 text-xs text-ink-muted"><StatusDot status={p.status} /> {p.setupNeeded ? 'Setup needed' : STATUS_LABEL[p.status]}</span>
           </div>
           <p className="text-sm">{p.setupNeeded ? 'No data source linked yet' : p.metric}</p>
-          <p className="text-xs text-ink-muted">{p.kind === 'inventory' ? 'Inventory' : 'Repair shop'} - {p.appUrl}</p>
+          <p className="text-xs text-ink-muted">{p.kind === 'inventory' ? 'Inventory' : 'Service Management System'} - {p.appUrl}</p>
         </div>
       </div>
       {launch === 'unreachable' && <Notice tone="error" title={`Couldn't open ${p.label}`}>The app didn't respond. Try again in a moment.</Notice>}
@@ -49,7 +49,7 @@ function PlatformCard({ p, launch, onConnect }: { p: DemoPlatform; launch: Launc
   );
 }
 
-/** Connect data panel: pick which Inventory feeds the clicked Repair shop branch. */
+/** Connect data panel: pick which Inventory feeds the clicked SMS branch. */
 export function ConnectDataModal({ open, onOpenChange, platform }: { open: boolean; onOpenChange: (o: boolean) => void; platform: DemoPlatform }) {
   const [src, setSrc] = useState(platform.setupNeeded ? 'none' : 'inv');
   const done = () => {
@@ -78,7 +78,7 @@ export function PlatformsPage({ state = 'default', launch = 'idle', connectOpen 
         <PageHeader title="Connected platforms" description={state === 'default' ? '3 platforms - 2 branches - 1 data link' : undefined} actions={addButton} />
         {state === 'loading' && <div className="grid grid-cols-1 gap-4 md:grid-cols-2"><Skeleton height={150} /><Skeleton height={150} /></div>}
         {state === 'error' && <RetryNotice title="Couldn't load your platforms">Check your connection and try again.</RetryNotice>}
-        {state === 'empty' && <EmptyState icon={Package} title="No platforms yet" description="Add Inventory or a Repair shop branch to start." action={addButton} />}
+        {state === 'empty' && <EmptyState icon={Package} title="No platforms yet" description="Add Inventory or a SMS branch to start." action={addButton} />}
         {state === 'default' && (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {PLATFORMS.map((p) => <PlatformCard key={p.id} p={p} launch={p.id === 'rs-dvo' ? launch : 'idle'} onConnect={pick} />)}

@@ -6,15 +6,15 @@ import { Icon } from '../../components/Icon';
 import { PageHeader } from '../../components/PageHeader';
 import { SettingsSection } from '../../components/SettingsSection';
 import { Skeleton } from '../../components/Skeleton';
-import { Page, RetryNotice } from '../repair-shop/Page';
-import { mobile } from '../repair-shop/params';
-import { RepairFlow } from '../repair-shop/Flow';
+import { Page, RetryNotice } from '../sms/Page';
+import { mobile } from '../sms/params';
+import { RepairFlow } from '../sms/Flow';
 import { ConnShell } from './ConnShell';
 import { PORTAL } from './data';
 import { ButtonLink as LinkButton } from '../../components/ButtonLink';
 
-/** PROTOTYPE (RDY-120) - Repair shop branch Settings (new), the Parts empty state with a working action, and New quotation opening the intake from Today and Jobs. */
-const meta: Meta = { title: 'Repair shop/Settings and parts', tags: ['!autodocs'], parameters: { layout: 'fullscreen' } };
+/** PROTOTYPE (RDY-120) - SMS branch Settings (new), the Parts empty state with a working action, and New quotation opening the intake from Today and Jobs. */
+const meta: Meta = { title: 'SMS/Settings and parts', tags: ['!autodocs'], parameters: { layout: 'fullscreen' } };
 export default meta;
 type Story = StoryObj;
 

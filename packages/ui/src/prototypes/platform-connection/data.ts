@@ -5,7 +5,7 @@ export type PlatformStatusKey = 'active' | 'degraded' | 'offline';
 export interface DemoPlatform {
   id: string;
   label: string;
-  kind: 'inventory' | 'repair_shop' | 'storefront';
+  kind: 'inventory' | 'sms' | 'storefront';
   status: PlatformStatusKey;
   /** App URL the API must expose per platform instance (new: `app_url`). */
   appUrl: string;
@@ -22,13 +22,13 @@ export const HANDOFF_OPENING = storyHref('portal-app-handoff--opening');
 
 export const PLATFORMS: DemoPlatform[] = [
   { id: 'inv', label: 'Main inventory', kind: 'inventory', status: 'active', appUrl: 'inventory.readyph.app', metric: '214 products - 6 low stock' },
-  { id: 'rs-dvo', label: 'Davao branch', kind: 'repair_shop', status: 'active', appUrl: 'inventory.readyph.app/repair-shop/davao', metric: '9 jobs open - 2 need attention' },
-  { id: 'rs-cdo', label: 'Cagayan branch', kind: 'repair_shop', status: 'offline', appUrl: 'inventory.readyph.app/repair-shop/cagayan', metric: '', setupNeeded: true },
+  { id: 'rs-dvo', label: 'Davao branch', kind: 'sms', status: 'active', appUrl: 'inventory.readyph.app/sms/davao', metric: '9 jobs open - 2 need attention' },
+  { id: 'rs-cdo', label: 'Cagayan branch', kind: 'sms', status: 'offline', appUrl: 'inventory.readyph.app/sms/cagayan', metric: '', setupNeeded: true },
 ];
 
 export type FindingStatus = 'dead' | 'placeholder' | 'fake-data' | 'missing';
 export interface Finding {
-  app: 'Portal' | 'Inventory' | 'Repair shop' | 'All apps';
+  app: 'Portal' | 'Inventory' | 'SMS' | 'All apps';
   where: string;
   today: string;
   kind: FindingStatus;
@@ -57,9 +57,9 @@ export const FINDINGS: Finding[] = [
   { app: 'Inventory', where: 'Settings > Reorder defaults', today: 'Notice says "planned for a later release"', kind: 'placeholder', resolution: 'Cut the tab until a tenant default exists.', story: 'Inventory/Connected settings' },
   { app: 'Inventory', where: 'Settings > Platform', today: 'Hard-coded "Connected to Portal"', kind: 'fake-data', resolution: 'Show real instance name, status, shared-with list and a Manage in Portal link.', story: 'Inventory/Connected settings' },
   { app: 'Inventory', where: 'Login: Google, Sign up', today: '"Coming soon" toast', kind: 'placeholder', resolution: 'Sign up links to the Portal sign-up; Google removed.', story: 'Hidden, no story' },
-  { app: 'Inventory', where: 'Anywhere', today: 'No entry to the Repair shop branches', kind: 'missing', resolution: 'Repair shop branches appear in the rail and switcher.', story: 'Inventory/Connected settings' },
-  { app: 'Repair shop', where: 'Today > New quotation', today: 'Routes to /jobs/new, which is read as a job id and errors', kind: 'dead', resolution: 'Opens the quotation intake (prototype RDY-18); Jobs list gets the same CTA.', story: 'Repair shop/Settings and parts' },
-  { app: 'Repair shop', where: 'Catalogue > Parts "No inventory linked"', today: 'Empty state with no action', kind: 'dead', resolution: 'Action: Connect inventory (Portal > Platforms > Connect data).', story: 'Repair shop/Settings and parts' },
-  { app: 'Repair shop', where: 'Settings / Account / Billing', today: 'Do not exist; account menu has Sign out only', kind: 'missing', resolution: 'Branch Settings page; Account and Billing link to the Portal.', story: 'Repair shop/Settings and parts' },
+  { app: 'Inventory', where: 'Anywhere', today: 'No entry to the SMS branches', kind: 'missing', resolution: 'SMS branches appear in the rail and switcher.', story: 'Inventory/Connected settings' },
+  { app: 'SMS', where: 'Today > New quotation', today: 'Routes to /jobs/new, which is read as a job id and errors', kind: 'dead', resolution: 'Opens the quotation intake (prototype RDY-18); Jobs list gets the same CTA.', story: 'SMS/Settings and parts' },
+  { app: 'SMS', where: 'Catalogue > Parts "No inventory linked"', today: 'Empty state with no action', kind: 'dead', resolution: 'Action: Connect inventory (Portal > Platforms > Connect data).', story: 'SMS/Settings and parts' },
+  { app: 'SMS', where: 'Settings / Account / Billing', today: 'Do not exist; account menu has Sign out only', kind: 'missing', resolution: 'Branch Settings page; Account and Billing link to the Portal.', story: 'SMS/Settings and parts' },
   { app: 'All apps', where: 'Session', today: 'Tokens in per-origin localStorage, so each app asks to sign in again', kind: 'missing', resolution: 'Signed-in handoff on every cross-app link, with expired and unreachable states.', story: 'Portal/App handoff' },
 ];

@@ -4,7 +4,7 @@ import type { IntakeScenario } from './QuotationIntake';
 import { mobile } from './params';
 
 /** PROTOTYPE (RDY-18) - quotation intake drawer on one screen, opened from the Today header. Success is a toast and the job detail, not a success screen. */
-const meta: Meta = { title: 'Repair shop/Quotation intake', tags: ['!autodocs'], parameters: { layout: 'fullscreen' } };
+const meta: Meta = { title: 'SMS/Quotation intake', tags: ['!autodocs'], parameters: { layout: 'fullscreen' } };
 export default meta;
 type Story = StoryObj;
 

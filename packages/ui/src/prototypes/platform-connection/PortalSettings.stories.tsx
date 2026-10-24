@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { mobile } from '../repair-shop/params';
+import { mobile } from '../sms/params';
 import { SettingsPage } from './PortalSettings';
 
 /** PROTOTYPE (RDY-120) - Portal Settings with real Company fields, a new Account tab and Billing v1 (Plan, Usage, Request plan change). Invoices and Payment method slot in as later cards on the Billing tab; they are not shown now. */

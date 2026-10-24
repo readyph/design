@@ -11,7 +11,7 @@ import { PageHeader } from '../../components/PageHeader';
 import { Select } from '../../components/Select';
 import { Table, type TableColumn } from '../../components/Table';
 import { toast } from '../../components/toast/toastStore';
-import { Page, RetryNotice } from '../repair-shop/Page';
+import { Page, RetryNotice } from '../sms/Page';
 import { UsersThree } from '@phosphor-icons/react';
 import { ConnShell } from './ConnShell';
 
@@ -49,7 +49,7 @@ function InviteModal({ open, onOpenChange, prefill = '' }: { open: boolean; onOp
       <div className="flex flex-col gap-4">
         <Field label="Email" required error={error}><Input type="email" autoFocus autoComplete="off" placeholder="name@company.ph" value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
         <Field label="Role"><Select value={role} onValueChange={setRole} options={[{ value: 'staff', label: 'Staff' }, { value: 'mechanic', label: 'Mechanic' }, { value: 'admin', label: 'Admin' }]} /></Field>
-        <Field label="Platform access" hint="Inventory and each Repair shop branch can be allowed separately."><Select value={access} onValueChange={setAccess} options={[{ value: 'all', label: 'All platforms' }, { value: 'inv', label: 'Main inventory only' }, { value: 'dvo', label: 'Davao branch only' }]} /></Field>
+        <Field label="Platform access" hint="Inventory and each SMS branch can be allowed separately."><Select value={access} onValueChange={setAccess} options={[{ value: 'all', label: 'All platforms' }, { value: 'inv', label: 'Main inventory only' }, { value: 'dvo', label: 'Davao branch only' }]} /></Field>
       </div>
     </Modal>
   );

@@ -23,10 +23,10 @@ import { mobile } from './params';
 
 /**
  * PROTOTYPE (RDY-18, RDY-73) - service catalogue (RDY-34) and the read-only linked inventory section (RDY-33).
- * Parts are not a repair-shop catalogue: they come from the linked Inventory platform. Add and edit are settings-type pages.
+ * Parts are not a sms catalogue: they come from the linked Inventory platform. Add and edit are settings-type pages.
  */
 const meta: Meta = {
-  title: 'Repair shop/Catalogue',
+  title: 'SMS/Catalogue',
   tags: ['!autodocs'],
   parameters: { layout: 'fullscreen' },
 };
