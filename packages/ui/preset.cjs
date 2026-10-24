@@ -9,6 +9,7 @@
  */
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  ...{
   "darkMode": [
     "class",
     "[data-theme=\"dark\"]"
@@ -198,7 +199,8 @@ module.exports = {
       "width": {
         "rail": "3.5rem",
         "sidebar": "15rem",
-        "right-panel": "18rem"
+        "right-panel": "18rem",
+        "leda-panel": "22.5rem"
       },
       "maxWidth": {
         "content": "48rem"
@@ -211,4 +213,6 @@ module.exports = {
       }
     }
   }
+},
+  plugins: [require('@tailwindcss/container-queries')],
 };

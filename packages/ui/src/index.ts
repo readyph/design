@@ -13,6 +13,7 @@ export {
   useShortcutMode,
   type ShortcutModeProviderProps,
 } from './providers/ShortcutModeProvider';
+export { useMediaQuery } from './hooks/useMediaQuery';
 export { useHotkeys, type HotkeyMap, type UseHotkeysOptions } from './hooks/useHotkeys';
 
 // Primitives
@@ -73,6 +74,7 @@ export { DataList, type DataListProps, type DataListItem } from './components/Da
 export { Accordion, type AccordionProps, type AccordionItemDef } from './components/Accordion';
 
 // Chat (Leda)
+export { LedaSidePanel, type LedaSidePanelProps } from './components/LedaSidePanel';
 export {
   Chat,
   ChatHeader,

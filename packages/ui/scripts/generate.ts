@@ -71,6 +71,7 @@ vars['--ds-focus'] = toChannels(colors.primary[500]);
 vars['--ds-overlay'] = colors.overlay;
 vars['--ds-font-sans'] = typography.fontFamily.base;
 vars['--ds-transition'] = motion.transition.base;
+vars['--ds-leda-panel-width'] = layout.ledaPanelWidth;
 
 /* -------------------------------------------------------------------------- */
 /* 1. theme.css                                                               */
@@ -200,6 +201,7 @@ const preset = {
         rail: layout.railWidth,
         sidebar: layout.sidebarWidth,
         'right-panel': layout.rightPanelWidth,
+        'leda-panel': layout.ledaPanelWidth,
       },
       maxWidth: { content: layout.contentMaxWidth },
       ringColor: { DEFAULT: c('--ds-focus') },
@@ -218,7 +220,10 @@ const presetCjs = `/**
  * and add the UI package to \`content\` so its classes compile.
  */
 /** @type {import('tailwindcss').Config} */
-module.exports = ${JSON.stringify(preset, null, 2)};
+module.exports = {
+  ...${JSON.stringify(preset, null, 2)},
+  plugins: [require('@tailwindcss/container-queries')],
+};
 `;
 
 writeFileSync(resolve(pkgRoot, 'preset.cjs'), presetCjs);

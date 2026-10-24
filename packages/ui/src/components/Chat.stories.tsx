@@ -7,7 +7,7 @@ const meta: Meta<typeof Chat> = {
   title: 'Components/Chat',
   component: Chat,
   argTypes: {
-    size: { control: 'inline-radio', options: ['sm', 'md', 'lg'] },
+    size: { control: 'inline-radio', options: ['sm', 'md', 'lg', 'fill'] },
   },
   parameters: {
     docs: {

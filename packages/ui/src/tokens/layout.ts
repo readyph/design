@@ -6,6 +6,8 @@ export const layout = {
   railWidth: '3.5rem',
   sidebarWidth: '15rem',
   rightPanelWidth: '18rem',
+  /** Docked Leda side panel (360px, the agreed Leda fit width). */
+  ledaPanelWidth: '22.5rem',
   topbarHeight: '3.25rem',
   contentMaxWidth: '48rem',
 } as const;

@@ -94,6 +94,7 @@ const LedaWidgetRoot = forwardRef<HTMLDivElement, LedaWidgetProps>(function Leda
   return (
     <div
       ref={ref}
+      data-leda-widget=""
       className={cn('overflow-hidden rounded-2xl bg-surface text-ink shadow-sm', className)}
       {...rest}
     >

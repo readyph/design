@@ -10,16 +10,25 @@ import { PaperPlaneRight, WaveTriangle, X, type Icon as PhosphorIcon } from '@ph
 import { cn, focusRing } from '../utils/cn';
 import { Icon } from './Icon';
 
-export type ChatSize = 'sm' | 'md' | 'lg';
+export type ChatSize = 'sm' | 'md' | 'lg' | 'fill';
 
 const chatSizes: Record<ChatSize, string> = {
   sm: 'w-80 h-[26rem]',
   md: 'w-96 h-[34rem]',
   lg: 'w-[30rem] h-[40rem]',
+  fill: 'h-full w-full',
+};
+
+/** `fill` is chrome-less so it can sit inside a host surface (e.g. LedaSidePanel). */
+const chatSurface: Record<ChatSize, string> = {
+  sm: 'rounded-lg border border-border bg-surface shadow-lg',
+  md: 'rounded-lg border border-border bg-surface shadow-lg',
+  lg: 'rounded-lg border border-border bg-surface shadow-lg',
+  fill: 'bg-transparent',
 };
 
 export interface ChatProps extends HTMLAttributes<HTMLDivElement> {
-  /** sm (compact) / md (panel) / lg (full). Width + height only; override with `className`. */
+  /** sm (compact) / md (panel) / lg (full) / fill (100% of the parent, no border, radius or shadow). Override with `className`. */
   size?: ChatSize;
 }
 
@@ -37,7 +46,8 @@ const ChatRoot = forwardRef<HTMLDivElement, ChatProps>(function Chat(
     <div
       ref={ref}
       className={cn(
-        'flex flex-col overflow-hidden rounded-lg border border-border bg-surface shadow-lg',
+        'flex flex-col overflow-hidden',
+        chatSurface[size],
         chatSizes[size],
         className,
       )}
