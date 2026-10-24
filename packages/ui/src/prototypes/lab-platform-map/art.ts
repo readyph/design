@@ -11,7 +11,7 @@
  * is the only thing Zdog depth-sorts.
  */
 import * as Zdog from 'zdog';
-import { CELL, STREET, type PlacedBuilding, type TownLink } from './layout';
+import { CELL, STREET, TURN_DEG, type PlacedBuilding, type TownLink } from './layout';
 import { mix, css, type RGB, type TownPalette } from './palette';
 
 const TAU = Zdog.TAU;
@@ -43,9 +43,9 @@ export const PAD_H = 4;
 /** Sidewalk pad edge length. */
 export const PAD = CELL - STREET;
 /** Buildings are modelled small and scaled up to fill their lot. */
-const BUILDING_SCALE = 1.4;
-/** Turns each building toward the viewer so its facade (door, awning, sign band) reads as the front. */
-const FACE = -TAU / 16;
+const BUILDING_SCALE = 1.25;
+/** Shifts each model so the building plus its oversized prop sits centred on the pad (model units). */
+const FIT_DX = { warehouse: -13.5, shop: -12.5, store: 13 } as const;
 
 /** `k` > 0 lightens toward the highlight, `k` < 0 darkens toward the shade. */
 function tone(c: RGB, look: Look, k = 0): string {
@@ -246,7 +246,7 @@ function store(g: Zdog.Group, look: Look, b: PlacedBuilding): Omit<BuildingModel
 /** One building as a painter-ordered Zdog group standing on its lot's pad. */
 export function buildBuilding(addTo: Zdog.Anchor, p: TownPalette, b: PlacedBuilding, glow: number): BuildingModel {
   const look: Look = { p, glow };
-  const group = new Zdog.Group({ addTo, translate: { x: b.x - 12, y: -PAD_H - b.lift, z: b.z }, rotate: { y: FACE }, scale: BUILDING_SCALE, updateSort: false });
+  const group = new Zdog.Group({ addTo, translate: { x: b.x + FIT_DX[b.art] * BUILDING_SCALE, y: -PAD_H - b.lift, z: b.z }, scale: BUILDING_SCALE, updateSort: false });
   // A small tree in the back-left corner of the pad, behind the building.
   tree(group, look, -PAD / 2 / BUILDING_SCALE + 8, -PAD / 2 / BUILDING_SCALE + 8, 0.7);
   const art = b.art === 'warehouse' ? warehouse(group, look, b) : b.art === 'shop' ? shop(group, look, b) : store(group, look, b);
@@ -296,6 +296,12 @@ export function buildScenery(addTo: Zdog.Anchor, p: TownPalette, island: { width
   });
 }
 
+
+/** Distance toward the viewer for the camera turn: larger = nearer, so nearer pads draw later. */
+function depthKey(q: { x: number; z: number }): number {
+  const t = (TURN_DEG * Math.PI) / 180;
+  return q.z * Math.cos(t) + q.x * Math.sin(t);
+}
 
 /** Where a road meets a building: the street in front of its lot. */
 function streetFront(b: PlacedBuilding): { x: number; z: number }[] {
@@ -371,7 +377,7 @@ export function buildGround(
   const lots = [
     ...placed.map((b) => ({ x: b.x, z: b.z, c: p.sidewalk, lift: b.lift })),
     ...empty.map((e) => ({ x: e.x, z: e.z, c: p.grass, lift: 0 })),
-  ].sort((a, b) => a.x + a.z - (b.x + b.z));
+  ].sort((a, b) => depthKey(a) - depthKey(b));
   for (const lot of lots) block(ground, look, lot.c, PAD, PAD_H + lot.lift, PAD, lot.x, 0, lot.z);
   return { ground, extent };
 }

@@ -14,7 +14,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import * as Zdog from 'zdog';
 import { cn } from '../../utils/cn';
 import { buildBuilding, buildGround, buildScenery, type BuildingModel, type Projected } from './art';
-import { dedupeLinks, defaultLights, placeBuildings, plotSize, streetSize, type TownBuilding, type TownLink } from './layout';
+import { TURN_DEG, dedupeLinks, defaultLights, placeBuildings, plotSize, streetSize, type TownBuilding, type TownLink } from './layout';
 import { css, readPalette, type TownPalette } from './palette';
 
 export type { TownBuilding, TownLink, TownStatus } from './layout';
@@ -55,7 +55,7 @@ const KIND_TEXT: Record<string, string> = { inventory: 'Warehouse', sms: 'Servic
 
 /** Camera: fixed isometric tilt and 45 degree turn. */
 const TILT = Math.atan(1 / Math.SQRT2);
-const TURN = Zdog.TAU / 8;
+const TURN = (TURN_DEG * Math.PI) / 180;
 /** Canvas padding in CSS px; the bottom leaves room for the front row's signs. */
 const PAD_X = 12;
 const PAD_TOP = 84;

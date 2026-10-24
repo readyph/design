@@ -33,6 +33,13 @@ export interface PlacedBuilding extends TownBuilding {
   lift: number;
 }
 
+/**
+ * Camera turn about the vertical axis, in degrees: the single knob for the whole world.
+ * 0 = facades straight toward the viewer; 45 = classic isometric corner view.
+ * Art assumes 0..45 (front and right faces visible).
+ */
+export const TURN_DEG = 20;
+
 /** One lot (building plot plus its share of the street) in world units, before zoom. */
 export const CELL = 190;
 /** Street width between lots. */
