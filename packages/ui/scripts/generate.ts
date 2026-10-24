@@ -64,6 +64,13 @@ for (const [name, pair] of Object.entries(colors.tint)) {
   vars[`--ds-tint-${name}-bg`] = toChannels(pair.bg);
   vars[`--ds-tint-${name}-fg`] = toChannels(pair.fg);
 }
+for (const [name, pair] of Object.entries(colors.scene)) {
+  vars[`--ds-scene-${name}`] = toChannels(pair.light);
+}
+/** Dark values for the scene tokens (the rest of the dark palette lives in globals.css). */
+const sceneDarkLines = Object.entries(colors.scene)
+  .map(([name, pair]) => `  --ds-scene-${name}: ${toChannels(pair.dark)};`)
+  .join('\n');
 /** The single focus-visible ring color. */
 vars['--ds-focus'] = toChannels(colors.primary[500]);
 
@@ -94,6 +101,11 @@ const themeCss = `/**
  */
 :root {
 ${cssLines}
+}
+
+/* Scene colours, dark values (see tokens/colors.ts \`scene\`). */
+[data-theme="dark"] {
+${sceneDarkLines}
 }
 
 /* Base surface + ink for the document. Opt-in: apply to <body> or a root node. */
@@ -164,6 +176,7 @@ const colorTheme = {
     strong: c('--ds-border-strong'),
   },
   link: c('--ds-link'),
+  scene: Object.fromEntries(Object.keys(colors.scene).map((k) => [k, c(`--ds-scene-${k}`)])),
   focus: c('--ds-focus'),
   tint: Object.fromEntries(
     Object.keys(colors.tint).flatMap((name) => [

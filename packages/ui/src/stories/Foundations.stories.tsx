@@ -87,6 +87,39 @@ export const Colors: Story = {
           ))}
         </div>
       </div>
+      <div>
+        <h3 className="mb-2 text-sm font-semibold text-ink">Scene (light and dark)</h3>
+        <div className="grid gap-4 md:grid-cols-2">
+          {(['light', 'dark'] as const).map((mode) => (
+            <div key={mode} className="rounded-md border border-border bg-surface p-3 text-ink" data-theme={mode}>
+              <div className="mb-2 text-xs font-medium capitalize text-ink">{mode}</div>
+              <div className="grid grid-cols-3 gap-3" data-testid={`scene-${mode}`}>
+                {Object.keys(colors.scene).map((k) => (
+                  <div key={k} className="flex flex-col gap-1">
+                    <div className="h-14 w-full rounded-md border border-border" style={{ background: `rgb(var(--ds-scene-${k}))` }} />
+                    <div className="text-xs font-medium text-ink">scene-{k}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3 flex gap-3">
+                <div
+                  className="flex h-12 flex-1 items-center justify-center rounded-md text-xs font-medium"
+                  style={{ background: 'rgb(var(--ds-scene-road))' }}
+                >
+                  <span className="h-1 w-3/4 rounded-full" style={{ background: 'rgb(var(--ds-scene-road-marking))' }} />
+                </div>
+                <div
+                  className="flex h-12 flex-1 items-center justify-center gap-2 rounded-md"
+                  style={{ background: 'rgb(var(--ds-scene-shop-wall))' }}
+                >
+                  <span className="h-5 w-5 rounded-sm" style={{ background: 'rgb(var(--ds-scene-window-glow))' }} />
+                  <span className="h-5 w-5 rounded-sm" style={{ background: 'rgb(var(--ds-scene-window-off))' }} />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   ),
 };
