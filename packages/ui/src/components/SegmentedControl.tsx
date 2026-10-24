@@ -39,7 +39,7 @@ export function SegmentedControl({
   };
   const h = size === 'sm' ? 'h-7 text-xs' : 'h-8 text-sm';
   return (
-    <div role="tablist" aria-label={ariaLabel} className={cn('inline-flex items-center gap-0.5 rounded-base bg-surface-muted p-1', className)}>
+    <div role="tablist" aria-label={ariaLabel} className={cn('inline-flex items-center gap-0.5 rounded-lg bg-surface-muted p-1', className)}>
       {options.map((o) => {
         const active = o.value === current;
         return (
@@ -50,9 +50,9 @@ export function SegmentedControl({
             aria-selected={active}
             onClick={() => select(o.value)}
             className={cn(
-              'inline-flex items-center gap-1.5 rounded-sm px-3 font-medium transition-colors',
+              'inline-flex items-center gap-1.5 rounded-md px-3 font-medium transition-colors',
               h,
-              active ? 'bg-surface text-ink shadow-none ring-1 ring-border' : 'text-ink-muted hover:text-ink',
+              active ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-ink',
               focusRing,
             )}
           >
