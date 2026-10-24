@@ -18,7 +18,7 @@ const viewports = {
 };
 
 const meta: Meta<DashboardShellProps> = {
-  title: 'Prototypes/Portal/[For Review] DashboardShell',
+  title: 'Prototypes/Portal/DashboardShell',
   tags: ['!autodocs'],
   parameters: { layout: 'fullscreen', viewport: { viewports, defaultViewport: 'desktop1440' } },
   args: { active: 'home', member: false, ledaOpen: true, ledaView: 'empty' },
