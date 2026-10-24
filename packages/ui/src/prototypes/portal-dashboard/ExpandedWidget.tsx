@@ -3,7 +3,7 @@
  *
  * - Today a list widget over the inline row limit opens a modal (portal LedaActionBlock). Here,
  *   Expand on any Leda widget replaces the Home content (connections diagram) with the full widget;
- *   the top-bar title becomes the widget title and a "Back to platforms" control returns Home with
+ *   the widget title becomes the page heading (no top bar) and a "Back to platforms" control returns Home with
  *   the scroll position restored.
  * - One expanded widget at a time: expanding another replaces it. The source message in the Leda
  *   chat is marked "Expanded"; follow-up prompts can refer to it (composer placeholder names it).
@@ -380,15 +380,18 @@ function ExpandedView({ id, onBack, focusOnMount }: { id: WidgetId; onBack: () =
   useEffect(() => {
     if (focusOnMount) backRef.current?.focus();
   }, [id, focusOnMount]);
-  // The top-bar title is the page heading (it shows the widget title); no duplicate heading here.
+  // No top bar (revision 2): the widget title is the page heading.
   return (
-    <section aria-label={WIDGET_TITLE[id]} className="flex flex-col gap-4 px-4 py-4 sm:px-6">
+    <section aria-labelledby="expanded-widget-heading" className="flex flex-col gap-4 px-4 py-4 sm:px-6">
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
         <Button ref={backRef} size="sm" variant="subtle" leftIcon={ArrowLeft} onClick={onBack} className="-ml-3">
           Back to platforms
         </Button>
         <p className="text-xs text-ink-subtle">From Leda · today 10:24</p>
       </div>
+      <h1 id="expanded-widget-heading" className="text-base font-semibold text-ink">
+        {WIDGET_TITLE[id]}
+      </h1>
       <View />
     </section>
   );
@@ -438,7 +441,6 @@ export function ExpandedWidgetPrototype({
   return (
     <DashboardShell
       active="home"
-      title={expanded ? WIDGET_TITLE[expanded] : undefined}
       ledaOpen={ledaOpen}
       ledaDrawerOpen={ledaDrawerOpen}
       ledaMessages={conversation}

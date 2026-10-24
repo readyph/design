@@ -5,7 +5,7 @@ import { FOLLOW_UP_CONVERSATION } from './expandedWidgetData';
 /**
  * RDY-216 (epic RDY-212): Leda widgets expand into the content panel instead of a modal. Expand
  * (top right of a widget, or "Show all" on a capped list) replaces the Home diagram with the full
- * widget, the top-bar title becomes the widget title, and "Back to platforms" returns Home with the
+ * widget, the widget title becomes the page heading (no top bar), and "Back to platforms" returns Home with the
  * scroll restored. One expanded widget at a time; the source message is marked "Expanded".
  * Content is flat (no cards, no stat tiles). Built on the RDY-213 shell (design#58).
  *
@@ -25,7 +25,7 @@ const viewports = {
 };
 
 const meta: Meta<ExpandedWidgetPrototypeProps> = {
-  title: 'Prototypes/Portal/ExpandedWidget',
+  title: 'Prototypes/Portal/[For Review] ExpandedWidget',
   tags: ['!autodocs'],
   parameters: {
     layout: 'fullscreen',
@@ -62,7 +62,7 @@ export const DesktopList: Story = {
   ...at('desktop1440', 'dark'),
 };
 export const DesktopListCollapsed: Story = {
-  name: '1440 · Expanded list, Leda collapsed',
+  name: '1440 · Expanded list, Leda hidden',
   args: { initialExpanded: 'low-stock', ledaOpen: false },
   ...at('desktop1440', 'dark'),
 };
@@ -99,7 +99,7 @@ export const LaptopStats: Story = {
   ...at('laptop1024', 'dark'),
 };
 export const LaptopOverviewCollapsed: Story = {
-  name: '1024 · Expanded overview, Leda collapsed',
+  name: '1024 · Expanded overview, Leda hidden',
   args: { initialExpanded: 'platform-overview', ledaOpen: false },
   ...at('laptop1024', 'dark'),
 };
