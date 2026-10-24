@@ -51,7 +51,7 @@ const openMenu: Story['play'] = async ({ canvasElement }) => {
 export const DesktopLedaEmpty: Story = { name: '1440 · Leda open, empty', ...at('desktop1440', 'dark') };
 export const DesktopLedaConversation: Story = { name: '1440 · Leda conversation', args: { ledaView: 'conversation' }, ...at('desktop1440', 'dark') };
 export const DesktopConfirmAction: Story = { name: '1440 · Confirm-before-write', args: { ledaView: 'confirm' }, ...at('desktop1440', 'dark') };
-export const DesktopLedaCollapsed: Story = { name: '1440 · Leda hidden (small tag)', args: { ledaOpen: false }, ...at('desktop1440', 'dark') };
+export const DesktopLedaCollapsed: Story = { name: '1440 · Leda hidden (Ask Leda button)', args: { ledaOpen: false }, ...at('desktop1440', 'dark') };
 export const DesktopMenuOpen: Story = { name: '1440 · Menu dropdown', play: openMenu, ...at('desktop1440', 'dark') };
 export const DesktopMemberMenu: Story = { name: '1440 · Menu dropdown, member', args: { member: true, active: 'reports' }, play: openMenu, ...at('desktop1440', 'dark') };
 export const DesktopLight: Story = { name: '1440 · Light, conversation', args: { ledaView: 'conversation' }, ...at('desktop1440', 'light') };
@@ -59,7 +59,7 @@ export const DesktopLightMenu: Story = { name: '1440 · Light, Menu dropdown', p
 
 // Laptop 1024
 export const LaptopLedaOpen: Story = { name: '1024 · Leda open', args: { ledaView: 'conversation' }, ...at('laptop1024', 'dark') };
-export const LaptopLedaCollapsed: Story = { name: '1024 · Leda hidden (tag)', args: { ledaOpen: false }, ...at('laptop1024', 'light') };
+export const LaptopLedaCollapsed: Story = { name: '1024 · Leda hidden (Ask Leda button)', args: { ledaOpen: false }, ...at('laptop1024', 'light') };
 export const LaptopLight: Story = { name: '1024 · Light, confirm', args: { ledaView: 'confirm' }, ...at('laptop1024', 'light') };
 
 // Phone 390 (below lg: no rail, off-canvas nav, Leda as overlay drawer)
