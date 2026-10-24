@@ -280,16 +280,16 @@ function ThinkingDots() {
   );
 }
 
-/** The Leda mark: white WaveTriangle glyph on a solid brand-blue circle. One treatment everywhere. */
+/** The Leda mark: the brand-blue WaveTriangle glyph only. No circle, fill or ring. */
 function LedaLogo({ size = 'md' }: { size?: 'md' | 'lg' }) {
   return (
     <span
       className={cn(
-        'grid shrink-0 place-items-center rounded-full bg-primary-600 text-white ring-2 ring-primary-400/50',
+        'grid shrink-0 place-items-center bg-transparent text-primary-500',
         size === 'lg' ? 'h-14 w-14' : 'h-8 w-8',
       )}
     >
-      <Icon icon={WaveTriangle} size={size === 'lg' ? 'lg' : 'sm'} weight="bold" />
+      <Icon icon={WaveTriangle} size={size === 'lg' ? 40 : 24} weight="bold" />
     </span>
   );
 }
@@ -503,7 +503,7 @@ export function DashboardShell({
             onClick={toggleLeda}
             aria-label="Ask Leda"
             className={cn(
-              'absolute right-3 top-2 grid h-10 w-10 place-items-center rounded-full bg-primary-600 text-white shadow-md ring-2 ring-primary-400/50 hover:bg-primary-700',
+              'absolute right-3 top-2 grid h-10 w-10 place-items-center rounded-full bg-surface text-primary-500 shadow-md hover:bg-surface-muted',
               focusRing,
             )}
           >
