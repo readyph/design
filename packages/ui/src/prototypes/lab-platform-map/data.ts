@@ -21,11 +21,6 @@ export interface LabPlatform {
   lastSync: string;
   connectedAt: string;
   links: LabLink[];
-  /**
-   * Placeholder anchor over the scene (Tailwind position classes). The real page gets the anchor
-   * from the Town Scene (RDY-224) projection of each building.
-   */
-  anchor: string;
 }
 
 export const KIND_LABEL: Record<LabKind, string> = { inventory: 'Inventory', sms: 'Service Management' };
@@ -53,25 +48,21 @@ export const LAB_PLATFORMS: LabPlatform[] = [
       { id: 'rs-dvo', label: 'Davao branch', capabilities: ['Stock read', 'Catalog read'] },
       { id: 'rs-ceb', label: 'Cebu branch', capabilities: ['Stock read'] },
     ],
-    anchor: 'left-[24%] top-[34%]',
   },
   {
     id: 'rs-dvo', label: 'Davao branch', kind: 'sms', status: 'active', alerts: 2,
     version: '0.9.4', lastSync: '5 min ago', connectedAt: 'Jun 12, 2026',
     links: [{ id: 'inv', label: 'Main inventory', capabilities: ['Stock read', 'Catalog read'] }],
-    anchor: 'left-[62%] top-[26%]',
   },
   {
     id: 'rs-ceb', label: 'Cebu branch', kind: 'sms', status: 'degraded', alerts: 1,
     version: '0.9.3', lastSync: '3 h ago', connectedAt: 'Aug 30, 2026',
     links: [{ id: 'inv', label: 'Main inventory', capabilities: ['Stock read'] }],
-    anchor: 'left-[42%] top-[66%]',
   },
   {
     id: 'rs-cdo', label: 'Cagayan branch', kind: 'sms', status: 'offline', alerts: 0,
     version: '0.9.4', lastSync: 'Never', connectedAt: 'Oct 20, 2026',
     links: [],
-    anchor: 'left-[78%] top-[62%]',
   },
 ];
 

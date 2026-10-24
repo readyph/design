@@ -1,5 +1,15 @@
 /** PROTOTYPE (RDY-224) - sample tenants for the Lab platform town (shape of `GET /platforms` + `/platforms/graph`). */
-import type { TownBuilding, TownLink } from './layout';
+
+export const THREE: TownBuilding[] = [
+  { id: 'inv', label: 'Warehouse', kind: 'inventory', status: 'ACTIVE', alerts: 0 },
+  { id: 'sms', label: 'Service Shop', kind: 'sms', status: 'OFFLINE', alerts: 0 },
+  { id: 'pos', label: 'Store', kind: 'pos', status: 'ACTIVE', alerts: 2 },
+];
+export const THREE_LINKS: TownLink[] = [
+  { from: 'inv', to: 'sms' }, { from: 'inv', to: 'pos' }, { from: 'sms', to: 'pos' },
+];
+
+import type { TownBuilding, TownLink } from '../TownScene';
 
 export const MIXED: TownBuilding[] = [
   { id: 'inv-davao', label: 'Davao warehouse', kind: 'inventory', status: 'ACTIVE', alerts: 0 },

@@ -7,12 +7,13 @@ import { LabPlatformMap, type LabPlatformMapProps } from './LabPlatformMap';
 
 /**
  * RDY-225 (epic RDY-222): Lab platform map, standalone Portal page `/lab/platform-map` outside the
- * Portal shell. Top bar (back to Portal, title, Experiment tag), the Town Scene region (placeholder
- * until RDY-224 merges), hover/focus bubble, detail modal, compact side list that doubles as the
+ * Portal shell. Top bar (back to Portal, title, Experiment tag), the Town Scene (RDY-224, SVG; drag or use the
+ * rotate buttons to turn it), hover/focus bubble, detail modal, compact side list that doubles as the
  * legend, and loading / error / empty states. Lights are view-only local state (reset on reload).
  *
- * Accessible fallback: one visually hidden, focusable button per building; Tab moves between them,
- * focus or hover shows the bubble, Enter opens the detail modal.
+ * Keyboard: the scene keeps one visually hidden, focusable button per building; Tab moves between them,
+ * focus or hover shows the bubble, Enter opens the detail modal. The connection legend in the side list
+ * highlights a connection on hover or focus.
  *
  * Leda entry points: none. The page is outside the shell, so the Leda panel is not shown, and lights
  * are local view state, so there is no Leda action ("no Leda impact" on the delivery tickets).
