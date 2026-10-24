@@ -16,7 +16,7 @@ const viewports = {
 };
 
 const meta: Meta<ShellProps> = {
-  title: 'Prototypes/Portal/[For Review] Shell',
+  title: 'Prototypes/Portal/Shell',
   component: Shell,
   tags: ['!autodocs'],
   parameters: {
