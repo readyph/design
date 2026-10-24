@@ -16,3 +16,6 @@
 }
 .town-scene { background: radial-gradient(ellipse at 50% 45%, rgb(var(--ds-surface)) 0%, rgb(var(--ds-primary-50)) 70%); }
 [data-theme="dark"] .town-scene { background: radial-gradient(ellipse at 50% 45%, #1A2438 0%, #0B1120 75%); }
+
+/* Transparent variant: the scene sits directly on the host surface. */
+.town-scene.town-scene--bare, [data-theme="dark"] .town-scene.town-scene--bare { background: none; }

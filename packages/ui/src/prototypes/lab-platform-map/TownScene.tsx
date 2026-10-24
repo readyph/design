@@ -64,6 +64,8 @@ export interface TownSceneProps {
   /** Accessible name of the scene. */
   label?: string;
   onRenderStats?: (stats: TownRenderStats) => void;
+  /** No backdrop: the scene sits directly on the host surface. */
+  bare?: boolean;
   className?: string;
 }
 
@@ -117,7 +119,7 @@ function readTokens(el: Element): { tokens: LabelTokens; dark: boolean } {
 
 export function TownScene({
   buildings, links = [], lights, onHover, onSelect, rotation, defaultRotation = 0, onRotationChange, highlightLink = null, pinnedId = null,
-  mode = 'roads', label = 'Platform town map', onRenderStats, className,
+  mode = 'roads', label = 'Platform town map', onRenderStats, bare = false, className,
 }: TownSceneProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -224,7 +226,7 @@ export function TownScene({
   const summary = `${label}: ${buildings.length} platform${buildings.length === 1 ? '' : 's'}.`;
 
   return (
-    <div ref={wrapRef} className={cn('town-scene relative h-full w-full select-none overflow-hidden', className)} role="group" aria-label={label}>
+    <div ref={wrapRef} className={cn('town-scene relative', bare && 'town-scene--bare', ' h-full w-full select-none overflow-hidden', className)} role="group" aria-label={label}>
       <svg
         ref={svgRef}
         viewBox={viewBox}

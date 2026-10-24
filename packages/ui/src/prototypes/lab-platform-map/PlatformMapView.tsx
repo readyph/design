@@ -69,12 +69,12 @@ function RotateButtons({ onTurn }: { onTurn: (quarterTurns: number) => void }) {
 }
 
 
-export function Connections({ platforms, onHilite }: { platforms: LabPlatform[]; onHilite: (id: string | null) => void }) {
+export function Connections({ platforms, onHilite, flush = false }: { platforms: LabPlatform[]; onHilite: (id: string | null) => void; flush?: boolean }) {
   const conns = useMemo(() => connectionsFor(toLinks(platforms), new Set(platforms.map((p) => p.id))), [platforms]);
   const name = (id: string) => platforms.find((p) => p.id === id)?.label ?? id;
   if (conns.length === 0) return null;
   return (
-    <div className="border-t border-border px-3 py-2">
+    <div className={cn(!flush && 'border-t border-border px-3 py-2')}>
       <h3 className="pb-1 text-xs font-semibold text-ink-muted">Connections</h3>
       <ul className="flex flex-col">
         {conns.map((c) => (
@@ -163,7 +163,8 @@ export interface MapRoutes {
  * The scene filling its (relative) parent, with the hover or focus bubble anchored at the label point and
  * the rotate buttons. `onSelect` fires on click, tap, Enter or Space.
  */
-export function PlatformMapScene({ platforms, lights, bubbleFor, hilite = null, onSelect }: {
+export function PlatformMapScene({ platforms, lights, bubbleFor, hilite = null, onSelect, bare = false }: {
+  bare?: boolean;
   platforms: LabPlatform[];
   lights: Record<string, boolean>;
   bubbleFor?: string;
@@ -188,6 +189,7 @@ export function PlatformMapScene({ platforms, lights, bubbleFor, hilite = null, 
           onRotationChange={setRotation}
           highlightLink={hilite}
           pinnedId={bubbleFor}
+          bare={bare}
           onHover={(id, pt) => setBubble(id && pt ? { id, x: pt.x, y: pt.y } : null)}
           onSelect={(id) => { const p = platforms.find((q) => q.id === id); if (p) { setBubble(null); onSelect(p); } }}
         />

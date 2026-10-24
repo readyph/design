@@ -78,3 +78,4 @@ export const DesktopTownBubble: Story = { name: '1440 · Scene, bubble open', ar
 export const DesktopTownSelected: Story = { name: '1440 · Scene, platform selected', args: { ledaOpen: false }, render: withTown({ modalFor: 'inv-davao' }), ...at('desktop1440', 'dark') };
 export const LaptopTownBubble: Story = { name: '1024 · Scene, bubble open', args: { ledaOpen: false }, render: withTown({ bubbleFor: 'st-bgc' }), ...at('laptop1024', 'light') };
 export const PhoneTownSelected: Story = { name: '390 · Scene, platform selected', render: withTown({ modalFor: 'st-cebu' }), ...at('phone390', 'light') };
+export const DesktopTownDark: Story = { name: '1440 · Scene, dark', args: { ledaOpen: false }, render: withTown({ bubbleFor: 'st-bgc' }), ...at('desktop1440', 'dark') };
