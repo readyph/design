@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { ArrowSquareOut, LinkSimple, Package, Plus, Wrench } from '@phosphor-icons/react';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
@@ -66,16 +66,18 @@ export function ConnectDataModal({ open, onOpenChange, platform }: { open: boole
   );
 }
 
-export function PlatformsPage({ state = 'default', launch = 'idle', connectOpen = false }: { state?: PlatformsState; launch?: Launch; connectOpen?: boolean }) {
+/** `extraActions` renders before Add platform (RDY-225: "Try 3D view" entry to the Lab platform map). */
+export function PlatformsPage({ state = 'default', launch = 'idle', connectOpen = false, extraActions }: { state?: PlatformsState; launch?: Launch; connectOpen?: boolean; extraActions?: ReactNode }) {
   const [connect, setConnect] = useState<DemoPlatform | null>(connectOpen ? PLATFORMS.find((p) => p.setupNeeded) ?? null : null);
   const [last, setLast] = useState<DemoPlatform>(PLATFORMS.find((p) => p.setupNeeded) ?? PLATFORMS[1]);
   const [add, setAdd] = useState(false);
   const pick = (p: DemoPlatform) => { setLast(p); setConnect(p); };
   const addButton = <Button leftIcon={Plus} onClick={() => setAdd(true)}>Add platform</Button>;
+  const headerActions = <>{extraActions}{addButton}</>;
   return (
     <ConnShell app="portal" activeKey="platforms" title={<span className="text-sm font-semibold">Connected platforms</span>} onAddPlatform={() => setAdd(true)}>
       <Page>
-        <PageHeader title="Connected platforms" description={state === 'default' ? '3 platforms - 2 branches - 1 data link' : undefined} actions={addButton} />
+        <PageHeader title="Connected platforms" description={state === 'default' ? '3 platforms - 2 branches - 1 data link' : undefined} actions={headerActions} />
         {state === 'loading' && <div className="grid grid-cols-1 gap-4 md:grid-cols-2"><Skeleton height={150} /><Skeleton height={150} /></div>}
         {state === 'error' && <RetryNotice title="Couldn't load your platforms">Check your connection and try again.</RetryNotice>}
         {state === 'empty' && <EmptyState icon={Package} title="No platforms yet" description="Add Inventory or a SMS branch to start." action={addButton} />}
