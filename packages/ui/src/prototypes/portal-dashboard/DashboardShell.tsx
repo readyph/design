@@ -63,7 +63,8 @@ export const MISSING_IN_KIT = [
   'Leda chat body stays project-owned (portal LedaDock content); only its container moves into LedaSidePanel.',
   'RailMenuButton / Menu item `active` and section headings (RDY-218); today composed from Menu + a raw button with the check drawn inside the label.',
   'Container-query support in the preset (RDY-219); prototype uses arbitrary `[@container(...)]` variants.',
-  'ConnectionsMap (RDY-214): flat diagram (bare icon tiles + labels, no node boxes or wrapping Card) with a divided text list below; prototype positions nodes with arbitrary top/left classes from static data.',
+  'ConnectionsMap (RDY-214): see MAP_MISSING_IN_KIT in ConnectionsMap.tsx.',
+  'LedaSidePanel `suggestions` and `prefill` (RDY-214): page-specific suggested prompts and a page action that opens the panel with the input prefilled.',
 ];
 
 export type LedaView = 'empty' | 'conversation' | 'confirm';
@@ -284,12 +285,37 @@ const ledaAvatar = (
   </span>
 );
 
-function LedaChat({ view, onClose, overlay }: { view: LedaView; onClose: () => void; overlay?: boolean }) {
+/** Prefill from a page action (RDY-214 "Ask Leda"): a new `key` re-applies the same text. */
+export interface LedaPrefill {
+  text: string;
+  key: number;
+}
+
+function LedaChat({
+  view,
+  onClose,
+  overlay,
+  suggestions = QUICK_ACTIONS,
+  prefill,
+}: {
+  view: LedaView;
+  onClose: () => void;
+  overlay?: boolean;
+  suggestions?: string[];
+  prefill?: LedaPrefill;
+}) {
   const [messages, setMessages] = useState<Msg[]>(() => initialMessages(view));
   const [draft, setDraft] = useState('');
   const [busy, setBusy] = useState(false);
   const [proposal, setProposal] = useState<'pending' | 'applying' | 'confirmed' | 'cancelled'>('pending');
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (!prefill) return;
+    setDraft(prefill.text);
+    inputRef.current?.focus?.();
+  }, [prefill]);
 
   useEffect(() => setMessages(initialMessages(view)), [view]);
   useEffect(() => {
@@ -371,7 +397,7 @@ function LedaChat({ view, onClose, overlay }: { view: LedaView; onClose: () => v
       </Chat.Messages>
       {messages.length === 0 && (
         <Chat.QuickActions>
-          {QUICK_ACTIONS.map((q) => (
+          {suggestions.map((q) => (
             <button
               key={q}
               type="button"
@@ -389,6 +415,7 @@ function LedaChat({ view, onClose, overlay }: { view: LedaView; onClose: () => v
         </Chat.QuickActions>
       )}
       <Chat.Input
+        ref={inputRef}
         value={draft}
         busy={busy}
         onChange={(e) => setDraft(e.target.value)}
@@ -423,6 +450,10 @@ export interface DashboardShellProps {
   ledaDrawerOpen?: boolean;
   onNavigate?: (key: PortalNavKey) => void;
   onAddPlatform?: () => void;
+  /** Page-specific suggested prompts in the empty panel (RDY-214 Home: "What needs my attention?"). */
+  ledaSuggestions?: string[];
+  /** Prefill the panel input from a page action; opens the panel (docked or drawer). */
+  ledaPrefill?: LedaPrefill;
   /** Page content; laid out against the measured content width (size container). */
   children: ReactNode;
 }
@@ -437,6 +468,8 @@ export function DashboardShell({
   ledaDrawerOpen = false,
   onNavigate,
   onAddPlatform,
+  ledaSuggestions,
+  ledaPrefill,
   children,
 }: DashboardShellProps) {
   const desktop = useMediaQuery(DESKTOP);
@@ -450,6 +483,11 @@ export function DashboardShell({
     writeStored(v);
   };
   const ledaShown = desktop ? docked : drawer;
+  useEffect(() => {
+    if (!ledaPrefill) return;
+    if (desktop) setDocked(true);
+    else setDrawer(true);
+  }, [ledaPrefill]);
   const toggleLeda = () => (desktop ? setDockedRemembered(!docked) : setDrawer(!drawer));
 
   return (
@@ -484,7 +522,7 @@ export function DashboardShell({
 
           {desktop && docked && (
             <aside aria-label="Leda panel" className="flex w-[24rem] shrink-0 flex-col border-l border-border bg-surface xl:w-[28rem]">
-              <LedaChat view={ledaView} onClose={() => setDockedRemembered(false)} />
+              <LedaChat view={ledaView} onClose={() => setDockedRemembered(false)} suggestions={ledaSuggestions} prefill={ledaPrefill} />
             </aside>
           )}
 
@@ -513,7 +551,7 @@ export function DashboardShell({
           <MobileNav open={nav} onOpenChange={setNav} active={active} member={member} onNavigate={onNavigate} />
           <OffCanvas open={drawer} onOpenChange={setDrawer} side="right" width="100vw" hideClose className="max-w-none sm:max-w-[24rem]">
             <OffCanvas.Header className="sr-only">Leda</OffCanvas.Header>
-            <LedaChat view={ledaView} onClose={() => setDrawer(false)} overlay />
+            <LedaChat view={ledaView} onClose={() => setDrawer(false)} overlay suggestions={ledaSuggestions} prefill={ledaPrefill} />
           </OffCanvas>
         </>
       )}
