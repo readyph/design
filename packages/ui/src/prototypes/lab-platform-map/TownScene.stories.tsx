@@ -17,7 +17,7 @@ import { MIXED, MIXED_LINKS, SINGLE, TWENTY, TWENTY_LINKS } from './town-data';
  * a building to see what the page bubble will receive.
  */
 const meta: Meta = {
-  title: 'Prototypes/Portal/Lab Platform Map/[For Review] Town Scene',
+  title: 'Prototypes/Portal/Lab Platform Map/Town Scene',
   tags: ['!autodocs'],
   parameters: { layout: 'fullscreen' },
 };
