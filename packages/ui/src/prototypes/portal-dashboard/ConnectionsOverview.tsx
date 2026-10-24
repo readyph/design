@@ -159,9 +159,9 @@ export function ConnectionsOverview() {
     <section aria-labelledby="connections-heading" className="flex flex-col gap-6 px-4 py-5 sm:px-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-1">
-          <h2 id="connections-heading" className="text-base font-semibold text-ink">
+          <h1 id="connections-heading" className="text-base font-semibold text-ink">
             Platform connections
-          </h2>
+          </h1>
           <p className="text-sm text-ink-muted">
             {platforms} platforms · {MAP_LINKS.length} data links · <span className="text-warning">{unlinked.length} needs a source</span>
           </p>
