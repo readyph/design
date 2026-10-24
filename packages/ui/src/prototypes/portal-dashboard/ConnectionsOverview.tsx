@@ -121,7 +121,7 @@ function LinkRows() {
   return (
     <div className="flex flex-col">
       <h3 className="pb-2 text-xs font-semibold uppercase tracking-wide text-ink-subtle">Data links</h3>
-      <ul className="divide-y divide-border border-y border-border">
+      <ul className="flex flex-col">
         {MAP_LINKS.map((l) => {
           const c = byId(l.consumerId);
           const p = byId(l.providerId);
