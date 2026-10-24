@@ -6,6 +6,7 @@ export const tags = ['autodocs'];
 /**
  * Toolbar globals:
  *  - Theme: light / dark (sets data-theme on <html>). Dark is the default.
+ *    Skipped for stories with `parameters.themeManaged: true` (they own data-theme).
  */
 export const globalTypes = {
   theme: {
@@ -46,7 +47,9 @@ const preview: Preview = {
   decorators: [
     (Story, context) => {
       const theme = (context.globals.theme as string) || 'dark';
-      if (typeof document !== 'undefined') {
+      // Stories that mount their own ThemeProvider set `parameters.themeManaged: true`
+      // so the toolbar does not overwrite the provider's data-theme.
+      if (typeof document !== 'undefined' && !context.parameters.themeManaged) {
         document.documentElement.setAttribute('data-theme', theme);
         document.documentElement.removeAttribute('data-skin');
       }
