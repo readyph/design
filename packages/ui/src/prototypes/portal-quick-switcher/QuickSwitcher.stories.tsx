@@ -15,7 +15,7 @@ const viewports = {
 };
 
 const meta: Meta<QuickSwitcherDemoProps> = {
-  title: 'Prototypes/Portal/[For Review] Quick switcher',
+  title: 'Prototypes/Portal/Quick switcher',
   component: QuickSwitcherDemo,
   tags: ['!autodocs'],
   parameters: {
