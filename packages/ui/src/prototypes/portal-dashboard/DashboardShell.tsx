@@ -56,8 +56,18 @@ import {
   type PortalNavKey,
 } from './data';
 
+/**
+ * Rail and Leda panel surfaces (round 7). Dark: rail = owner swatch #0c0c11 (12 12 17), closest kit token is
+ * surface-canvas (10 10 14), which equals the content area so cannot separate them; Leda panel = 16 16 22, darker than
+ * surface (22 22 29) and distinct from the content. Light: rail 228 228 231 (deeper than canvas 236), panel = white.
+ * Proposed kit tokens: surface-rail and surface-leda-panel (see MISSING_IN_KIT). Scoped here until they exist.
+ */
+const SHELL_SURFACES =
+  '[--ds-rail:12_12_17] [--ds-leda-panel:16_16_22] [[data-theme=light]_&]:[--ds-rail:228_228_231] [[data-theme=light]_&]:[--ds-leda-panel:255_255_255]';
+
 /** Kit gaps found while building this prototype (also in the PR body). */
 export const MISSING_IN_KIT = [
+  'Surface tokens `surface-rail` (dark 12 12 17 = owner swatch #0c0c11; light 228 228 231) and `surface-leda-panel` (dark 16 16 22; light white) so the rail and Leda column read as distinct from the canvas (dark 10 10 14); prototype scopes them as --ds-rail and --ds-leda-panel.',
   'LedaSidePanel (RDY-219, revise): docked state = flush full-height column (top to bottom of the viewport, no top bar above it) separated from the canvas by surface tone only (no border line), no inset or card border; hidden state renders no column, only a floating circular Leda icon button (right edge, top, aligned with the collapse button, tooltip "Ask Leda") that reopens it; header uses a "Collapse Leda" panel icon instead of X, a Leda logo (white glyph on solid brand-blue circle) and a subtle return-arrow submit inside the input field (no filled button); no visible page-context chip (context is still sent to Leda).',
   'Shell without TopBar (RDY-218/221): no top bar; Leda toggle and Add platform are not in a header (Add platform stays in the rail and mobile nav); below lg a floating Menu button replaces the top-bar menu button. Portal layout must drop TopBar.',
   'Token `width.leda-panel` = 28rem from xl (1280px) and 24rem at lg (1024 to 1279px), replacing 22.5rem; prototype uses w-[24rem] xl:w-[28rem].',
@@ -146,7 +156,7 @@ const accountItems: MenuItem[] = [
 
 function Rail({ active, member, onNavigate, onAddPlatform }: { active: PortalNavKey; member: boolean; onNavigate?: (k: PortalNavKey) => void; onAddPlatform?: () => void }) {
   return (
-    <nav aria-label="Platforms" className="hidden w-rail shrink-0 flex-col items-center gap-2 py-3 lg:flex">
+    <nav aria-label="Platforms" className="hidden w-rail shrink-0 flex-col items-center gap-2 bg-[rgb(var(--ds-rail))] py-3 lg:flex">
       <Menu
         side="right"
         align="start"
@@ -368,7 +378,7 @@ function LedaChat({
         {messages.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4 text-center">
             <LedaLogo size="lg" />
-            <p className="text-sm text-ink-muted">Ask me about your company, inventory or team. I answer from your Memory and can draft changes for you to confirm.</p>
+            <p className="text-sm text-ink">Ask me about your company, inventory or team. I answer from your Memory and can draft changes for you to confirm.</p>
           </div>
         ) : (
           messages.map((m) =>
@@ -451,13 +461,13 @@ function LedaChat({
             }}
             placeholder={busy ? 'Leda is replying…' : 'Ask Leda…'}
             aria-label="Message Leda"
-            className="min-h-8 flex-1 resize-none self-center bg-transparent py-1.5 text-sm leading-5 text-ink outline-none placeholder:text-ink-subtle"
+            className="min-h-8 flex-1 resize-none self-center bg-transparent py-1.5 text-sm leading-5 text-ink outline-none placeholder:text-ink-muted"
           />
           <button
             type="submit"
             aria-label="Send"
             disabled={busy || !draft.trim()}
-            className={cn('grid h-8 w-8 shrink-0 place-items-center rounded-base bg-transparent text-ink-muted hover:text-ink disabled:cursor-not-allowed disabled:opacity-40', focusRing)}
+            className={cn('grid h-8 w-8 shrink-0 place-items-center rounded-base bg-transparent text-ink hover:text-primary-500 disabled:cursor-not-allowed', focusRing)}
           >
             <Icon icon={ArrowElbowDownLeft} size="md" />
           </button>
@@ -523,13 +533,13 @@ export function DashboardShell({
   const toggleLeda = () => (desktop ? setDockedRemembered(!docked) : setDrawer(!drawer));
 
   return (
-    <div className="ds-root relative flex h-screen w-full overflow-hidden bg-surface-canvas font-sans text-ink">
+    <div className={cn('ds-root relative flex h-screen w-full overflow-hidden bg-surface-canvas font-sans text-ink', SHELL_SURFACES)}>
       <Rail active={active} member={member} onNavigate={onNavigate} onAddPlatform={onAddPlatform} />
 
       <main className={cn('min-h-0 min-w-0 flex-1 overflow-y-auto [container-type:inline-size] max-lg:pb-16', !ledaShown && 'pr-24')}>{children}</main>
 
       {desktop && docked && (
-        <aside aria-label="Leda panel" className="flex h-full w-[24rem] shrink-0 flex-col bg-surface shadow-sm xl:w-[28rem]">
+        <aside aria-label="Leda panel" className="flex h-full w-[24rem] shrink-0 flex-col bg-[rgb(var(--ds-leda-panel))] shadow-sm xl:w-[28rem]">
           <LedaChat view={ledaView} onClose={() => setDockedRemembered(false)} suggestions={ledaSuggestions} prefill={ledaPrefill} />
         </aside>
       )}
@@ -564,7 +574,7 @@ export function DashboardShell({
             <Icon icon={List} size="md" weight="bold" />
           </button>
           <MobileNav open={nav} onOpenChange={setNav} active={active} member={member} onNavigate={onNavigate} />
-          <OffCanvas open={drawer} onOpenChange={setDrawer} side="right" width="100vw" hideClose className="max-w-none sm:max-w-[24rem]">
+          <OffCanvas open={drawer} onOpenChange={setDrawer} side="right" width="100vw" hideClose className={cn('max-w-none bg-[rgb(var(--ds-leda-panel))] sm:max-w-[24rem]', SHELL_SURFACES)}>
             <OffCanvas.Header className="sr-only">Leda</OffCanvas.Header>
             <LedaChat view={ledaView} onClose={() => setDrawer(false)} overlay suggestions={ledaSuggestions} prefill={ledaPrefill} />
           </OffCanvas>
