@@ -3,7 +3,7 @@
  *
  * Opens from a connections-map node or a rail platform tile in the RDY-213 DashboardShell.
  * Flat layout per owner direction: no cards and no stat tiles. Key numbers are one row of plain
- * figures split by hairline dividers; lists are divided rows. Only the degraded/offline banner
+ * figures separated by spacing; lists are plain rows. Only the degraded/offline banner
  * uses a tinted Notice, because it is an alert.
  *
  * Desktop: centred over the content area (not the viewport) and sized to it, so it sits beside
@@ -54,7 +54,7 @@ import {
 export const MISSING_IN_KIT = [
   'Modal `placement="content"` (or a `container` prop): centre and size the dialog over the shell content area beside the fixed Leda column; prototype uses arbitrary lg:/xl: left and max-w calc() classes with the rail (3.5rem) and leda-panel widths.',
   'Modal `sheetBelow="sm"`: full-screen sheet on phones (inset-0, no rounding/border, fade instead of the translate-based scale keyframe); prototype overrides with max-sm: classes.',
-  'StatRow (flat key numbers): plain figures in one row split by hairline dividers, 4 up / 2 up by container width, `warn` and `stale` tones, skeleton variant. Today `Stat` is a tile, which the owner ruled out.',
+  'StatRow (flat key numbers): plain figures in one row separated by spacing, 4 up / 2 up by container width, `warn` and `stale` tones, skeleton variant. Today `Stat` is a tile, which the owner ruled out.',
   'ListSection + ListRow: section heading with count, rows separated by spacing, row as a link with leading severity, trailing caret, empty-row copy. Composed by hand here and in ConnectionsOverview.',
   'LiveStamp: "Updated 4s ago" with a quiet live dot that ticks and resets on refetch, stale tone when the provider fails.',
   'LedaSidePanel `prefill(text, context)` API so a page can open the column with a drafted question and silent context; prototype writes to the composer through the DOM.',
