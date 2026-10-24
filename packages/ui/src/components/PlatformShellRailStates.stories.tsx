@@ -11,8 +11,8 @@ type Story = StoryObj;
 
 const platforms: PlatformShellPlatform[] = [
   { id: 'inventory', label: 'Inventory', icon: Package, status: 'active' },
-  { id: 'davao', label: 'Repair shop - Davao', icon: Wrench, status: 'active', active: true },
-  { id: 'cebu', label: 'Repair shop - Cebu', avatar: 'Cebu Branch', status: 'degraded' },
+  { id: 'davao', label: 'SMS - Davao', icon: Wrench, status: 'active', active: true },
+  { id: 'cebu', label: 'SMS - Cebu', avatar: 'Cebu Branch', status: 'degraded' },
 ];
 
 const base: Omit<PlatformShellProps, 'children'> = {

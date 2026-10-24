@@ -3,7 +3,7 @@ import { MechanicFlow } from './MechanicFlow';
 import { mechanic } from './params';
 
 /** PROTOTYPE (RDY-63) - Job detail for the mechanic: customer report, work to do (tap to tick), items used, comments, attachments. Sticky bottom bar: the next action is the one primary; Change status holds free moves and Mark as pending (with a reason). No confirm on status steps (undo toast); only removing an item confirms. Completing a job is the front desk step, not offered. */
-const meta: Meta = { title: 'Repair shop/Mechanic job detail', tags: ['!autodocs'], parameters: { layout: 'fullscreen' } };
+const meta: Meta = { title: 'SMS/Mechanic job detail', tags: ['!autodocs'], parameters: { layout: 'fullscreen' } };
 export default meta;
 type Story = StoryObj;
 

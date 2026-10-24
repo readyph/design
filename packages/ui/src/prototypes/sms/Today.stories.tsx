@@ -3,7 +3,7 @@ import { RepairFlow } from './Flow';
 import { mobile } from './params';
 
 /** PROTOTYPE (RDY-18) - Today is the shell home for the branch: due today, waiting on customer, unpaid, then a "Needs attention" list. Each item suggests one next action. Leda slots are inert placeholders (pending decision). */
-const meta: Meta = { title: 'Repair shop/Today', tags: ['!autodocs'], parameters: { layout: 'fullscreen' } };
+const meta: Meta = { title: 'SMS/Today', tags: ['!autodocs'], parameters: { layout: 'fullscreen' } };
 export default meta;
 type Story = StoryObj;
 

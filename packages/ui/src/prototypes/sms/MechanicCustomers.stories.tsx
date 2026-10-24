@@ -3,7 +3,7 @@ import { MechanicFlow } from './MechanicFlow';
 import { mechanic } from './params';
 
 /** PROTOTYPE (RDY-63) - Minimal, read-only customer list for the mechanic: name, plates, tap to call. A customer opens a small detail with vehicles and the mechanic jobs. */
-const meta: Meta = { title: 'Repair shop/Mechanic customers', tags: ['!autodocs'], parameters: { layout: 'fullscreen' } };
+const meta: Meta = { title: 'SMS/Mechanic customers', tags: ['!autodocs'], parameters: { layout: 'fullscreen' } };
 export default meta;
 type Story = StoryObj;
 

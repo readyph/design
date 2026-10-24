@@ -5,7 +5,7 @@ import { JOBS, type JobStatus } from './data';
 import { mobile } from './params';
 
 /** PROTOTYPE (RDY-18) - job detail. The next action is the single primary in the header (the sticky bar on mobile); free status moves live in "Change status". The Leda slot is an inert placeholder. */
-const meta: Meta = { title: 'Repair shop/Job detail', tags: ['!autodocs'], parameters: { layout: 'fullscreen' } };
+const meta: Meta = { title: 'SMS/Job detail', tags: ['!autodocs'], parameters: { layout: 'fullscreen' } };
 export default meta;
 type Story = StoryObj;
 

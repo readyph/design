@@ -27,14 +27,14 @@ type Story = StoryObj;
 
 const one: PlatformShellPlatform[] = [
   { id: 'inventory', label: 'Inventory', icon: Package, status: 'active' },
-  { id: 'davao', label: 'Repair shop - Davao', icon: Wrench, status: 'active', active: true },
+  { id: 'davao', label: 'SMS - Davao', icon: Wrench, status: 'active', active: true },
 ];
 const many: PlatformShellPlatform[] = [
   { id: 'inventory', label: 'Inventory', icon: Package, status: 'active' },
-  { id: 'davao', label: 'Repair shop - Davao', icon: Wrench, status: 'active', active: true },
-  { id: 'cebu', label: 'Repair shop - Cebu', avatar: 'Cebu Branch', status: 'degraded' },
-  { id: 'manila', label: 'Repair shop - Manila', avatar: 'Manila Branch', status: 'active' },
-  { id: 'iloilo', label: 'Repair shop - Iloilo', avatar: 'Iloilo Branch', status: 'offline' },
+  { id: 'davao', label: 'SMS - Davao', icon: Wrench, status: 'active', active: true },
+  { id: 'cebu', label: 'SMS - Cebu', avatar: 'Cebu Branch', status: 'degraded' },
+  { id: 'manila', label: 'SMS - Manila', avatar: 'Manila Branch', status: 'active' },
+  { id: 'iloilo', label: 'SMS - Iloilo', avatar: 'Iloilo Branch', status: 'offline' },
 ];
 
 const base: Omit<PlatformShellProps, 'children'> = {

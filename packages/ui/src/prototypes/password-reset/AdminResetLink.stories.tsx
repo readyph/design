@@ -17,13 +17,13 @@ import { Table, type TableColumn } from '../../components/Table';
 import { Toaster } from '../../components/toast/Toaster';
 import { toast } from '../../components/toast/toastStore';
 import { PortalShell } from '../../patterns/portal/shell';
-import { AuthFrame } from '../../patterns/repair-shop/SetPassword';
+import { AuthFrame } from '../../patterns/sms/SetPassword';
 
 /**
  * PROTOTYPE (RDY-164, relates to RDY-65) - password reset is admin-initiated in the Portal only.
  * An administrator opens Team, uses "Send reset link" on a member row; the member gets an email whose
  * link opens the Portal reset page (existing Portal/Auth "Reset password", "done", "link expired"
- * stories). Inventory and Repair shop sign-in have no self-service "Forgot password".
+ * stories). Inventory and SMS sign-in have no self-service "Forgot password".
  */
 const meta: Meta = {
   title: 'Portal/Team - send reset link',
@@ -160,7 +160,7 @@ export const Email: Story = {
   ),
 };
 
-function SignInNoForgot({ platform }: { platform: 'Inventory' | 'Repair shop' }) {
+function SignInNoForgot({ platform }: { platform: 'Inventory' | 'SMS' }) {
   return (
     <AuthFrame>
       <Card padding="lg" className="flex flex-col gap-4">
@@ -177,4 +177,4 @@ function SignInNoForgot({ platform }: { platform: 'Inventory' | 'Repair shop' })
   );
 }
 export const SignInInventory: Story = { name: '8. Inventory sign-in (no Forgot password)', render: () => <SignInNoForgot platform="Inventory" /> };
-export const SignInRepairShop: Story = { name: '8. Repair shop sign-in (no Forgot password)', render: () => <SignInNoForgot platform="Repair shop" /> };
+export const SignInSms: Story = { name: '8. SMS sign-in (no Forgot password)', render: () => <SignInNoForgot platform="SMS" /> };

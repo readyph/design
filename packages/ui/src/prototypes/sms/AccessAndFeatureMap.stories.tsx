@@ -15,7 +15,7 @@ import { Table, type TableColumn } from '../../components/Table';
  * (area -> proposed epic -> shared API coverage). Source of truth for planning is the ticket.
  */
 const meta: Meta = {
-  title: 'Repair shop/Access and feature map',
+  title: 'SMS/Access and feature map',
   tags: ['!autodocs'],
   parameters: { layout: 'fullscreen' },
 };
@@ -119,7 +119,7 @@ export const FeatureMap: Story = {
     return (
       <div className="ds-root min-h-screen bg-surface-canvas font-sans text-ink">
         <Page>
-          <PageHeader title="Repair shop platform: feature map" description="The source app runs on its own API; almost nothing maps onto the shared /api/v1 yet." />
+          <PageHeader title="SMS platform: feature map" description="The source app runs on its own API; almost nothing maps onto the shared /api/v1 yet." />
           <Table columns={cols} data={AREAS} rowKey={(a) => a.epic} />
         </Page>
       </div>

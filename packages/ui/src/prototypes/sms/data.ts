@@ -1,5 +1,5 @@
 /**
- * PROTOTYPE data + rules for the repair-shop platform (RDY-18).
+ * PROTOTYPE data + rules for the sms platform (RDY-18).
  * Behaviour captured from the Montauto QA app; mock values only, no real records.
  */
 export type JobStatus = 'quotation' | 'for_approval' | 'todo' | 'in_progress' | 'pending' | 'for_pickup' | 'completed';
@@ -152,7 +152,7 @@ export const attentionReason = (j: Job): { label: string; tone: 'error' | 'warni
   return null;
 };
 
-/** Inventory products read from the linked inventory platform (inventory.catalog). Read-only in the repair shop. */
+/** Inventory products read from the linked inventory platform (inventory.catalog). Read-only in the SMS. */
 export interface InventoryItem { id: number; sku: string; name: string; price: number; onHand: number; minQty: number; unit: string }
 export const INVENTORY: InventoryItem[] = [
   { id: 1, sku: 'OEM-156', name: 'Oil filter', price: 1500, onHand: 20, minQty: 5, unit: 'box' },
