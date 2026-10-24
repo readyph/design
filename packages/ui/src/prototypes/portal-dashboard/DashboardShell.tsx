@@ -494,7 +494,7 @@ export function DashboardShell({
       <main className="min-h-0 min-w-0 flex-1 overflow-y-auto [container-type:inline-size] max-lg:pb-16">{children}</main>
 
       {desktop && docked && (
-        <aside aria-label="Leda panel" className="flex h-full w-[24rem] shrink-0 flex-col border-l border-border bg-surface xl:w-[28rem]">
+        <aside aria-label="Leda panel" className="flex h-full w-[24rem] shrink-0 flex-col bg-surface shadow-sm xl:w-[28rem]">
           <LedaChat view={ledaView} onClose={() => setDockedRemembered(false)} suggestions={ledaSuggestions} prefill={ledaPrefill} />
         </aside>
       )}
