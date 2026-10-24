@@ -1,5 +1,12 @@
 # @readyph/ui
 
+## 0.7.0
+
+### Minor Changes
+
+- c4452dc: RDY-227: `Tooltip` gains `tone="surface"` (rich bubble), `Switch` accepts `aria-label` / `aria-labelledby`, and the new `Anchor` places children at an (x, y) percent point via CSS variables.
+- e035f21: Add scene colour tokens for the Lab town map: `--ds-scene-*` CSS variables (light and dark) and Tailwind keys `scene-grass`, `scene-grass-edge`, `scene-road`, `scene-road-marking`, `scene-footpath`, `scene-window-glow`, `scene-window-off`, `scene-warehouse-wall/roof`, `scene-shop-wall/roof`, `scene-store-wall/roof`, `scene-hq-wall/roof`, `scene-awning`, `scene-awning-stripe`.
+
 ## 0.6.1
 
 ### Patch Changes
