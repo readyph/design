@@ -9,7 +9,7 @@ type Bar = 'strip' | 'map' | 'list' | 'list-short';
 /** Tiny page schematic built from token-colored bars; the map is always the largest block. */
 function Schematic({ blocks, label }: { blocks: Bar[]; label: string }) {
   return (
-    <div role="img" aria-label={label} className="flex h-28 w-36 flex-col gap-1.5 rounded-md border border-border bg-surface p-2">
+    <div role="img" aria-label={label} className="flex h-28 w-32 flex-col gap-1.5 rounded-md border border-border bg-surface p-2">
       {blocks.map((b, i) => (
         <div
           key={i}
@@ -27,20 +27,29 @@ function Schematic({ blocks, label }: { blocks: Bar[]; label: string }) {
 
 interface Row {
   label: string;
-  cells: [string, string, string, string];
+  cells: [string, string, string, string, string];
 }
 
 const ROWS: Row[] = [
-  { label: 'What it adds', cells: ['Four numbers above the map: orders, low stock, open jobs, approvals.', 'A list of decisions waiting on the owner, each with Approve and Decline.', 'The KPI strip and the approvals list together.', 'A time-ordered list of what happened across platforms.'] },
-  { label: 'Helps the owner', cells: ['See the day at a glance.', 'Act without leaving Home.', 'Both of the left.', 'Catch up after being away.'] },
-  { label: 'Data and API', cells: ['One small aggregate endpoint per platform kind (counts and one delta).', 'Each platform already has approvals; Portal aggregates them like Needs attention.', 'Both of the left.', 'New merged, time-ordered activity API across platforms. Not available.'] },
-  { label: 'Fits v1', cells: ['Yes, with 3 small endpoints.', 'Yes.', 'Yes, but is the heaviest v1 page.', 'No. Out of scope for v1.'] },
-  { label: 'Weight on the page', cells: ['Low (about 72px), but pushes the map down.', 'Medium, grows with the queue.', 'High; the map moves below the fold on laptops.', 'High; long list, low urgency.'] },
-  { label: 'Overlap with Needs attention', cells: ['Same numbers, summarized.', 'Moves approval items out of Needs attention so nothing shows twice.', 'Both.', 'Repeats items that already appear in the strip.'] },
-  { label: 'Leda hook', cells: ['Each figure links to its platform; prompt "Why did orders go up today?".', '"Ask Leda" per request; prompt "Is PO-1042 a normal amount?".', 'Both.', 'Prompt "What happened today?".'] },
+  { label: 'What it adds', cells: ['Nothing: the map and the Needs attention strip.', 'Four numbers above the map: sales today, open jobs, low stock, unpaid invoices.', 'A list of decisions waiting on the owner: transfers, purchase orders, repair quotes, Leda proposals.', 'A time-ordered list of what happened across platforms.', 'The KPI strip, plus Needs attention beside Pending approvals.'] },
+  { label: 'Helps the owner', cells: ['See what is wrong.', 'See the day at a glance.', 'Decide without leaving Home.', 'Catch up after being away.', 'All three.'] },
+  { label: 'Data and API', cells: ['Attention feed (RDY-241).', 'One small aggregate endpoint per platform kind (a count and one delta).', 'Each platform already has approvals; Portal aggregates them like Needs attention. Leda proposals come from Leda.', 'New merged, time-ordered activity API across platforms. Not available.', 'Both of B and C.'] },
+  { label: 'Live and actionable', cells: ['Live; Open and Ask Leda.', 'Live; each figure links to its source. Read only.', 'Live and actionable: Approve, Decline, Review in Leda.', 'Read only; links to the source.', 'Live; actionable in the approvals column.'] },
+  { label: 'Fits v1', cells: ['Yes.', 'Yes, with 3 small endpoints.', 'Yes.', 'No. Out of scope for v1.', 'Yes, but the heaviest v1 page.'] },
+  { label: 'Pushed below the fold (laptop)', cells: ['Nothing.', 'Map moves down about 72px.', 'Needs attention moves below the approvals.', 'Activity sits below attention, mostly unseen.', 'Map moves down; two columns stay narrow at 1024.'] },
+  { label: 'Overlap with Needs attention', cells: ['n/a', 'Same numbers, summarized.', 'Approval items leave Needs attention so nothing shows twice.', 'Repeats items already in the strip.', 'Handled as in C.'] },
+  { label: 'Leda hook', cells: ['"What needs my attention?"; Ask Leda per row.', 'Figures link to platforms; prompt "Why are sales up today?".', 'Ask Leda per request; Review in Leda opens the proposal confirm card.', 'Prompt "What happened today?".', 'Both of B and C.'] },
 ];
 
-const HEADS = ['A · KPI strip', 'B · Pending approvals', 'C · Combined', 'D · Activity feed'];
+const SCHEMATICS: [string, Bar[]][] = [
+  ['Map, then attention list', ['map', 'list-short']],
+  ['Strip, then map, then attention list', ['strip', 'map', 'list-short']],
+  ['Map, then approvals list, then attention list', ['map', 'list', 'list-short']],
+  ['Map, then attention list, then activity list', ['map', 'list-short', 'list']],
+  ['Strip, then map, then attention beside approvals', ['strip', 'map', 'list']],
+];
+
+const HEADS = ['A · Baseline', 'B · KPI strip', 'C · Pending approvals', 'D · Activity feed', 'E · Combined'];
 
 export function HomeOptionsComparison() {
   return (
@@ -54,20 +63,20 @@ export function HomeOptionsComparison() {
 
       <section aria-labelledby="rec-heading" className="flex flex-col gap-2 border-y border-border py-5">
         <h2 id="rec-heading" className="flex items-center gap-2 text-base font-semibold">
-          Recommendation <Badge tone="success" size="sm">Option B</Badge>
+          Recommendation <Badge tone="success" size="sm">Option C</Badge>
         </h2>
         <p className="max-w-3xl text-sm text-ink">
-          Ship Pending approvals under the map for v1. It is the only addition that lets the owner finish a job from Home, it needs no new platform capability beyond what Needs attention already aggregates, and it leaves the map in view on a laptop.
+          Ship Option C, Pending approvals under the map, for v1. It is the only addition that lets the owner finish a job from Home, it needs no new capability beyond what Needs attention already aggregates, and it leaves the map in view on a laptop.
         </p>
         <ul className="max-w-3xl list-disc space-y-1 pl-5 text-sm text-ink-muted">
-          <li>Keep the KPI strip (A) as a follow-up once the three aggregate endpoints exist; it is cheap but duplicates what the platforms show.</li>
-          <li>Skip the combined page (C) for v1: it pushes the map down and doubles the API work.</li>
-          <li>Defer the activity feed (D) until a cross-platform activity API exists.</li>
+          <li>Keep the KPI strip (B) as a follow-up once the three aggregate endpoints exist; it is cheap but repeats what the platforms already show.</li>
+          <li>Skip the combined page (E) for v1: it pushes the map down, and its two columns are cramped at 1024.</li>
+          <li>Defer the activity feed (D) until a tenant activity API exists.</li>
         </ul>
       </section>
 
       <section aria-label="Comparison" className="overflow-x-auto">
-        <table className="w-full min-w-[56rem] border-collapse text-left text-sm">
+        <table className="w-full min-w-[64rem] border-collapse text-left text-sm">
           <caption className="sr-only">Home content options compared</caption>
           <thead>
             <tr className="border-b border-border">
@@ -84,18 +93,11 @@ export function HomeOptionsComparison() {
               <th scope="row" className="py-3 pr-4 text-xs font-medium text-ink-subtle">
                 Layout
               </th>
-              <td className="px-3 py-3">
-                <Schematic label="Strip, then map, then attention list" blocks={['strip', 'map', 'list-short']} />
-              </td>
-              <td className="px-3 py-3">
-                <Schematic label="Map, then approvals list, then attention list" blocks={['map', 'list', 'list-short']} />
-              </td>
-              <td className="px-3 py-3">
-                <Schematic label="Strip, then map, then approvals and attention lists" blocks={['strip', 'map', 'list', 'list-short']} />
-              </td>
-              <td className="px-3 py-3">
-                <Schematic label="Map, then attention list, then activity list" blocks={['map', 'list-short', 'list']} />
-              </td>
+              {SCHEMATICS.map(([label, blocks]) => (
+                <td key={label} className="px-3 py-3">
+                  <Schematic label={label} blocks={blocks} />
+                </td>
+              ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-border">

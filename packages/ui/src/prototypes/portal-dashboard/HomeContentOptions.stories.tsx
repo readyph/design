@@ -5,15 +5,15 @@ import { MAP_DEFAULT, MAP_EMPTY } from './home-data';
 
 /**
  * RDY-217 (epic RDY-212): owner-choice content options for Portal Home. The owner picks one; see
- * "Comparison and recommendation" first.
+ * "Overview" first.
  *
  * Shared rules: connections map stays the main content; no cards, and the KPI strip is flat
  * typography on hairline dividers (no tiles); Leda stays the fixed flush right column with the
  * previous chat. Built on the RDY-214 Home (shared ConnectionsMap, Needs attention strip) and the
  * revised RDY-213 shell.
  *
- * A KPI strip, B Pending approvals, C Combined, D Recent activity (needs a new activity API, out of
- * scope for v1). The slim label at the top of each page names the option; it is review-only.
+ * A baseline (RDY-214), B KPI strip, C Pending approvals, D Recent activity (needs a new activity API,
+ * out of scope for v1), E Combined. The slim label at the top of each page names the option; it is review-only.
  *
  * Leda entry points: option-specific suggested prompts in the panel; "Ask Leda" on every approval
  * and attention row prefills the panel; KPIs link into their platform.
@@ -44,32 +44,32 @@ const meta: Meta<HomeContentOptionsProps> = {
 export default meta;
 type Story = StoryObj<HomeContentOptionsProps>;
 
-export const Comparison: Story = {
-  name: '0 · Comparison and recommendation',
+export const Overview: Story = {
+  name: 'Overview · Comparison and recommendation',
   render: () => <HomeOptionsComparison />,
   parameters: { layout: 'fullscreen', viewport: { viewports, defaultViewport: 'desktop1440' } },
   globals: { theme: 'light' },
 };
-export const ComparisonDark: Story = { ...Comparison, name: '0 · Comparison (dark)', globals: { theme: 'dark' } };
-
-// Option A
-export const A_KpiStrip: Story = { name: 'A · KPI strip, 1440 light', args: { option: 'kpi' }, ...at('desktop1440', 'light') };
-export const A_KpiStripDark: Story = { name: 'A · KPI strip, 1440 dark', args: { option: 'kpi' }, ...at('desktop1440', 'dark') };
-export const A_KpiLaptop: Story = { name: 'A · KPI strip, 1024', args: { option: 'kpi' }, ...at('laptop1024', 'light') };
-export const A_KpiPhone: Story = { name: 'A · KPI strip, 390', args: { option: 'kpi' }, ...at('phone390', 'light') };
+export const OverviewDark: Story = { ...Overview, name: 'Overview · Comparison (dark)', globals: { theme: 'dark' } };
 
 // Option B
-export const B_Approvals: Story = { name: 'B · Pending approvals, 1440 light', args: { option: 'approvals' }, ...at('desktop1440', 'light') };
-export const B_ApprovalsDark: Story = { name: 'B · Pending approvals, 1440 dark', args: { option: 'approvals' }, ...at('desktop1440', 'dark') };
-export const B_ApprovalsLaptop: Story = { name: 'B · Pending approvals, 1024', args: { option: 'approvals' }, ...at('laptop1024', 'light') };
-export const B_ApprovalsPhone: Story = { name: 'B · Pending approvals, 390', args: { option: 'approvals' }, ...at('phone390', 'dark') };
-export const B_ApprovalsEmpty: Story = { name: 'B · State, nothing to approve', args: { option: 'approvals', approvalsEmpty: true }, ...at('desktop1440', 'light') };
+export const B_KpiStrip: Story = { name: 'B · KPI strip, 1440 light', args: { option: 'kpi' }, ...at('desktop1440', 'light') };
+export const B_KpiStripDark: Story = { name: 'B · KPI strip, 1440 dark', args: { option: 'kpi' }, ...at('desktop1440', 'dark') };
+export const B_KpiLaptop: Story = { name: 'B · KPI strip, 1024', args: { option: 'kpi' }, ...at('laptop1024', 'light') };
+export const B_KpiPhone: Story = { name: 'B · KPI strip, 390', args: { option: 'kpi' }, ...at('phone390', 'light') };
 
 // Option C
-export const C_Combined: Story = { name: 'C · Combined, 1440 light', args: { option: 'combined' }, ...at('desktop1440', 'light') };
-export const C_CombinedDark: Story = { name: 'C · Combined, 1440 dark, Leda collapsed', args: { option: 'combined', ledaOpen: false }, ...at('desktop1440', 'dark') };
-export const C_CombinedLaptop: Story = { name: 'C · Combined, 1024', args: { option: 'combined' }, ...at('laptop1024', 'light') };
-export const C_CombinedPhone: Story = { name: 'C · Combined, 390', args: { option: 'combined' }, ...at('phone390', 'light') };
+export const C_Approvals: Story = { name: 'C · Pending approvals, 1440 light', args: { option: 'approvals' }, ...at('desktop1440', 'light') };
+export const C_ApprovalsDark: Story = { name: 'C · Pending approvals, 1440 dark', args: { option: 'approvals' }, ...at('desktop1440', 'dark') };
+export const C_ApprovalsLaptop: Story = { name: 'C · Pending approvals, 1024', args: { option: 'approvals' }, ...at('laptop1024', 'light') };
+export const C_ApprovalsPhone: Story = { name: 'C · Pending approvals, 390', args: { option: 'approvals' }, ...at('phone390', 'dark') };
+export const C_ApprovalsEmpty: Story = { name: 'C · State, nothing to approve', args: { option: 'approvals', approvalsEmpty: true }, ...at('desktop1440', 'light') };
+
+// Option E
+export const E_Combined: Story = { name: 'E · Combined, 1440 light', args: { option: 'combined' }, ...at('desktop1440', 'light') };
+export const E_CombinedDark: Story = { name: 'E · Combined, 1440 dark, Leda collapsed', args: { option: 'combined', ledaOpen: false }, ...at('desktop1440', 'dark') };
+export const E_CombinedLaptop: Story = { name: 'E · Combined, 1024', args: { option: 'combined' }, ...at('laptop1024', 'light') };
+export const E_CombinedPhone: Story = { name: 'E · Combined, 390', args: { option: 'combined' }, ...at('phone390', 'light') };
 
 // Option D (needs API, out of scope for v1)
 export const D_Activity: Story = { name: 'D · Activity feed (needs API, not v1), 1440 light', args: { option: 'activity' }, ...at('desktop1440', 'light') };
@@ -77,5 +77,5 @@ export const D_ActivityDark: Story = { name: 'D · Activity feed, 1440 dark', ar
 export const D_ActivityPhone: Story = { name: 'D · Activity feed, 390', args: { option: 'activity' }, ...at('phone390', 'light') };
 
 // Shared states
-export const Baseline: Story = { name: 'Reference · RDY-214 baseline', args: { option: 'baseline' }, ...at('desktop1440', 'light') };
+export const A_Baseline: Story = { name: 'A · Baseline (RDY-214), 1440 light', args: { option: 'baseline' }, ...at('desktop1440', 'light') };
 export const NoPlatforms: Story = { name: 'State · No platforms (all options hide the extras)', args: { option: 'combined', map: MAP_EMPTY }, ...at('desktop1440', 'light') };

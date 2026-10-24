@@ -19,10 +19,10 @@ export interface Kpi {
 
 /** Option A: one number per platform kind plus approvals. Each needs a small aggregate endpoint. */
 export const KPIS: Kpi[] = [
-  { id: 'orders', label: 'Orders today', value: '48', delta: '+12% vs last Tuesday', deltaTone: 'success', source: 'Storefronts', href: '/open/orders' },
-  { id: 'low', label: 'Low stock products', value: '7', delta: '2 more than yesterday', deltaTone: 'error', source: 'Inventory', href: '/open/low-stock' },
+  { id: 'sales', label: 'Sales today', value: 'PHP 84,250', delta: '+9% vs last Tuesday', deltaTone: 'success', source: 'Storefronts', href: '/open/sales' },
   { id: 'jobs', label: 'Open job orders', value: '14', delta: '3 waiting for parts', deltaTone: 'neutral', source: 'Repair shops', href: '/open/jobs' },
-  { id: 'approvals', label: 'Awaiting approval', value: '4', delta: 'Oldest 2 days', deltaTone: 'neutral', source: 'All platforms', href: '#approvals' },
+  { id: 'low', label: 'Low stock products', value: '7', delta: '2 more than yesterday', deltaTone: 'error', source: 'Inventory', href: '/open/low-stock' },
+  { id: 'unpaid', label: 'Unpaid invoices', value: '5', delta: 'PHP 126,400 overdue', deltaTone: 'error', source: 'Storefronts and repair shops', href: '/open/unpaid' },
 ];
 
 export interface Approval {
@@ -32,6 +32,8 @@ export interface Approval {
   platform: string;
   requestedBy: string;
   requestedAgo: string;
+  /** `leda`: a Leda proposal; Review opens its confirm card in the Leda panel (confirm-before-write unchanged). */
+  kind?: 'request' | 'leda';
   /** Result line announced after Approve. */
   approvedNote: string;
 }
@@ -41,7 +43,8 @@ export const APPROVALS: Approval[] = [
   { id: 'apr-1', title: 'Stock transfer TR-2201: 40 units to Visayas stock', detail: 'Rebalancing Visayas', platform: 'Central stock', requestedBy: 'Liza Ramos', requestedAgo: '2 days ago', approvedNote: 'Transfer TR-2201 approved.' },
   { id: 'apr-2', title: 'Stock transfer TR-2203: 12 units to Davao stock', detail: 'Rebalancing Davao', platform: 'Central stock', requestedBy: 'Liza Ramos', requestedAgo: '1 day ago', approvedNote: 'Transfer TR-2203 approved.' },
   { id: 'apr-3', title: 'Purchase order PO-1042 for PHP 48,200', detail: 'Supplier: Mega Parts Trading', platform: 'Central stock', requestedBy: 'Joel Cruz', requestedAgo: '5 hours ago', approvedNote: 'Purchase order PO-1042 approved.' },
-  { id: 'apr-4', title: 'Price override on job JO-3391: 15% discount', detail: 'Customer: Dela Cruz, screen replacement', platform: 'Repair shop Makati', requestedBy: 'Ana Reyes', requestedAgo: '35 minutes ago', approvedNote: 'Discount on JO-3391 approved.' },
+  { id: 'apr-4', title: 'Repair quote Q-0457: screen replacement, PHP 4,800', detail: 'Customer: Dela Cruz', platform: 'Repair shop Makati', requestedBy: 'Ana Reyes', requestedAgo: '35 minutes ago', approvedNote: 'Quote Q-0457 approved and sent to the customer.' },
+  { id: 'apr-5', title: 'Leda proposes a reorder draft for 7 low stock products', detail: 'Draft purchase order, PHP 31,500', platform: 'Central stock', requestedBy: 'Leda', requestedAgo: '10 minutes ago', kind: 'leda', approvedNote: '' },
 ];
 
 /** The attention item that duplicates two of the approvals; hidden from Needs attention when approvals show. */
@@ -69,7 +72,7 @@ export const ACTIVITY: ActivityEvent[] = [
 ];
 
 export const OPTION_LEDA_SUGGESTIONS = {
-  kpi: ['What needs my attention?', 'Why did orders go up today?', 'Which products should I reorder?'],
+  kpi: ['What needs my attention?', 'Why are sales up today?', 'Which products should I reorder?'],
   approvals: ['What needs my approval?', 'Is PO-1042 a normal amount?', 'What needs my attention?'],
   activity: ['What happened today?', 'Why is Cebu branch offline?', 'What needs my attention?'],
 } as const;

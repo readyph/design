@@ -6,8 +6,8 @@
  * typography on dividers), the connections map stays the main content, the Leda column stays the
  * fixed flush column with the previous chat.
  *
- * Options: A KPI strip, B Pending approvals, C Combined (A + B), D Activity feed (needs a new API,
- * out of scope for v1). Baseline is RDY-214 unchanged, for comparison.
+ * Options: A baseline (RDY-214, reference), B KPI strip, C Pending approvals, D Activity feed (needs a
+ * new API, out of scope for v1), E Combined (KPI strip + two-column attention / approvals).
  *
  * Leda entry points: per-option suggested prompts in the panel; "Ask Leda" on every approval and
  * attention row (prefills the panel); each KPI is a link into its platform; activity rows link to
@@ -15,7 +15,7 @@
  */
 import { useState } from 'react';
 import { ArrowRight, CheckCircle, Sparkle } from '@phosphor-icons/react';
-import { Badge, Button, ButtonLink, EmptyState, Icon, Link, Stat } from '../../index';
+import { Badge, Button, ButtonLink, EmptyState, Icon, Link, Stat, cn } from '../../index';
 import { DashboardShell, type DashboardShellProps, type LedaPrefill } from './DashboardShell';
 import { ConnectionsOverview } from './ConnectionsOverview';
 import { NeedsAttention, type AttentionState } from './DashboardHome';
@@ -25,11 +25,11 @@ import { ACTIVITY, APPROVALS, APPROVAL_ATTENTION_IDS, KPIS, OPTION_LEDA_SUGGESTI
 export type HomeOption = 'baseline' | 'kpi' | 'approvals' | 'combined' | 'activity';
 
 export const OPTION_META: Record<HomeOption, { name: string; note?: string }> = {
-  baseline: { name: 'Baseline · RDY-214: map and Needs attention' },
-  kpi: { name: 'Option A · KPI strip above the map' },
-  approvals: { name: 'Option B · Pending approvals under the map' },
-  combined: { name: 'Option C · Combined: KPI strip and pending approvals' },
-  activity: { name: 'Option D · Recent activity under the map', note: 'Needs a new cross-platform activity feed API. Out of scope for v1.' },
+  baseline: { name: 'Option A · Baseline (RDY-214): map and Needs attention' },
+  kpi: { name: 'Option B · KPI strip above the map' },
+  approvals: { name: 'Option C · Pending approvals under the map' },
+  activity: { name: 'Option D · Recent activity under the map', note: 'Needs a new tenant activity feed API. Out of scope for v1.' },
+  combined: { name: 'Option E · Combined: KPI strip, map, attention beside approvals' },
 };
 
 /* ------------------------------------------------------------ Option A -- */
@@ -90,15 +90,23 @@ function ApprovalRow({
         </p>
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        <Button size="sm" variant="subtle" leftIcon={Sparkle} onClick={() => onAskLeda(item)} aria-label={`Ask Leda about: ${item.title}`}>
-          Ask Leda
-        </Button>
-        <Button size="sm" variant="secondary" onClick={() => onResolve(item.id, 'declined')} aria-label={`Decline: ${item.title}`}>
+        {item.kind === 'leda' ? (
+          <Button size="sm" variant="secondary" leftIcon={Sparkle} onClick={() => onAskLeda(item)} aria-label={`Review in Leda: ${item.title}`}>
+            Review in Leda
+          </Button>
+        ) : (
+          <>
+            <Button size="sm" variant="subtle" leftIcon={Sparkle} onClick={() => onAskLeda(item)} aria-label={`Ask Leda about: ${item.title}`}>
+              Ask Leda
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => onResolve(item.id, 'declined')} aria-label={`Decline: ${item.title}`}>
           Decline
-        </Button>
-        <Button size="sm" onClick={() => onResolve(item.id, 'approved')} aria-label={`Approve: ${item.title}`}>
-          Approve
-        </Button>
+            </Button>
+            <Button size="sm" onClick={() => onResolve(item.id, 'approved')} aria-label={`Approve: ${item.title}`}>
+              Approve
+            </Button>
+          </>
+        )}
       </div>
     </li>
   );
@@ -201,7 +209,7 @@ export function HomeContentOptions({ option = 'combined', map = MAP_DEFAULT, att
   const [prefill, setPrefill] = useState<LedaPrefill | undefined>();
   const ask = (text: string) => setPrefill({ text, key: Date.now() });
   const askAttention = (i: AttentionItem) => ask(`Help me with "${i.title}" on ${i.platform}.`);
-  const askApproval = (i: Approval) => ask(`Should I approve "${i.title}"?`);
+  const askApproval = (i: Approval) => ask(i.kind === 'leda' ? `Open your proposal: ${i.title}.` : `Should I approve "${i.title}"?`);
   const hasKpi = option === 'kpi' || option === 'combined';
   const hasApprovals = option === 'approvals' || option === 'combined';
   const suggestions =
@@ -213,9 +221,14 @@ export function HomeContentOptions({ option = 'combined', map = MAP_DEFAULT, att
       {hasKpi && showLower && <KpiStrip />}
       <ConnectionsOverview data={map} onNodeSelect={onNodeSelect} onAddPlatform={shell.onAddPlatform} />
       {showLower && (
-        <div className="flex flex-col gap-2">
-          {hasApprovals && <PendingApprovals onAskLeda={askApproval} empty={approvalsEmpty} />}
-          <NeedsAttention state={attention} onAskLeda={askAttention} exclude={hasApprovals && !approvalsEmpty ? APPROVAL_ATTENTION_IDS : []} />
+        <div className={cn('flex flex-col gap-2', option === 'combined' && 'items-stretch [@container(min-width:60rem)]:grid [@container(min-width:60rem)]:grid-cols-2 [@container(min-width:60rem)]:items-start [@container(min-width:60rem)]:gap-x-2')}>
+          {/* Each column is its own size container, so rows pick the stacked layout when the column is narrow. */}
+          <div className={cn('min-w-0 [container-type:inline-size]', option === 'combined' && '[@container(min-width:60rem)]:order-2')}>
+            {hasApprovals && <PendingApprovals onAskLeda={askApproval} empty={approvalsEmpty} />}
+          </div>
+          <div className={cn('min-w-0 [container-type:inline-size]', option === 'combined' && '[@container(min-width:60rem)]:order-1')}>
+            <NeedsAttention state={attention} onAskLeda={askAttention} exclude={hasApprovals && !approvalsEmpty ? APPROVAL_ATTENTION_IDS : []} />
+          </div>
           {option === 'activity' && <RecentActivity />}
         </div>
       )}
