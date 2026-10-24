@@ -33,6 +33,7 @@ function ThemeSwitcher() {
 const meta: Meta = {
   title: 'Components/Providers/ThemeProvider',
   parameters: {
+    themeManaged: true,
     docs: {
       description: {
         component: `\`\`\`tsx
@@ -50,7 +51,7 @@ const { preference, resolved, setPreference } = useTheme();
 export default meta;
 type Story = StoryObj;
 
-/** A SegmentedControl bound to `useTheme` switches the canvas theme (the Storybook toolbar theme is overridden while the provider is mounted). */
+/** A SegmentedControl bound to `useTheme` switches the canvas theme (this story sets `themeManaged`, so the Storybook toolbar theme does not write `data-theme`; the provider owns it and the toolbar has no effect here). */
 export const Switcher: Story = {
   render: () => (
     <ThemeProvider>
