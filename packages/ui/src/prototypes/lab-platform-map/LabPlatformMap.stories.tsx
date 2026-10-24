@@ -22,11 +22,11 @@ const viewports = {
   phone375: { name: 'Phone 375', styles: { width: '375px', height: '812px' } },
 };
 
-/** Story id of this page; update when the [For Review] prefix is removed. */
-const PAGE_STORY = 'prototypes-portal-lab-platform-map-for-review-page--desktop-dark';
+/** Story id of this page. */
+const PAGE_STORY = 'prototypes-portal-lab-platform-map-page--desktop-dark';
 
 const meta: Meta<LabPlatformMapProps> = {
-  title: 'Prototypes/Portal/Lab Platform Map/[For Review] Page',
+  title: 'Prototypes/Portal/Lab Platform Map/Page',
   tags: ['!autodocs'],
   parameters: { layout: 'fullscreen', viewport: { viewports, defaultViewport: 'desktop1440' } },
   args: { state: 'default', lightsOff: ['rs-cdo'] },
