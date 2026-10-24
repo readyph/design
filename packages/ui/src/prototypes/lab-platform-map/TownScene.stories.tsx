@@ -30,9 +30,10 @@ interface HarnessProps {
   allOff?: boolean;
   showStats?: boolean;
   detail?: 'blockout' | 'full';
+  tileH?: number;
 }
 
-function Harness({ buildings, links, allOff, showStats, detail }: HarnessProps) {
+function Harness({ buildings, links, allOff, showStats, detail, tileH }: HarnessProps) {
   const [lights, setLights] = useState<Record<string, boolean>>(() =>
     allOff ? Object.fromEntries(buildings.map((b) => [b.id, false])) : defaultLights(buildings),
   );
@@ -50,6 +51,7 @@ function Harness({ buildings, links, allOff, showStats, detail }: HarnessProps) 
           links={links}
           lights={lights}
           detail={detail}
+          tileH={tileH}
           onHover={(id, p) => setHovered(id && p ? { id, ...p } : null)}
           onSelect={(id) => setLights((l) => ({ ...l, [id]: !l[id] }))}
           onRenderStats={showStats ? setStats : undefined}
@@ -90,9 +92,15 @@ export const MixedTenant: Story = {
   render,
 };
 
-export const MixedTenantFullArt: Story = {
-  name: 'Mixed tenant (full building art)',
-  args: { buildings: MIXED, links: MIXED_LINKS, detail: 'full' },
+export const MixedTenantBlockout: Story = {
+  name: 'Mixed tenant (blockout boxes)',
+  args: { buildings: MIXED, links: MIXED_LINKS, detail: 'blockout' },
+  render,
+};
+
+export const MixedTenantFlatView: Story = {
+  name: 'Mixed tenant (flat view 24)',
+  args: { buildings: MIXED, links: MIXED_LINKS, tileH: 24 },
   render,
 };
 

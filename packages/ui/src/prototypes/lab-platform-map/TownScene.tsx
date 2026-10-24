@@ -14,7 +14,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import * as Zdog from 'zdog';
 import { cn } from '../../utils/cn';
 import { buildBuilding, buildGround, buildScenery, type BuildingModel, type Projected, type SceneDetail } from './art';
-import { TURN_DEG, dedupeLinks, defaultLights, planTown, type TownBuilding, type TownLink } from './layout';
+import { TILE_H, TILE_W, TURN, dedupeLinks, defaultLights, planTown, tiltFor, type TownBuilding, type TownLink } from './layout';
 import { css, readPalette, type TownPalette } from './palette';
 
 export type { TownBuilding, TownLink, TownStatus } from './layout';
@@ -49,6 +49,8 @@ export interface TownSceneProps {
   onRenderStats?: (stats: TownRenderStats) => void;
   /** `blockout` = massing boxes for the master-plan review; `full` = the finished building art. */
   detail?: SceneDetail;
+  /** Projection tile height in px (tile width is TILE_W): lower it to flatten the view. Default TILE_H. */
+  tileH?: number;
   className?: string;
 }
 
@@ -56,8 +58,6 @@ const STATUS_TEXT = { ACTIVE: 'Active', DEGRADED: 'Degraded', OFFLINE: 'Offline'
 const KIND_TEXT: Record<string, string> = { inventory: 'Warehouse', sms: 'Service shop' };
 
 /** Camera: fixed isometric tilt and 45 degree turn. */
-const TILT = Math.atan(1 / Math.SQRT2);
-const TURN = (TURN_DEG * Math.PI) / 180;
 /** Canvas padding in CSS px; the bottom leaves room for the front row's signs. */
 const PAD_X = 12;
 const PAD_TOP = 84;
@@ -104,7 +104,8 @@ export function TownScene({
   onSelect,
   label = 'Platform town map',
   onRenderStats,
-  detail = 'blockout',
+  detail = 'full',
+  tileH = TILE_H,
   className,
 }: TownSceneProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -235,6 +236,8 @@ export function TownScene({
     return performance.now() - t0;
   }, [palette, toScreen, bounds]);
 
+  const tilt = tiltFor(TILE_W, tileH);
+
   /** (Re)builds the scene graph from the current glow values. */
   const build = useCallback(() => {
     const canvas = canvasRef.current;
@@ -242,12 +245,13 @@ export function TownScene({
     const t0 = performance.now();
     let s = sceneRef.current;
     if (!s || s.illo.element !== canvas) {
-      const illo = new Zdog.Illustration({ element: canvas, rotate: { x: -TILT, y: TURN } }) as Illo;
+      const illo = new Zdog.Illustration({ element: canvas, rotate: { x: -tilt, y: TURN } }) as Illo;
       s = { illo, models: [], zoom: 1, dx: 0, dy: 0, width, height: 0 };
       sceneRef.current = s;
     }
     const scene = s;
     const { illo } = scene;
+    illo.rotate.x = -tilt;
     [...illo.children].forEach((c) => c.remove());
     const { ground, extent } = buildGround(illo, palette, plan, roads);
     pinBehind(ground, -1e9);
@@ -271,7 +275,7 @@ export function TownScene({
     const buildMs = performance.now() - t0;
     const drawMs = draw();
     latest.current.onRenderStats?.({ buildMs, drawMs, items: illo.flatGraph.length });
-  }, [palette, width, plan, placed, roads, detail, draw]);
+  }, [palette, width, plan, placed, roads, detail, tilt, draw]);
 
   useLayoutEffect(build, [build]);
 

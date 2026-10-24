@@ -11,7 +11,7 @@
  * is the only thing Zdog depth-sorts.
  */
 import * as Zdog from 'zdog';
-import { DRIVE_HALF, ROAD_HALF, rotY, routeFor, type PlacedBuilding, type Pt, type TownLink, type TownPlan } from './layout';
+import { DRIVE_HALF, ROAD_HALF, routeFor, type PlacedBuilding, type Pt, type TownLink, type TownPlan } from './layout';
 import { mix, css, type RGB, type TownPalette } from './palette';
 
 const TAU = Zdog.TAU;
@@ -278,28 +278,42 @@ function streetLamp(addTo: Zdog.Anchor, look: Look, x: number, z: number, y = 0)
   ball(addTo, css(mix(look.p.windowOff, look.p.windowOn, look.glow)), 6, x, y - 26, z);
 }
 
-/** Scenery from the plan: trees, hedges, street lamps along the road and the pond. */
+/** Scenery from the plan: trees, hedges, street lamps along the curb, plus a few trees inside parks. */
 export function buildScenery(addTo: Zdog.Anchor, p: TownPalette, plan: TownPlan) {
   const look: Look = { p, glow: 1 };
-  for (const t of plan.scenery.trees) {
-    const g = new Zdog.Group({ addTo, translate: { x: t.x, z: t.z }, updateSort: false });
-    if (t.hedge) hedge(g, look, 0, 0);
-    else tree(g, look, 0, 0, t.s);
-  }
-  plan.road.forEach((r, i) => {
-    if (i % 40 !== 20) return;
-    const nx = plan.road[Math.min(i + 1, plan.road.length - 1)], pv = plan.road[Math.max(i - 1, 0)];
-    const len = Math.hypot(nx.x - pv.x, nx.z - pv.z) || 1;
-    const side = (i / 40) % 2 < 1 ? 1 : -1;
-    streetLamp(addTo, look, r.x - ((nx.z - pv.z) / len) * (ROAD_HALF + 6) * side, r.z + ((nx.x - pv.x) / len) * (ROAD_HALF + 6) * side);
+  const plant = (x: number, z: number, s: number, isHedge: boolean, y = 0) => {
+    const g = new Zdog.Group({ addTo, translate: { x, y, z }, updateSort: false });
+    if (isHedge) hedge(g, look, 0, 0);
+    else tree(g, look, 0, 0, s);
+  };
+  for (const t of plan.scenery.trees) plant(t.x, t.z, t.s, t.hedge);
+  for (const l of plan.scenery.lamps) streetLamp(addTo, look, l.x, l.z);
+  plan.parks.forEach((k, i) => {
+    plant(k.x - k.w / 4, k.z - 8, 1.25, false, -PAD_H);
+    plant(k.x + k.w / 4, k.z + 10, 1.05, false, -PAD_H);
+    plant(k.x + 4, k.z - k.d / 4, 1, i % 2 === 0, -PAD_H);
   });
 }
 
-const polyline = (pts: readonly Pt[], y: number): Zdog.PathCommand[] => pts.map((pt, i) => (i === 0 ? { x: pt.x, y, z: pt.z } : { line: { x: pt.x, y, z: pt.z } }));
+const path3 = (pts: readonly Pt[], y: number): Zdog.PathCommand[] => pts.map((pt, i) => (i === 0 ? { x: pt.x, y, z: pt.z } : { line: { x: pt.x, y, z: pt.z } }));
+
+/** Closed band polygon of constant world width `half * 2` around a polyline (projected with everything else). */
+function band(pts: readonly Pt[], half: number): Pt[] {
+  const left: Pt[] = [], right: Pt[] = [];
+  pts.forEach((pt, i) => {
+    const a = pts[Math.max(i - 1, 0)], b = pts[Math.min(i + 1, pts.length - 1)];
+    const len = Math.hypot(b.x - a.x, b.z - a.z) || 1;
+    const nx = -(b.z - a.z) / len, nz = (b.x - a.x) / len;
+    left.push({ x: pt.x + nx * half, z: pt.z + nz * half });
+    right.push({ x: pt.x - nx * half, z: pt.z - nz * half });
+  });
+  return [...left, ...right.reverse()];
+}
 
 /**
- * Ground layer: island slab, the winding road and driveways, link routes, raised
- * sites and the pond. The slab is inserted first, so painter order keeps it behind everything.
+ * Ground layer: island slab, the U-shaped road (curb, tarmac, dashed centre line),
+ * straight driveways, link routes, the pond and the lots. The slab is inserted
+ * first, so painter order keeps it behind everything.
  */
 export function buildGround(
   addTo: Zdog.Anchor,
@@ -318,44 +332,35 @@ export function buildGround(
   side(r, q, r, -q, 0, lip, p.grassSide, -0.2);
   flat(ground, tone(p.grass, look), -r, -q, r, q);
   const extent = [marker(ground, -r, 0, -q), marker(ground, r, t, q), marker(ground, -r, t, q), marker(ground, r, t, -q)];
-  const stroke = (pts: readonly Pt[], y: number, width: number, color: string) =>
-    new Zdog.Shape({ addTo: ground, path: polyline(pts, y), closed: false, stroke: width, color });
-  // Main road: kerb, tarmac; driveways likewise.
-  stroke(plan.road, -0.3, ROAD_HALF * 2 + 8, tone(p.sidewalk, look, -0.04));
-  for (const dv of Object.values(plan.driveways)) stroke(dv, -0.3, DRIVE_HALF * 2 + 6, tone(p.sidewalk, look, -0.04));
-  stroke(plan.road, -0.6, ROAD_HALF * 2, tone(p.street, look));
-  for (const dv of Object.values(plan.driveways)) stroke(dv, -0.6, DRIVE_HALF * 2, tone(p.street, look));
-  // Link routes along the road network, with a dashed centre line.
+  const kerb = tone(p.sidewalk, look, -0.04), tarmac = tone(p.street, look);
+  const fill = (pts: readonly Pt[], y: number, color: string) => poly(ground, pts.map((pt) => ({ x: pt.x, y, z: pt.z })), color);
+  // Road and driveways: kerb band first, then tarmac band, both through the projection.
+  fill(band(plan.road, ROAD_HALF + 4), -0.3, kerb);
+  for (const dv of Object.values(plan.driveways)) fill(band([dv[0], dv[dv.length - 1]], DRIVE_HALF + 3), -0.3, kerb);
+  fill(band(plan.road, ROAD_HALF), -0.6, tarmac);
+  for (const dv of Object.values(plan.driveways)) fill(band([dv[0], dv[dv.length - 1]], DRIVE_HALF), -0.6, tarmac);
+  // Link routes along the centre line.
   for (const l of links) {
-    const pts = routeFor(plan, l.from, l.to);
-    stroke(pts, -0.9, 9, tone(p.route, look));
-    const dashes: Zdog.PathCommand[] = [];
-    for (let i = 1; i < pts.length; i += 3) {
-      const s = pts[i - 1], e = pts[Math.min(i + 1, pts.length - 1)];
-      dashes.push({ move: { x: s.x, y: -1.3, z: s.z } }, { line: { x: e.x, y: -1.3, z: e.z } });
-    }
-    new Zdog.Shape({ addTo: ground, path: dashes, closed: false, stroke: 1.6, color: tone(p.routeMark, look) });
+    new Zdog.Shape({ addTo: ground, path: path3(routeFor(plan, l.from, l.to), -0.9), closed: false, stroke: 6, color: tone(p.route, look) });
   }
+  // Dashed centre line along the same path.
+  const dashes: Zdog.PathCommand[] = [];
+  for (let i = 0; i + 1 < plan.road.length; i += 3) {
+    const a = plan.road[i], b = plan.road[Math.min(i + 2, plan.road.length - 1)];
+    dashes.push({ move: { x: a.x, y: -1.3, z: a.z } }, { line: { x: b.x, y: -1.3, z: b.z } });
+  }
+  new Zdog.Shape({ addTo: ground, path: dashes, closed: false, stroke: 1.8, color: tone(p.routeMark, look) });
   // Pond.
   const pd = plan.scenery.pond;
   if (pd) {
     new Zdog.Ellipse({ addTo: ground, translate: { x: pd.x, y: -0.4, z: pd.z }, rotate: { x: TAU / 4 }, diameter: pd.r * 2, stroke: 8, fill: true, color: tone(p.sidewalk, look, 0.1) });
     new Zdog.Ellipse({ addTo: ground, translate: { x: pd.x, y: -0.8, z: pd.z }, rotate: { x: TAU / 4 }, diameter: pd.r * 2 - 4, stroke: 2, fill: true, color: tone(p.water, look) });
   }
-  // Sites, far to near, as yawed raised slabs: lawn top in blockout, sidewalk-coloured pad.
-  const order = [...plan.placed].sort((a, b) => a.z - b.z);
-  for (const b of order) slab(ground, look, p.sidewalk, b);
+  // Lots, far to near (the grid runs down-right and down-left, so near = larger x + z).
+  const lots = [
+    ...plan.placed.map((b) => ({ x: b.x, z: b.z, w: b.w, d: b.d, c: p.sidewalk })),
+    ...plan.parks.map((k) => ({ x: k.x, z: k.z, w: k.w, d: k.d, c: p.grass })),
+  ].sort((a, b) => a.x + a.z - (b.x + b.z));
+  for (const lot of lots) block(ground, look, lot.c, lot.w, PAD_H, lot.d, lot.x, 0, lot.z);
   return { ground, extent };
-}
-
-/** Yawed site slab: top plus the two faces that point at the camera (front, right). */
-function slab(addTo: Zdog.Anchor, look: Look, c: RGB, b: PlacedBuilding) {
-  const h = PAD_H + b.lift;
-  const at = (i: number, j: number, y: number) => {
-    const v = rotY({ x: (i * b.w) / 2, z: (j * b.d) / 2 }, b.yaw);
-    return { x: b.x + v.x, y, z: b.z + v.z };
-  };
-  poly(addTo, [at(-1, 1, 0), at(1, 1, 0), at(1, 1, -h), at(-1, 1, -h)], tone(c, look, 0.02));
-  poly(addTo, [at(1, 1, 0), at(1, -1, 0), at(1, -1, -h), at(1, 1, -h)], tone(c, look, -0.15));
-  poly(addTo, [at(-1, -1, -h), at(1, -1, -h), at(1, 1, -h), at(-1, 1, -h)], tone(c, look, 0.3));
 }
