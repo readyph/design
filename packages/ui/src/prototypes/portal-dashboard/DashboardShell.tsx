@@ -451,7 +451,7 @@ function LedaChat({ view, onClose, overlay = false, initial, renderAttachment, p
                 setDraft('');
               }
             }}
-            placeholder={busy ? 'Leda is replying…' : 'Ask Leda…'}
+            placeholder={busy ? 'Leda is replying…' : (placeholder ?? 'Ask Leda…')}
             aria-label="Message Leda"
             className="min-h-8 flex-1 resize-none self-center bg-transparent py-1.5 text-sm leading-5 text-ink outline-none placeholder:text-ink-subtle"
           />
