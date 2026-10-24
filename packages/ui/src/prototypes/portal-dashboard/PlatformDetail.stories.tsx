@@ -94,7 +94,7 @@ const viewports = {
 };
 
 const meta: Meta<DemoProps> = {
-  title: 'Prototypes/Portal/[For Review] PlatformDetail',
+  title: 'Prototypes/Portal/PlatformDetail',
   tags: ['!autodocs'],
   parameters: { layout: 'fullscreen', viewport: { viewports, defaultViewport: 'desktop1440' } },
   args: { initialId: 'inv-central', ledaOpen: true },
