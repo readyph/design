@@ -2,7 +2,7 @@
 import { HANDOFF_OPENING, storyHref } from '../platform-connection/data';
 
 export type LabStatus = 'active' | 'degraded' | 'offline';
-export type LabKind = 'inventory' | 'sms';
+export type LabKind = 'inventory' | 'sms' | 'store';
 
 export interface LabLink {
   id: string;
@@ -17,14 +17,14 @@ export interface LabPlatform {
   kind: LabKind;
   status: LabStatus;
   alerts: number;
-  version: string;
-  lastSync: string;
-  connectedAt: string;
+  version?: string;
+  lastSync?: string;
+  connectedAt?: string;
   links: LabLink[];
 }
 
-export const KIND_LABEL: Record<LabKind, string> = { inventory: 'Inventory', sms: 'Service Management' };
-export const KIND_SHORT: Record<LabKind, string> = { inventory: 'Inventory', sms: 'SMS' };
+export const KIND_LABEL: Record<LabKind, string> = { inventory: 'Inventory', sms: 'Service Management', store: 'Storefront' };
+export const KIND_SHORT: Record<LabKind, string> = { inventory: 'Inventory', sms: 'SMS', store: 'Storefront' };
 export const STATUS_LABEL: Record<LabStatus, string> = { active: 'Active', degraded: 'Degraded', offline: 'Offline' };
 export const STATUS_TONE = { active: 'success', degraded: 'warning', offline: 'neutral' } as const;
 

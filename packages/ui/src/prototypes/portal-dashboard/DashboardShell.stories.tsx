@@ -1,12 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { DashboardShell, type DashboardShellProps } from './DashboardShell';
-import { ConnectionsOverview } from './ConnectionsOverview';
+import { TownOverview, type TownOverviewProps } from './TownOverview';
 
 /**
  * RDY-213 (epic RDY-212): Portal shell with the rail Menu dropdown, no top bar, and Leda as a
  * full-height fixed right column (24rem at lg, 28rem from xl) behind one separator. The chat inside is the
- * previous Portal Leda chat, unchanged. Content shows the platform connections diagram, flat (no
- * cards). Review at 1440, 1024 and 390 in light and dark.
+ * previous Portal Leda chat, unchanged. Content shows the platform connections as the Town Scene (RDY-224, shared with the Lab platform map page): hover or focus a building for the bubble, select it for the detail modal (Open / Manage connections), the legend highlights a connection. Review at 1440, 1024 and 390 in light and dark.
  *
  * Leda entry points: the small "Leda" tag shown when the panel is hidden (every page), quick actions in
  * the empty panel, and the confirm-before-write proposal for a connection change.
@@ -29,7 +28,7 @@ const meta: Meta<DashboardShellProps> = {
   render: (args) => (
     // Remount when args change so review controls reset the shell state.
     <DashboardShell key={JSON.stringify(args)} {...args}>
-      <ConnectionsOverview />
+      <TownOverview />
     </DashboardShell>
   ),
 };
@@ -68,3 +67,14 @@ export const PhoneNav: Story = { name: '390 · Off-canvas nav', args: { navOpen:
 export const PhoneNavMember: Story = { name: '390 · Off-canvas nav, member', args: { navOpen: true, member: true }, ...at('phone390', 'light') };
 export const PhoneLeda: Story = { name: '390 · Leda drawer', args: { ledaDrawerOpen: true, ledaView: 'conversation' }, ...at('phone390', 'dark') };
 export const PhoneLight: Story = { name: '390 · Light, Leda confirm', args: { ledaDrawerOpen: true, ledaView: 'confirm' }, ...at('phone390', 'light') };
+
+// Town scene states
+const withTown = (town: TownOverviewProps): Story['render'] => (args) => (
+  <DashboardShell key={JSON.stringify([args, town])} {...args}>
+    <TownOverview {...town} />
+  </DashboardShell>
+);
+export const DesktopTownBubble: Story = { name: '1440 · Scene, bubble open', args: { ledaOpen: false }, render: withTown({ bubbleFor: 'inv-central' }), ...at('desktop1440', 'light') };
+export const DesktopTownSelected: Story = { name: '1440 · Scene, platform selected', args: { ledaOpen: false }, render: withTown({ modalFor: 'inv-davao' }), ...at('desktop1440', 'dark') };
+export const LaptopTownBubble: Story = { name: '1024 · Scene, bubble open', args: { ledaOpen: false }, render: withTown({ bubbleFor: 'st-bgc' }), ...at('laptop1024', 'light') };
+export const PhoneTownSelected: Story = { name: '390 · Scene, platform selected', render: withTown({ modalFor: 'st-cebu' }), ...at('phone390', 'light') };
