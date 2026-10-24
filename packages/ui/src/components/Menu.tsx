@@ -1,5 +1,6 @@
 import { type ReactNode } from 'react';
 import * as RadixMenu from '@radix-ui/react-dropdown-menu';
+import { Check } from '@phosphor-icons/react';
 import type { Icon as PhosphorIcon } from '@phosphor-icons/react';
 import { cn, focusRing } from '../utils/cn';
 import { Icon } from './Icon';
@@ -21,6 +22,10 @@ export interface MenuActionItem {
   rel?: string;
   disabled?: boolean;
   danger?: boolean;
+  /** Marks the item as the current page: `aria-current="page"`, check icon, primary text. */
+  active?: boolean;
+  /** Optional trailing content (e.g. a count). Replaced by the check icon when `active`. */
+  meta?: ReactNode;
 }
 
 export type MenuItem =
@@ -68,7 +73,15 @@ export function Menu({ trigger, items, side = 'bottom', align = 'end', className
             const content = (
               <>
                 {it.icon && <Icon icon={it.icon} size="sm" className="text-ink-subtle" />}
-                <span className="flex-1">{it.label}</span>
+                <span className={cn('flex-1', it.active && 'font-semibold')}>{it.label}</span>
+                {it.active ? (
+                  <>
+                    <Icon icon={Check} size="sm" aria-hidden="true" />
+                    <span className="sr-only">(current page)</span>
+                  </>
+                ) : (
+                  it.meta != null && <span className="text-xs text-ink-subtle">{it.meta}</span>
+                )}
                 {it.shortcut && shortcutMode && (
                   <span className="flex items-center gap-0.5">
                     {formatShortcut(it.shortcut).map((k, j) => (
@@ -86,7 +99,9 @@ export function Menu({ trigger, items, side = 'bottom', align = 'end', className
               'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
               it.danger
                 ? 'text-error-fg data-[highlighted]:bg-error/10 data-[highlighted]:text-error-fg'
-                : 'text-ink',
+                : it.active
+                  ? 'text-primary-700 [[data-theme=dark]_&]:text-primary-900'
+                  : 'text-ink',
               focusRing,
             );
             if (it.href !== undefined) {
@@ -96,6 +111,7 @@ export function Menu({ trigger, items, side = 'bottom', align = 'end', className
                     href={it.disabled ? undefined : it.href}
                     target={it.target}
                     rel={it.rel ?? (it.target === '_blank' ? 'noopener noreferrer' : undefined)}
+                    aria-current={it.active ? 'page' : undefined}
                     className={itemClass}
                   >
                     {content}
@@ -104,7 +120,13 @@ export function Menu({ trigger, items, side = 'bottom', align = 'end', className
               );
             }
             return (
-              <RadixMenu.Item key={i} disabled={it.disabled} onSelect={it.onSelect} className={itemClass}>
+              <RadixMenu.Item
+                key={i}
+                disabled={it.disabled}
+                onSelect={it.onSelect}
+                aria-current={it.active ? 'page' : undefined}
+                className={itemClass}
+              >
                 {content}
               </RadixMenu.Item>
             );

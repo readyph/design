@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import {
   Plus,
   MagnifyingGlass,
@@ -69,7 +69,14 @@ export interface PlatformShellFooterLink {
 /** State of the platforms list in the rail. The Portal tile, "+" and account menu render in every state. */
 export type PlatformShellRailState = 'loading' | 'error' | 'ready';
 
+/** `sidebar`: icon rail plus a nav sidebar (default). `menu`: no sidebar; the rail's top tile opens the nav as a dropdown. */
+export type PlatformShellNavigation = 'sidebar' | 'menu';
+
 export interface PlatformShellProps {
+  /** Navigation mode (default `sidebar`). */
+  navigation?: PlatformShellNavigation;
+  /** Rendered to the right of the main content, inside the content row (e.g. a docked side panel). */
+  aside?: ReactNode;
   /** State of the rail's platform list (default `ready`). */
   railState?: PlatformShellRailState;
   /** Retry loading the platform list; shown as a button in the `error` state. */
@@ -151,6 +158,8 @@ function RailPlatform({ p }: { p: PlatformShellPlatform }) {
  * off-canvas sidebar on small screens. The Ask-Leda launcher is opt-in via `hideLeda={false}`.
  */
 export function PlatformShell({
+  navigation = 'sidebar',
+  aside,
   platform,
   company,
   platforms,
@@ -178,8 +187,12 @@ export function PlatformShell({
     onMenuOpenChange?.(v);
   };
 
+  const menuMode = navigation === 'menu';
+  const navRef = useRef<HTMLElement>(null);
+
   const sidebarBody = (mobile = false) => (
     <>
+      {!menuMode && (
       <div className="mb-2 flex items-center gap-2 px-2 pt-1">
         <span className="grid h-6 w-6 shrink-0 place-items-center rounded-base bg-primary-50 text-primary-700 [[data-theme=dark]_&]:text-primary-900">
           <Icon icon={platform.icon} size="sm" weight="fill" />
@@ -193,6 +206,7 @@ export function PlatformShell({
           <span className="truncate text-sm font-bold tracking-tight text-ink">{platform.name}</span>
         )}
       </div>
+      )}
       {sections.map((s, i) => (
         <SidebarSection key={s.title ?? i} title={s.title}>
           {s.items.map((n) => (
@@ -215,6 +229,35 @@ export function PlatformShell({
           ))}
         </SidebarSection>
       ))}
+      {mobile && menuMode && (
+        <SidebarSection title="Platforms">
+          {platforms.map((p) => (
+            <SidebarItem
+              key={p.id}
+              icon={p.icon}
+              href={p.href}
+              active={p.active}
+              badge={p.status ? <StatusDot status={p.status} label={p.status} size="sm" /> : undefined}
+              onClick={(e) => {
+                if (!p.href && p.onSelect) e.preventDefault();
+                p.onSelect?.();
+                setOpen(false);
+              }}
+            >
+              {p.label}
+            </SidebarItem>
+          ))}
+          <SidebarItem
+            icon={Plus}
+            onClick={() => {
+              onAddPlatform?.();
+              setOpen(false);
+            }}
+          >
+            Add platform
+          </SidebarItem>
+        </SidebarSection>
+      )}
       {mobile && account && (
         <SidebarSection title={account.email ?? account.name} className={footerLink ? undefined : 'mt-auto'}>
           {(account.items ?? []).map((it, i) =>
@@ -272,6 +315,24 @@ export function PlatformShell({
     className: cn('grid h-9 w-9 place-items-center rounded-lg bg-primary-600 font-bold text-white shadow-sm', focusRing),
   };
 
+  const navMenuItems: MenuItem[] = [
+    ...(company ? [{ type: 'label', label: company } as MenuItem] : []),
+    ...sections.flatMap((s, i): MenuItem[] => [
+      ...(i > 0 || company ? ([{ type: 'separator' }] as MenuItem[]) : []),
+      ...(s.title ? ([{ type: 'label', label: s.title }] as MenuItem[]) : []),
+      ...s.items.map(
+        (n): MenuItem => ({
+          label: n.label,
+          icon: n.icon,
+          href: n.href,
+          meta: n.badge,
+          active: activeKey === n.key,
+          onSelect: n.onSelect,
+        }),
+      ),
+    ]),
+  ];
+
   const accountItems: MenuItem[] = account
     ? [
         ...(account.email ? [{ type: 'label', label: account.email } as MenuItem] : []),
@@ -284,8 +345,25 @@ export function PlatformShell({
   return (
     <div className="ds-root flex h-screen w-full overflow-hidden bg-surface-canvas font-sans text-ink">
       {/* Platforms rail */}
-      <div className="hidden w-rail shrink-0 flex-col items-center gap-2 py-3 sm:flex">
-        {homeHref ? (
+      <div className={cn('hidden w-rail shrink-0 flex-col items-center gap-2 py-3', menuMode ? 'lg:flex' : 'sm:flex')}>
+        {menuMode ? (
+          <Menu
+            side="right"
+            align="start"
+            className="min-w-56"
+            trigger={
+              <button
+                type="button"
+                aria-label="Menu"
+                title="Menu"
+                className={cn(tile, 'bg-primary-600 text-white shadow-sm hover:bg-primary-700', focusRing)}
+              >
+                <Icon icon={List} size="md" weight="bold" />
+              </button>
+            }
+            items={navMenuItems}
+          />
+        ) : homeHref ? (
           <a href={homeHref} onClick={onHome} {...homeProps}>R</a>
         ) : (
           <button type="button" onClick={onHome} {...homeProps}>R</button>
@@ -345,7 +423,7 @@ export function PlatformShell({
 
       {/* Window */}
       <div className="flex min-w-0 flex-1 overflow-hidden bg-transparent">
-        <Sidebar className="hidden lg:flex">{sidebarBody()}</Sidebar>
+        {!menuMode && <Sidebar className="hidden lg:flex">{sidebarBody()}</Sidebar>}
 
         <div className="relative flex min-w-0 flex-1 flex-col">
           <TopBar
@@ -371,19 +449,48 @@ export function PlatformShell({
               )
             }
           />
-          {scroll ? (
-            <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
-          ) : (
-            <div className="flex min-h-0 flex-1 flex-col">{children}</div>
-          )}
+          <div className="flex min-h-0 flex-1">
+            <main
+              className={cn(
+                'min-h-0 min-w-0 flex-1 [container-type:inline-size]',
+                scroll ? 'overflow-y-auto' : 'flex flex-col',
+              )}
+            >
+              {children}
+            </main>
+            {aside}
+          </div>
           {!hideLeda && <LedaLauncher />}
         </div>
       </div>
 
-      <OffCanvas open={open} onOpenChange={setOpen} side="left" width="288px">
-        {/* Accessible dialog title only: the sidebar brand already shows the company name. */}
-        <OffCanvasHeader className="sr-only">{company ?? platform.name}</OffCanvasHeader>
-        <Sidebar className="flex p-0">{sidebarBody(true)}</Sidebar>
+      <OffCanvas
+        open={open}
+        onOpenChange={setOpen}
+        side="left"
+        width="288px"
+        onOpenAutoFocus={
+          menuMode
+            ? (e) => {
+                // Sheet focus (layout-and-spacing): land on the current page, not the close button.
+                const current = navRef.current?.querySelector<HTMLElement>('[aria-current="page"]');
+                if (current) {
+                  e.preventDefault();
+                  current.focus();
+                }
+              }
+            : undefined
+        }
+      >
+        {menuMode ? (
+          <OffCanvasHeader className="pr-12">{company ?? platform.name}</OffCanvasHeader>
+        ) : (
+          /* Accessible dialog title only: the sidebar brand already shows the company name. */
+          <OffCanvasHeader className="sr-only">{company ?? platform.name}</OffCanvasHeader>
+        )}
+        <Sidebar ref={navRef} className={cn('flex p-0', menuMode && 'min-h-0 w-full flex-1 overflow-y-auto px-3 pb-3')}>
+          {sidebarBody(true)}
+        </Sidebar>
       </OffCanvas>
     </div>
   );

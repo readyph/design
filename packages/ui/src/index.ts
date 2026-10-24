@@ -111,6 +111,7 @@ export {
   type PlatformShellAccount,
   type PlatformShellFooterLink,
   type PlatformShellRailState,
+  type PlatformShellNavigation,
 } from './components/PlatformShell';
 export { MainNav, MainNavItem, type MainNavProps, type MainNavItemProps } from './components/MainNav';
 

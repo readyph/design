@@ -17,6 +17,8 @@ export interface DrawerProps {
   side?: 'right' | 'left';
   width?: string;
   hideClose?: boolean;
+  /** Runs when focus moves into the panel on open; call `event.preventDefault()` to place focus yourself. */
+  onOpenAutoFocus?: (event: Event) => void;
   className?: string;
 }
 
@@ -61,6 +63,7 @@ function DrawerRoot({
   side = 'right',
   width = '22rem',
   hideClose = false,
+  onOpenAutoFocus,
   className,
 }: DrawerProps) {
   const propMode = title != null || description != null || footer != null;
@@ -71,6 +74,7 @@ function DrawerRoot({
         <Dialog.Overlay className={overlay} />
         <Dialog.Content
           style={{ width }}
+          onOpenAutoFocus={onOpenAutoFocus}
           className={cn(
             'fixed inset-y-0 z-drawer flex max-w-[calc(100vw-2rem)] flex-col border-border bg-surface shadow-xl focus:outline-none motion-reduce:animate-none',
             side === 'right'
