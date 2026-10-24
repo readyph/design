@@ -43,7 +43,9 @@ export const PAD_H = 4;
 /** Sidewalk pad edge length. */
 export const PAD = CELL - STREET;
 /** Buildings are modelled small and scaled up to fill their lot. */
-const BUILDING_SCALE = 1.25;
+const BUILDING_SCALE = 1.4;
+/** Turns each building toward the viewer so its facade (door, awning, sign band) reads as the front. */
+const FACE = -TAU / 16;
 
 /** `k` > 0 lightens toward the highlight, `k` < 0 darkens toward the shade. */
 function tone(c: RGB, look: Look, k = 0): string {
@@ -244,7 +246,7 @@ function store(g: Zdog.Group, look: Look, b: PlacedBuilding): Omit<BuildingModel
 /** One building as a painter-ordered Zdog group standing on its lot's pad. */
 export function buildBuilding(addTo: Zdog.Anchor, p: TownPalette, b: PlacedBuilding, glow: number): BuildingModel {
   const look: Look = { p, glow };
-  const group = new Zdog.Group({ addTo, translate: { x: b.x, y: -PAD_H, z: b.z }, scale: BUILDING_SCALE, updateSort: false });
+  const group = new Zdog.Group({ addTo, translate: { x: b.x - 12, y: -PAD_H - b.lift, z: b.z }, rotate: { y: FACE }, scale: BUILDING_SCALE, updateSort: false });
   // A small tree in the back-left corner of the pad, behind the building.
   tree(group, look, -PAD / 2 / BUILDING_SCALE + 8, -PAD / 2 / BUILDING_SCALE + 8, 0.7);
   const art = b.art === 'warehouse' ? warehouse(group, look, b) : b.art === 'shop' ? shop(group, look, b) : store(group, look, b);
@@ -296,15 +298,15 @@ export function buildScenery(addTo: Zdog.Anchor, p: TownPalette, island: { width
 
 
 /** Where a road meets a building: the street in front of its lot. */
-function streetFront(b: { x: number; z: number }): { x: number; z: number } {
-  return { x: b.x, z: b.z + CELL / 2 };
+function streetFront(b: PlacedBuilding): { x: number; z: number }[] {
+  return [{ x: b.x, z: b.z + (CELL - STREET) / 2 }, { x: b.x, z: b.nz + CELL / 2 }];
 }
 
 /** Manhattan route between two lots along the streets: out the front, along one cross street, in the front. */
 function route(a: PlacedBuilding, b: PlacedBuilding): { x: number; z: number }[] {
-  const p0 = streetFront(a), p3 = streetFront(b);
-  const xv = Math.min(a.x, b.x) + CELL / 2;
-  const pts = [p0, { x: xv, z: p0.z }, { x: xv, z: p3.z }, p3];
+  const [a0, a1] = streetFront(a), [b0, b1] = streetFront(b);
+  const xv = Math.min(a.nx, b.nx) + CELL / 2;
+  const pts = [a0, a1, { x: xv, z: a1.z }, { x: xv, z: b1.z }, b1, b0];
   return pts.filter((q, i) => i === 0 || q.x !== pts[i - 1].x || q.z !== pts[i - 1].z);
 }
 
@@ -367,9 +369,9 @@ export function buildGround(
   new Zdog.Ellipse({ addTo: ground, translate: { x: px, y: -0.8, z: pz }, rotate: { x: TAU / 4 }, diameter: 32, stroke: 2, fill: true, color: tone(p.water, look) });
   // Pads, back to front, so the kerbs of nearer lots cover the ones behind.
   const lots = [
-    ...placed.map((b) => ({ x: b.x, z: b.z, c: p.sidewalk })),
-    ...empty.map((e) => ({ x: e.x, z: e.z, c: p.grass })),
+    ...placed.map((b) => ({ x: b.x, z: b.z, c: p.sidewalk, lift: b.lift })),
+    ...empty.map((e) => ({ x: e.x, z: e.z, c: p.grass, lift: 0 })),
   ].sort((a, b) => a.x + a.z - (b.x + b.z));
-  for (const lot of lots) block(ground, look, lot.c, PAD, PAD_H, PAD, lot.x, 0, lot.z);
+  for (const lot of lots) block(ground, look, lot.c, PAD, PAD_H + lot.lift, PAD, lot.x, 0, lot.z);
   return { ground, extent };
 }

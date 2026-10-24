@@ -23,17 +23,37 @@ export type BuildingArt = 'warehouse' | 'shop' | 'store';
 
 export interface PlacedBuilding extends TownBuilding {
   art: BuildingArt;
-  /** World position of the lot centre on the ground plane. */
+  /** World position of the lot centre on the ground plane (organic offset applied). */
   x: number;
   z: number;
+  /** Nominal grid-cell centre; streets and routes follow the grid, not the offset. */
+  nx: number;
+  nz: number;
+  /** Raised plot height (0, 6 or 12): gentle terrain steps. */
+  lift: number;
 }
 
 /** One lot (building plot plus its share of the street) in world units, before zoom. */
-export const CELL = 150;
+export const CELL = 190;
 /** Street width between lots. */
-export const STREET = 34;
+export const STREET = 60;
 /** Scenery band (houses, trees, pond) around the streets. */
 export const PLOT_MARGIN = 56;
+
+/** Largest organic offset of a lot from its grid cell, per axis. Keeps pads at least STREET - 2 * MAX_JITTER apart. */
+export const MAX_JITTER = 20;
+/** Plot lift steps (terrain depth). */
+export const LIFTS = [0, 6, 12] as const;
+
+/** Deterministic 0..1 hash of a string and a salt: stable per id, never shuffles between renders. */
+export function hash01(id: string, salt: number): number {
+  let h = 2166136261 ^ salt;
+  for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 16777619);
+  h ^= h >>> 15;
+  h = Math.imul(h, 2246822519);
+  h ^= h >>> 13;
+  return (h >>> 0) / 4294967296;
+}
 
 const KIND_ORDER = ['inventory', 'sms'];
 
@@ -79,7 +99,15 @@ export interface TownLayout {
 export function placeBuildings(buildings: readonly TownBuilding[]): TownLayout {
   const { cols, rows } = gridSize(buildings.length);
   const at = (i: number, j: number) => ({ x: (i - (cols - 1) / 2) * CELL, z: (j - (rows - 1) / 2) * CELL });
-  const placed = sortBuildings(buildings).map((b, k) => ({ ...b, art: artFor(b.kind), ...at(k % cols, Math.floor(k / cols)) }));
+  const placed = sortBuildings(buildings).map((b, k) => {
+    const n = at(k % cols, Math.floor(k / cols));
+    // A single platform stays centred and level; otherwise stagger and lift lots per id.
+    const organic = buildings.length > 1;
+    const jx = organic ? Math.round((hash01(b.id, 1) * 2 - 1) * MAX_JITTER) : 0;
+    const jz = organic ? Math.round((hash01(b.id, 2) * 2 - 1) * MAX_JITTER) : 0;
+    const lift = organic ? LIFTS[Math.floor(hash01(b.id, 3) * LIFTS.length)] : 0;
+    return { ...b, art: artFor(b.kind), x: n.x + jx, z: n.z + jz, nx: n.x, nz: n.z, lift };
+  });
   const empty: { x: number; z: number }[] = [];
   for (let k = buildings.length; k < cols * rows; k++) empty.push(at(k % cols, Math.floor(k / cols)));
   return { cols, rows, placed, empty };

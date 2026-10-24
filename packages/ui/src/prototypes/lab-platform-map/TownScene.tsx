@@ -14,7 +14,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import * as Zdog from 'zdog';
 import { cn } from '../../utils/cn';
 import { buildBuilding, buildGround, buildScenery, type BuildingModel, type Projected } from './art';
-import { CELL, dedupeLinks, defaultLights, placeBuildings, plotSize, streetSize, type TownBuilding, type TownLink } from './layout';
+import { dedupeLinks, defaultLights, placeBuildings, plotSize, streetSize, type TownBuilding, type TownLink } from './layout';
 import { css, readPalette, type TownPalette } from './palette';
 
 export type { TownBuilding, TownLink, TownStatus } from './layout';
@@ -58,12 +58,10 @@ const TILT = Math.atan(1 / Math.SQRT2);
 const TURN = Zdog.TAU / 8;
 /** Canvas padding in CSS px; the bottom leaves room for the front row's signs. */
 const PAD_X = 12;
-const PAD_TOP = 64;
+const PAD_TOP = 84;
 const PAD_BOTTOM = 12;
 /** Small tenants stop growing here so outlines and signs keep their weight. */
 const MAX_ZOOM = 1.5;
-/** Labels show when a grid cell is at least this wide on screen; otherwise only on hover / focus. */
-const LABEL_MIN_CELL = 120;
 const FADE_MS = 250;
 
 /** Zdog runtime members that @types/zdog does not declare. */
@@ -170,34 +168,34 @@ export function TownScene({
     ctx.setTransform(pr, 0, 0, pr, 0, 0);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    const cellPx = CELL * s.zoom;
-    const showAll = cellPx >= LABEL_MIN_CELL;
-    const sign = (text: string, at: ScreenPoint, emphasis: boolean, maxW: number) => {
-      ctx.font = `600 11px ${palette.font}`;
+    /** Tooltip on the roof: label in a small rounded bubble with a pointer, kept inside the canvas. */
+    const tooltip = (text: string, at: ScreenPoint) => {
+      ctx.font = `600 12px ${palette.font}`;
+      const w = Math.min(ctx.measureText(text).width + 20, s.width - 8);
       let t = text;
-      while (t.length > 1 && ctx.measureText(t).width > maxW - 12) t = t.slice(0, -1);
+      while (t.length > 1 && ctx.measureText(t).width > w - 20) t = t.slice(0, -1);
       if (t !== text) t = `${t.trimEnd()}…`;
-      const w = Math.min(maxW, ctx.measureText(t).width + 12);
-      const h = 18;
-      const x = at.x - w / 2;
-      const y = at.y - 2;
+      const h = 24;
+      const x = Math.min(Math.max(at.x - w / 2, 4), s.width - w - 4);
+      const y = Math.max(at.y - 22 - h, 4);
       ctx.beginPath();
-      ctx.roundRect(x, y, w, h, 4);
+      ctx.roundRect(x, y, w, h, 6);
+      ctx.moveTo(at.x - 5, y + h);
+      ctx.lineTo(at.x, y + h + 6);
+      ctx.lineTo(at.x + 5, y + h);
       ctx.fillStyle = css(palette.signFill);
       ctx.fill();
-      ctx.lineWidth = emphasis ? 2 : 1;
-      ctx.strokeStyle = css(emphasis ? palette.focus : palette.signBorder);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = css(palette.signBorder);
       ctx.stroke();
       ctx.fillStyle = css(palette.signText);
-      ctx.fillText(t, at.x, y + h / 2 + 0.5);
+      ctx.fillText(t, x + w / 2, y + h / 2 + 0.5);
     };
     const byId = new Map(pl.map((b) => [b.id, b]));
-    // Back-to-front so nearer signs sit on top.
+    // Back-to-front so nearer badges sit on top; the tooltip is drawn last, above everything.
     const order = [...s.models].sort((a, b) => a.signAt.renderOrigin.z - b.signAt.renderOrigin.z);
     for (const m of order) {
       const b = byId.get(m.id)!;
-      const emphasis = m.id === hov || m.id === foc;
-      if (showAll || emphasis) sign(b.label, toScreen(m.signAt), emphasis, Math.max(cellPx - 8, 96));
       if (b.alerts > 0) {
         const p = toScreen(m.lampAt);
         const text = b.alerts > 9 ? '9+' : String(b.alerts);
@@ -226,6 +224,9 @@ export function TownScene({
         ctx.stroke();
       }
     }
+    const active = hov ?? foc;
+    const am = active ? s.models.find((m) => m.id === active) : undefined;
+    if (am) tooltip(byId.get(am.id)!.label, toScreen(am.lampAt));
     ctx.restore();
     return performance.now() - t0;
   }, [palette, toScreen, bounds]);
@@ -314,9 +315,7 @@ export function TownScene({
     let best: BuildingModel | null = null;
     for (const m of s.models) {
       const b = bounds(m);
-      const sg = toScreen(m.signAt);
-      const inSign = Math.abs(x - sg.x) < 40 && y > sg.y - 4 && y < sg.y + 18;
-      if ((x >= b.x0 && x <= b.x1 && y >= b.y0 && y <= b.y1) || inSign) {
+      if (x >= b.x0 && x <= b.x1 && y >= b.y0 && y <= b.y1) {
         if (!best || m.signAt.renderOrigin.z > best.signAt.renderOrigin.z) best = m;
       }
     }
