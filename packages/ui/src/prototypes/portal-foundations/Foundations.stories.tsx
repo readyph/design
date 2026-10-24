@@ -18,7 +18,7 @@ import {
  * and SMS. Stories pin the Storybook theme to light so light and dark panes can sit side by side.
  */
 const meta: Meta = {
-  title: 'Prototypes/Portal/[For Review] Foundations',
+  title: 'Prototypes/Portal/Foundations',
   tags: ['!autodocs'],
   parameters: { layout: 'fullscreen' },
   globals: { theme: 'light' },
