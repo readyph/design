@@ -35,7 +35,7 @@ const overlay =
   'fixed inset-0 z-modal bg-overlay data-[state=open]:animate-[ds-fade-in_150ms_ease] data-[state=closed]:animate-[ds-fade-out_150ms_ease] motion-reduce:animate-none';
 
 const content =
-  'fixed left-1/2 top-1/2 z-modal flex max-h-[calc(100vh-2rem)] w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg border border-border bg-surface shadow-xl focus:outline-none data-[state=open]:animate-[ds-scale-in_150ms_ease] data-[state=closed]:animate-[ds-scale-out_150ms_ease] motion-reduce:animate-none';
+  'fixed left-1/2 top-1/2 z-modal flex max-h-[calc(100vh-2rem)] w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-md border border-border bg-surface shadow-xl focus:outline-none data-[state=open]:animate-[ds-scale-in_150ms_ease] data-[state=closed]:animate-[ds-scale-out_150ms_ease] motion-reduce:animate-none';
 
 function CloseButton({ className }: { className?: string }) {
   return (

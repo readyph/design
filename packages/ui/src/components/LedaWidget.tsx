@@ -94,13 +94,13 @@ const LedaWidgetRoot = forwardRef<HTMLDivElement, LedaWidgetProps>(function Leda
   return (
     <div
       ref={ref}
-      className={cn('overflow-hidden rounded-2xl bg-surface text-ink shadow-sm', className)}
+      className={cn('overflow-hidden rounded-base border border-border bg-surface text-ink', className)}
       {...rest}
     >
       {hasHeader && (
         <div className="flex items-center gap-3 px-5 pt-4 pb-1">
           {icon && (
-            <span className={cn('grid h-9 w-9 shrink-0 place-items-center rounded-xl', toneChip[tone])}>
+            <span className={cn('grid h-9 w-9 shrink-0 place-items-center rounded-base', toneChip[tone])}>
               <Icon icon={icon} size="md" weight="fill" />
             </span>
           )}
@@ -157,7 +157,7 @@ function LedaStatGrid({ items, columns, className, ...wrap }: LedaStatGridProps)
   const body = (
     <div className={cn('grid grid-cols-2 gap-2.5', gridCols[cols], className)}>
       {items.map((s, i) => (
-        <div key={i} className="rounded-xl bg-surface-subtle p-3.5">
+        <div key={i} className="rounded-base bg-surface-subtle p-3.5">
           <Stat
             label={s.label}
             value={s.value}
@@ -250,7 +250,7 @@ function LedaChart({
             <div key={i} className="flex h-full flex-1 flex-col items-center justify-end gap-2">
               {valuePills && <span className={valuePill}>{fmt(p.value)}</span>}
               <div
-                className="w-full rounded-t-lg"
+                className="w-full rounded-t-sm"
                 style={{
                   height: `${h}%`,
                   background: `rgb(var(--ds-primary-500) / ${opacity.toFixed(2)})`,
@@ -348,7 +348,7 @@ function LedaHeatmap({ rows, columns, chartTone = 'primary', className, ...wrap 
             return (
               <div
                 key={ci}
-                className="aspect-square w-full rounded-xl"
+                className="aspect-square w-full rounded-base"
                 style={{
                   backgroundColor: `rgb(var(${v}) / ${op})`,
                   backgroundImage: hatch
@@ -596,7 +596,7 @@ function LedaProposal({
       {changes && changes.length > 0 ? (
         <div className="flex flex-col gap-1.5">
           {changes.map((c, i) => (
-            <div key={i} className="flex items-center gap-3 rounded-lg bg-surface-subtle px-3 py-2 text-sm">
+            <div key={i} className="flex items-center gap-3 rounded-sm bg-surface-subtle px-3 py-2 text-sm">
               <span className="min-w-0 flex-1 truncate text-ink-muted">{c.label}</span>
               {c.from != null || c.to != null ? (
                 <span className="flex items-center gap-1.5 font-medium text-ink">
@@ -698,12 +698,12 @@ function LedaChoices({ options, onSelect, className, title, icon, tone = 'primar
           type="button"
           onClick={() => onSelect?.(o.id)}
           className={cn(
-            'group flex items-center gap-3 rounded-xl bg-surface-subtle px-3 py-2.5 text-left transition-colors',
+            'group flex items-center gap-3 rounded-base bg-surface-subtle px-3 py-2.5 text-left transition-colors',
             'hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-focus',
           )}
         >
           {o.icon && (
-            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-surface-muted text-ink-muted group-hover:bg-primary-500/15 group-hover:text-primary-500">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-sm bg-surface-muted text-ink-muted group-hover:bg-primary-500/15 group-hover:text-primary-500">
               <Icon icon={o.icon} size="md" />
             </span>
           )}
@@ -743,7 +743,7 @@ function LedaLinks({ links, className, title, icon, tone = 'primary' }: LedaLink
         const inner = (
           <>
             {l.icon && (
-              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary-500/15 text-primary-500">
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-sm bg-primary-500/15 text-primary-500">
                 <Icon icon={l.icon} size="md" />
               </span>
             )}
@@ -755,7 +755,7 @@ function LedaLinks({ links, className, title, icon, tone = 'primary' }: LedaLink
           </>
         );
         const cls =
-          'flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-surface-subtle focus:outline-none focus-visible:ring-2 focus-visible:ring-focus';
+          'flex items-center gap-3 rounded-base px-3 py-2.5 transition-colors hover:bg-surface-subtle focus:outline-none focus-visible:ring-2 focus-visible:ring-focus';
         return l.href ? (
           <a key={i} href={l.href} className={cls}>
             {inner}
@@ -796,7 +796,7 @@ const LedaResult = forwardRef<HTMLDivElement, LedaResultProps>(function LedaResu
 ) {
   const t = resultTone[tone];
   return (
-    <div ref={ref} className={cn('flex items-start gap-2.5 rounded-xl px-3.5 py-3', t.fill, className)} {...rest}>
+    <div ref={ref} className={cn('flex items-start gap-2.5 rounded-base px-3.5 py-3', t.fill, className)} {...rest}>
       <Icon icon={icon ?? t.defaultIcon} size="md" weight="fill" className={cn('mt-0.5 shrink-0', t.icon)} />
       <div className="min-w-0">
         <p className="text-sm font-medium text-ink">{title}</p>
@@ -862,7 +862,7 @@ function LedaMemory({
       className={className}
     >
       {children != null && (
-        <div className="rounded-xl bg-surface-subtle px-3.5 py-3 text-sm leading-relaxed text-ink-muted">
+        <div className="rounded-base bg-surface-subtle px-3.5 py-3 text-sm leading-relaxed text-ink-muted">
           {children}
         </div>
       )}
