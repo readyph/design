@@ -1,9 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { FloppyDisk, Plus, ArrowRight, Trash } from '@phosphor-icons/react';
-import { Button } from './Button';
-import { surfaces, status } from '../tokens/colors';
-
-const colors = { ...surfaces, ...status };
+import { useEffect, useRef, useState } from 'react';
+import { Button, variants } from './Button';
 
 const meta: Meta<typeof Button> = {
   title: 'Components/Actions/Button',
@@ -63,8 +61,8 @@ export const ActionBar: Story = {
   ),
 };
 
-const lum = (hex: string) => {
-  const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((x) => (x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4));
+const lum = (rgb: string) => {
+  const c = (rgb.match(/[\d.]+/g) ?? ['0', '0', '0']).slice(0, 3).map((n) => Number(n) / 255).map((x) => (x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4));
   return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
 };
 const ratio = (a: string, b: string) => {
@@ -72,29 +70,48 @@ const ratio = (a: string, b: string) => {
   return (hi + 0.05) / (lo + 0.05);
 };
 
-/** Danger ink (`--bad-on`) against `--bad` (rest) and `--bad-dot` (hover), computed from the tokens. WCAG AA needs 4.5:1. */
+/** One rendered danger button; reads its computed colour and background after mount. */
+function Measured({ name, className }: { name: string; className?: string }) {
+  const ref = useRef<HTMLButtonElement>(null);
+  const [m, setM] = useState<[string, string] | null>(null);
+  useEffect(() => {
+    const read = () => {
+      if (!ref.current) return;
+      const cs = getComputedStyle(ref.current);
+      setM([cs.color, cs.backgroundColor]);
+    };
+    read();
+    const mo = new MutationObserver(read);
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] });
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    mq.addEventListener('change', read);
+    return () => { mo.disconnect(); mq.removeEventListener('change', read); };
+  }, []);
+  const r = m ? ratio(m[0], m[1]) : 0;
+  return (
+    <tr>
+      <td className="pr-4">{name}</td>
+      <td className="pr-4"><Button ref={ref} variant="danger" className={className}>Delete</Button></td>
+      <td className="pr-4">{m ? `${m[0]} on ${m[1]}` : '...'}</td>
+      <td className="pr-4">{m ? `${r.toFixed(2)}:1` : ''}</td>
+      <td data-testid="verdict">{m ? (r >= 4.5 ? 'AA pass' : 'AA FAIL') : ''}</td>
+    </tr>
+  );
+}
+
+/**
+ * Measured from the rendered danger Button (getComputedStyle), in the active theme: switch light/dark in the
+ * toolbar or via `data-theme` and it re-reads. The hover row applies the hover utilities (`hover:` stripped) to the
+ * same variant classes, so it reflects the real hover colours. WCAG AA needs 4.5:1.
+ */
 export const DangerContrast: Story = {
   render: () => {
-    const rows = [
-      ['Light rest', colors['bad-on'][0], colors['bad'][0]],
-      ['Light hover', colors['bad-on'][0], colors['bad-dot'][0]],
-      ['Dark rest', colors['bad-on'][1], colors['bad'][1]],
-      ['Dark hover', colors['bad-on'][1], colors['bad-dot'][1]],
-    ] as const;
+    const hover = variants.danger.split(' ').filter((c) => c.startsWith('hover:')).map((c) => c.slice(6)).join(' ');
     return (
       <table className="text-small">
         <tbody>
-          {rows.map(([name, fg, bg]) => {
-            const r = ratio(fg, bg);
-            return (
-              <tr key={name}>
-                <td className="pr-4">{name}</td>
-                <td className="pr-4">{fg} on {bg}</td>
-                <td className="pr-4">{r.toFixed(2)}:1</td>
-                <td>{r >= 4.5 ? 'AA pass' : 'AA FAIL'}</td>
-              </tr>
-            );
-          })}
+          <Measured name="Rest" />
+          <Measured name="Hover" className={hover} />
         </tbody>
       </table>
     );

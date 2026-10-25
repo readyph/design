@@ -51,7 +51,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
           <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
         </span>
       )}
-      <span className={cn('inline-flex items-center justify-center gap-2', loading && 'invisible')}>
+      <span className={cn('inline-flex items-center justify-center gap-2', loading && 'opacity-0')}>
         {Left && <Left size={14} aria-hidden="true" />}
         {children}
         {Right && <Right size={14} aria-hidden="true" />}
