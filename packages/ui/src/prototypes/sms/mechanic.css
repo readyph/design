@@ -1,4 +1,0 @@
-/* Prototype-local safe-area helpers for the mobile mechanic shell (no arbitrary values in markup). */
-.mech-safe-top { padding-top: max(0.5rem, env(safe-area-inset-top)); }
-.mech-safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
-.mech-safe-bottom-bar { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }

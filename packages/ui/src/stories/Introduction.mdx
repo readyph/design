@@ -2,50 +2,7 @@ import { Meta } from '@storybook/blocks';
 
 <Meta title="Introduction" />
 
-# ReadyPH Design System
+# ReadyPH UI
 
-A standalone, installable design system: **design tokens on top of Tailwind**, a
-custom **white-with-blue** theme, and flexible **React components**.
-
-- **One source of truth** — brand (color, type, spacing, icons) and UI components,
-  versioned like any dependency.
-- **Built on Tailwind** — tokens drive a Tailwind **preset**; components are styled
-  with Tailwind utilities.
-- **Themeable** — a generic theme ships as **CSS custom properties**; a project
-  overrides it without forking, at runtime.
-- **Flexible** — the package owns *appearance*; the consuming project owns
-  *behavior and CTA* (what a button does, what it says, where a form submits).
-- **Accessible & keyboard-first** — WCAG 2.1 AA, a single visible focus ring, and
-  real keyboard support via headless Radix primitives.
-
-## The package
-
-One install, `@readyph/ui`, with everything on subpaths:
-
-| Import | Contents |
-|---|---|
-| `@readyph/ui` | React components + design tokens (Tailwind + Radix + Phosphor) |
-| `@readyph/ui/preset` | the **Tailwind preset** |
-| `@readyph/ui/theme.css` | the **CSS-variable theme** |
-| `@readyph/ui/styles.css` | fonts + theme + Tailwind base (import once) |
-
-## How theming works
-
-Colors live as space-separated RGB channels in CSS variables, so Tailwind opacity
-utilities work and a project can retheme by redefining a variable — no rebuild:
-
-```css
-:root { --ds-primary-500: 59 130 246; }        /* default blue */
-.project-x { --ds-primary-500: 230 100 20; }   /* a project's accent */
-```
-
-A component uses `bg-primary-600`; the *value* comes from the variable.
-
-## Where to look
-
-- **Foundations** — Colors, Typography, Spacing, Radius, Shadows, Icons, Shortcuts.
-- **Components** — Actions, Forms, Feedback, Data display, Navigation, Overlays, Layout.
-- **Patterns → Dashboard** — the whole system composed into one screen.
-
-> Keyboard model: the package renders the **visual affordance** for shortcuts
-> (`<Kbd>` + `shortcutMode`); the **project binds the real keys**.
+The design system has been reset (RDY-244). The previous components, tokens and styles are preserved on the `legacy` branch.
+New components and tokens are added through the Portal redesign (RDY-243). Prototypes live under `Prototypes/<Platform>/…` and are never published.
