@@ -1,0 +1,87 @@
+// @vitest-environment jsdom
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { ProgressBar } from './ProgressBar';
+
+afterEach(cleanup);
+
+const bar = () => screen.getByRole('progressbar');
+const fillOf = () => bar().firstElementChild as HTMLElement;
+
+describe('ProgressBar ARIA', () => {
+  it('exposes value, range and a name from the readout', () => {
+    render(<ProgressBar value={10} max={15} label="10 of 15 seats used" />);
+    expect(bar().getAttribute('aria-valuenow')).toBe('10');
+    expect(bar().getAttribute('aria-valuemin')).toBe('0');
+    expect(bar().getAttribute('aria-valuemax')).toBe('15');
+    expect(screen.getByRole('progressbar', { name: '10 of 15 seats used' })).toBeTruthy();
+  });
+
+  it('uses aria-label when there is no readout', () => {
+    render(<ProgressBar value={1} aria-label="Storage" />);
+    expect(screen.getByRole('progressbar', { name: 'Storage' })).toBeTruthy();
+  });
+
+  it('clamps aria-valuenow when over the limit and announces the state', () => {
+    render(<ProgressBar value={17} max={15} label="17 of 15 seats used" />);
+    expect(bar().getAttribute('aria-valuenow')).toBe('15');
+    expect(bar().getAttribute('aria-valuetext')).toContain('limit reached');
+  });
+
+  it('has no value when indeterminate', () => {
+    render(<ProgressBar value={null} aria-label="Counting" />);
+    expect(bar().getAttribute('aria-valuenow')).toBeNull();
+  });
+});
+
+describe('ProgressBar tones', () => {
+  it('is accent below the warn point', () => {
+    render(<ProgressBar value={10} max={15} warnAt={13} label="x" />);
+    expect(fillOf().className).toContain('bg-accent');
+  });
+  it('warns at 2 seats left', () => {
+    render(<ProgressBar value={13} max={15} warnAt={13} label="x" />);
+    expect(fillOf().className).toContain('bg-warn-dot');
+  });
+  it('warns at 85% by default', () => {
+    render(<ProgressBar value={85} label="x" />);
+    expect(fillOf().className).toContain('bg-warn-dot');
+  });
+  it('is bad when full and shows the Plan and billing link', () => {
+    render(<ProgressBar value={15} max={15} label="x" actionHref="/billing" />);
+    expect(fillOf().className).toContain('bg-bad-dot');
+    expect(screen.getByRole('link', { name: 'Plan and billing' }).getAttribute('href')).toBe('/billing');
+  });
+  it('shows no link before the limit', () => {
+    render(<ProgressBar value={14} max={15} warnAt={13} label="x" actionHref="/billing" />);
+    expect(screen.queryByText('Plan and billing')).toBeNull();
+  });
+  it('renders a button when only onAction is given', () => {
+    const onAction = vi.fn();
+    render(<ProgressBar value={16} max={15} label="x" onAction={onAction} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Plan and billing' }));
+    expect(onAction).toHaveBeenCalled();
+  });
+  it('maps legacy tones', () => {
+    render(<ProgressBar value={1} tone="error" label="x" />);
+    expect(fillOf().className).toContain('bg-bad-dot');
+  });
+});
+
+describe('ProgressBar layout', () => {
+  it('is 4px high and 56px wide inline', () => {
+    render(<ProgressBar value={1} label="x" />);
+    expect(bar().className).toContain('h-1');
+    expect(bar().className).toContain('w-14');
+  });
+  it('is full width in the full layout', () => {
+    render(<ProgressBar layout="full" value={1} label="x" />);
+    expect(bar().className).toContain('w-full');
+  });
+  it('puts className on the wrapper, not the bar', () => {
+    const { container } = render(<ProgressBar value={1} label="x" className="w-96 h-20" />);
+    expect((container.firstElementChild as HTMLElement).className).toContain('w-96');
+    expect(bar().className).not.toContain('h-20');
+    expect(bar().className).toContain('h-1');
+  });
+});
