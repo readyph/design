@@ -78,34 +78,21 @@ const INTERACTIVE = 'button,a[href],input,select,textarea,summary,[role="button"
 // Any contenteditable value except "false" is editable ("", "true", "plaintext-only").
 const EDITABLE = 'input,textarea,select,[contenteditable]:not([contenteditable="false"])';
 
-export interface ListProps extends Omit<HTMLAttributes<HTMLElement>, 'onChange'> {
-  /** `list` (default): a plain list. `table`: row / columnheader / cell roles, for rows that line up under column headers. */
-  as?: Mode;
-  /** CSS `grid-template-columns` for the header and every row, e.g. `minmax(0,300fr) minmax(0,168fr) 112px`. Default: one column. */
-  columns?: string;
-  /** Stack the row (identity + actions on top, the rest underneath) when the list is narrower than this. Default 760. */
-  stackBelow?: ListStackBelow;
-  /** Cursor row (controlled). A row is current when its `rowId` equals this. */
+export interface ListCursorOptions {
+  shortcuts?: boolean;
   cursorId?: string | null;
-  /** Start with this row as the cursor (uncontrolled). */
   defaultCursorId?: string | null;
   onCursorChange?: (id: string) => void;
-  /** j / k move the cursor and Enter opens the cursor row, from anywhere on the page. Default true. With several Lists on one page, leave it on for the primary list only. */
-  shortcuts?: boolean;
-  children?: ReactNode;
 }
 
 /**
- * List rows (C18): a ruled list. Header row (12px muted labels, bottom rule) over rows with 16px top and bottom
- * padding, a 1px rule between rows, square corners, a value-column subgrid, and a j/k cursor. Only the row under
- * the pointer highlights. Below `stackBelow` px of the list's own width each row stacks. `className` goes on the
- * outer element (margins, width); the columns, container and rule live on the parts, so a caller class cannot break them.
+ * The j / k / Enter cursor over every `[data-row-id]` inside `rootRef`, in document order. `List` uses it for its
+ * own rows; `ListGroups` uses it once for all of its groups, so j / k cross group titles without a stop.
  */
-export const List = forwardRef<HTMLElement, ListProps>(function List(
-  { as = 'list', columns = 'minmax(0,1fr)', stackBelow = 760, cursorId, defaultCursorId = null, onCursorChange, shortcuts = true, className, children, ...rest },
-  ref,
+export function useListCursor(
+  rootRef: { current: HTMLElement | null },
+  { shortcuts = true, cursorId, defaultCursorId = null, onCursorChange }: ListCursorOptions,
 ) {
-  const rootRef = useRef<HTMLElement | null>(null);
   const [inner, setInner] = useState<string | null>(defaultCursorId);
   const [announce, setAnnounce] = useState('');
   const controlled = cursorId !== undefined;
@@ -157,6 +144,39 @@ export const List = forwardRef<HTMLElement, ListProps>(function List(
     return () => document.removeEventListener('keydown', onKey);
   }, [shortcuts, moveCursor]);
 
+  return { current, moveCursor, announce };
+}
+
+export interface ListProps extends Omit<HTMLAttributes<HTMLElement>, 'onChange'> {
+  /** `list` (default): a plain list. `table`: row / columnheader / cell roles, for rows that line up under column headers. */
+  as?: Mode;
+  /** CSS `grid-template-columns` for the header and every row, e.g. `minmax(0,300fr) minmax(0,168fr) 112px`. Default: one column. */
+  columns?: string;
+  /** Stack the row (identity + actions on top, the rest underneath) when the list is narrower than this. Default 760. */
+  stackBelow?: ListStackBelow;
+  /** Cursor row (controlled). A row is current when its `rowId` equals this. */
+  cursorId?: string | null;
+  /** Start with this row as the cursor (uncontrolled). */
+  defaultCursorId?: string | null;
+  onCursorChange?: (id: string) => void;
+  /** j / k move the cursor and Enter opens the cursor row, from anywhere on the page. Default true. With several Lists on one page, leave it on for the primary list only; Lists inside a `ListGroups` do not listen, the group does. */
+  shortcuts?: boolean;
+  children?: ReactNode;
+}
+
+/**
+ * List rows (C18): a ruled list. Header row (12px muted labels, bottom rule) over rows with 16px top and bottom
+ * padding, a 1px rule between rows, square corners, a value-column subgrid, and a j/k cursor. Only the row under
+ * the pointer highlights. Below `stackBelow` px of the list's own width each row stacks. `className` goes on the
+ * outer element (margins, width); the columns, container and rule live on the parts, so a caller class cannot break them.
+ */
+export const List = forwardRef<HTMLElement, ListProps>(function List(
+  { as = 'list', columns = 'minmax(0,1fr)', stackBelow = 760, cursorId, defaultCursorId = null, onCursorChange, shortcuts = true, className, children, ...rest },
+  ref,
+) {
+  const rootRef = useRef<HTMLElement | null>(null);
+  const { current, moveCursor, announce } = useListCursor(rootRef, { shortcuts, cursorId, defaultCursorId, onCursorChange });
+
   const ctx = useMemo<ListContextValue>(() => ({ mode: as, stack: stackBelow, cursorId: current, moveCursor }), [as, stackBelow, current, moveCursor]);
   const Root = (as === 'table' ? 'div' : 'ul') as 'div';
   return (
@@ -174,9 +194,11 @@ export const List = forwardRef<HTMLElement, ListProps>(function List(
       >
         {children}
       </Root>
-      <span role="status" aria-live="polite" className="sr-only">
-        {announce}
-      </span>
+      {shortcuts ? (
+        <span role="status" aria-live="polite" className="sr-only">
+          {announce}
+        </span>
+      ) : null}
     </ListContext.Provider>
   );
 });
