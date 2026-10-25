@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { userEvent, within } from '@storybook/test';
 import { BookOpen, FileText, Graph, House, Plus, Users } from '@phosphor-icons/react';
 import { AccountMenu } from './AccountMenu';
+import { PlatformShell } from './PlatformShell';
 import { CountBadge, IconRail, IconRailContent, IconRailFoot, IconRailItem, IconRailMark, IconRailSpacer } from './IconRail';
 
 const meta: Meta<typeof IconRail> = {
@@ -152,32 +153,56 @@ export const AccountMenuOpen: Story = {
   },
 };
 
-/**
- * Rail in the shell's `rail` slot. PlatformShell (RDY-261) is not on main yet, so this mirrors the
- * shell's slot wrapper (a labelled `nav`, flex column, same classes); swap in the real shell once merged.
- * Exactly one navigation landmark.
- */
+const ShellRail = () => (
+  <IconRailContent>
+    <IconRailMark href="#home" />
+    <IconRailItem icon={House} label="Home" href="#home" current />
+    <IconRailItem icon={Graph} label="Platforms" href="#platforms" />
+    <IconRailItem icon={Users} label="Team" href="#team" count={3} />
+    <IconRailItem icon={Plus} label="Add a platform" onClick={() => undefined} className="mt-2" />
+    <IconRailSpacer />
+    <IconRailFoot>
+      <AccountMenu name="Maria Santos" email="maria@santosauto.ph" role="Owner" applyToDocument={false} />
+    </IconRailFoot>
+  </IconRailContent>
+);
+
+const phoneTabs = [
+  [House, 'Home', '#home', 0],
+  [Graph, 'Platforms', '#platforms', 0],
+  [FileText, 'Reports', '#reports', 0],
+  [Users, 'Team', '#team', 3],
+] as const;
+
+/** Phone bottom nav (60px): the same item with `tooltip={false}`, stretched to fill each tab. */
+const ShellPhoneNav = () => (
+  <div className="flex h-[60px] w-full items-center justify-around px-2">
+    {phoneTabs.map(([Ic, label, href, count], i) => (
+      <IconRailItem key={label} icon={Ic} label={label} href={href} count={count} current={i === 0} tooltip={false} className="h-11 w-14" />
+    ))}
+  </div>
+);
+
+const shellPage = (
+  <div className="p-pad text-ui">
+    <h1 className="m-0 text-body font-semibold">Home</h1>
+    <p className="text-muted">The rail sits in the shell's labelled nav slot.</p>
+  </div>
+);
+
+/** The rail in the real PlatformShell `rail` slot: exactly one navigation landmark at desktop width. */
 export const InShellRailSlot: Story = {
   render: () => (
     <Theme theme="light">
-      <div className="flex h-[560px] w-full bg-frame">
-        <nav aria-label="Main" className="col-start-1 row-start-1 flex min-h-0 min-w-0 flex-col">
-          <IconRailContent>
-            <IconRailMark href="#home" />
-            <IconRailItem icon={House} label="Home" href="#home" current />
-            <IconRailItem icon={Graph} label="Platforms" href="#platforms" />
-            <IconRailItem icon={Users} label="Team" href="#team" count={3} />
-            <IconRailItem icon={Plus} label="Add a platform" onClick={() => undefined} className="mt-2" />
-            <IconRailSpacer />
-            <IconRailFoot>
-              <AccountMenu name="Maria Santos" email="maria@santosauto.ph" role="Owner" applyToDocument={false} />
-            </IconRailFoot>
-          </IconRailContent>
-        </nav>
-        <main className="m-2 ml-0 flex-1 rounded-card border border-border bg-surface p-6 text-ui text-text">
-          <h1 className="text-body font-semibold">Home</h1>
-        </main>
-      </div>
+      <PlatformShell rail={<ShellRail />} phoneNav={<ShellPhoneNav />} status={<span>All running</span>}>
+        {shellPage}
+      </PlatformShell>
     </Theme>
   ),
+};
+
+/** Same shell at phone width: the rail hides and the bottom nav reuses `IconRailItem` + `CountBadge`. */
+export const InShellPhoneNav: Story = {
+  ...InShellRailSlot,
+  parameters: { viewport: { defaultViewport: 'mobile1' } },
 };
