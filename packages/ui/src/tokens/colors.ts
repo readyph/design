@@ -41,6 +41,7 @@ export const status: Record<string, Pair> = {
   'bad-dot': ['#d23763', '#e85d87'],
   'bad-bg': ['#fbe5ec', '#2e1a21'],
   'bad-ink': ['#7d1235', '#f6a0ba'],
+  'bad-on': ['#ffffff', '#0b1020'],
   'info': ['#3b6889', '#93b9d9'],
   'info-bg': ['#e2ecf3', '#1a2530'],
   'info-ink': ['#24465f', '#b0cde4'],
