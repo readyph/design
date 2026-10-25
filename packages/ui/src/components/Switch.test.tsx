@@ -46,6 +46,26 @@ describe('Switch row content', () => {
   });
 });
 
+describe('Switch whole-row click', () => {
+  it('toggles from the description, example, lock note and the row itself', () => {
+    const onChange = vi.fn();
+    const { container } = render(<Switch label="Row" description="Desc" example="Ex" lockNote="Note" onCheckedChange={onChange} />);
+    fireEvent.click(screen.getByText('Desc'));
+    fireEvent.click(screen.getByText('Ex'));
+    fireEvent.click(screen.getByText('Note'));
+    fireEvent.click(container.querySelector('label') as HTMLElement);
+    expect(onChange.mock.calls.map((c) => c[0])).toEqual([true, false, true, false]);
+  });
+
+  it('does not toggle from the row or description when disabled', () => {
+    const onChange = vi.fn();
+    const { container } = render(<Switch label="Row" description="Desc" disabled onCheckedChange={onChange} />);
+    fireEvent.click(screen.getByText('Desc'));
+    fireEvent.click(container.querySelector('label') as HTMLElement);
+    expect(onChange).not.toHaveBeenCalled();
+  });
+});
+
 describe('Switch behaviour', () => {
   it('toggles on click and on Space, reports the value', () => {
     const onChange = vi.fn();

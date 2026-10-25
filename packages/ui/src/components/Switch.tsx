@@ -67,12 +67,15 @@ export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(function Switch
   if (!label) return control;
 
   return (
-    <div className={cn('flex items-start gap-3 max-sm:min-h-11', className)}>
+    <label
+      htmlFor={switchId}
+      className={cn('flex items-start gap-3 max-sm:min-h-11', disabled ? 'cursor-not-allowed' : 'cursor-pointer', className)}
+    >
       {control}
       <div className="flex min-w-0 flex-col">
-        <label id={labelId} htmlFor={switchId} className={cn('text-body', disabled ? 'cursor-not-allowed text-muted' : 'cursor-pointer text-text')}>
+        <span id={labelId} className={cn('text-body', disabled ? 'text-muted' : 'text-text')}>
           {label}
-        </label>
+        </span>
         {(description || example) && (
           <span id={descId} className="flex flex-col">
             {description && <span className="text-small text-muted">{description}</span>}
@@ -86,6 +89,6 @@ export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(function Switch
           </span>
         )}
       </div>
-    </div>
+    </label>
   );
 });

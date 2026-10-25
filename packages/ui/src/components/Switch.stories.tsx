@@ -32,7 +32,7 @@ export const Playground: Story = {};
 
 export const States: Story = {
   render: () => (
-    <div className="flex max-w-place flex-col gap-field-y">
+    <div className="flex w-full max-w-[var(--place)] flex-col gap-field-y">
       <Switch label="Off" description="Default state." />
       <Switch defaultChecked label="On" description="Leda can tell staff what is in stock." />
       <Switch defaultChecked label="With example" description="Leda can tell staff what is in stock." example="Is the blue kettle in at Cubao?" />
@@ -47,7 +47,7 @@ export const Settings: Story = {
     const [a, setA] = useState(true);
     const [b, setB] = useState(false);
     return (
-      <div className="flex max-w-place flex-col gap-field-y">
+      <div className="flex w-full max-w-[var(--place)] flex-col gap-field-y">
         <Switch checked={a} onCheckedChange={setA} label="Remember supplier names" description="Leda uses them when you ask who sells an item." />
         <Switch checked={b} onCheckedChange={setB} label="Share sales with branches" description="Each branch sees the combined totals." example="How did Pasig do against Cubao?" />
       </div>
