@@ -94,6 +94,18 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
   const selected = useMemo(() => options.find((o) => o.value === current), [options, current]);
   const enabled = useCallback((i: number) => i >= 0 && i < options.length && !options[i].disabled, [options]);
 
+  const hidden = useRef<HTMLInputElement>(null);
+  const lastValue = useRef(current);
+  // Fire a bubbling `change` on the hidden input when the value changes, so form listeners hear it.
+  useEffect(() => {
+    if (lastValue.current === current) return;
+    lastValue.current = current;
+    const el = hidden.current;
+    if (!el) return;
+    el.value = current;
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  }, [current]);
+
   const setRef = (node: HTMLButtonElement | null) => {
     btn.current = node;
     if (typeof ref === 'function') ref(node);
@@ -152,6 +164,17 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
     return idx.length ? (end ? idx[idx.length - 1] : idx[0]) : -1;
   };
 
+  // Jump up to 7 enabled options; stop at the first/last enabled one when fewer remain.
+  const page = (dir: 1 | -1) => {
+    let i = active;
+    for (let n = 0; n < 7; n++) {
+      const next = move(i, dir);
+      if (next === i) break;
+      i = next;
+    }
+    return i;
+  };
+
   const typeAhead = (ch: string) => {
     const now = Date.now();
     const b = buffer.current;
@@ -184,8 +207,8 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
       case 'ArrowUp': e.preventDefault(); setActive(move(active, -1)); break;
       case 'Home': e.preventDefault(); setActive(edge(false)); break;
       case 'End': e.preventDefault(); setActive(edge(true)); break;
-      case 'PageDown': e.preventDefault(); setActive(Math.min(move(active, 7), edge(true))); break;
-      case 'PageUp': e.preventDefault(); setActive(Math.max(move(active, -7), edge(false))); break;
+      case 'PageDown': e.preventDefault(); setActive(page(1)); break;
+      case 'PageUp': e.preventDefault(); setActive(page(-1)); break;
       case 'Enter':
       case ' ':
         e.preventDefault();
@@ -213,6 +236,7 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
         ref={setRef}
         id={id}
         type="button"
+        role="combobox"
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={open ? listId : undefined}
@@ -225,7 +249,7 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
         onClick={() => (open ? close(false) : openList())}
         onKeyDown={onKeyDown}
         className={cn(
-          'flex w-full items-center gap-2 rounded-control border bg-surface px-3 text-left text-[14px] text-text transition-colors',
+          'flex w-full items-center gap-2 rounded-control border bg-surface px-3 text-left text-body text-text transition-colors',
           'hover:bg-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
           'disabled:cursor-not-allowed disabled:bg-raised disabled:text-faint',
           size === 'sm' ? 'h-[var(--ctl-dropdown-sm)]' : 'h-[var(--ctl-dropdown)]',
@@ -242,7 +266,7 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
           className={cn('shrink-0 text-muted transition-transform duration-150 motion-reduce:transition-none', open && 'rotate-180')}
         />
       </button>
-      {name ? <input type="hidden" name={name} value={current} /> : null}
+      {name ? <input ref={hidden} type="hidden" name={name} value={current} readOnly /> : null}
       {open ? (
         <ul
           ref={list}
@@ -271,7 +295,7 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
                 close(true);
               }}
               className={cn(
-                'flex min-h-8 cursor-pointer items-center gap-2 rounded-chip px-2 text-[14px] text-text max-sm:min-h-10',
+                'flex min-h-8 cursor-pointer items-center gap-2 rounded-chip px-2 text-body text-text max-sm:min-h-10',
                 i === active && 'bg-frame-hover',
                 o.disabled && 'cursor-not-allowed text-faint',
               )}
@@ -280,7 +304,7 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
               <span className="min-w-0 flex-1 truncate">{o.label}</span>
               {o.meta ? <span className="shrink-0 text-small text-muted">{o.meta}</span> : null}
               <span className="inline-flex w-4 shrink-0 justify-center text-accent">
-                {o.value === current ? <Check size={14} weight="bold" aria-label="Selected" /> : null}
+                {o.value === current ? <Check size={14} weight="bold" aria-hidden /> : null}
               </span>
             </li>
           ))}
