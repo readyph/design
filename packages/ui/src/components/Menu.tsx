@@ -4,11 +4,11 @@ import { Check, type Icon as PhosphorIcon } from '@phosphor-icons/react';
 import { cn } from '../utils/cn';
 
 /** Shared item look (handover C35): 7x10px padding, 4px radius, 13px type. */
-const itemBase =
+export const menuItemBase =
   'flex w-full cursor-pointer select-none items-center gap-2 rounded-chip px-2.5 py-[7px] text-left text-ui outline-none ' +
   'data-[disabled]:pointer-events-none data-[disabled]:opacity-50';
-const itemTone = 'text-text data-[highlighted]:bg-raised';
-const itemDanger = 'text-bad-ink data-[highlighted]:bg-bad-bg';
+export const menuItemTone = 'text-text data-[highlighted]:bg-raised';
+export const menuItemDanger = 'text-bad-ink data-[highlighted]:bg-bad-bg';
 
 export interface MenuActionItem {
   type?: 'item';
@@ -94,7 +94,7 @@ export function Menu({ trigger, items, side = 'bottom', align = 'end', className
                       value={r.value}
                       disabled={r.disabled}
                       onSelect={r.onSelect}
-                      className={cn(itemBase, itemTone)}
+                      className={cn(menuItemBase, menuItemTone)}
                     >
                       <span>{r.label}</span>
                       {r.meta && <Meta>{r.meta}</Meta>}
@@ -127,7 +127,7 @@ export function Menu({ trigger, items, side = 'bottom', align = 'end', className
                 {it.meta && <Meta>{it.meta}</Meta>}
               </Fragment>
             );
-            const cls = cn(itemBase, it.danger ? itemDanger : itemTone);
+            const cls = cn(menuItemBase, it.danger ? menuItemDanger : menuItemTone);
             if (it.href !== undefined) {
               return (
                 <RadixMenu.Item key={i} asChild disabled={it.disabled} onSelect={it.onSelect}>
