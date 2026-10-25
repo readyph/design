@@ -1,5 +1,11 @@
 # @readyph/ui
 
+## 0.7.0
+
+### Minor Changes
+
+- 0a03db1: Reset the design system: all components, tokens and styles are removed (preserved on the `legacy` branch). The package builds empty; the Portal redesign (RDY-243) rebuilds it.
+
 ## 0.6.1
 
 ### Patch Changes
