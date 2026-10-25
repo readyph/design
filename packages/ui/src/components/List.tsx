@@ -75,7 +75,8 @@ export const listRowSurface =
   'data-[current=true]:shadow-[inset_2px_0_0_var(--accent)] data-[flash=true]:bg-clip-padding';
 
 const INTERACTIVE = 'button,a[href],input,select,textarea,summary,[role="button"],[role="menuitem"],[role="menu"],[role="switch"],[role="checkbox"],[role="combobox"]';
-const EDITABLE = 'input,textarea,select,[contenteditable=""],[contenteditable="true"]';
+// Any contenteditable value except "false" is editable ("", "true", "plaintext-only").
+const EDITABLE = 'input,textarea,select,[contenteditable]:not([contenteditable="false"])';
 
 export interface ListProps extends Omit<HTMLAttributes<HTMLElement>, 'onChange'> {
   /** `list` (default): a plain list. `table`: row / columnheader / cell roles, for rows that line up under column headers. */
@@ -89,7 +90,7 @@ export interface ListProps extends Omit<HTMLAttributes<HTMLElement>, 'onChange'>
   /** Start with this row as the cursor (uncontrolled). */
   defaultCursorId?: string | null;
   onCursorChange?: (id: string) => void;
-  /** j / k move the cursor and Enter opens the cursor row, from anywhere on the page. Default true. */
+  /** j / k move the cursor and Enter opens the cursor row, from anywhere on the page. Default true. With several Lists on one page, leave it on for the primary list only. */
   shortcuts?: boolean;
   children?: ReactNode;
 }

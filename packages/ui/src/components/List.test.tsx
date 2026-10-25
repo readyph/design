@@ -75,6 +75,25 @@ describe('List', () => {
     fireEvent.keyDown(input, { key: 'j' });
     expect(screen.getAllByRole('listitem')[0].getAttribute('aria-current')).toBeNull();
     input.remove();
+    const editor = document.createElement('div');
+    editor.setAttribute('contenteditable', 'plaintext-only');
+    editor.innerHTML = '<b>x</b>';
+    document.body.appendChild(editor);
+    fireEvent.keyDown(editor.firstElementChild!, { key: 'j' });
+    expect(screen.getAllByRole('listitem')[0].getAttribute('aria-current')).toBeNull();
+    editor.remove();
+  });
+
+  it('removes its keydown listener on unmount', () => {
+    const add = vi.spyOn(document, 'addEventListener');
+    const remove = vi.spyOn(document, 'removeEventListener');
+    const { unmount } = plain();
+    const handler = add.mock.calls.find(([type]) => type === 'keydown')?.[1];
+    unmount();
+    expect(handler).toBeTruthy();
+    expect(remove.mock.calls.some(([type, fn]) => type === 'keydown' && fn === handler)).toBe(true);
+    add.mockRestore();
+    remove.mockRestore();
   });
 
   it('clicking a row opens it and moves the cursor; clicking a button inside does not', () => {
