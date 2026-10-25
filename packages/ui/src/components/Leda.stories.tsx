@@ -49,7 +49,7 @@ export const Aurora: Story = {
           <LedaThinking thinking={on} size={96} />
           <LedaThinking thinking={on} size={96} tile />
         </div>
-        <p className="text-small text-muted">Reduced motion: no movement, a static teal shift and a "Thinking…" label in a reserved slot.</p>
+        <p className="text-small text-muted">Reduced motion: no movement. Aurora (thinking) shows a still teal shift and a "Thinking…" label in a reserved slot; Glint and Scan stay still with no tint. Replay Glint/Scan with `once` and a changing `key`.</p>
       </div>
     );
   },

@@ -27,8 +27,8 @@ describe('Leda', () => {
     });
   });
   it('announces Thinking only while thinking, and only Aurora has the still layer', () => {
-    const { container, getByRole, rerender } = render(<LedaThinking thinking />);
-    expect(getByRole('status').textContent).toBe('Thinking…');
+    const { container, rerender } = render(<LedaThinking thinking />);
+    expect(container.querySelector('[role=status]')?.textContent).toBe('Thinking…');
     expect(container.querySelector('.ld-still')).toBeTruthy();
     rerender(<LedaThinking thinking effect="glint" />);
     expect(container.querySelector('.ld-still')).toBeNull();
