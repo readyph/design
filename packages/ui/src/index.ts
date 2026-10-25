@@ -22,3 +22,5 @@ export * from './components/SheetBar';
 export { AccountMenu, AccountButton, applyTheme, initialsOf, type AccountMenuProps, type ThemeChoice } from './components/AccountMenu';
 export * from './components/Breadcrumbs';
 export * from './components/List';
+export * from './components/PlatformShell';
+export * from './components/ListGroup';

@@ -182,7 +182,7 @@
   --dur-toast: 5000ms;
   --dur-row-flash: 1.6s;
 }
-@media (max-width: 1440px) {
+@media (max-width: 1439px) {
   :root {
     --place: 400px;
   }
