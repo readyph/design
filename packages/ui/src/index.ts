@@ -21,3 +21,4 @@ export { AccountMenu, AccountButton, applyTheme, initialsOf, type AccountMenuPro
 export * from './components/Breadcrumbs';
 export * from './components/List';
 export * from './components/ListGroup';
+export * from './components/Queue';
