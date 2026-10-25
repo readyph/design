@@ -204,5 +204,10 @@
     --ctl-button: 40px;
     --ctl-dropdown: 44px;
     --ctl-dropdown-sm: 44px;
+    --fs-case: 18px;
+    --lh-case: 25px;
+    --fs-topic: 20px;
+    --lh-topic: 28px;
+    --fs-overview-figure: 20px;
   }
 }

@@ -75,9 +75,7 @@ ${darkExplicit}
   body { margin: 0; background: var(--frame); color: var(--text); font-variant-numeric: tabular-nums; }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   code, kbd, samp { font-family: var(--mono); font-size: 13px; }
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { transition: none !important; }
-  }
+  /* Reduced motion is handled per component (spec 4.7 keeps the 140ms fade and the halo opacity fade). */
 }
 `;
 writeFileSync(resolve(pkgRoot, 'src/styles/globals.css'), globals);
@@ -100,7 +98,10 @@ const fontSize = Object.fromEntries(
   ]),
 );
 const preset = {
-  darkMode: ['class', '[data-theme="dark"]'],
+  darkMode: ['variant', [
+    '@media (prefers-color-scheme: dark) { &:not([data-theme="light"], [data-theme="light"] *) }',
+    '&:is([data-theme="dark"], [data-theme="dark"] *)',
+  ]],
   theme: {
     extend: {
       colors,
