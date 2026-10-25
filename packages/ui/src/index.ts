@@ -1,4 +1,6 @@
 export * from './tokens';
+export * from './components/Button';
+export * from './components/IconButton';
 export * from './components/Badge';
 export * from './components/PlatformLogo';
 export * from './components/SegmentedControl';
@@ -10,6 +12,7 @@ export * from './components/FactsLine';
 export { Menu, type MenuProps, type MenuItem, type MenuActionItem, type MenuRadioItem } from './components/Menu';
 export * from './components/Switch';
 export * from './components/ProgressBar';
+export * from './components/DataList';
 export * from './components/EmptyState';
 export * from './components/Skeleton';
 export * from './components/ErrorBlock';
