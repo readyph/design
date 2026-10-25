@@ -24,13 +24,13 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 // One geometry for every variant: 32px (40 phone) tall, 5px radius, 13px / 500.
 // Each variant carries a 1px border (transparent unless `secondary`) so sizes match.
 export const base =
-  'relative inline-flex h-[var(--ctl-button)] items-center justify-center gap-2 whitespace-nowrap rounded-control border border-transparent px-4 text-ui font-medium transition-colors duration-hover disabled:cursor-not-allowed disabled:opacity-50';
+  'relative inline-flex h-[var(--ctl-button)] items-center justify-center gap-2 whitespace-nowrap rounded-control border border-transparent px-3 text-ui font-medium transition-colors duration-hover disabled:cursor-not-allowed disabled:opacity-70';
 
 export const variants: Record<ButtonVariant, string> = {
   primary: 'bg-accent text-accent-ink hover:bg-accent-hover',
-  secondary: 'border-control bg-surface text-text hover:bg-raised active:bg-raised-2',
-  text: 'bg-transparent text-text hover:bg-frame-hover active:bg-frame-active',
-  danger: 'border-bad-dot bg-bad-bg text-bad-ink hover:bg-bad-dot hover:text-white',
+  secondary: 'border-control bg-surface text-text hover:border-muted active:bg-raised',
+  text: 'bg-transparent text-text hover:bg-raised active:bg-raised-2',
+  danger: 'bg-bad text-white hover:bg-bad-dot',
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
@@ -52,9 +52,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
         </span>
       )}
       <span className={cn('inline-flex items-center justify-center gap-2', loading && 'invisible')}>
-        {Left && <Left size={16} aria-hidden="true" />}
+        {Left && <Left size={14} aria-hidden="true" />}
         {children}
-        {Right && <Right size={16} aria-hidden="true" />}
+        {Right && <Right size={14} aria-hidden="true" />}
       </span>
     </button>
   );

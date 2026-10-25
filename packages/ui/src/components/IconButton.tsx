@@ -31,7 +31,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       className={cn(
-        'inline-grid h-[var(--ctl-button)] w-[var(--ctl-button)] place-items-center rounded-control border border-transparent transition-colors duration-hover disabled:cursor-not-allowed disabled:opacity-50',
+        'inline-grid h-[var(--ctl-button)] w-[var(--ctl-button)] place-items-center rounded-control border border-transparent transition-colors duration-hover disabled:cursor-not-allowed disabled:opacity-70',
         focusRing,
         variants[variant],
         actionBar && 'max-[640px]:h-[var(--ctl-touch)] max-[640px]:w-[var(--ctl-touch)]',
@@ -42,7 +42,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
       {loading ? (
         <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden="true" />
       ) : (
-        <IconCmp size={16} aria-hidden="true" />
+        <IconCmp size={14} aria-hidden="true" />
       )}
     </button>
   );
