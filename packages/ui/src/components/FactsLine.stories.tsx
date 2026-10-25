@@ -66,3 +66,14 @@ export const Wrapping: Story = {
     </div>
   ),
 };
+
+export const LongUnbreakable: Story = {
+  render: () => (
+    <div className="w-[200px] rounded-ctl border border-border bg-surface p-3">
+      <FactsLine aria-label="Long value facts">
+        <Fact value="Supercalifragilisticexpialidocious-Logistics-Warehouse">Platform</Fact>
+        <Fact tone="bad" value="2 days">Closes in</Fact>
+      </FactsLine>
+    </div>
+  ),
+};

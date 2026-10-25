@@ -29,4 +29,25 @@ describe('FactsLine', () => {
     expect(container.querySelector('li > span[aria-hidden]')).toBeTruthy();
     expect(screen.getByRole('listitem').textContent).toBe('3 open cases');
   });
+  it('puts className on the wrapper so a caller margin keeps the gutter shift', () => {
+    const { container } = render(
+      <FactsLine className="mx-4 ml-2">
+        <Fact value="3">open</Fact>
+      </FactsLine>,
+    );
+    const wrapper = container.firstElementChild as HTMLElement;
+    expect(wrapper.className).toContain('mx-4');
+    expect(wrapper.className).toContain('overflow-hidden');
+    expect(screen.getByRole('list').className).toContain('-ml-[23px]');
+  });
+  it('lets a long unbreakable value wrap inside its fact', () => {
+    render(
+      <FactsLine>
+        <Fact value="Supercalifragilisticexpialidocious-Logistics-Warehouse">Platform</Fact>
+      </FactsLine>,
+    );
+    const cls = screen.getByRole('listitem').className;
+    expect(cls).toContain('min-w-0');
+    expect(cls).toContain('[overflow-wrap:anywhere]');
+  });
 });
