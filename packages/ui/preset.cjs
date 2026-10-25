@@ -237,6 +237,9 @@ const preset = {
         "leda-w": "var(--leda-w)",
         "leda-w-overview": "var(--leda-w-overview)"
       },
+      "maxWidth": {
+        "leda-w-overview": "var(--leda-w-overview)"
+      },
       "height": {
         "status": "var(--status)",
         "map-h": "var(--map-h)",

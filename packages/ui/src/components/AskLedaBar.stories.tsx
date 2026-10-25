@@ -50,3 +50,15 @@ export const PaletteOpen: Story = {
     return strip(<><span className="text-small text-muted">{open ? 'Palette open (halo paused)' : 'Closed'}</span><AskLedaBar {...a} paused={open} onOpen={() => setOpen((o) => !o)} /></>);
   },
 };
+
+/** Overview in grid, flex and block parents: none may scroll sideways at 320/375/560/1280 (check with the viewport toolbar). */
+export const OverviewParents: Story = {
+  parameters: { viewport: { defaultViewport: 'mobile1' } },
+  render: (a) => (
+    <div className="flex flex-col gap-4 bg-surface p-4">
+      <div className="grid place-items-center"><AskLedaBar {...a} variant="overview" scope="grid" shortcuts={false} /></div>
+      <div className="flex justify-center"><AskLedaBar {...a} variant="overview" scope="flex" shortcuts={false} /></div>
+      <div><AskLedaBar {...a} variant="overview" scope="block" shortcuts={false} /></div>
+    </div>
+  ),
+};

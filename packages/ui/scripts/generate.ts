@@ -111,6 +111,7 @@ const preset = {
       borderRadius: Object.fromEntries(Object.keys(radius).map((k) => [k, v(`r-${k}`)])),
       spacing: Object.fromEntries(Object.keys(spacing).map((k) => [k, v(k)])),
       width: { rail: v('rail'), place: v('place'), 'leda-w': v('leda-w'), 'leda-w-overview': v('leda-w-overview') },
+      maxWidth: { 'leda-w-overview': v('leda-w-overview') },
       height: { status: v('status'), 'map-h': v('map-h'), 'sheet-bar': v('sheet-bar') },
       boxShadow: { float: v('shadow-float') },
       backgroundImage: { halo: `conic-gradient(${v('hl0')}, ${v('hl1')}, ${v('hl2')}, ${v('hl3')}, ${v('hl0')})` },

@@ -48,6 +48,7 @@ describe('AskLedaBar semantics', () => {
     const wrap = outer.firstElementChild as HTMLElement;
     expect(outer.className).toContain('ml-4');
     expect(wrap.className).toContain('w-leda-w');
+    expect(wrap.className).not.toContain('w-leda-w-overview');
     expect(wrap.className).not.toMatch(/(^| )w-10( |$)/);
     expect(screen.getByRole('button').className).toContain('h-[var(--ctl-leda-bar)]');
   });
@@ -55,6 +56,31 @@ describe('AskLedaBar semantics', () => {
     const { container } = render(<AskLedaBar />);
     expect((container.querySelector('[data-ask-leda]') as HTMLElement).className).toContain('max-[640px]:w-[var(--ctl-touch)]');
     expect(screen.getByRole('button').className).toContain('max-[640px]:h-[var(--ctl-touch)]');
+  });
+});
+
+describe('AskLedaBar overview shrinks in any parent', () => {
+  it('has no fixed width: full width capped at the token, outer box full width', () => {
+    const { container } = render(<AskLedaBar variant="overview" className="w-10" />);
+    const outer = container.firstElementChild as HTMLElement;
+    const wrap = container.querySelector('[data-ask-leda]') as HTMLElement;
+    expect(wrap.className).toContain('w-full');
+    expect(wrap.className).toContain('max-w-leda-w-overview');
+    expect(wrap.className).not.toMatch(/(^| )w-leda-w-overview( |$)/);
+    expect(outer.className).toContain('w-full');
+    expect(outer.className).not.toContain('shrink-0');
+  });
+  it('bar variant keeps its fixed width', () => {
+    const { container } = render(<AskLedaBar />);
+    expect((container.firstElementChild as HTMLElement).className).toContain('shrink-0');
+    expect((container.querySelector('[data-ask-leda]') as HTMLElement).className).not.toContain('w-full');
+  });
+  it('hides the kbd at 640px and below on both variants', () => {
+    for (const variant of ['bar', 'overview'] as const) {
+      const { container, unmount } = render(<AskLedaBar variant={variant} />);
+      expect(container.querySelector('kbd')!.className).toContain('max-[640px]:hidden');
+      unmount();
+    }
   });
 });
 
@@ -119,5 +145,6 @@ describe('AskLedaBar utilities exist in the preset', () => {
   it('animations, halo background and overview width are generated', () => {
     const preset = readFileSync(`${process.cwd()}/preset.cjs`, 'utf8');
     for (const k of ['"halo-spin"', '"halo-fade"', '"halo-fade-reduced"', '"halo"', '"leda-w-overview"']) expect(preset).toContain(k);
+    expect(preset).toMatch(/maxWidth[\s\S]*"leda-w-overview"/);
   });
 });

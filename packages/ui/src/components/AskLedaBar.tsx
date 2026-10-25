@@ -110,12 +110,14 @@ export function useAskLedaShine(enabled: boolean) {
 
 const VARIANT = {
   bar: {
+    outer: 'inline-flex shrink-0 max-w-full',
     wrap: 'w-leda-w max-[640px]:w-[var(--ctl-touch)]',
     bar: 'h-[var(--ctl-leda-bar)] max-[640px]:h-[var(--ctl-touch)] max-[640px]:justify-center max-[640px]:px-0',
     mark: 20,
   },
   overview: {
-    wrap: 'w-leda-w-overview max-w-full',
+    outer: 'flex w-full',
+    wrap: 'w-full max-w-leda-w-overview',
     bar: 'h-[var(--ctl-touch)]',
     mark: 22,
   },
@@ -157,7 +159,7 @@ export const AskLedaBar = forwardRef<HTMLButtonElement, AskLedaBarProps>(functio
 
   return (
     // The caller's className lands on an outer box (margin, placement); the bar's own box is fixed inside it.
-    <span className={cn('inline-flex shrink-0 max-w-full', className)}>
+    <span className={cn(className, v.outer)}>
     <span data-ask-leda={variant} className={cn('relative isolate inline-flex rounded-control', v.wrap)}>
       {halo && (
         <span key={`g${pass}`} aria-hidden="true" data-halo="glow" className="pointer-events-none absolute -inset-px overflow-hidden rounded-control blur-[9px] animate-halo-fade [--halo-peak:.75] dark:[--halo-peak:.8] motion-reduce:hidden max-[640px]:hidden">
@@ -180,7 +182,7 @@ export const AskLedaBar = forwardRef<HTMLButtonElement, AskLedaBarProps>(functio
           <LedaMark key={pass} size={v.mark} effect="scan" active={scan} once decorative className={cn(variant === 'bar' && 'max-[640px]:h-6 max-[640px]:w-6')} />
         </span>
         <span className={cn('min-w-0 flex-1 truncate text-muted', variant === 'bar' && 'max-[640px]:hidden')} aria-hidden="true">{placeholder}</span>
-        <kbd aria-hidden="true" className={cn('shrink-0 rounded-[3px] border border-border px-1 font-sans text-tiny text-muted', variant === 'bar' && 'max-[640px]:hidden')}>{kbd}</kbd>
+        <kbd aria-hidden="true" className={cn('shrink-0 rounded-[3px] border border-border px-1 font-sans text-tiny text-muted max-[640px]:hidden')}>{kbd}</kbd>
       </button>
       {halo && (
         <span key={`r${pass}`} aria-hidden="true" data-halo="ring" className="pointer-events-none absolute -inset-px z-[2] overflow-hidden rounded-control p-[2px] [mask-image:linear-gradient(#000_0_0),linear-gradient(#000_0_0)] [mask-clip:content-box,border-box] [mask-composite:exclude] dark:p-[1.5px] animate-halo-fade motion-reduce:animate-halo-fade-reduced max-[640px]:hidden">
