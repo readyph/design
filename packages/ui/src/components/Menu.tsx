@@ -7,7 +7,7 @@ import { cn } from '../utils/cn';
 const itemBase =
   'flex w-full cursor-pointer select-none items-center gap-2 rounded-chip px-2.5 py-[7px] text-left text-ui outline-none ' +
   'data-[disabled]:pointer-events-none data-[disabled]:opacity-50';
-const itemTone = 'text-text data-[highlighted]:bg-accent-tint';
+const itemTone = 'text-text data-[highlighted]:bg-raised';
 const itemDanger = 'text-bad-ink data-[highlighted]:bg-bad-bg';
 
 export interface MenuActionItem {
@@ -53,7 +53,7 @@ export interface MenuProps {
 }
 
 const Meta = ({ children }: { children: ReactNode }) => (
-  <span className="ml-auto pl-4 text-small text-muted">{children}</span>
+  <span className="ml-auto pl-4 text-ui text-muted">{children}</span>
 );
 
 /** Consecutive radio items form one group. */
