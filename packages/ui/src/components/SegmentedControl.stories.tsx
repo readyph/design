@@ -66,16 +66,18 @@ export const ListGrid: Story = {
 
 export const ThemeInMenu: Story = {
   render: () => (
-    <SegmentedControl
-      semantics="menu"
-      aria-label="Theme"
-      defaultValue="system"
-      options={[
-        { value: 'light', label: 'Light' },
-        { value: 'dark', label: 'Dark' },
-        { value: 'system', label: 'System' },
-      ]}
-    />
+    <div role="menu" aria-label="Appearance" className="inline-block">
+      <SegmentedControl
+        semantics="menu"
+        aria-label="Theme"
+        defaultValue="system"
+        options={[
+          { value: 'light', label: 'Light' },
+          { value: 'dark', label: 'Dark' },
+          { value: 'system', label: 'System' },
+        ]}
+      />
+    </div>
   ),
 };
 
@@ -89,6 +91,21 @@ export const Disabled: Story = {
       <SegmentedControl aria-label="Some off" options={[{ value: 'a', label: 'Day' }, { value: 'b', label: 'Week' }, { value: 'c', label: 'Month', disabled: true }]} />
       <SegmentedControl aria-label="All off" disabled options={filters} />
     </div>
+  ),
+};
+
+export const RadioWithDisabled: Story = {
+  render: () => (
+    <SegmentedControl
+      semantics="radio"
+      aria-label="Range"
+      defaultValue="day"
+      options={[
+        { value: 'day', label: 'Day' },
+        { value: 'week', label: 'Week', disabled: true },
+        { value: 'month', label: 'Month' },
+      ]}
+    />
   ),
 };
 

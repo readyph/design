@@ -129,7 +129,7 @@ export function SegmentedControl({
             {Icon && <Icon size={16} aria-hidden />}
             {o.label}
             {o.count !== undefined && (
-              <span className={cn('text-small tabular-nums', active ? 'text-muted' : 'text-faint')}>{o.count}</span>
+              <span className="text-small tabular-nums text-muted">{o.count}</span>
             )}
           </button>
         );
