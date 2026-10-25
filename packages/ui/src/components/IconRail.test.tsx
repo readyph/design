@@ -3,7 +3,7 @@ import { render, screen, cleanup, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
 import { House, Plus, Users } from '@phosphor-icons/react';
-import { CountBadge, IconRail, IconRailFoot, IconRailItem, IconRailMark, IconRailSpacer, formatCount } from './IconRail';
+import { CountBadge, IconRail, IconRailContent, IconRailFoot, IconRailItem, IconRailMark, IconRailSpacer, formatCount } from './IconRail';
 
 afterEach(cleanup);
 
@@ -87,5 +87,38 @@ describe('IconRail', () => {
   it('legacy `active` still marks the current page', () => {
     render(<IconRailItem icon={House} label="Home" href="#" active tooltip={false} />);
     expect(screen.getByRole('link').getAttribute('aria-current')).toBe('page');
+  });
+});
+
+describe('IconRail in a shell slot', () => {
+  it('an item alone in a plain nav does not throw and still shows a tooltip provider-free', () => {
+    render(
+      <nav aria-label="Main">
+        <IconRailItem icon={House} label="Home" href="/" />
+      </nav>,
+    );
+    expect(screen.getByRole('link', { name: 'Home' })).toBeTruthy();
+  });
+
+  it('IconRailContent inside a nav renders exactly one navigation landmark and keeps the column layout', () => {
+    const { container } = render(
+      <nav aria-label="Main">
+        <IconRailContent data-testid="c">
+          <IconRailItem icon={House} label="Home" href="/" current />
+          <IconRailItem icon={Users} label="Team" href="/team" count={3} />
+        </IconRailContent>
+      </nav>,
+    );
+    expect(screen.getAllByRole('navigation')).toHaveLength(1);
+    const c = screen.getByTestId('c');
+    expect(c.tagName).toBe('DIV');
+    expect(c.className).toContain('flex-col');
+    expect(c.className).toContain('bg-frame');
+    expect(container.querySelectorAll('nav')).toHaveLength(1);
+  });
+
+  it('phone path: tooltip={false} + CountBadge needs no provider', () => {
+    render(<IconRailItem icon={Users} label="Team" href="/team" count={3} tooltip={false} />);
+    expect(screen.getByRole('link', { name: 'Team, 3' })).toBeTruthy();
   });
 });

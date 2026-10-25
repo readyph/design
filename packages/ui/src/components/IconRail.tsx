@@ -1,4 +1,4 @@
-import { forwardRef, type Ref, type AnchorHTMLAttributes, type ButtonHTMLAttributes, type HTMLAttributes, type ReactNode } from 'react';
+import { createContext, forwardRef, useContext, type Ref, type AnchorHTMLAttributes, type ButtonHTMLAttributes, type HTMLAttributes, type ReactNode } from 'react';
 import * as RadixTooltip from '@radix-ui/react-tooltip';
 import type { Icon as PhosphorIcon } from '@phosphor-icons/react';
 import { cn, focusRing } from '../utils/cn';
@@ -37,7 +37,40 @@ export function CountBadge({ count, className, ...rest }: CountBadgeProps) {
   );
 }
 
+const InRailTooltips = createContext(false);
+
+const railLayout =
+  'box-border flex w-rail min-w-[var(--rail)] max-w-[var(--rail)] shrink-0 flex-col items-center gap-1 pb-2 pt-3';
+
+function RailTooltips({ children }: { children: ReactNode }) {
+  return (
+    <RadixTooltip.Provider delayDuration={200} skipDelayDuration={400}>
+      <InRailTooltips.Provider value>{children}</InRailTooltips.Provider>
+    </RadixTooltip.Provider>
+  );
+}
+
 export interface IconRailProps extends HTMLAttributes<HTMLElement> {}
+
+export interface IconRailContentProps extends HTMLAttributes<HTMLDivElement> {}
+
+/**
+ * The rail without its own landmark, for `PlatformShell`'s `rail` slot (the shell already wraps the
+ * slot in a labelled `nav`, so a second one would nest). Same colour, 52px column layout and shared
+ * tooltip timing as `IconRail`; it fills the height of the slot.
+ */
+export const IconRailContent = forwardRef<HTMLDivElement, IconRailContentProps>(function IconRailContent(
+  { className, children, ...rest },
+  ref,
+) {
+  return (
+    <RailTooltips>
+      <div ref={ref} {...rest} className={cn('min-h-0 flex-1 bg-frame text-muted', className, railLayout)}>
+        {children}
+      </div>
+    </RailTooltips>
+  );
+});
 
 /**
  * The 52px desktop icon rail (C2): a `nav` landmark on the `--frame` colour (no border: the frame is
@@ -50,7 +83,7 @@ export const IconRail = forwardRef<HTMLElement, IconRailProps>(function IconRail
   ref,
 ) {
   return (
-    <RadixTooltip.Provider delayDuration={200} skipDelayDuration={400}>
+    <RailTooltips>
       <nav
         ref={ref}
         aria-label={ariaLabel}
@@ -58,12 +91,12 @@ export const IconRail = forwardRef<HTMLElement, IconRailProps>(function IconRail
         className={cn(
           'bg-frame text-muted',
           className,
-          'box-border flex w-rail min-w-[var(--rail)] max-w-[var(--rail)] shrink-0 flex-col items-center gap-1 pb-2 pt-3',
+          railLayout,
         )}
       >
         {children}
       </nav>
-    </RadixTooltip.Provider>
+    </RailTooltips>
   );
 });
 
@@ -149,6 +182,7 @@ export const IconRailItem = forwardRef<HTMLAnchorElement | HTMLButtonElement, Ic
   { icon: IconCmp, label, current, active, count = 0, tooltip = true, className, ...rest },
   ref,
 ) {
+  const inRail = useContext(InRailTooltips);
   const isCurrent = current ?? active ?? false;
   const name = count > 0 ? `${label}, ${formatCount(count)}` : label;
   const classes = cn(
@@ -175,7 +209,7 @@ export const IconRailItem = forwardRef<HTMLAnchorElement | HTMLButtonElement, Ic
       </button>
     );
   if (!tooltip) return node;
-  return (
+  const tip = (
     <RadixTooltip.Root>
       <RadixTooltip.Trigger asChild>{node}</RadixTooltip.Trigger>
       <RadixTooltip.Portal>
@@ -189,5 +223,8 @@ export const IconRailItem = forwardRef<HTMLAnchorElement | HTMLButtonElement, Ic
         </RadixTooltip.Content>
       </RadixTooltip.Portal>
     </RadixTooltip.Root>
+  );
+  return inRail ? tip : (
+    <RadixTooltip.Provider delayDuration={200} skipDelayDuration={400}>{tip}</RadixTooltip.Provider>
   );
 });

@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { userEvent, within } from '@storybook/test';
 import { BookOpen, FileText, Graph, House, Plus, Users } from '@phosphor-icons/react';
 import { AccountMenu } from './AccountMenu';
-import { CountBadge, IconRail, IconRailFoot, IconRailItem, IconRailMark, IconRailSpacer } from './IconRail';
+import { CountBadge, IconRail, IconRailContent, IconRailFoot, IconRailItem, IconRailMark, IconRailSpacer } from './IconRail';
 
 const meta: Meta<typeof IconRail> = {
   title: 'Components/IconRail',
@@ -15,6 +15,8 @@ const meta: Meta<typeof IconRail> = {
         component: `Icon rail (RDY-262, handover C2): the 52px \`nav\` on the \`--frame\` colour. Stack: \`IconRailMark\` (the "R", 32px, links Home), 36x36 \`IconRailItem\`s (19px icons, 5px radius), "+" add platform, \`IconRailSpacer\`, then \`IconRailFoot\` with the \`AccountMenu\`. **No Settings item**: Settings lives in the avatar menu.
 
 States: default muted, hover \`--frame-hover\`, current \`--frame-active\` + \`aria-current="page"\`, optional count badge (\`99+\` above 99; the accessible name becomes "Team, 3"). The tooltip (right, 12px, ink) shows on hover and on keyboard focus; Esc dismisses. Focus rings use the frame colour as the gap.
+
+**In PlatformShell (RDY-261):** the shell wraps its \`rail\` slot in its own labelled \`nav\`, so pass \`IconRailContent\` (same layout, colour and tooltip timing, no landmark): \`<PlatformShell rail={<IconRailContent>…</IconRailContent>} />\`. Use \`IconRail\` only where there is no shell. \`IconRailItem\` also works alone (it mounts its own tooltip provider when none is above it).
 
 **Phone (RDY-261):** the rail does not render at phone width; the shell swaps in the 60px bottom nav. \`IconRailItem\` (use \`tooltip={false}\`, size via \`className\`) and \`CountBadge\` are reusable there.
 
@@ -148,4 +150,34 @@ export const AccountMenuOpen: Story = {
   play: async ({ canvasElement }) => {
     await userEvent.click(within(canvasElement).getByRole('button', { name: /Account menu/ }));
   },
+};
+
+/**
+ * Rail in the shell's `rail` slot. PlatformShell (RDY-261) is not on main yet, so this mirrors the
+ * shell's slot wrapper (a labelled `nav`, flex column, same classes); swap in the real shell once merged.
+ * Exactly one navigation landmark.
+ */
+export const InShellRailSlot: Story = {
+  render: () => (
+    <Theme theme="light">
+      <div className="flex h-[560px] w-full bg-frame">
+        <nav aria-label="Main" className="col-start-1 row-start-1 flex min-h-0 min-w-0 flex-col">
+          <IconRailContent>
+            <IconRailMark href="#home" />
+            <IconRailItem icon={House} label="Home" href="#home" current />
+            <IconRailItem icon={Graph} label="Platforms" href="#platforms" />
+            <IconRailItem icon={Users} label="Team" href="#team" count={3} />
+            <IconRailItem icon={Plus} label="Add a platform" onClick={() => undefined} className="mt-2" />
+            <IconRailSpacer />
+            <IconRailFoot>
+              <AccountMenu name="Maria Santos" email="maria@santosauto.ph" role="Owner" applyToDocument={false} />
+            </IconRailFoot>
+          </IconRailContent>
+        </nav>
+        <main className="m-2 ml-0 flex-1 rounded-card border border-border bg-surface p-6 text-ui text-text">
+          <h1 className="text-body font-semibold">Home</h1>
+        </main>
+      </div>
+    </Theme>
+  ),
 };
