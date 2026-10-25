@@ -19,3 +19,4 @@ export * from './components/Skeleton';
 export * from './components/ErrorBlock';
 export * from './components/Breadcrumbs';
 export * from './components/List';
+export * from './components/PlatformShell';
