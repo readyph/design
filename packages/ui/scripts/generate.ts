@@ -113,6 +113,8 @@ const preset = {
       width: { rail: v('rail'), place: v('place'), 'leda-w': v('leda-w') },
       height: { status: v('status'), 'map-h': v('map-h'), 'sheet-bar': v('sheet-bar') },
       boxShadow: { float: v('shadow-float') },
+      keyframes: { 'tab-fade': { from: { opacity: '0' }, to: { opacity: '1' } } },
+      animation: { 'tab-fade': 'tab-fade var(--dur-tab) linear' },
       transitionTimingFunction: { subpage: v('ease-subpage'), halo: v('ease-halo') },
       transitionDuration: { hover: v('dur-hover'), 'hover-slow': v('dur-hover-slow'), tab: v('dur-tab'), 'subpage-in': v('dur-subpage-in'), 'subpage-out': v('dur-subpage-out') },
     },

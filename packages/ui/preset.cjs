@@ -244,6 +244,19 @@ module.exports = {
       "boxShadow": {
         "float": "var(--shadow-float)"
       },
+      "keyframes": {
+        "tab-fade": {
+          "from": {
+            "opacity": "0"
+          },
+          "to": {
+            "opacity": "1"
+          }
+        }
+      },
+      "animation": {
+        "tab-fade": "tab-fade var(--dur-tab) linear"
+      },
       "transitionTimingFunction": {
         "subpage": "var(--ease-subpage)",
         "halo": "var(--ease-halo)"
