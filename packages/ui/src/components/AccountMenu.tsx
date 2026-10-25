@@ -184,7 +184,7 @@ export function AccountMenu({
           ref={contentRef}
           side={phone ? 'bottom' : 'right'}
           align="end"
-          sideOffset={phone ? 8 : 10}
+          sideOffset={phone ? 14 : 10}
           collisionPadding={8}
           loop
           onKeyDownCapture={onKeyDownCapture}

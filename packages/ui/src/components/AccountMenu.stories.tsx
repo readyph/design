@@ -75,7 +75,7 @@ export const Closed: Story = {
 export const OpenLight: Story = {
   render: (a) => (
     <Theme theme="light">
-      <RailFrame><AccountMenu {...a} /></RailFrame>
+      <RailFrame><AccountMenu {...a} defaultTheme="light" /></RailFrame>
     </Theme>
   ),
   play: open,
@@ -84,7 +84,7 @@ export const OpenLight: Story = {
 export const OpenDark: Story = {
   render: (a) => (
     <Theme theme="dark">
-      <RailFrame><AccountMenu {...a} /></RailFrame>
+      <RailFrame><AccountMenu {...a} defaultTheme="dark" /></RailFrame>
     </Theme>
   ),
   play: open,
@@ -94,7 +94,7 @@ export const OpenOverBusyBackground: Story = {
   render: (a) => (
     <Theme theme="light">
       <RailFrame busy>
-        <AccountMenu {...a} />
+        <AccountMenu {...a} defaultTheme="light" />
       </RailFrame>
     </Theme>
   ),
@@ -115,7 +115,7 @@ export const OpenPhoneLight: Story = {
   parameters: { viewport: { defaultViewport: 'mobile1' } },
   render: (a) => (
     <Theme theme="light">
-      <PhoneBar><AccountMenu {...a} /></PhoneBar>
+      <PhoneBar><AccountMenu {...a} defaultTheme="light" /></PhoneBar>
     </Theme>
   ),
   play: open,
@@ -125,7 +125,7 @@ export const OpenPhoneDark: Story = {
   parameters: { viewport: { defaultViewport: 'mobile1' } },
   render: (a) => (
     <Theme theme="dark">
-      <PhoneBar><AccountMenu {...a} /></PhoneBar>
+      <PhoneBar><AccountMenu {...a} defaultTheme="dark" /></PhoneBar>
     </Theme>
   ),
   play: open,
@@ -135,7 +135,7 @@ export const LongNames: Story = {
   args: { name: 'Maria Cristina Santos-Villanueva', email: 'maria.cristina.santos-villanueva@santosautoworks.com.ph' },
   render: (a) => (
     <Theme theme="light">
-      <RailFrame><AccountMenu {...a} /></RailFrame>
+      <RailFrame><AccountMenu {...a} defaultTheme="light" /></RailFrame>
     </Theme>
   ),
   play: open,

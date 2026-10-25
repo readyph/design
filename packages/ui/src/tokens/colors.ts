@@ -21,7 +21,7 @@ export const surfaces: Record<string, Pair> = {
   'accent-tint-2': ['#cfdbf6', '#2c3657'],
   hatch: ['#c7cfdb', '#4b4d50'],
   scrim: ['rgba(18,23,34,.28)', 'rgba(0,0,0,.5)'],
-  overlay: ['rgba(255,255,255,.82)', 'rgba(43,44,45,.86)'],
+  overlay: ['rgba(255,255,255,.86)', 'rgba(43,44,45,.90)'],
   skeleton: ['#e6eaf0', '#2b2c2d'],
   'avatar-bg': ['#dfe7f7', '#233152'],
   'avatar-text': ['#1f3d86', '#c4d3f7'],
