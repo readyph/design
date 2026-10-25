@@ -66,6 +66,21 @@ export const StatusBar: Story = {
   ),
 };
 
+export const OnFrameAndSurface: Story = {
+  parameters: { docs: { description: { story: 'The empty track on `bg-frame` (status bar, Seats) and on `bg-surface` (Memory room). Switch the theme toolbar to check light and dark.' } } },
+  render: () => (
+    <div className="grid w-full max-w-[var(--place)] gap-3 sm:grid-cols-2">
+      {(['bg-frame', 'bg-surface'] as const).map((bg) => (
+        <div key={bg} className={`${bg} flex flex-col gap-group-y rounded-card p-4`}>
+          <ProgressBar layout="full" value={3} max={15} label={`3 of 15 on ${bg}`} />
+          <ProgressBar layout="full" value={10} max={15} warnAt={13} label={`10 of 15 on ${bg}`} />
+          <ProgressBar layout="inline" value={0} max={15} label={`0 of 15 on ${bg}`} />
+        </div>
+      ))}
+    </div>
+  ),
+};
+
 export const Phone: Story = {
   parameters: { viewport: { defaultViewport: 'mobile1' } },
   render: () => (
