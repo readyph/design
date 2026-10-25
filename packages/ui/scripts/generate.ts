@@ -86,7 +86,7 @@ const colors: Record<string, string | Record<string, string>> = {};
 for (const k of Object.keys(surfaces)) colors[k] = v(k);
 for (const tone of ['ok', 'warn', 'bad', 'info']) {
   colors[tone] = {
-    DEFAULT: v(tone), bg: v(`${tone}-bg`), ink: v(`${tone}-ink`), ...(tone !== 'info' ? { dot: v(`${tone}-dot`) } : {}),
+    DEFAULT: v(tone), bg: v(`${tone}-bg`), ink: v(`${tone}-ink`), ...(`${tone}-on` in status ? { on: v(`${tone}-on`) } : {}), ...(tone !== 'info' ? { dot: v(`${tone}-dot`) } : {}),
   };
 }
 for (const k of Object.keys(dataviz)) colors[k] = v(k);

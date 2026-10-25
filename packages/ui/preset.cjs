@@ -52,6 +52,7 @@ module.exports = {
           "DEFAULT": "var(--bad)",
           "bg": "var(--bad-bg)",
           "ink": "var(--bad-ink)",
+          "on": "var(--bad-on)",
           "dot": "var(--bad-dot)"
         },
         "info": {
