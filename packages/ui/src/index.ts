@@ -1,4 +1,6 @@
 export * from './tokens';
+export * from './components/Button';
+export * from './components/IconButton';
 export * from './components/Badge';
 export * from './components/PlatformLogo';
 export * from './components/SegmentedControl';
