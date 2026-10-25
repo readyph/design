@@ -4,8 +4,11 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   "darkMode": [
-    "class",
-    "[data-theme=\"dark\"]"
+    "variant",
+    [
+      "@media (prefers-color-scheme: dark) { &:not([data-theme=\"light\"], [data-theme=\"light\"] *) }",
+      "&:is([data-theme=\"dark\"], [data-theme=\"dark\"] *)"
+    ]
   ],
   "theme": {
     "extend": {
