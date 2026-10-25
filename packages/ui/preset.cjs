@@ -234,7 +234,8 @@ const preset = {
       "width": {
         "rail": "var(--rail)",
         "place": "var(--place)",
-        "leda-w": "var(--leda-w)"
+        "leda-w": "var(--leda-w)",
+        "leda-w-overview": "var(--leda-w-overview)"
       },
       "height": {
         "status": "var(--status)",
@@ -244,6 +245,9 @@ const preset = {
       "boxShadow": {
         "float": "var(--shadow-float)"
       },
+      "backgroundImage": {
+        "halo": "conic-gradient(var(--hl0), var(--hl1), var(--hl2), var(--hl3), var(--hl0))"
+      },
       "keyframes": {
         "row-flash": {
           "0%, 40%": {
@@ -252,10 +256,43 @@ const preset = {
           "100%": {
             "backgroundColor": "transparent"
           }
+        },
+        "halo-spin": {
+          "from": {
+            "transform": "translate(-50%, -50%) rotate(0deg)"
+          },
+          "to": {
+            "transform": "translate(-50%, -50%) rotate(360deg)"
+          }
+        },
+        "halo-fade": {
+          "0%": {
+            "opacity": "0"
+          },
+          "18%, 70%": {
+            "opacity": "var(--halo-peak, 1)"
+          },
+          "100%": {
+            "opacity": "0"
+          }
+        },
+        "halo-fade-reduced": {
+          "0%": {
+            "opacity": "0"
+          },
+          "50%": {
+            "opacity": "1"
+          },
+          "100%": {
+            "opacity": "0"
+          }
         }
       },
       "animation": {
-        "row-flash": "row-flash var(--dur-row-flash) ease-out 1"
+        "row-flash": "row-flash var(--dur-row-flash) ease-out 1",
+        "halo-spin": "halo-spin var(--dur-halo) var(--ease-halo) 1 both",
+        "halo-fade": "halo-fade var(--dur-halo) var(--ease-halo) 1 both",
+        "halo-fade-reduced": "halo-fade-reduced var(--dur-halo-reduced) ease-in-out 1 both"
       },
       "transitionTimingFunction": {
         "subpage": "var(--ease-subpage)",
