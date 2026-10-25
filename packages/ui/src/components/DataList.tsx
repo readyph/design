@@ -19,7 +19,7 @@ export interface DataListProps {
   items: DataListItem[];
   /** Always stack the label above the value. Without it the list stacks by itself when it is narrower than 600px. */
   stacked?: boolean;
-  /** Layout, never the list's own spacing: put margins on a wrapper if you need to be sure. */
+  /** Margins and width only (e.g. `mt-4`). Do not pass `p-*` (it shrinks the container, so the list stacks earlier) or `text-*` (changes the type size). */
   className?: string;
 }
 
@@ -27,16 +27,18 @@ export interface DataListProps {
  * Key-value rows (C41): a `dl` of rows in a `minmax(120px, 34%) | 1fr` grid, 13/20, 7px row padding with a top rule.
  * The label is muted on one line; the value is weight 500 with an optional right note and a `bad` tone.
  * Stacks when the list is narrower than 600px (a phone, a narrow sheet) or with `stacked`.
+ * Needs a definite width (block, `1fr` track or flex child): it is `w-full` and never content-sized,
+ * because the container query removes its intrinsic width.
  * Works on surface, raised and raised-2.
  */
 export function DataList({ items, stacked = false, className }: DataListProps) {
   return (
-    <dl className={cn('m-0 min-w-0 text-[13px] leading-5 [container-type:inline-size]', className)}>
+    <dl className={cn('m-0 min-w-0 w-full text-[13px] [container-type:inline-size]', className)}>
       {items.map((item, i) => (
         <div
           key={i}
           className={cn(
-            'grid items-start gap-x-3 border-t border-rule py-[7px]',
+            'grid items-start gap-x-3 border-t leading-5 border-rule py-[7px]',
             stacked ? 'grid-cols-1' : 'grid-cols-[minmax(120px,34%)_1fr] [@container_(max-width:599px)]:grid-cols-1',
           )}
         >

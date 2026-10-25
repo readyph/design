@@ -97,3 +97,12 @@ export const OnRaisedSurfaces: Story = {
     </div>
   ),
 };
+
+export const BesideNote: Story = {
+  render: (args) => (
+    <div className="flex max-w-[640px] gap-4">
+      <DataList {...args} />
+      <p className="m-0 w-40 shrink-0 text-[13px] text-muted">Leda: this invoice is two days overdue.</p>
+    </div>
+  ),
+};

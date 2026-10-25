@@ -55,4 +55,11 @@ describe('DataList layout', () => {
     expect(container.querySelector('dl')!.className).toContain('mt-4');
     expect(container.querySelector('dl > div')!.className).toContain('grid');
   });
+
+  it('is full width and keeps leading-5 on the rows when a caller passes text-*', () => {
+    const { container } = render(<DataList items={items} className="text-sm" />);
+    expect(container.querySelector('dl')!.className).toContain('w-full');
+    expect(container.querySelector('dl > div')!.className).toContain('leading-5');
+    expect(container.querySelector('dl')!.className).not.toContain('leading-5');
+  });
 });
