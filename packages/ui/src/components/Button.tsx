@@ -30,7 +30,7 @@ export const variants: Record<ButtonVariant, string> = {
   primary: 'bg-accent text-accent-ink hover:bg-accent-hover',
   secondary: 'border-control bg-surface text-text hover:border-muted active:bg-raised',
   text: 'bg-transparent text-text hover:bg-raised active:bg-raised-2',
-  danger: 'bg-bad text-white hover:bg-bad-dot',
+  danger: 'bg-bad text-bad-on hover:bg-bad-dot',
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(

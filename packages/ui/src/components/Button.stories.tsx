@@ -1,6 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { FloppyDisk, Plus, ArrowRight, Trash } from '@phosphor-icons/react';
 import { Button } from './Button';
+import { surfaces, status } from '../tokens/colors';
+
+const colors = { ...surfaces, ...status };
 
 const meta: Meta<typeof Button> = {
   title: 'Components/Actions/Button',
@@ -58,4 +61,42 @@ export const ActionBar: Story = {
       <Button actionBar fullWidth>Save</Button>
     </div>
   ),
+};
+
+const lum = (hex: string) => {
+  const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((x) => (x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+};
+const ratio = (a: string, b: string) => {
+  const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+};
+
+/** Danger ink (`--bad-on`) against `--bad` (rest) and `--bad-dot` (hover), computed from the tokens. WCAG AA needs 4.5:1. */
+export const DangerContrast: Story = {
+  render: () => {
+    const rows = [
+      ['Light rest', colors['bad-on'][0], colors['bad'][0]],
+      ['Light hover', colors['bad-on'][0], colors['bad-dot'][0]],
+      ['Dark rest', colors['bad-on'][1], colors['bad'][1]],
+      ['Dark hover', colors['bad-on'][1], colors['bad-dot'][1]],
+    ] as const;
+    return (
+      <table className="text-small">
+        <tbody>
+          {rows.map(([name, fg, bg]) => {
+            const r = ratio(fg, bg);
+            return (
+              <tr key={name}>
+                <td className="pr-4">{name}</td>
+                <td className="pr-4">{fg} on {bg}</td>
+                <td className="pr-4">{r.toFixed(2)}:1</td>
+                <td>{r >= 4.5 ? 'AA pass' : 'AA FAIL'}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    );
+  },
 };
