@@ -77,6 +77,21 @@ export const LongNames: Story = {
           ]}
         />
       </div>,
-      'w-80',
+      'w-full max-w-80',
+    ),
+};
+
+/** 320px is the place column width below 960px: the trail stays on one line, ancestors truncate first. */
+export const TrailNarrow320: Story = {
+  render: () =>
+    panel(
+      <Breadcrumbs aria-label="Breadcrumb 9"
+        items={[
+          { label: 'All platforms', href: '#' },
+          { label: 'Quezon City Business Permits and Licensing Office', href: '#', logo: <PlatformLogo decorative name="Quezon City" index={1} /> },
+          { label: 'An exceptionally long case title that must truncate rather than overflow' },
+        ]}
+      />,
+      'w-full max-w-[320px]',
     ),
 };

@@ -71,7 +71,7 @@ export const Breadcrumbs = forwardRef<HTMLElement, BreadcrumbsProps>(function Br
         crumb={back}
         className={cn(
           link,
-          'inline-flex max-w-full items-center gap-1 text-ui font-medium text-muted hover:text-text max-sm:min-h-11',
+          'inline-flex max-w-full items-center gap-1 text-ui font-medium text-muted hover:text-text max-sm:min-h-11 max-sm:min-w-11',
           focusRing,
         )}
       >
@@ -111,7 +111,7 @@ export const Breadcrumbs = forwardRef<HTMLElement, BreadcrumbsProps>(function Br
     );
   } else {
     body = (
-      <ol className="flex min-w-0 list-none flex-wrap items-center gap-x-1.5 gap-y-0.5 p-0 text-small text-muted">
+      <ol className="flex min-w-0 list-none flex-nowrap items-center gap-x-1.5 p-0 text-small text-muted">
         {items.map((item, i) => {
           const last = i === items.length - 1;
           const content = (
@@ -122,7 +122,7 @@ export const Breadcrumbs = forwardRef<HTMLElement, BreadcrumbsProps>(function Br
           );
           return (
             <Fragment key={i}>
-              <li className="flex min-w-0 items-center">
+              <li className={cn('flex min-w-0 items-center', last ? 'max-w-[45%] shrink-0' : i === items.length - 2 ? 'shrink' : 'shrink-[0.15]')}>
                 {last ? (
                   <span aria-current="page" title={item.label} className="inline-flex min-w-0 items-center gap-1.5 font-semibold text-text">
                     {content}
@@ -140,7 +140,7 @@ export const Breadcrumbs = forwardRef<HTMLElement, BreadcrumbsProps>(function Br
                 )}
               </li>
               {!last && (
-                <li aria-hidden className="shrink-0 text-muted">
+                <li aria-hidden className="shrink-0 whitespace-nowrap text-muted">
                   /
                 </li>
               )}

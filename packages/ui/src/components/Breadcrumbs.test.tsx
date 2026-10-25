@@ -60,4 +60,22 @@ describe('Breadcrumbs', () => {
     expect(screen.queryByRole('link')).toBeNull();
     expect(screen.getByText('Only').getAttribute('aria-current')).toBe('page');
   });
+  it('trail: never wraps; ancestors shrink, current crumb shrinks last', () => {
+    const { container } = render(<Breadcrumbs items={items} />);
+    const ol = container.querySelector('ol')!;
+    expect(ol.className).toContain('flex-nowrap');
+    expect(ol.className).not.toContain('flex-wrap');
+    const lis = Array.from(ol.querySelectorAll(':scope > li'));
+    expect(lis[0].className).toContain('shrink');
+    expect(lis[0].className).not.toContain('shrink-0');
+    expect(lis[1].getAttribute('aria-hidden')).toBe('true');
+    expect(lis[1].className).toContain('shrink-0');
+    expect(lis[lis.length - 1].className).toContain('shrink-0');
+  });
+  it('phone: back link is at least 44x44 on small screens', () => {
+    render(<Breadcrumbs variant="phone" items={items} />);
+    const a = screen.getByRole('link');
+    expect(a.className).toContain('max-sm:min-h-11');
+    expect(a.className).toContain('max-sm:min-w-11');
+  });
 });
