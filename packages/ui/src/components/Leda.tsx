@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useInsertionEffect, useRef, useState } from 'react';
 import { leda } from '../tokens';
 
 /**
@@ -53,11 +53,28 @@ const CSS = `
 @keyframes ld-b3{0%{opacity:0}39%{opacity:1}48%{opacity:.38}78%{opacity:1}84%{opacity:.6}88%,100%{opacity:0}}
 @keyframes ld-b4{0%{opacity:0}50%{opacity:1}59%{opacity:.38}78%{opacity:1}84%{opacity:.6}88%,100%{opacity:0}}
 @keyframes ld-flow{from{transform:translateY(0)}to{transform:translateY(-240px)}}
-.ld-rmlabel{visibility:hidden}
+.ld-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.ld-rmlabel{display:none}
 @media (prefers-reduced-motion:reduce){
-.ld-fx{display:none}.ld-on .ld-still{opacity:1}.ld-on .ld-rmlabel{visibility:visible}
+.ld-fx{display:none}.ld-aurora.ld-on .ld-still{opacity:1}
+.ld-rmlabel{display:inline;visibility:hidden}.ld-on .ld-rmlabel{visibility:visible}
 }
 `;
+
+/** Inject the stylesheet once per document (before paint), not once per instance. */
+let injected = false;
+function useLedaStyles() {
+  useInsertionEffect(() => {
+    if (injected || typeof document === 'undefined') return;
+    if (!document.getElementById('ld-css')) {
+      const el = document.createElement('style');
+      el.id = 'ld-css';
+      el.textContent = CSS;
+      document.head.appendChild(el);
+    }
+    injected = true;
+  }, []);
+}
 
 export type LedaEffect = 'aurora' | 'glint' | 'scan';
 
@@ -72,10 +89,16 @@ export interface LedaMarkProps {
   effect?: LedaEffect;
   /** Plays the effect (add the `thinking` state). Removing it settles over 300 ms. */
   active?: boolean;
-  /** Play the effect once (splash glint) instead of looping. */
+  /**
+   * Play the effect once (splash glint) instead of looping. Glint and Scan are meant to
+   * run one pass per moment: pass `once` and change the element's `key` to replay it.
+   * Under reduced motion Glint and Scan stay completely still.
+   */
   once?: boolean;
-  /** Accessible name. */
+  /** Accessible name. Ignored when `decorative`. */
   label?: string;
+  /** Hide from assistive tech (`aria-hidden`, no role). Use wherever the text already says "Leda". */
+  decorative?: boolean;
   className?: string;
 }
 
@@ -144,9 +167,10 @@ function Fx({ effect, uid }: { effect: LedaEffect; uid: string }) {
 
 /**
  * The Leda shard. Static by default; give it an `effect` and toggle `active` for the
- * thinking state. Reduced motion: no movement, a static teal shift instead.
+ * thinking state. Reduced motion: no movement; Aurora (thinking) shows a still teal shift, Glint and Scan show nothing.
  */
-export function LedaMark({ size = 32, tile = false, cut = 'auto', effect, active = false, once = false, label = 'Leda', className }: LedaMarkProps) {
+export function LedaMark({ size = 32, tile = false, cut = 'auto', effect, active = false, once = false, label = 'Leda', decorative = false, className }: LedaMarkProps) {
+  useLedaStyles();
   const uid = 'ld' + useId().replace(/:/g, '');
   const small = cut === '16' || (cut === 'auto' && size <= 24);
   const [settling, setSettling] = useState(false);
@@ -173,14 +197,13 @@ export function LedaMark({ size = 32, tile = false, cut = 'auto', effect, active
   ].filter(Boolean).join(' ');
 
   return (
-    <svg viewBox="0 0 256 256" role="img" aria-label={label} className={cls} width={size} height={size}>
-      <style>{CSS}</style>
+    <svg viewBox="0 0 256 256" {...(decorative ? { 'aria-hidden': true } : { role: 'img', 'aria-label': label })} className={cls} width={size} height={size}>
       {effect && <Defs uid={uid} lit={lit} deep={deep} />}
       {tile && <rect width="256" height="256" rx="56" className="ld-bg" />}
       <path d={lit} className="ld-lit" />
       <path d={deep} className="ld-deep" />
       {effect && <Fx effect={effect} uid={uid} />}
-      {effect && (
+      {effect === 'aurora' && (
         <g className="ld-still">
           <path d={deep} className="ld-td" opacity=".55" />
           <path d={lit} className="ld-tl" opacity=".5" />
@@ -195,16 +218,18 @@ export interface LedaThinkingProps extends Omit<LedaMarkProps, 'effect' | 'activ
   thinking: boolean;
   /** Default aurora. */
   effect?: LedaEffect;
-  /** Reserved "Thinking…" label slot beside the mark, shown only under reduced motion. */
+  /** Aurora only: reserved visible "Thinking…" slot under reduced motion. Screen readers always get it announced. */
   showLabel?: boolean;
 }
 
 /** Mark plus the reduced-motion "Thinking…" slot (always reserved, so nothing shifts). */
-export function LedaThinking({ thinking, effect = 'aurora', showLabel = true, ...rest }: LedaThinkingProps) {
+export function LedaThinking({ thinking, effect = 'aurora', showLabel = true, decorative = true, ...rest }: LedaThinkingProps) {
+  useLedaStyles();
   return (
     <span className={`inline-flex items-center gap-2${thinking ? ' ld-on' : ''}`}>
-      <LedaMark {...rest} effect={effect} active={thinking} />
-      {showLabel && <span className="ld-rmlabel text-small text-muted" aria-live="polite">Thinking…</span>}
+      <LedaMark {...rest} decorative={decorative} effect={effect} active={thinking} />
+      <span className="ld-sr" role="status" aria-live="polite">{thinking ? 'Thinking…' : ''}</span>
+      {showLabel && effect === 'aurora' && <span className="ld-rmlabel text-small text-muted" aria-hidden="true">Thinking…</span>}
     </span>
   );
 }
@@ -214,18 +239,20 @@ export interface LedaWordmarkProps {
   height?: number;
   /** Mono ink in `currentColor` (e.g. on a coloured ground). */
   mono?: boolean;
+  /** Hide from assistive tech where the surrounding text already says "Leda". */
+  decorative?: boolean;
   className?: string;
 }
 
 /** "Leda" wordmark: the shard is the stem of the L. Title case only. */
-export function LedaWordmark({ height = 24, mono = false, className }: LedaWordmarkProps) {
+export function LedaWordmark({ height = 24, mono = false, decorative = false, className }: LedaWordmarkProps) {
+  useLedaStyles();
   const l1 = mono ? undefined : 'ld-lit';
   const l2 = mono ? undefined : 'ld-deep';
   const ink = mono ? undefined : 'ld-ink';
   const f = mono ? 'currentColor' : undefined;
   return (
-    <svg viewBox="0 0 514 256" role="img" aria-label="Leda" className={className} height={height} width={(height * 514) / 256}>
-      <style>{CSS}</style>
+    <svg viewBox="0 0 514 256" {...(decorative ? { 'aria-hidden': true } : { role: 'img', 'aria-label': 'Leda' })} className={className} height={height} width={(height * 514) / 256}>
       <path className={l1} fill={f} fillRule="evenodd" d="M8 72.11 L30 34 L42 208 L8 188.37 Z" />
       <path className={l2} fill={f} fillRule="evenodd" d="M30 34 L64 53.63 L64 169.89 L42 208 Z" />
       <path className={l2} fill={f} fillRule="evenodd" d="M64 169.89 L64 186 L112 186 L99.3 208 L42 208 Z" />
