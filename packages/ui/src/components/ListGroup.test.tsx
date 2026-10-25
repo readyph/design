@@ -163,3 +163,17 @@ describe('ListGroups keyboard', () => {
     expect(document.querySelector('[aria-current="true"]')?.getAttribute('data-row-id')).toBe('s1');
   });
 });
+
+describe('ListGroups columns', () => {
+  it('warns once when a shared header is used with an auto track, not for fr / minmax(0,1fr)', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const hdr = <ListHeaderCell>Name</ListHeaderCell>;
+    render(<ListGroups aria-label="ok" columns="minmax(0,1fr) 112px" header={hdr}><ListGroup title="A" /></ListGroups>);
+    expect(warn).not.toHaveBeenCalled();
+    cleanup();
+    render(<ListGroups aria-label="bad" columns="minmax(0,1fr) auto" header={hdr}><ListGroup title="A" /></ListGroups>);
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(String(warn.mock.calls[0][0])).toContain('auto');
+    warn.mockRestore();
+  });
+});

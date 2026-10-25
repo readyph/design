@@ -3,6 +3,7 @@ import {
   createContext,
   forwardRef,
   useContext,
+  useEffect,
   useId,
   useMemo,
   useRef,
@@ -27,6 +28,10 @@ interface GroupsContextValue {
 }
 const GroupsContext = createContext<GroupsContextValue | null>(null);
 
+/* The shared header is a separate grid from each group's rows, so `auto` tracks would size independently. */
+const AUTO_TRACK = /(^|[\s(,])auto([\s),]|$)/;
+let warnedAuto = false;
+
 /* Written out in full so Tailwind sees them: the visual column header hides once the rows stack. */
 const headerHidden: Record<ListStackBelow, string> = {
   600: '@max-[600px]/list:hidden',
@@ -37,7 +42,10 @@ const headerHidden: Record<ListStackBelow, string> = {
 export interface ListGroupsProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onChange'> {
   /** `list` (default) or `table` (row / cell roles; each group is then its own table). Same as `List`. */
   as?: Mode;
-  /** CSS `grid-template-columns` shared by the column header and every row of every group. */
+  /**
+   * CSS `grid-template-columns` shared by the column header and every row of every group. Use fixed or `fr` widths:
+   * the header is its own grid, so `auto` columns size to different content and drift apart (warned in the console).
+   */
   columns?: string;
   /** Stack the rows below this width of the groups. Default 760. */
   stackBelow?: ListStackBelow;
@@ -67,6 +75,14 @@ export const ListGroups = forwardRef<HTMLDivElement, ListGroupsProps>(function L
 ) {
   const rootRef = useRef<HTMLElement | null>(null);
   const { current, moveCursor, announce } = useListCursor(rootRef, { shortcuts, cursorId, defaultCursorId, onCursorChange });
+  const hasHeader = header != null && header !== false;
+  useEffect(() => {
+    if (!hasHeader || warnedAuto || !AUTO_TRACK.test(columns)) return;
+    warnedAuto = true;
+    console.warn(
+      `ListGroups: columns "${columns}" has an \`auto\` track. The column header is its own grid, so it will not line up with the rows. Use fixed or fr widths.`,
+    );
+  }, [hasHeader, columns]);
   const ctx = useMemo<GroupsContextValue>(
     () => ({ mode: as, columns, stackBelow, header, cursorId: current, moveCursor }),
     [as, columns, stackBelow, header, current, moveCursor],

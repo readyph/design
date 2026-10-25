@@ -106,7 +106,7 @@ export const LongTitlesNarrow: Story = {
   name: 'Long titles, narrow container',
   render: () => (
     <div className="w-full max-w-[360px]">
-      <ListGroups aria-label="Narrow" columns="minmax(0,1fr) auto" stackBelow={600} header={<><ListHeaderCell>Name</ListHeaderCell><ListHeaderCell>Status</ListHeaderCell></>}>
+      <ListGroups aria-label="Narrow" columns="minmax(0,1fr) 112px" stackBelow={600} header={<><ListHeaderCell>Name</ListHeaderCell><ListHeaderCell>Status</ListHeaderCell></>}>
         <ListGroup title="Reads_from_Cebu_Parts_Stockroom_Warehouse_Annex_Building_Number_Twelve_Extension" count={1} actions={<Button variant="text" leftIcon={Plus}>Add connection</Button>} note="Newest first">
           <ListRow rowId="a"><ListCell kind="lead">Stock</ListCell><ListCell kind="actions">Open</ListCell><ListCell>Body under the name</ListCell></ListRow>
         </ListGroup>
