@@ -1,4 +1,4 @@
-import { createContext, useContext, useRef, type HTMLAttributes, type ReactNode } from 'react';
+import { createContext, useContext, useRef, type HTMLAttributes, type ReactNode, type RefObject } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X, type Icon as PhosphorIcon } from '@phosphor-icons/react';
 import { cn, focusRing } from '../utils/cn';
@@ -7,8 +7,9 @@ import { cn, focusRing } from '../utils/cn';
  * `sm` / `md` / `lg` are the original content-sized dialogs (height follows content).
  * `panel` (C13) is fixed 720 x 640, `marketplace` (C20) is fixed 904 x 744; both shrink to
  * the window less 24px each side and go full screen on a phone. Fixed size never changes with content.
+ * `confirm` (C12) is 420 wide (the window less 48px), content-high, and stays a centred dialog on a phone.
  */
-export type ModalSize = 'sm' | 'md' | 'lg' | 'panel' | 'marketplace';
+export type ModalSize = 'sm' | 'md' | 'lg' | 'confirm' | 'panel' | 'marketplace';
 
 export interface ModalProps {
   open?: boolean;
@@ -30,6 +31,10 @@ export interface ModalProps {
   hideClose?: boolean;
   /** Accessible name when there is no visible title (composition without Modal.Header). */
   'aria-label'?: string;
+  /** `alertdialog` for confirmations that interrupt (ConfirmDialog). Default `dialog`. */
+  role?: 'dialog' | 'alertdialog';
+  /** Element that takes focus on open instead of the first control (e.g. Cancel in a confirmation). */
+  initialFocus?: RefObject<HTMLElement | null>;
   className?: string;
 }
 
@@ -37,6 +42,7 @@ const sizes: Record<ModalSize, string> = {
   sm: 'max-w-sm max-h-[calc(100vh-48px)]',
   md: 'max-w-md max-h-[calc(100vh-48px)]',
   lg: 'max-w-lg max-h-[calc(100vh-48px)]',
+  confirm: 'w-[min(420px,calc(100vw-48px))] max-h-[calc(100vh-48px)]',
   panel: 'h-[min(640px,calc(100vh-48px))] w-[min(720px,calc(100vw-48px))]',
   marketplace: 'h-[min(744px,calc(100vh-48px))] w-[min(904px,calc(100vw-48px))]',
 };
@@ -44,7 +50,11 @@ const sizes: Record<ModalSize, string> = {
 const overlay = 'fixed inset-0 z-50 bg-scrim';
 
 const content =
-  'fixed left-1/2 top-1/2 z-50 flex -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-sheet border border-border bg-surface text-text shadow-float focus:outline-none max-sm:inset-0 max-sm:h-full max-sm:max-h-none max-sm:w-full max-sm:max-w-none max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-none max-sm:border-0';
+  'fixed left-1/2 top-1/2 z-50 flex -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-sheet border border-border bg-surface text-text shadow-float focus:outline-none';
+
+/** Phone: every size but `confirm` becomes a full-screen sheet. */
+const sheet =
+  'max-sm:inset-0 max-sm:h-full max-sm:max-h-none max-sm:w-full max-sm:max-w-none max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-none max-sm:border-0';
 
 const ModalContext = createContext({ hideClose: false });
 
@@ -136,6 +146,8 @@ function ModalRoot({
   footer,
   size = 'md',
   hideClose = false,
+  role,
+  initialFocus,
   'aria-label': ariaLabel,
   className,
 }: ModalProps) {
@@ -148,11 +160,16 @@ function ModalRoot({
       <Dialog.Portal>
         <Dialog.Overlay className={overlay} />
         <Dialog.Content
-          className={cn(content, sizes[size], className)}
+          className={cn(content, size !== 'confirm' && sheet, sizes[size], className)}
+          role={role ?? 'dialog'}
           aria-label={ariaLabel}
           data-size={size}
-          onOpenAutoFocus={() => {
+          onOpenAutoFocus={(e) => {
             opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+            if (initialFocus?.current) {
+              e.preventDefault();
+              initialFocus.current.focus();
+            }
           }}
           onEscapeKeyDown={(e) => {
             // Esc on an open Select closes only its listbox; the next Esc closes the modal.

@@ -26,7 +26,8 @@
   "files": [
     "dist",
     "src/styles",
-    "preset.cjs"
+    "preset.cjs",
+    "plugins"
   ],
   "publishConfig": {
     "access": "restricted",
