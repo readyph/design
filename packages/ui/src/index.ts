@@ -17,7 +17,11 @@ export * from './components/DataList';
 export * from './components/EmptyState';
 export * from './components/Skeleton';
 export * from './components/ErrorBlock';
+<<<<<<< HEAD
 export * from './components/Tabs';
 export * from './components/SheetBar';
+=======
+export { AccountMenu, AccountButton, applyTheme, initialsOf, type AccountMenuProps, type ThemeChoice } from './components/AccountMenu';
+>>>>>>> origin/main
 export * from './components/Breadcrumbs';
 export * from './components/List';
