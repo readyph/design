@@ -26,7 +26,7 @@ export interface TabItem {
 
 /**
  * - `editor`: closable tabs in the sheet bar (Home). 96-180px, shrink before the strip scrolls.
- * - `fixed`: no close, natural width (Memory, Home "Today").
+ * - `fixed`: no close, natural width up to 16rem then ellipsis (Memory, Home "Today"). 48px with its own bottom border; inside a `SheetBar` the bar supplies the border.
  * - `vertical`: left list with icon, name and a status word (platform.html).
  * - `chips`: the phone form; 44px chips, the chosen chip scrolls into view.
  * - `underline` / `pill`: legacy names, kept as aliases of `fixed` / `chips` (desktop height).
@@ -39,7 +39,11 @@ export interface TabsProps {
   defaultValue?: string;
   onValueChange?: (value: string) => void;
   variant?: TabsVariant;
-  /** Called by the close X (pointer) and the Delete key on a `closable` tab. */
+  /**
+   * Called by the close X (pointer) and the Delete key on a `closable` tab. On Delete, focus has already moved to the
+   * next tab (else the previous) and automatic activation has selected it: keep that selection, and only pick a
+   * neighbour yourself when the closed tab is still the selected one (X click).
+   */
   onClose?: (value: string) => void;
   /** Called when a preview tab is double-clicked. */
   onPin?: (value: string) => void;
@@ -76,14 +80,14 @@ const toSurface = (v: TabsVariant) => (v === 'underline' ? 'fixed' : v === 'pill
 
 const rootCls: Record<ReturnType<typeof toSurface>, string> = {
   editor: 'flex h-full min-w-0 flex-1 flex-col',
-  fixed: 'flex min-w-0 flex-col gap-4',
+  fixed: 'flex h-full min-w-0 flex-col gap-4',
   vertical: 'flex min-w-0 flex-col gap-4',
   chips: 'flex min-w-0 flex-col gap-4',
 };
 
 const listCls: Record<ReturnType<typeof toSurface>, string> = {
   editor: 'flex h-full min-w-0 items-stretch overflow-x-auto overflow-y-hidden',
-  fixed: 'flex min-w-0 items-stretch gap-1 overflow-x-auto overflow-y-hidden border-b border-border',
+  fixed: 'flex min-h-0 min-w-0 flex-1 items-stretch gap-1 overflow-x-auto overflow-y-hidden border-b border-border',
   vertical: 'flex flex-col gap-1',
   chips: 'flex min-w-0 items-center gap-2 overflow-x-auto overflow-y-hidden py-0.5',
 };
@@ -175,7 +179,7 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
                   ),
                 v === 'fixed' &&
                   cn(
-                    'relative inline-flex h-sheet-bar shrink-0 items-center gap-2 whitespace-nowrap px-3 hover:bg-raised hover:text-text',
+                    'relative inline-flex h-full min-h-[47px] max-w-[16rem] shrink-0 items-center gap-2 whitespace-nowrap px-3 hover:bg-raised hover:text-text',
                     'data-[state=active]:font-medium data-[state=active]:text-text',
                     'after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:after:bg-accent',
                   ),
@@ -187,7 +191,7 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
             >
               {Lead && <Lead size={16} aria-hidden className="shrink-0" />}
               {item.leading && <span aria-hidden className="inline-flex shrink-0">{item.leading}</span>}
-              <span className={cn('min-w-0', v === 'editor' ? 'truncate' : v === 'vertical' ? 'flex-1 truncate' : '', item.preview && 'italic')}>
+              <span className={cn('min-w-0', v === 'editor' || v === 'fixed' ? 'truncate' : v === 'vertical' ? 'flex-1 truncate' : '', item.preview && 'italic')}>
                 {item.label}
               </span>
               {item.badge != null && <span className="shrink-0 text-small tabular-nums text-muted">{item.badge}</span>}

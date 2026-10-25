@@ -70,8 +70,12 @@ function EditorDemo({ initial = open, wide = true }: { initial?: TabItem[]; wide
   const [items, setItems] = useState(initial);
   const [v, setV] = useState(initial[0].value);
   const close = (id: string) => {
+    // Delete hands focus to the next tab (else the previous one) and Radix selects the focused tab,
+    // so only fall back to the same neighbour when the selection is still the closed tab (X click).
+    const i = items.findIndex((t) => t.value === id);
+    const next = (items[i + 1] ?? items[i - 1])?.value;
     setItems((all) => all.filter((t) => t.value !== id));
-    if (id === v) setV(items[0].value);
+    setV((cur) => (cur === id && next ? next : cur));
   };
   return (
     <div className={cn('max-w-full bg-surface', wide ? 'w-[920px]' : 'w-[720px]')}>

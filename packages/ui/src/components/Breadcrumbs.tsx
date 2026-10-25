@@ -152,7 +152,7 @@ export const Breadcrumbs = forwardRef<HTMLElement, BreadcrumbsProps>(function Br
   }
 
   return (
-    <div className={cn('min-w-0', className)}>
+    <div className={cn('min-w-0', variant === 'sheet' && 'w-full min-w-[9rem]', className)}>
       <nav ref={ref} aria-label={label} className="min-w-0">
         {body}
       </nav>

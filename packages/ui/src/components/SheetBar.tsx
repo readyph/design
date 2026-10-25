@@ -13,7 +13,7 @@ export interface SheetBarProps {
 export function SheetBar({ children, actions, className }: SheetBarProps) {
   return (
     <div className={cn('flex h-sheet-bar items-stretch gap-4 border-b border-border bg-surface px-pad', className)}>
-      <div className="flex min-w-0 flex-1 items-center">{children}</div>
+      <div className="flex min-w-0 flex-1 items-center [&_[role=tablist]]:border-b-0">{children}</div>
       {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
     </div>
   );
