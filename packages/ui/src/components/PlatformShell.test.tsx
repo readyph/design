@@ -22,6 +22,7 @@ describe('PlatformShell', () => {
     expect(screen.getByRole('region', { name: 'Platforms' }).tagName).toBe('SECTION');
     expect(screen.getAllByRole('main')).toHaveLength(1);
     expect(screen.getByRole('contentinfo', { name: 'Status' }).tagName).toBe('FOOTER');
+    expect(screen.getByRole('banner', { hidden: true }).tagName).toBe('HEADER');
   });
   it('sheet is a named container with border, radius and inset', () => {
     render(<PlatformShell {...slots}>Body</PlatformShell>);
@@ -31,7 +32,7 @@ describe('PlatformShell', () => {
   it('DOM order is focus order: top bar, rail, place, sheet, status, phone nav', () => {
     const { container } = render(<PlatformShell {...slots}>Body</PlatformShell>);
     const tags = Array.from(container.firstElementChild!.children).map((e) => e.tagName);
-    expect(tags).toEqual(['DIV', 'NAV', 'SECTION', 'MAIN', 'FOOTER', 'NAV']);
+    expect(tags).toEqual(['HEADER', 'NAV', 'SECTION', 'MAIN', 'FOOTER', 'NAV']);
   });
   it('phone: place shows by default, detail shows the sheet; action bar only renders when given', () => {
     const { rerender } = render(<PlatformShell {...slots}>Body</PlatformShell>);

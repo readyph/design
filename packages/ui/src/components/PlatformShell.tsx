@@ -18,7 +18,7 @@ export interface PlatformShellProps extends Omit<HTMLAttributes<HTMLDivElement>,
   status?: ReactNode;
   /** Accessible name of the status 'footer' (default "Status"). */
   statusLabel?: string;
-  /** Phone top bar (48px): word, page name, Leda icon button, avatar. Hidden above 640px. */
+  /** Phone top bar (48px): word, page name, Leda icon button, avatar. Rendered inside a 'header' (banner). Hidden above 640px. */
   topBar?: ReactNode;
   /** Phone bottom nav items (60px). Rendered inside a 'nav'. Hidden above 640px. */
   phoneNav?: ReactNode;
@@ -42,7 +42,7 @@ const hiddenWins = '[&[hidden]]:!hidden';
  * ('@container/sheet', '@max-[760px]/sheet:' ...). The shell fills its parent's height (use it as the page root,
  * or in a sized box): the sheet body scrolls, the frame does not.
  *
- * Landmarks: 'nav' (rail, phone nav), 'section' (place), 'main' (sheet), 'footer' (status).
+ * Landmarks: 'header' (phone top bar), 'nav' (rail, phone nav), 'section' (place), 'main' (sheet), 'footer' (status).
  * Phone (640px and below): 48px top bar, one region at a time (place, or the sheet with 'detail'), 60px bottom nav.
  * The shell owns layout; 'className' is merged underneath it, so it can add colours or margins but cannot move the regions.
  */
@@ -96,7 +96,7 @@ export function PlatformShell({
       )}
     >
       {hasTop && (
-        <div
+        <header
           className={cn(
             'hidden',
             'max-[640px]:col-start-1 max-[640px]:row-start-1 max-[640px]:flex max-[640px]:min-w-0 max-[640px]:items-center max-[640px]:gap-2 max-[640px]:border-b max-[640px]:border-border max-[640px]:bg-surface max-[640px]:px-pad',
@@ -104,7 +104,7 @@ export function PlatformShell({
           )}
         >
           {topBar}
-        </div>
+        </header>
       )}
 
       {hasRail && (
