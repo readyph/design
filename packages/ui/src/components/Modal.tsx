@@ -20,6 +20,8 @@ export interface ModalProps {
   description?: ReactNode;
   /** Phosphor icon shown in the 32px well before the title. */
   icon?: PhosphorIcon;
+  /** Any node for the 32px well instead of `icon`, e.g. `<LedaMark size={18} decorative />` (Try it, C30). */
+  iconNode?: ReactNode;
   children?: ReactNode;
   /** Footer actions row. Omit when composing with `Modal.Footer`. */
   footer?: ReactNode;
@@ -46,10 +48,10 @@ const content =
 
 const ModalContext = createContext({ hideClose: false });
 
-function CloseButton({ className }: { className?: string }) {
+function CloseButton({ className, label }: { className?: string; label?: string }) {
   return (
     <Dialog.Close
-      aria-label="Close"
+      aria-label={label ? `Close ${label}` : 'Close'}
       className={cn(
         'grid h-8 w-8 shrink-0 place-items-center rounded-control text-muted hover:bg-raised hover:text-text max-sm:h-11 max-sm:w-11',
         focusRing,
@@ -61,31 +63,32 @@ function CloseButton({ className }: { className?: string }) {
   );
 }
 
-/** 32px icon well (accent tint, 5px radius). */
-export function ModalIconWell({ icon: Ico }: { icon: PhosphorIcon }) {
+/** 32px icon well (raised surface, card radius, accent icon). Holds a Phosphor `icon` or any `children` (the Leda mark). */
+export function ModalIconWell({ icon: Ico, children }: { icon?: PhosphorIcon; children?: ReactNode }) {
   return (
-    <span aria-hidden className="grid h-8 w-8 shrink-0 place-items-center rounded-control bg-accent-tint text-accent">
-      <Ico size={18} />
+    <span aria-hidden className="grid h-8 w-8 shrink-0 place-items-center rounded-card bg-raised text-accent">
+      {Ico ? <Ico size={18} /> : children}
     </span>
   );
 }
 
 export interface ModalHeaderProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title'> {
   icon?: PhosphorIcon;
+  iconNode?: ReactNode;
   description?: ReactNode;
 }
 
 /** Header region: optional icon well, title (accessible name), description and close button. */
-export function ModalHeader({ icon, description, className, children, ...rest }: ModalHeaderProps) {
+export function ModalHeader({ icon, iconNode, description, className, children, ...rest }: ModalHeaderProps) {
   const { hideClose } = useContext(ModalContext);
   return (
-    <div className={cn('flex shrink-0 items-center gap-3 border-b border-rule px-pad py-4 max-sm:px-4', className)} {...rest}>
-      {icon && <ModalIconWell icon={icon} />}
+    <div className={cn('flex shrink-0 items-start gap-3 border-b border-rule px-pad py-4 max-sm:px-4', className)} {...rest}>
+      {(icon || iconNode) && <ModalIconWell icon={icon}>{iconNode}</ModalIconWell>}
       <div className="min-w-0 flex-1">
-        <Dialog.Title className="truncate text-dialog text-text">{children}</Dialog.Title>
-        {description && <Dialog.Description className="mt-0.5 truncate text-small text-muted">{description}</Dialog.Description>}
+        <Dialog.Title className="text-dialog text-text">{children}</Dialog.Title>
+        {description && <Dialog.Description className="mt-0.5 text-[13px] leading-[18px] text-muted">{description}</Dialog.Description>}
       </div>
-      {!hideClose && <CloseButton />}
+      {!hideClose && <CloseButton label={typeof children === 'string' ? children : undefined} />}
     </div>
   );
 }
@@ -93,7 +96,11 @@ export function ModalHeader({ icon, description, className, children, ...rest }:
 /** Body region: takes the remaining height and scrolls inside. */
 export function ModalBody({ className, children, ...rest }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn('min-h-0 flex-1 overflow-y-auto px-pad py-5 text-body text-text max-sm:px-4', className)} {...rest}>
+    <div
+      tabIndex={0}
+      className={cn('min-h-0 flex-1 overflow-y-auto px-pad py-5 text-body text-text max-sm:px-4', focusRing, 'focus-visible:ring-inset focus-visible:ring-offset-0', className)}
+      {...rest}
+    >
       {children}
     </div>
   );
@@ -124,6 +131,7 @@ function ModalRoot({
   title,
   description,
   icon,
+  iconNode,
   children,
   footer,
   size = 'md',
@@ -146,6 +154,11 @@ function ModalRoot({
           onOpenAutoFocus={() => {
             opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
           }}
+          onEscapeKeyDown={(e) => {
+            // Esc on an open Select closes only its listbox; the next Esc closes the modal.
+            const t = e.target;
+            if (t instanceof Element && t.closest('[role="listbox"], [role="combobox"][aria-expanded="true"]')) e.preventDefault();
+          }}
           onCloseAutoFocus={(e) => {
             // Controlled use has no Dialog.Trigger, so return focus to whatever opened the modal.
             if (!trigger && opener.current?.isConnected) {
@@ -157,7 +170,7 @@ function ModalRoot({
           <ModalContext.Provider value={{ hideClose }}>
             {quick ? (
               <>
-                <ModalHeader icon={icon} description={description}>{title}</ModalHeader>
+                <ModalHeader icon={icon} iconNode={iconNode} description={description}>{title}</ModalHeader>
                 {(isFixed || children) && <ModalBody>{children}</ModalBody>}
                 {footer && <ModalFooter>{footer}</ModalFooter>}
               </>

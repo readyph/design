@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { useState } from 'react';
 import { Buildings, Storefront } from '@phosphor-icons/react';
 import { Modal } from './Modal';
+import { LedaMark } from './Leda';
 
 const btn =
   'h-8 rounded-control border border-border bg-surface px-3 text-ui text-text hover:bg-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent';
@@ -83,4 +84,28 @@ export const OpenOnLoad: Story = {
       {lines(4)}
     </Modal>
   ),
+};
+
+/** Try it (C30): the Leda mark in the icon well, and a description that wraps instead of truncating. */
+export const LedaTryIt: Story = {
+  name: 'Leda mark in the well (Try it)',
+  render: () => {
+    const [open, setOpen] = useState(false);
+    return (
+      <div className="p-pad">
+        <button className={btn} onClick={() => setOpen(true)}>Open Try it</button>
+        <Modal
+          open={open}
+          onOpenChange={setOpen}
+          size="panel"
+          iconNode={<LedaMark size={18} decorative />}
+          title="Try it"
+          description="Ask as a customer and see what Leda says, and why. The description wraps to a second line on a narrow screen."
+          footer={<button className={primary} onClick={() => setOpen(false)}>Done</button>}
+        >
+          {lines(4)}
+        </Modal>
+      </div>
+    );
+  },
 };

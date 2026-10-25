@@ -5,6 +5,8 @@ import userEvent from '@testing-library/user-event';
 import { Buildings } from '@phosphor-icons/react';
 import { useState } from 'react';
 import { Modal } from './Modal';
+import { Select } from './Select';
+import { LedaMark } from './Leda';
 
 afterEach(cleanup);
 
@@ -50,11 +52,47 @@ describe('Modal', () => {
     await userEvent.click(screen.getByText('Open'));
     for (let i = 0; i < 6; i++) await userEvent.tab();
     expect(screen.getByRole('dialog').contains(document.activeElement)).toBe(true);
-    await userEvent.click(screen.getByLabelText('Close'));
+    await userEvent.click(screen.getByLabelText('Close Edit place'));
     expect(screen.queryByRole('dialog')).toBeNull();
   });
   it('hideClose removes the X', async () => {
     render(<Modal open hideClose title="T">x</Modal>);
     expect(screen.queryByLabelText('Close')).toBeNull();
+  });
+  it('close label names the dialog', async () => {
+    render(<Demo />);
+    await userEvent.click(screen.getByText('Open'));
+    expect(screen.getByRole('button', { name: 'Close Edit place' })).toBeTruthy();
+  });
+  it('body is keyboard focusable so it can scroll', async () => {
+    render(<Demo />);
+    await userEvent.click(screen.getByText('Open'));
+    expect(screen.getByLabelText('Name').parentElement?.getAttribute('tabindex')).toBe('0');
+  });
+  it('icon well uses raised surface and card radius, and holds the Leda mark', async () => {
+    render(<Modal open title="Try it" iconNode={<LedaMark size={18} decorative />}>x</Modal>);
+    const well = screen.getByRole('dialog').querySelector('span[aria-hidden]') as HTMLElement;
+    expect(well.className).toContain('bg-raised');
+    expect(well.className).toContain('rounded-card');
+    expect(well.querySelector('svg')).toBeTruthy();
+  });
+  it('Esc closes an open Select first, then the modal', async () => {
+    function W() {
+      const [open, setOpen] = useState(true);
+      return (
+        <Modal open={open} onOpenChange={setOpen} title="T" size="panel">
+          <Select aria-label="Region" options={[{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }]} defaultValue="a" />
+        </Modal>
+      );
+    }
+    render(<W />);
+    const combo = screen.getByRole('combobox');
+    await userEvent.click(combo);
+    expect(screen.getByRole('listbox')).toBeTruthy();
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByRole('listbox')).toBeNull();
+    expect(screen.getByRole('dialog')).toBeTruthy();
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 });
