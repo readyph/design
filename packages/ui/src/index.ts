@@ -35,3 +35,7 @@ export { toast, useToast, useToasts, addToast, dismissToast, clearToasts, TOAST_
 export * from './components/PlatformToday';
 export * from './components/CommandPalette';
 export * from './components/TownMap';
+export * from './components/WeekChart';
+export * from './components/OverviewCharts';
+export * from './components/Sparkline';
+export * from './components/RevenueChart';
