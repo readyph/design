@@ -1037,6 +1037,7 @@ export function PlatformPage({ platformId = 'autoworks', tab: tab0 = 'general', 
       <PortalFrame
         current="platforms"
         pageName="Platform"
+        heading={null}
         account={{ name: 'Maria Santos', email: 'maria@santosauto.ph', role: 'Owner' }}
         onAddPlatform={() => toast({ description: 'Choose a platform to add.' })}
         placeLabel="This platform on your map"
@@ -1051,7 +1052,7 @@ export function PlatformPage({ platformId = 'autoworks', tab: tab0 = 'general', 
             <AccountMenu name="Maria Santos" email="maria@santosauto.ph" role="Owner" applyToDocument={false} />
           </>
         }
-        sheetBar={<SheetBar actions={ask}><Breadcrumbs variant="sheet" aria-label="You are here" items={crumbs} /></SheetBar>}
+        sheetBar={phone ? undefined : <SheetBar actions={ask}><Breadcrumbs variant="sheet" aria-label="You are here" items={crumbs} /></SheetBar>}
         status={<StatusBar platforms={platforms.map((x) => ({ id: x.id, name: shortName({ label: nameOf(x.id) }), health: healthTone[x.isNew ? (needsLink(x) ? 'setup' : 'setting-up') : x.health] === 'ok' ? 'ok' : (healthTone[x.isNew ? (needsLink(x) ? 'setup' : 'setting-up') : x.health] as 'warn'), healthText: x.isNew || x.health !== 'ok' ? statusLabel(x).split(' since')[0].toLowerCase() : undefined, selected: x.id === p?.id, href: `#${x.id}` }))} people={{ count: 14 }} leda={{ used: 412, max: 1000 }} plan="Business" updatedAt="9:12 AM" />}
       >
         {content}
