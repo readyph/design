@@ -5,9 +5,9 @@ import { sampleCatalog } from '../components/Marketplace.sample';
 import { Button } from '../components/Button';
 import { LedaNote } from '../components/LedaNote';
 
-/** [For Review] RDY-280. Prototype only: stories are not exported from the package. */
+/** RDY-280. Prototype only: stories are not exported from the package. */
 const meta: Meta = {
-  title: 'Prototypes/Portal/[For Review] Marketplace',
+  title: 'Prototypes/Portal/Marketplace',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;
