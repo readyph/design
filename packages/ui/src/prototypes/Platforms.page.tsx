@@ -263,7 +263,7 @@ function Place({ set, state, phone, focusIds, onFocusPlatform, onAdd, onRetry, s
   const ids = focusIds ?? (mapHover ? [mapHover] : null);
   const need = set.platforms.filter((p) => setupNeeded(set, p));
   const idle = idleShares(set);
-  const caption = state === 'loading' ? undefined : state === 'error' ? 'No data' : `${plural(set.platforms.length, 'platform')} + HQ`;
+  const caption = state === 'loading' ? undefined : state === 'error' ? 'No data' : `${plural(set.platforms.length, 'platform')} · ${plural(set.links.length, 'data link')}`;
   return (
     <div className="flex flex-col">
       <TownMap
@@ -278,7 +278,7 @@ function Place({ set, state, phone, focusIds, onFocusPlatform, onAdd, onRetry, s
         focus={live && ids?.length === 1 ? ids[0] : null}
         highlight={live && ids && ids.length > 1 ? ids : null}
         onSelect={(id) => {
-          if (live && id) open(byId(set, id)?.name ?? 'HQ');
+          if (live && id) open(byId(set, id)?.name ?? '');
         }}
         onHover={setMapHover}
       />

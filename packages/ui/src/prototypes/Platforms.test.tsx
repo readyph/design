@@ -4,7 +4,7 @@ import { cleanup, render, screen, waitFor, within } from '@testing-library/react
 import userEvent from '@testing-library/user-event';
 import axe from 'axe-core';
 import { PlatformsPage, type PlatformsPageProps } from './Platforms.page';
-import { headline, healthLine, idleShares, ordered, sets } from './Platforms.data';
+import { headline, healthLine, idleShares, mapPlatforms, ordered, sets } from './Platforms.data';
 import { clearToasts } from '../components/toast/toastStore';
 
 afterEach(() => {
@@ -16,6 +16,12 @@ const renderPage = (props: PlatformsPageProps = {}) => render(<PlatformsPage {..
 const sheet = () => screen.getByRole('main', { name: 'All platforms' });
 
 describe('Platforms data', () => {
+  it('maps only the platforms to the map, with no HQ building', () => {
+    const placed = mapPlatforms(sets.duo).filter(Boolean);
+    expect(placed).toHaveLength(sets.duo.platforms.length);
+    expect(placed.some((p) => p?.name === 'HQ')).toBe(false);
+  });
+
   it('words the finding line like the handover', () => {
     expect(headline(sets.duo)).toBe('Parts Stockroom shares its catalog with Dela Cruz Auto Works.');
     expect(headline(sets.many)).toBe('4 data links. Cubao Parts Counter needs a stock source.');
@@ -48,6 +54,8 @@ describe('Platforms page', () => {
     expect(within(place).getByRole('heading', { level: 1, name: 'Platforms' })).toBeTruthy();
     expect(within(place).getByRole('group', { name: 'Data links' })).toBeTruthy();
     expect(within(place).getByRole('group', { name: 'Not shared yet' })).toBeTruthy();
+    expect(within(place).getByText(/2 platforms · 1 data link$/)).toBeTruthy();
+    expect(within(place).queryByText(/HQ/)).toBeNull();
   });
 
   it('opens the marketplace from "Add another platform" and returns focus to it on Escape', async () => {

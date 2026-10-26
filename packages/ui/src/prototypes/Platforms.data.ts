@@ -2,9 +2,6 @@ import { platformInitialsFor } from '../components/PlatformLogo';
 import { sampleCatalog } from '../components/Marketplace.sample';
 import type { StatusTone } from '../components/StatusDot';
 import type { TownMapLink, TownMapPlatform, TownMapSlot } from '../components/TownMap';
-import { hq as hqSlot } from '../components/TownMap.data';
-
-const hq: TownMapPlatform = { ...hqSlot, count: undefined };
 
 /** Story data for the Portal Platforms page (RDY-256). Prototype only: not exported from the package. */
 
@@ -187,7 +184,6 @@ export function mapPlatforms(set: PlatformSet): TownMapSlot[] {
     initials: initialsOf(set)[p.id],
     count: setupNeeded(set, p) ? 1 : undefined,
   }));
-  slots.push(hq);
   while (slots.length < 4) slots.push(null);
   return slots;
 }
