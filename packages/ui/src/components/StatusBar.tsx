@@ -92,7 +92,7 @@ const item =
   'inline-flex h-[26px] min-w-0 items-center gap-1.5 whitespace-nowrap rounded-chip px-1.5 text-small text-muted';
 const interactive =
   'cursor-pointer hover:bg-frame-hover hover:text-text aria-pressed:bg-frame-active aria-[current=true]:bg-frame-active ' +
-  'outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-frame';
+  'outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-frame forced-colors:outline-0 forced-colors:focus-visible:outline forced-colors:focus-visible:outline-2 forced-colors:focus-visible:outline-[Highlight]';
 const dropUpdated = '@max-[960px]/status:hidden';
 const dropPlan = '@max-[780px]/status:hidden';
 const dropInviteWord = '@max-[780px]/status:hidden';

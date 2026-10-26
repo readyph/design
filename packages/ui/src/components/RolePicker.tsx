@@ -191,7 +191,7 @@ export const RolePicker = forwardRef<HTMLDivElement, RolePickerProps>(function R
       ) : null}
 
       <section aria-labelledby={`${uid}-roles`} className="min-w-0">
-        <h3 ref={heading} tabIndex={-1} id={`${uid}-roles`} className="text-ui font-medium text-text outline-none">
+        <h3 ref={heading} tabIndex={-1} id={`${uid}-roles`} className="text-ui font-medium text-text outline-0">
           Roles on each platform
         </h3>
         {full ? (
