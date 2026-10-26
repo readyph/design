@@ -55,4 +55,31 @@ describe('Memory page', () => {
     render(<MemoryPage state="empty" />);
     expect(screen.getByRole('button', { name: /Add a company topic/ })).toBeTruthy();
   });
+
+  it('folder pick filters Blocked questions and the breadcrumb names the folder', async () => {
+    const user = userEvent.setup();
+    render(<MemoryPage />);
+    expect(screen.getByRole('navigation', { name: 'Memory location' }).textContent).toContain('All topics');
+    const folders = screen.getByRole('list', { name: 'Folders' });
+    await user.click(within(folders).getByText('Main Stockroom'));
+    expect(screen.getByRole('navigation', { name: 'Memory location' }).textContent).toContain('Main Stockroom');
+    await user.click(screen.getByRole('tab', { name: 'Blocked questions' }));
+    const main = screen.getByRole('main');
+    expect(within(main).getByText(/stock do you have left/)).toBeTruthy();
+    expect(within(main).queryByText(/parts supplier/)).toBeNull();
+    expect(within(main).getByRole('combobox', { name: 'Business' }).textContent).toContain('Main Stockroom');
+  });
+
+  it('Blocked tab business filter changes the list and keeps focus on the filter', async () => {
+    const user = userEvent.setup();
+    render(<MemoryPage initialTab="blocked" />);
+    const main = screen.getByRole('main');
+    expect(within(main).getByText(/parts supplier/)).toBeTruthy();
+    const filter = within(main).getByRole('combobox', { name: 'Business' });
+    await user.click(filter);
+    await user.click(screen.getByRole('option', { name: /Main Stockroom/ }));
+    expect(within(main).queryByText(/parts supplier/)).toBeNull();
+    expect(within(main).getByText(/stock do you have left/)).toBeTruthy();
+    await waitFor(() => expect(document.activeElement).toBe(filter));
+  });
 });

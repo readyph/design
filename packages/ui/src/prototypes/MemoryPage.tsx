@@ -14,7 +14,6 @@ import { Breadcrumbs } from "../components/Breadcrumbs";
 import { Button } from "../components/Button";
 import { EmptyState } from "../components/EmptyState";
 import { ErrorBlock } from "../components/ErrorBlock";
-import { IconButton } from "../components/IconButton";
 import {
   IconRailContent,
   IconRailFoot,
@@ -55,9 +54,18 @@ import { toast } from "../components/toast/toastStore";
 import {
   FOLDER_NAMES,
   TopicLibraryPage,
+  businessOptions,
   sampleTopics,
 } from "../components/TopicLibrary.sample";
-import { Live } from "../components/BlockedQuestions.demo";
+import { BlockedQuestions } from "../components/BlockedQuestions";
+import {
+  items as blockedSeed,
+  replies as blockedRepliesSeed,
+  scopes as blockedScopes,
+} from "../components/BlockedQuestions.data";
+import { LedaMark } from "../components/Leda";
+import { Select } from "../components/Select";
+import { focusRing } from "../utils/cn";
 import type { TopicItem } from "../components/TopicLibrary";
 import { useMatchMedia } from "../utils/useMatchMedia";
 
@@ -66,12 +74,19 @@ import { useMatchMedia } from "../utils/useMatchMedia";
 export type MemoryState = "live" | "loading" | "error" | "empty" | "full";
 
 const ROOM_MAX = 16000;
+const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 /** Folder id to the map building it opens. */
 const BUILDING: Record<string, string> = {
   company: "hq",
-  auto: "autoworks",
+  autoworks: "autoworks",
   cafe: "cafe",
-  stock: "stockroom",
+  stockroom: "stockroom",
+};
+/** Folder id to the Try it "about" value (cafe has no sample yet). */
+const TRY_ABOUT: Record<string, string> = {
+  company: "company",
+  autoworks: "auto",
+  stockroom: "parts",
 };
 const map: TownMapSlot[] = [stockroom, autoWorks, cafe, hq];
 const mapOf = (id: string) =>
@@ -96,21 +111,21 @@ interface Request {
 const requestsSeed: Request[] = [
   {
     id: "r1",
-    folder: "auto",
+    folder: "autoworks",
     name: "Book a service",
     about: "A customer asks for a date. Staff accept or suggest another.",
     on: true,
   },
   {
     id: "r2",
-    folder: "auto",
+    folder: "autoworks",
     name: "Ask for a quote",
     about: "Sent to the front desk with the car and the work wanted.",
     on: true,
   },
   {
     id: "r3",
-    folder: "auto",
+    folder: "autoworks",
     name: "Ask for a call back",
     about: "Staff phone the customer back.",
     on: false,
@@ -131,7 +146,7 @@ const requestsSeed: Request[] = [
   },
   {
     id: "r6",
-    folder: "stock",
+    folder: "stockroom",
     name: "Hold a part",
     about: "Staff hold the part for a day.",
     on: false,
@@ -245,6 +260,8 @@ export function MemoryPage({
   const store = useState<TopicItem[]>(state === "empty" ? [] : sampleTopics);
   const [topics, setTopics] = store;
   const [requests, setRequests] = useState(requestsSeed);
+  const [blockedItems, setBlockedItems] = useState(blockedSeed);
+  const [blockedReplies, setBlockedReplies] = useState(blockedRepliesSeed);
   const [view, setView] = useState(openTopic ? sampleTopics[3].id : "list");
   const [dir, setDir] = useState<SubpageDirection>("in");
   const [phoneSheet, setPhoneSheet] = useState(startDetail || openTopic);
@@ -318,6 +335,19 @@ export function MemoryPage({
     return `${ts.filter((t) => t.on).length} of ${ts.length} on`;
   };
 
+  const rulesRows = [
+    {
+      tab: "blocked",
+      name: "Blocked questions",
+      count: String(blockedItems.length),
+    },
+    {
+      tab: "requests",
+      name: "Customer requests",
+      count: `${requests.filter((r) => r.on).length} of ${requests.length} on`,
+    },
+  ];
+
   const folderRows: Array<{ id: string; name: string; note: string }> = [
     { id: "", name: "All topics", note: `${on.length} of ${topics.length} on` },
     ...Object.keys(FOLDER_NAMES).map((k) => ({
@@ -329,7 +359,7 @@ export function MemoryPage({
 
   const place = (
     <div className="flex h-full min-h-0 flex-col gap-3 overflow-y-auto pb-4">
-      <div className="min-h-[220px] max-[640px]:hidden">
+      <div className="min-h-[220px]">
         <TownMap
           platforms={map}
           caption="3 platforms + HQ"
@@ -351,6 +381,16 @@ export function MemoryPage({
         ) : (
           <p className="mb-0 mt-1 text-ui text-muted">{finding}</p>
         )}
+        {phone && !loading ? (
+          <div className="mt-3">
+            <AskLedaBar
+              variant="overview"
+              scope="Memory"
+              shortcuts={false}
+              paused={tryShown}
+            />
+          </div>
+        ) : null}
       </div>
       {!loading && !error && topics.length ? (
         <div className="px-3 sm:px-0">
@@ -387,27 +427,26 @@ export function MemoryPage({
         <div className="px-pad">
           <h2 className="m-0 mb-1 text-ui font-semibold">Rules</h2>
           <ul className="m-0 list-none p-0">
-            {[
-              ["blocked", "Blocked questions"],
-              ["requests", "Customer requests"],
-            ].map(([v, l]) => (
-              <li key={v}>
+            {rulesRows.map((x) => (
+              <li key={x.tab}>
                 <button
                   type="button"
-                  className="flex min-h-11 w-full items-center text-left text-body hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
-                  onClick={() => setTabAndList(v)}
+                  className={`flex min-h-11 w-full items-center justify-between gap-3 text-left text-body hover:text-accent ${focusRing}`}
+                  onClick={() => setTabAndList(x.tab)}
                 >
-                  {l}
+                  <span>{x.name}</span>
+                  <span className="text-ui text-muted">{x.count}</span>
                 </button>
               </li>
             ))}
             <li>
               <button
                 type="button"
-                className="flex min-h-11 w-full items-center text-left text-body hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+                className={`flex min-h-11 w-full items-center justify-between gap-3 text-left text-body hover:text-accent ${focusRing}`}
                 onClick={() => openTry()}
               >
-                Try it
+                <span>Try it</span>
+                <span className="text-ui text-muted">Ask as a customer</span>
               </button>
             </li>
           </ul>
@@ -422,7 +461,7 @@ export function MemoryPage({
         variant="secondary"
         onClick={() =>
           openTry(
-            folder ? (folder === "company" ? "company" : folder) : undefined
+            folder ? TRY_ABOUT[folder] : undefined
           )
         }
       >
@@ -472,6 +511,24 @@ export function MemoryPage({
       >
         &larr; Memory
       </button>
+      {tab === "topics" && !phone ? (
+        <Breadcrumbs
+          variant="sheet"
+          aria-label="Memory location"
+          className="mr-4 max-[1499px]:hidden"
+          items={[
+            {
+              label: "Memory",
+              href: "#memory",
+              onClick: (e: { preventDefault: () => void }) => {
+                e.preventDefault();
+                setFolder("");
+              },
+            },
+            { label: folder ? FOLDER_NAMES[folder] : "All topics" },
+          ]}
+        />
+      ) : null}
       <Tabs
         variant={phone ? "chips" : "fixed"}
         aria-label="Memory"
@@ -480,6 +537,19 @@ export function MemoryPage({
         onValueChange={(v) => setTab(v as typeof tab)}
       />
     </SheetBar>
+  );
+
+  const businessFilter = (
+    <div className="mb-4 max-w-[260px]">
+      <Select
+        size="sm"
+        aria-label="Business"
+        options={businessOptions}
+        value={folder}
+        onValueChange={(v) => setFolder(v)}
+        className="w-full min-w-0"
+      />
+    </div>
   );
 
   const roNote = readOnly ? (
@@ -577,10 +647,29 @@ export function MemoryPage({
       <>
         <h1 className="text-header">Blocked questions</h1>
         {roNote}
+        {businessFilter}
         <div className="mt-2">
-          <Live
+          <BlockedQuestions
+            items={blockedItems}
+            scopes={blockedScopes}
+            replies={blockedReplies}
+            scope={folder || undefined}
             readOnly={readOnly}
             status={loading ? "loading" : "ready"}
+            onBlock={async (i) => {
+              await wait(150);
+              setBlockedItems((x) => [...x, { id: `n${Date.now()}`, ...i }]);
+            }}
+            onRemove={async (item, { undo }) => {
+              await wait(150);
+              setBlockedItems((x) =>
+                undo ? [item, ...x] : x.filter((y) => y.id !== item.id)
+              );
+            }}
+            onEditReply={async (sc, t) => {
+              await wait(150);
+              setBlockedReplies((x) => ({ ...x, [sc]: t }));
+            }}
             onTry={(i) => openTry(undefined, i.question)}
           />
         </div>
@@ -591,6 +680,7 @@ export function MemoryPage({
       <>
         <h1 className="mb-1 text-header">Customer requests</h1>
         {roNote}
+        {businessFilter}
         {loading ? (
           <Skeleton variant="text" lines={5} />
         ) : (
@@ -678,7 +768,15 @@ export function MemoryPage({
           <>
             <span className="font-semibold">ReadyPH</span>
             <span className="min-w-0 flex-1 truncate text-muted">Memory</span>
-            <IconButton icon={Plus} label="Ask Leda" />
+            <button
+              type="button"
+              aria-label="Ask Leda"
+              className={`grid size-11 shrink-0 place-items-center rounded-control ${focusRing}`}
+              onClick={() => openTry()}
+            >
+              <LedaMark size={24} decorative />
+            </button>
+            <AccountButton name="Maria Santos" />
           </>
         }
         phoneNav={
