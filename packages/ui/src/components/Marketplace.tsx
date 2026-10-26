@@ -129,6 +129,8 @@ function Tile({ item, categoryLabel, checked, tabStop, onPick, onInstall, onKeyD
       className={cn(
         'flex w-full min-w-0 flex-col items-start rounded-card border px-4 py-3.5 text-left transition-colors duration-hover',
         tileHeight,
+        // Phone: compact icon-plus-text row (icon well left, text right) instead of the tall desktop tile.
+        'max-sm:grid max-sm:min-h-0 max-sm:grid-cols-[36px_minmax(0,1fr)_auto] max-sm:content-start max-sm:gap-x-3 max-sm:px-3.5 max-sm:py-3',
         focusRing,
         soon
           ? 'cursor-default border-dashed border-control bg-surface'
@@ -137,17 +139,17 @@ function Tile({ item, categoryLabel, checked, tabStop, onPick, onInstall, onKeyD
             : 'border-border bg-surface hover:border-control hover:bg-raised',
       )}
     >
-      <span className="flex w-full items-center justify-between gap-2">
+      <span className="flex w-full items-center justify-between gap-2 max-sm:contents">
         <span
           aria-hidden
           className={cn(
-            'grid size-9 shrink-0 place-items-center rounded-card',
+            'grid size-9 shrink-0 place-items-center rounded-card max-sm:col-start-1 max-sm:row-span-4 max-sm:row-start-1',
             checked ? 'bg-accent text-accent-ink' : soon ? 'bg-raised-2 text-muted' : 'bg-raised-2 text-text',
           )}
         >
           <Icon size={20} />
         </span>
-        <span className="flex min-w-0 items-center gap-2">
+        <span className="flex min-w-0 items-center gap-2 max-sm:col-start-3 max-sm:row-start-1">
           {soon && <Badge tone="neutral" id={`${id}-s`}>Coming soon</Badge>}
           {!soon && owned > 0 && (
             <span id={`${id}-h`} className="inline-flex items-center gap-1 text-small text-muted">
@@ -158,12 +160,12 @@ function Tile({ item, categoryLabel, checked, tabStop, onPick, onInstall, onKeyD
           {checked && <CheckCircle size={20} weight="fill" aria-hidden className="shrink-0 text-accent" />}
         </span>
       </span>
-      <span id={`${id}-n`} className={cn('mt-3 break-words text-body font-semibold', soon ? 'text-muted' : 'text-text')}>
+      <span id={`${id}-n`} className={cn('mt-3 break-words text-body font-semibold max-sm:col-start-2 max-sm:row-start-1 max-sm:mt-0 max-sm:min-w-0', soon ? 'text-muted' : 'text-text')}>
         {item.name}
       </span>
-      <span id={`${id}-c`} className="text-small text-muted">{categoryLabel}</span>
-      <span id={`${id}-d`} className={cn('mt-1.5 break-words text-ui', soon ? 'text-muted' : 'text-text')}>{item.description}</span>
-      <span id={`${id}-io`} className="mt-auto break-words pt-2.5 text-small text-muted">{marketplaceIoLine(item)}</span>
+      <span id={`${id}-c`} className="text-small text-muted max-sm:col-span-2 max-sm:col-start-2 max-sm:row-start-2">{categoryLabel}</span>
+      <span id={`${id}-d`} className={cn('mt-1.5 break-words text-ui max-sm:col-span-2 max-sm:col-start-2 max-sm:row-start-3', soon ? 'text-muted' : 'text-text')}>{item.description}</span>
+      <span id={`${id}-io`} className="mt-auto break-words pt-2.5 text-small text-muted max-sm:col-span-2 max-sm:col-start-2 max-sm:row-start-4 max-sm:pt-1.5">{marketplaceIoLine(item)}</span>
     </button>
   );
 }
@@ -235,7 +237,7 @@ function MarketplaceContent({
   const summary = pickedItem ? (
     <>
       <pickedItem.icon size={18} aria-hidden className="shrink-0 text-accent" />
-      <span className="min-w-0 break-words">
+      <span className="min-w-0 break-words max-sm:truncate">
         <b className="font-semibold text-text">{pickedItem.name}</b>
         {' · '}
         {pickedItem.hasApp ? 'opens in its own app' : 'no app yet, it works through its data links'}
@@ -294,18 +296,18 @@ function MarketplaceContent({
           </div>
         )}
       </ModalBody>
-      <ModalFooter>
+      <ModalFooter className="max-sm:flex-row max-sm:flex-wrap max-sm:gap-2 max-sm:pb-[calc(8px+env(safe-area-inset-bottom))] max-sm:pt-2">
         <div
           role="status"
-          className="flex min-w-0 items-center gap-2 text-ui text-muted sm:mr-auto max-sm:order-last max-sm:w-full"
+          className="flex min-w-0 items-center gap-2 text-ui text-muted sm:mr-auto max-sm:basis-full"
         >
           {summary}
         </div>
         <Dialog.Close asChild>
-          <Button variant="secondary">Cancel</Button>
+          <Button variant="secondary" className="max-sm:h-11 max-sm:flex-1">Cancel</Button>
         </Dialog.Close>
-        <Button leftIcon={DownloadSimple} disabled={!pickedItem || status !== 'ready'} onClick={() => pickedItem && onInstall?.(pickedItem)}>
-          {pickedItem ? `Install ${pickedItem.name}` : 'Install'}
+        <Button className="max-sm:h-11 max-sm:min-w-0 max-sm:flex-1 max-sm:overflow-hidden max-sm:[&_svg]:shrink-0 max-sm:[&>span]:min-w-0 max-sm:[&>span:not([aria-hidden])]:max-w-full" leftIcon={DownloadSimple} disabled={!pickedItem || status !== 'ready'} onClick={() => pickedItem && onInstall?.(pickedItem)}>
+          <span className="min-w-0 max-sm:truncate">{pickedItem ? `Install ${pickedItem.name}` : 'Install'}</span>
         </Button>
       </ModalFooter>
     </>
