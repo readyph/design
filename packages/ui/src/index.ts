@@ -28,3 +28,4 @@ export * from './components/ListGroup';
 export * from './components/Queue';
 export * from './components/StatusBar';
 export * from './components/CommandPalette';
+export * from './components/SubpageTransition';
