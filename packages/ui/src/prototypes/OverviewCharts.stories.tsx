@@ -6,7 +6,7 @@ import { Fact, FactsLine } from '../components/FactsLine';
 
 /** RDY-291 (C31). Prototype only: stories are not exported from the package. The charts in the real PlatformShell sheet. */
 const meta: Meta = {
-  title: 'Prototypes/Portal/[For Review] Overview charts',
+  title: 'Prototypes/Portal/Overview charts',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;
