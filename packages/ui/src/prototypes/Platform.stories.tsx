@@ -12,7 +12,7 @@ import { PlatformPage } from './Platform.page';
 const meta: Meta<typeof PlatformPage> = {
   title: 'Prototypes/Platform',
   component: PlatformPage,
-  parameters: { layout: 'fullscreen' },
+  parameters: { layout: 'fullscreen', viewport: { defaultViewport: 'desktop' } },
 };
 export default meta;
 type Story = StoryObj<typeof PlatformPage>;

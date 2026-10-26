@@ -38,8 +38,8 @@
     "prebuild": "npm run generate",
     "build": "tsup",
     "clean": "rm -rf dist",
-    "storybook": "storybook dev -p 6006 --no-open",
-    "build-storybook": "storybook build",
+    "storybook": "storybook dev -p 6006 --no-open --disable-telemetry --no-version-updates",
+    "build-storybook": "storybook build --disable-telemetry",
     "type-check": "tsc --noEmit",
     "test": "vitest run --passWithNoTests"
   },

@@ -8,7 +8,7 @@ import { MemoryPage } from './MemoryPage';
 const meta: Meta<typeof MemoryPage> = {
   title: 'Prototypes/Memory',
   component: MemoryPage,
-  parameters: { layout: 'fullscreen' },
+  parameters: { layout: 'fullscreen', viewport: { defaultViewport: 'desktop' } },
 };
 export default meta;
 type Story = StoryObj<typeof MemoryPage>;
