@@ -114,7 +114,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
   const [phoneDetail, setPhoneDetail] = useState(false);
   const [filter, setFilter] = useState<string | null>(null);
   const [hover, setHover] = useState<string | null>(null);
-  const [cursor, setCursor] = useState<string | null>(null);
+  const [cursor, setCursor] = useState<string | null>(() => itemsAll[0]?.id ?? null);
   const [pstate, setPstate] = useState<Record<string, LedaProposalState>>({});
   const [choice, setChoice] = useState<Record<string, string>>({});
   const [flash, setFlash] = useState(0);
@@ -349,6 +349,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
               loading={loading}
               error={failed === p.id}
               lastLoaded="9:10 AM"
+              retryLabel="Retry"
               onRetry={() => {
                 window.setTimeout(() => setFixed(true), 600);
               }}
@@ -566,12 +567,21 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
 
   const sheetBody = overview ? overviewView : tab === 'today' ? todayView : caseView(tab);
 
+  const queueHeadline =
+    filter || loading
+      ? undefined
+      : quiet
+        ? `Watching ${data.watching.length}. Yesterday: 9 jobs completed, 41 stock movements.`
+        : open[0]?.id === 'q1'
+          ? `${open.length} decisions. First: alternator for the 11:00 Vios, order by 9:45.`
+          : undefined;
+
   const place = (
     <div className="flex h-full min-h-0 flex-col max-[640px]:h-auto">
       <TownMap
         ref={mapRef}
         className="shrink-0"
-        platforms={mapSlots({ ...data, platforms: data.platforms.map((p) => (p.id === failed ? { ...p, error: true } : p)) })}
+        platforms={mapSlots({ ...data, hq: quiet || loading ? { ...data.hq, count: 0 } : data.hq, platforms: data.platforms.map((p) => ({ ...p, count: quiet || loading ? 0 : p.count, ...(p.id === failed ? { error: true } : {}) })) })}
         links={data.links}
         caption={`${data.platforms.length} platforms + HQ`}
         label="Your platforms"
@@ -581,17 +591,20 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
         onSelect={setFilterTo}
         onHover={setHover}
       />
-      <div className="mt-2 hidden px-3 max-[640px]:block">{askBar('overview', false)}</div>
       <Queue
         className="min-h-0 flex-1"
         items={open}
-        watching={quiet || loading ? data.watching : data.watching}
-        snoozed={snoozed}
-        done={done}
+        watching={loading ? [] : data.watching}
+        snoozed={loading ? [] : snoozed}
+        done={loading ? [] : done}
         platforms={queuePlatforms(data)}
         filter={filter}
         onFilterChange={setFilterTo}
         loading={queueLoading}
+        headline={queueHeadline}
+        belowHeadline={phone ? askBar('overview', false) : undefined}
+        defaultOpenGroups={quiet ? ['watching'] : []}
+        retryLabel="Retry"
         errors={failed ? [{ platform: { id: failed, name: platformById(failed)!.name, index: platformById(failed)!.index }, lastLoaded: '9:10 AM' }] : []}
         onRetry={() => { window.setTimeout(() => setFixed(true), 600); }}
         cursorId={cursor}

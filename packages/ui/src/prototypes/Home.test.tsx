@@ -18,6 +18,17 @@ afterEach(() => {
 const queue = () => within(screen.getByRole('list', { name: 'Needs you' }));
 
 describe('Home', () => {
+  it('live: handover headline, cursor on the first decision; quiet: watching headline, no map badges', () => {
+    render(<Home />);
+    expect(screen.getByText('4 decisions. First: alternator for the 11:00 Vios, order by 9:45.')).toBeTruthy();
+    expect(queue().getAllByRole('listitem')[0]!.getAttribute('aria-current')).toBe('true');
+    cleanup();
+    render(<Home state="quiet" />);
+    expect(screen.getByText('Watching 2. Yesterday: 9 jobs completed, 41 stock movements.')).toBeTruthy();
+    expect(screen.queryByText('Nothing open.')).toBeNull();
+    expect(screen.getByRole('button', { name: /Leda is watching/ }).getAttribute('aria-expanded')).toBe('true');
+  });
+
   it('opens on Today with the decisions in Needs you and one h1', () => {
     render(<Home />);
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
@@ -79,7 +90,7 @@ describe('Home', () => {
     expect(a.container.querySelector('[aria-busy="true"]')).toBeTruthy();
     cleanup();
     render(<Home state="error" />);
-    expect(screen.getAllByRole('button', { name: /Try again/ }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('button', { name: /^Retry$/ }).length).toBeGreaterThan(0);
     cleanup();
     render(<Home set="many" />);
     expect(screen.getAllByRole('heading', { level: 3 }).length).toBeGreaterThanOrEqual(8);
