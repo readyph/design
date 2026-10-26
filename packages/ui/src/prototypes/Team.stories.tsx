@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Team } from './Team';
 
 /**
- * [For Review] RDY-258. Prototype only: stories are not exported from the package.
+ * RDY-258. Prototype only: stories are not exported from the package.
  * Portal Team in the real PlatformShell (shared `PortalFrame`): the place column (map, where they work, roles by kind,
  * Portal access, seats), the sheet (everyone as a table with a role per platform, grouped Waiting to join / Suspended / People),
  * the person subpage (roles on each platform, Portal access, account, password, activity, suspend), the invite dialog
@@ -10,7 +10,7 @@ import { Team } from './Team';
  * Guards (own access, creator, last admin, suspend, reset link rules) show their reason instead of acting.
  */
 const meta: Meta<typeof Team> = {
-  title: 'Prototypes/Portal/[For Review] Team',
+  title: 'Prototypes/Portal/Team',
   component: Team,
   parameters: { layout: 'fullscreen' },
   argTypes: {
