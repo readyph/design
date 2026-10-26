@@ -6,6 +6,12 @@ import { Button } from './Button';
 import { IconButton } from './IconButton';
 import { PlatformLogo } from './PlatformLogo';
 import { ProgressBar } from './ProgressBar';
+import { Queue } from './Queue';
+import { allPlatforms, done, items, snoozed, watching } from './Queue.data';
+import { PlatformToday } from './PlatformToday';
+import { autoWorks, cafe, jobs } from './PlatformToday.data';
+import { ListCell, ListRow } from './List';
+import { ListGroup, ListGroups } from './ListGroup';
 
 const meta: Meta<typeof PlatformShell> = {
   title: 'Components/Layout/PlatformShell',
@@ -166,4 +172,29 @@ export const PhoneInteractive: Story = {
     );
   },
   parameters: { viewport: { defaultViewport: 'mobile1' } },
+};
+
+/** The place column carries data-surface="frame": Queue, ListGroup and PlatformToday rules use --frame-rule and focus rings offset on --frame; a sheet nested in the column resets to --rule / --surface (RDY-305). */
+export const PlaceColumnSurfaces: Story = {
+  render: () => (
+    <PlatformShell
+      {...full}
+      place={
+        <div className="flex flex-col gap-4 pb-4">
+          <div className="h-[420px]"><Queue items={items} watching={watching} snoozed={snoozed} done={done} platforms={allPlatforms} shortcuts={false} defaultOpenGroups={['watching']} /></div>
+          <ListGroups as="list" aria-label="Frame groups">
+            <ListGroup title="Frame group" count={2}>
+              {['One', 'Two'].map((t) => <ListRow key={t} rowId={t} label={t} onActivate={() => {}}><ListCell kind="lead">{t}</ListCell></ListRow>)}
+            </ListGroup>
+          </ListGroups>
+          <PlatformToday platform={autoWorks} kind="Auto repair" lists={[{ ...jobs, onViewAll: () => {} }]} onOpen={() => {}} />
+          <div data-testid="nested-sheet" className="rounded-card border border-border bg-surface p-3" data-surface="surface">
+            <PlatformToday platform={cafe} kind="Point of sale" lists={[{ ...jobs, id: "j2", onViewAll: () => {} }]} onOpen={() => {}} surface="surface" />
+          </div>
+        </div>
+      }
+    >
+      <Body />
+    </PlatformShell>
+  ),
 };

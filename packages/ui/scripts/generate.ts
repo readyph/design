@@ -74,12 +74,18 @@ ${darkExplicit}
   /* html stays at the browser default (16px) so Tailwind's rem scale is px-accurate (h-8 = 32px); the 14px body text size lives on body (RDY-303). */
   html { font-size: 100%; background: var(--frame); -webkit-font-smoothing: antialiased; }
   body { margin: 0; font-family: var(--font); font-size: var(--fs-body); line-height: var(--lh-body); background: var(--frame); color: var(--text); font-variant-numeric: tabular-nums; }
-  /* Content drawn straight on --frame (the place column) gets the frame-specific row rule; set data-surface="frame" on its root. */
-  [data-surface="frame"] { --rule: var(--frame-rule); }
+  /* Surface scope. PlatformShell's place column and PlatformToday set data-surface="frame": content drawn straight on --frame gets the frame row rule and
+     the focus-ring offset on --frame. A sheet nested inside sets data-surface="surface" to restore the sheet values (nearest ancestor wins). */
+  :root { --rule-sheet: var(--rule); }
+  [data-surface="frame"] { --rule: var(--frame-rule); --ring-offset-bg: var(--frame); }
+  [data-surface="surface"] { --rule: var(--rule-sheet); --ring-offset-bg: var(--surface); }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   code, kbd, samp { font-family: var(--mono); font-size: 13px; }
   /* Reduced motion is handled per component (spec 4.7 keeps the 140ms fade and the halo opacity fade). */
 }
+
+/* The shared focusRing offsets on --surface; inside a data-surface scope it follows --ring-offset-bg. The extra [class] raises specificity above the ring-offset utility (the build emits this rule before the utilities). */
+[class*="ring-offset-surface"][class]:focus-visible { --tw-ring-offset-color: var(--ring-offset-bg, var(--surface)); }
 `;
 writeFileSync(resolve(pkgRoot, 'src/styles/globals.css'), globals);
 
