@@ -119,6 +119,8 @@ export function PlatformShell({
       {hasPlace && (
         <section
           aria-label={placeLabel}
+          data-surface="frame"
+          data-shell-place=""
           className={cn(
             'row-start-1 flex min-h-0 min-w-0 flex-col pb-0 pl-1 pr-3 pt-inset',
             placeCol,
@@ -135,6 +137,7 @@ export function PlatformShell({
       )}
 
       <main
+        data-shell="sheet"
         aria-label={sheetLabel}
         className={cn(
           '@container/sheet row-start-1 flex min-h-0 min-w-0 flex-col overflow-hidden border border-border bg-surface rounded-sheet',
@@ -172,6 +175,7 @@ export function PlatformShell({
 
       {hasPhoneNav && (
         <nav
+          data-shell="phone-nav"
           aria-label={phoneNavLabel}
           className={cn(
             'hidden',

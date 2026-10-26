@@ -21,6 +21,7 @@ const preset = {
         "raised-2": "var(--raised-2)",
         "border": "var(--border)",
         "rule": "var(--rule)",
+        "frame-rule": "var(--frame-rule)",
         "control": "var(--control)",
         "text": "var(--text)",
         "muted": "var(--muted)",
@@ -70,6 +71,7 @@ const preset = {
         "identity-text": "var(--identity-text)",
         "map-top": "var(--map-top)",
         "map-side": "var(--map-side)",
+        "map-side-2": "var(--map-side-2)",
         "map-road": "var(--map-road)",
         "map-window": "var(--map-window)",
         "map-window-soft": "var(--map-window-soft)",
@@ -260,6 +262,27 @@ const preset = {
             "backgroundColor": "transparent"
           }
         },
+        "tab-fade": {
+          "from": {
+            "opacity": "0"
+          },
+          "to": {
+            "opacity": "1"
+          }
+        },
+        "town-flow-a": {
+          "to": {
+            "strokeDashoffset": "-27"
+          }
+        },
+        "town-flow-b": {
+          "from": {
+            "strokeDashoffset": "13"
+          },
+          "to": {
+            "strokeDashoffset": "40"
+          }
+        },
         "halo-spin": {
           "from": {
             "transform": "translate(-50%, -50%) rotate(0deg)"
@@ -293,6 +316,11 @@ const preset = {
       },
       "animation": {
         "row-flash": "row-flash var(--dur-row-flash) ease-out 1",
+        "tab-fade": "tab-fade var(--dur-tab) linear",
+        "town-flow-a": "town-flow-a 1.6s linear infinite",
+        "town-flow-b": "town-flow-b 1.6s linear infinite",
+        "town-flow-a-slow": "town-flow-a 5s linear infinite",
+        "town-flow-b-slow": "town-flow-b 5s linear infinite",
         "halo-spin": "halo-spin var(--dur-halo) var(--ease-halo) 1 both",
         "halo-fade": "halo-fade var(--dur-halo) var(--ease-halo) 1 both",
         "halo-fade-reduced": "halo-fade-reduced var(--dur-halo-reduced) ease-in-out 1 both"

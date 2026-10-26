@@ -9,6 +9,7 @@
   --raised-2: #eaeef3;
   --border: #e1e5eb;
   --rule: #edf0f3;
+  --frame-rule: #d8dde6;
   --control: #c6ccd6;
   --text: #121722;
   --muted: #535d6c;
@@ -48,9 +49,10 @@
   --chart-axis: var(--faint);
   --identity-hq: #4f6074;
   --identity-text: #ffffff;
-  --map-top: #eceff4;
-  --map-side: #dbe1ea;
-  --map-road: #c6ccd6;
+  --map-top: #fffffd;
+  --map-side: #c9dcf7;
+  --map-side-2: #a9c6f0;
+  --map-road: #dbeafe;
   --map-window: #FFD66B;
   --map-window-soft: #FFE7A3;
   --ld-lit: #8E9BEE;

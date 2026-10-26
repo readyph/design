@@ -10,6 +10,8 @@ export const surfaces: Record<string, Pair> = {
   'raised-2': ['#eaeef3', '#404142'],
   border: ['#e1e5eb', '#37393a'],
   rule: ['#edf0f3', '#313133'],
+  /** The row rule on `--frame` (the place column): `rule` is ~1:1 on frame in light. Applied by `[data-surface="frame"]`. */
+  'frame-rule': ['#d8dde6', '#393b3c'],
   control: ['#c6ccd6', '#4b4d50'],
   text: ['#121722', '#e6e8eb'],
   muted: ['#535d6c', '#a9aeb5'],
@@ -56,9 +58,11 @@ export const dataviz: Record<string, Pair> = {
   'chart-axis': ['var(--faint)', 'var(--faint)'],
   'identity-hq': ['#4f6074', '#4f6074'],
   'identity-text': ['#ffffff', '#ffffff'],
-  'map-top': ['#eceff4', '#1c1e21'],
-  'map-side': ['#dbe1ea', '#141517'],
-  'map-road': ['#c6ccd6', '#2a2d33'],
+  /** Platform map (C16, RDY-276). Light values are the prototype's island colours (the RDY-246 placeholders were frame greys). */
+  'map-top': ['#fffffd', '#1c1e21'],
+  'map-side': ['#c9dcf7', '#141517'],
+  'map-side-2': ['#a9c6f0', '#0f1012'],
+  'map-road': ['#dbeafe', '#2a2d33'],
   'map-window': ['#FFD66B', '#FFD66B'],
   'map-window-soft': ['#FFE7A3', '#FFE7A3'],
 };
