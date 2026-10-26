@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { OpeningHours, openingHoursDirty, weekSummary, DAY_KEYS, type OpeningHoursProps, type OpeningHoursValue } from './OpeningHours';
 import { companyWeek, nowSample, ownValue, publicHolidays, sameValue, todayIso } from './OpeningHours.data';
 
@@ -130,20 +130,60 @@ describe('OpeningHours', () => {
     expect(document.activeElement).toBe(date);
     expect((date as HTMLInputElement).value).toBe('');
   });
-  it('removing a closure asks first and returns focus to a real control', async () => {
-    vi.useFakeTimers();
+  it('removing a closure asks first; cancel returns focus to its Remove button', async () => {
     render(<H initial={ownValue} />);
-    fireEvent.click(screen.getByRole('button', { name: /Remove closure on .*Nov.*Stock count/ }));
+    const opener = screen.getByRole('button', { name: /Remove closure on .*Nov.*Stock count/ });
+    opener.focus();
+    fireEvent.click(opener);
     expect(screen.getByRole('alertdialog')).toBeTruthy();
     expect(screen.getByText('Auto Works keeps its usual hours that day.')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull());
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: /Remove closure on .*Nov.*Stock count/ })));
     expect(screen.getAllByRole('button', { name: /Remove closure/ })).toHaveLength(2);
+  });
+  it('after Remove, focus lands on the next row, then the previous, then the date field', async () => {
+    render(<H initial={ownValue} />);
     fireEvent.click(screen.getByRole('button', { name: /Remove closure on .*Nov.*Stock count/ }));
     fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
-    act(() => { vi.advanceTimersByTime(200); });
-    expect(screen.getAllByRole('button', { name: /Remove closure/ })).toHaveLength(1);
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: /Remove closure/ }));
-    vi.useRealTimers();
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: /Remove closure/ })));
+    expect(document.activeElement).not.toBe(document.body);
+    expect((document.activeElement as HTMLElement).getAttribute('aria-label')).toContain('Dec 24');
+    fireEvent.click(screen.getByRole('button', { name: /Remove closure/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByLabelText('Closed on')));
+  });
+  it('after Remove, a field the user already moved to keeps focus', async () => {
+    render(<H initial={ownValue} />);
+    fireEvent.click(screen.getByRole('button', { name: /Remove closure on .*Nov.*Stock count/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
+    const why = screen.getByLabelText(/Reason/) as HTMLInputElement;
+    why.focus();
+    await new Promise((r) => setTimeout(r, 120));
+    expect(document.activeElement).toBe(why);
+  });
+  it('closure ids come from the counter or makeClosureId, not the clock', () => {
+    const spy = vi.fn();
+    const { unmount } = render(<H initial={sameValue} spy={spy} />);
+    const add = (d: string) => {
+      fireEvent.change(screen.getByLabelText('Closed on'), { target: { value: d } });
+      fireEvent.click(screen.getByRole('button', { name: 'Add closed day' }));
+    };
+    add('2026-11-10');
+    add('2026-11-11');
+    const ids = spy.mock.calls.at(-1)![0].closures.map((c: { id: string }) => c.id);
+    expect(new Set(ids).size).toBe(2);
+    expect(ids.join()).not.toMatch(/\d{10,}/);
+    unmount();
+    let n = 0;
+    render(<H initial={sameValue} spy={spy} makeClosureId={() => `x${++n}`} />);
+    add('2026-11-12');
+    expect(spy.mock.calls.at(-1)![0].closures[0].id).toBe('x1');
+  });
+  it('Closed days heading follows headingLevel', () => {
+    render(<H initial={sameValue} headingLevel={2} />);
+    expect(screen.getByRole('heading', { name: 'Opening hours' }).tagName).toBe('H2');
+    expect(screen.getByRole('heading', { name: 'Closed days' }).tagName).toBe('H2');
   });
   it('builds the Leda line from now, and follows edits', () => {
     render(<H initial={ownValue} />);
@@ -165,14 +205,32 @@ describe('OpeningHours', () => {
     render(<H initial={ownValue} formatTime={(s) => `@${s}`} />);
     expect(screen.getByRole('combobox', { name: 'Opening time, Monday' }).textContent).toContain('@08:00');
   });
-  it('save bar: disabled until dirty, then saves; focus goes to the heading, not the page', async () => {
-    vi.useFakeTimers();
-    function S() {
-      const [saved, setSaved] = useState(ownValue);
-      const [v, setV] = useState(ownValue);
-      return <OpeningHours value={v} onChange={setV} companyWeek={companyWeek} savedValue={saved} onSave={(x) => setSaved(x)} onDiscard={() => setV(saved)} />;
-    }
-    render(<S />);
+  function Saver({ slow }: { slow?: boolean }) {
+    const [saved, setSaved] = useState(ownValue);
+    const [v, setV] = useState(ownValue);
+    const [saving, setSaving] = useState(false);
+    return (
+      <>
+        <OpeningHours
+          value={v}
+          onChange={setV}
+          companyWeek={companyWeek}
+          today={todayIso}
+          savedValue={saved}
+          saving={saving}
+          onSave={(x) => {
+            if (!slow) return setSaved(x);
+            setSaving(true);
+            (window as unknown as { finish: () => void }).finish = () => { setSaved(x); setSaving(false); };
+          }}
+          onDiscard={() => setV(saved)}
+        />
+        <input aria-label="Elsewhere" />
+      </>
+    );
+  }
+  it('save bar: disabled until dirty; after Save focus goes to the heading, never body', () => {
+    render(<Saver />);
     const save = screen.getByRole('button', { name: 'Save system settings' }) as HTMLButtonElement;
     expect(save.disabled).toBe(true);
     pick('Closing time, Monday', '5:00 PM');
@@ -180,10 +238,55 @@ describe('OpeningHours', () => {
     expect(screen.getByText('Unsaved changes')).toBeTruthy();
     save.focus();
     fireEvent.click(save);
-    act(() => { vi.advanceTimersByTime(200); });
     expect(save.disabled).toBe(true);
     expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Opening hours' }));
-    vi.useRealTimers();
+  });
+  it('Discard moves focus to the heading too', () => {
+    render(<Saver />);
+    pick('Closing time, Monday', '5:00 PM');
+    const d = screen.getByRole('button', { name: 'Discard' });
+    d.focus();
+    fireEvent.click(d);
+    expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Opening hours' }));
+  });
+  it('slow save: Save stays focusable (aria-disabled, aria-busy), a second click is ignored, typing elsewhere is not interrupted', () => {
+    render(<Saver slow />);
+    pick('Closing time, Monday', '5:00 PM');
+    const save = screen.getByRole('button', { name: 'Save system settings' }) as HTMLButtonElement;
+    save.focus();
+    fireEvent.click(save);
+    expect(save.disabled).toBe(false);
+    expect(document.activeElement).toBe(save);
+    expect(save.getAttribute('aria-disabled')).toBe('true');
+    expect(save.getAttribute('aria-busy')).toBe('true');
+    fireEvent.click(save);
+    const other = screen.getByLabelText('Elsewhere') as HTMLInputElement;
+    other.focus();
+    act(() => (window as unknown as { finish: () => void }).finish());
+    expect(document.activeElement).toBe(other);
+    expect(screen.getByRole('button', { name: 'Save system settings' }).hasAttribute('aria-busy')).toBe(false);
+  });
+  it('slow save: focus left on the date field or a dropdown stays there when Save completes', () => {
+    render(<Saver slow />);
+    pick('Closing time, Monday', '5:00 PM');
+    fireEvent.click(screen.getByRole('button', { name: 'Save system settings' }));
+    const date = screen.getByLabelText('Closed on') as HTMLInputElement;
+    date.focus();
+    act(() => (window as unknown as { finish: () => void }).finish());
+    expect(document.activeElement).toBe(date);
+    pick('Closing time, Tuesday', '5:00 PM');
+    fireEvent.click(screen.getByRole('button', { name: 'Save system settings' }));
+    const sel = screen.getByRole('combobox', { name: 'Opening time, Friday' });
+    sel.focus();
+    act(() => (window as unknown as { finish: () => void }).finish());
+    expect(document.activeElement).toBe(sel);
+  });
+  it('slow save: nothing in the editor is disabled, so a focused control never drops focus', () => {
+    render(<Saver slow />);
+    pick('Closing time, Monday', '5:00 PM');
+    fireEvent.click(screen.getByRole('button', { name: 'Save system settings' }));
+    expect((screen.getByRole('combobox', { name: 'Opening time, Friday' }) as HTMLButtonElement).disabled).toBe(false);
+    expect((screen.getByLabelText('Closed on') as HTMLInputElement).disabled).toBe(false);
   });
   it('discard restores the saved draft', () => {
     function S() {

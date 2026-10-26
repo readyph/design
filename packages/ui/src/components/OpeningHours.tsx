@@ -1,6 +1,7 @@
-import { forwardRef, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
+import { forwardRef, useId, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { CalendarX, CopySimple, Plus, Warning, X } from '@phosphor-icons/react';
 import { cn, focusRing } from '../utils/cn';
+import { focusIfLost } from '../utils/focusIfLost';
 import { Button } from './Button';
 import { ConfirmDialog } from './ConfirmDialog';
 import { LedaNote } from './LedaNote';
@@ -87,6 +88,8 @@ export interface OpeningHoursProps {
   onSave?: (value: OpeningHoursValue) => void;
   onDiscard?: () => void;
   saving?: boolean;
+  /** Id for a new closure. Default: a counter, so nothing reads the clock. */
+  makeClosureId?: () => string;
   /** Save failed: shown above the buttons as an alert; the draft stays. */
   error?: ReactNode;
   saveLabel?: string;
@@ -186,6 +189,7 @@ export const OpeningHours = forwardRef<HTMLDivElement, OpeningHoursProps>(functi
     onSave,
     onDiscard,
     saving,
+    makeClosureId,
     error,
     saveLabel = 'Save system settings',
     headingLevel = 3,
@@ -197,7 +201,8 @@ export const OpeningHours = forwardRef<HTMLDivElement, OpeningHoursProps>(functi
   const fmt = useMemo(() => makeFormatter(locale, hour12, formatTime), [locale, hour12, formatTime]);
   const long = (i: number) => dayName(locale, i, 'long');
   const short = (i: number) => dayName(locale, i, 'short');
-  const off = !!readOnly || !!saving;
+  // While saving nothing is disabled: a focused control that disables itself would drop focus to <body>.
+  const off = !!readOnly;
 
   const [announce, setAnnounce] = useState('');
   const tick = useRef(0);
@@ -207,35 +212,26 @@ export const OpeningHours = forwardRef<HTMLDivElement, OpeningHoursProps>(functi
   const saveBtn = useRef<HTMLButtonElement>(null);
   const dateRef = useRef<HTMLInputElement>(null);
   const removeRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const barRef = useRef<HTMLDivElement>(null);
   const used = useRef(false);
-  const refocus = useRef<string | null>(null);
+  const nextFocus = useRef<string | null>(null);
+  const counter = useRef(0);
 
   const week = value.week;
   const shown = effectiveWeek(value, companyWeek);
   const dirty = savedValue ? openingHoursDirty(value, savedValue) : false;
   const bar = !!onSave && !readOnly;
 
-  // Save and Discard disable themselves when they finish, which would drop focus to <body>.
-  // Remember that one of them was used; when the work is over, move focus somewhere real.
-  useEffect(() => {
+  // Save and Discard disable themselves when the work is done, which would leave focus on <body>.
+  // When one of them was used and the draft settles, move focus to Save (failed) or the heading (done),
+  // but only if focus was lost: if the user went to another field meanwhile it stays there. No timers.
+  useLayoutEffect(() => {
     if (!used.current || saving || (dirty && !error)) return;
     used.current = false;
-    const id = setTimeout(() => (dirty ? saveBtn.current : heading.current)?.focus(), 60);
-    return () => clearTimeout(id);
+    focusIfLost(barRef.current, dirty ? saveBtn.current : heading.current);
   }, [dirty, saving, error]);
 
   const sorted = useMemo(() => [...value.closures].sort((a, b) => a.date.localeCompare(b.date)), [value.closures]);
-
-  // After a closure is removed its button is gone: land on the next one, else the previous, else the date field.
-  useEffect(() => {
-    const want = refocus.current;
-    if (want === null) return;
-    refocus.current = null;
-    const id = setTimeout(() => {
-      (removeRefs.current[want] ?? dateRef.current)?.focus();
-    }, 60);
-    return () => clearTimeout(id);
-  }, [value.closures]);
 
   const upcoming = useMemo(() => publicHolidays.filter((h) => !today || h.date >= today).slice(0, 5), [publicHolidays, today]);
 
@@ -294,7 +290,7 @@ export const OpeningHours = forwardRef<HTMLDivElement, OpeningHoursProps>(functi
       setCErr(`Already closed on ${dateText(locale, cDate)}.`);
       return dateRef.current?.focus();
     }
-    set({ closures: [...value.closures, { id: `${cDate}-${value.closures.length}-${Date.now()}`, date: cDate, reason: cWhy.trim() || undefined }] });
+    set({ closures: [...value.closures, { id: makeClosureId ? makeClosureId() : `${uid}-c${counter.current++}`, date: cDate, reason: cWhy.trim() || undefined }] });
     say(`Closed on ${dateText(locale, cDate)}${cWhy.trim() ? `: ${cWhy.trim()}` : ''}. Added.`);
     setCDate('');
     setCWhy('');
@@ -308,12 +304,22 @@ export const OpeningHours = forwardRef<HTMLDivElement, OpeningHoursProps>(functi
     if (!c) return;
     const i = sorted.findIndex((x) => x.id === c.id);
     const next = sorted[i + 1] ?? sorted[i - 1];
-    refocus.current = next ? next.id : '';
+    nextFocus.current = next ? next.id : '';
     set({ closures: value.closures.filter((x) => x.id !== c.id) });
     say(`Removed the closure on ${dateText(locale, c.date)}.`);
   };
 
+  // Focus after a removal: the next row's Remove, else the previous, else the date field. Only if focus was lost.
+  const onDialogClose = (e: Event) => {
+    const want = nextFocus.current;
+    if (want === null) return; // cancelled: the default returns focus to the Remove that opened it
+    nextFocus.current = null;
+    e.preventDefault();
+    focusIfLost(null, removeRefs.current[want] ?? dateRef.current);
+  };
+
   const trySave = () => {
+    if (saving) return;
     used.current = true;
     onSave?.(value);
   };
@@ -446,9 +452,9 @@ export const OpeningHours = forwardRef<HTMLDivElement, OpeningHoursProps>(functi
 
       <section className="flex min-w-0 flex-col gap-4" aria-labelledby={groupLabel}>
         <div className="flex flex-col gap-0.5">
-          <h4 id={groupLabel} className={sectionTitle}>
+          <H id={groupLabel} className={sectionTitle}>
             Closed days
-          </h4>
+          </H>
           <p className={sectionHint}>Holidays and one-off closures, on top of the week above.</p>
         </div>
 
@@ -527,7 +533,6 @@ export const OpeningHours = forwardRef<HTMLDivElement, OpeningHoursProps>(functi
                 type="date"
                 min={today}
                 value={cDate}
-                disabled={saving}
                 aria-invalid={cErr ? true : undefined}
                 aria-describedby={cErr ? `${uid}-cerr` : undefined}
                 onChange={(e) => {
@@ -549,13 +554,12 @@ export const OpeningHours = forwardRef<HTMLDivElement, OpeningHoursProps>(functi
                 autoComplete="off"
                 placeholder="Stock count, staff outing"
                 value={cWhy}
-                disabled={saving}
                 onChange={(e) => setCWhy(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && addClosure()}
                 className={inputCls}
               />
             </div>
-            <Button variant="secondary" leftIcon={Plus} onClick={addClosure} disabled={saving} className="h-[var(--ctl-dropdown)] max-[640px]:w-full">
+            <Button variant="secondary" leftIcon={Plus} onClick={addClosure} className="h-[var(--ctl-dropdown)] max-[640px]:w-full">
               Add closed day
             </Button>
             {cErr ? (
@@ -574,7 +578,7 @@ export const OpeningHours = forwardRef<HTMLDivElement, OpeningHoursProps>(functi
       ) : null}
 
       {bar ? (
-        <div className="flex flex-col gap-2">
+        <div ref={barRef} className="flex flex-col gap-2">
           {error ? (
             <p role="alert" className="m-0 flex items-start gap-2 rounded-card bg-bad-bg px-3 py-2 text-small text-bad-ink">
               <Warning aria-hidden size={14} weight="bold" className="mt-0.5 shrink-0" />
@@ -582,16 +586,28 @@ export const OpeningHours = forwardRef<HTMLDivElement, OpeningHoursProps>(functi
             </p>
           ) : null}
           <div className="flex flex-wrap items-center gap-2">
-            <Button ref={saveBtn} variant="primary" onClick={trySave} disabled={!dirty || saving} loading={saving} actionBar>
-              {saveLabel}
+            <Button
+              ref={saveBtn}
+              variant="primary"
+              onClick={trySave}
+              disabled={!dirty}
+              aria-disabled={saving || undefined}
+              aria-busy={saving || undefined}
+              className="aria-disabled:cursor-wait aria-disabled:opacity-60"
+              actionBar
+            >
+              {saving ? 'Saving…' : saveLabel}
             </Button>
             <Button
               variant="secondary"
               onClick={() => {
+                if (saving) return;
                 used.current = true;
                 onDiscard?.();
               }}
-              disabled={!dirty || saving}
+              disabled={!dirty}
+              aria-disabled={saving || undefined}
+              className="aria-disabled:cursor-not-allowed aria-disabled:opacity-60"
               actionBar
             >
               Discard
@@ -617,6 +633,7 @@ export const OpeningHours = forwardRef<HTMLDivElement, OpeningHoursProps>(functi
         tone="danger"
         onCancel={() => setRemoving(null)}
         onConfirm={confirmRemove}
+        onCloseAutoFocus={onDialogClose}
       />
     </div>
   );
