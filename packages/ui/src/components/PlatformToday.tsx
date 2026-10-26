@@ -337,7 +337,7 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
       ref={ref}
       aria-labelledby={nameId}
       aria-busy={loading || undefined}
-      data-surface={surface === 'frame' ? 'frame' : undefined}
+      data-surface={surface}
       className={cn('@container/today relative min-w-0', className)}
       {...rest}
     >
