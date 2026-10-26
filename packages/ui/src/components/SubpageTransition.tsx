@@ -287,6 +287,10 @@ export function SubpageLane({ from = 'right', surface = 'surface', focus = true,
     focusedSeq.current = ctx.seq;
     const pane = curRef.current;
     if (!pane) return;
+    // Only move focus that is lost or sits in the lanes (the pane that is going away). Never steal it from where the user put it.
+    const act = document.activeElement;
+    const inLanes = !!act && Array.from(ctx.lanes.values()).some((get) => get?.()?.closest('[data-subpage-lane]')?.contains(act));
+    if (act && act !== document.body && act !== document.documentElement && !inLanes && !act.closest('[inert]')) return;
     let target: HTMLElement | null = null;
     if (ctx.direction === 'out') {
       target = ctx.restoreFocus?.() ?? null;

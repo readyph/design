@@ -1,5 +1,4 @@
 import type { HTMLAttributes, ReactNode } from 'react';
-import { useEffect, useRef } from 'react';
 import { cn } from '../utils/cn';
 import { useMatchMedia } from '../utils/useMatchMedia';
 import { SUBPAGE_PHONE, SubpageScreensContext, useSubpageShell } from './SubpageTransition';
@@ -73,15 +72,11 @@ export function PlatformShell({
   const phoneNow = useMatchMedia(SUBPAGE_PHONE);
   const slide = !!sub && sub.running && !sub.reduced && hasPlace && phoneNow;
   const slideIn = sub?.direction === 'in';
-  const placeRef = useRef<HTMLElement | null>(null);
-  const sheetRef = useRef<HTMLElement | null>(null);
-  const underRef = slide ? (slideIn ? placeRef : sheetRef) : null;
-  useEffect(() => {
-    const el = underRef?.current;
-    if (!el) return undefined;
-    el.setAttribute('inert', '');
-    return () => el.removeAttribute('inert');
-  }, [underRef, sub?.seq]);
+  // The region under the slide is inert. It is an attribute in the render (not an effect) so it is already right in the same commit
+  // in which a lane moves focus; a later effect would still see the previous state and focus would be lost.
+  const underPlace = slide && slideIn;
+  const underSheet = slide && !slideIn;
+  const inertAttr = { inert: '' } as Record<string, string>;
   const hasStatus = status != null;
   const hasRail = rail != null;
   const hasTop = topBar != null;
@@ -136,8 +131,8 @@ export function PlatformShell({
 
       {hasPlace && (
         <section
-          ref={placeRef}
-          aria-hidden={slide && slideIn ? true : undefined}
+          {...(underPlace ? inertAttr : {})}
+          aria-hidden={underPlace ? true : undefined}
           aria-label={placeLabel}
           data-surface="frame"
           data-shell-place=""
@@ -158,8 +153,8 @@ export function PlatformShell({
       )}
 
       <main
-        ref={sheetRef}
-        aria-hidden={slide && !slideIn ? true : undefined}
+        {...(underSheet ? inertAttr : {})}
+        aria-hidden={underSheet ? true : undefined}
         onAnimationEnd={slide ? (e) => { if (e.target === e.currentTarget) sub?.screenEnded(sub.seq); } : undefined}
         data-shell="sheet"
         aria-label={sheetLabel}

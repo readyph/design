@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { PlatformShell } from './PlatformShell';
 import { SubpageLane, SubpageTransition, type SubpageDirection } from './SubpageTransition';
 
 beforeEach(() => vi.useFakeTimers());
@@ -162,6 +163,50 @@ describe('SubpageTransition', () => {
     expect(add).toHaveBeenCalled();
     unmount();
     expect(remove).toHaveBeenCalled();
+  });
+
+  it('never steals focus the user moved outside the lanes', () => {
+    const { rerender } = render(<><button>outside</button><Page k="list" /></>);
+    screen.getByText('outside').focus();
+    rerender(<><button>outside</button><Page k="a" /></>);
+    expect(document.activeElement).toBe(screen.getByText('outside'));
+  });
+
+  it('phone: Back during the in slide returns focus to the opener, with the place region live at that moment', () => {
+    vi.stubGlobal('matchMedia', (q: string) => ({ matches: q.includes('max-width'), addEventListener() {}, removeEventListener() {} }));
+    const seen: boolean[] = [];
+    const real = HTMLElement.prototype.focus;
+    HTMLElement.prototype.focus = function (this: HTMLElement, o?: FocusOptions) {
+      if (this.id === 'col-open') seen.push(!!this.closest('[inert]'));
+      real.call(this, o);
+    };
+    function Phone({ k, dir }: { k: string; dir: SubpageDirection }) {
+      return (
+        <SubpageTransition paneKey={k} direction={dir}>
+          <PlatformShell
+            detail={k !== 'list'}
+            place={<SubpageLane from="left" focus={false}>{k === 'list' ? <button id="col-open">open</button> : <p>facts</p>}</SubpageLane>}
+          >
+            <SubpageLane>{k === 'list' ? <h1>All</h1> : <h1>Detail</h1>}</SubpageLane>
+          </PlatformShell>
+        </SubpageTransition>
+      );
+    }
+    try {
+      const { rerender } = render(<Phone k="list" dir="in" />);
+      document.getElementById('col-open')!.focus();
+      seen.length = 0;
+      rerender(<Phone k="a" dir="in" />);
+      act(() => void vi.advanceTimersByTime(100));
+      rerender(<Phone k="list" dir="out" />);
+      expect(seen.at(-1)).toBe(false);
+      expect(document.activeElement?.id).toBe('col-open');
+      expect(document.querySelector('section[aria-label="Places"]')!.hasAttribute('inert')).toBe(false);
+      act(() => void vi.advanceTimersByTime(500));
+      expect(document.querySelector('[inert]')).toBeNull();
+    } finally {
+      HTMLElement.prototype.focus = real;
+    }
   });
 
   it('clears timers on unmount', () => {
