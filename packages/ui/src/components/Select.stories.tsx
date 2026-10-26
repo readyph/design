@@ -58,3 +58,15 @@ export const Controlled: Story = {
 export const OpensUpward: Story = {
   decorators: [(Story) => <div className="flex h-72 w-64 items-end"><Story /></div>],
 };
+
+export const LongOptions: Story = {
+  args: {
+    'aria-label': 'Connection',
+    placeholder: 'Choose a connection',
+    options: [
+      { value: 'short', label: 'Main Stockroom' },
+      { value: 'long', label: 'Read stock from Pasig Loyalty Program for Fieldwork Rewards and Seasonal Offers' },
+    ],
+  },
+  parameters: { viewport: { defaultViewport: 'mobile1' } },
+};

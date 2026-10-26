@@ -35,6 +35,8 @@ export interface SelectProps {
   size?: 'sm' | 'md';
   invalid?: boolean;
   disabled?: boolean;
+  /** Long labels wrap inside the button instead of being cut off (the button grows to fit; Try it, C30). The list always wraps. */
+  wrap?: boolean;
   /** Name for the hidden input that carries the value in a form. */
   name?: string;
   id?: string;
@@ -68,6 +70,7 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
     size = 'md',
     invalid,
     disabled,
+    wrap = false,
     name,
     id,
     className,
@@ -252,12 +255,14 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
           'flex w-full items-center gap-2 rounded-control border bg-surface px-3 text-left text-body text-text transition-colors',
           'hover:bg-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
           'disabled:cursor-not-allowed disabled:bg-raised disabled:text-faint',
-          size === 'sm' ? 'h-[var(--ctl-dropdown-sm)]' : 'h-[var(--ctl-dropdown)]',
+          wrap
+            ? cn('py-2', size === 'sm' ? 'min-h-[var(--ctl-dropdown-sm)]' : 'min-h-[var(--ctl-dropdown)]')
+            : size === 'sm' ? 'h-[var(--ctl-dropdown-sm)]' : 'h-[var(--ctl-dropdown)]',
           invalid ? 'border-bad' : 'border-control',
         )}
       >
         {lead ? <span className="inline-flex shrink-0 items-center text-muted">{lead}</span> : null}
-        <span className={cn('min-w-0 flex-1 truncate', !selected && 'text-muted')}>
+        <span className={cn('min-w-0 flex-1', wrap ? '[overflow-wrap:anywhere]' : 'truncate', !selected && 'text-muted')}>
           {selected ? selected.label : placeholder}
         </span>
         <CaretDown
@@ -276,7 +281,7 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
           aria-labelledby={ariaLabelledBy}
           aria-label={ariaLabelledBy ? undefined : ariaLabel}
           className={cn(
-            'absolute left-0 z-50 max-h-[264px] min-w-full overflow-y-auto rounded-card border border-border bg-surface p-1 shadow-float',
+            'absolute left-0 z-50 max-h-[264px] w-max min-w-full max-w-[max(100%,min(32rem,calc(100vw-2rem)))] overflow-y-auto rounded-card border border-border bg-surface p-1 shadow-float',
             up ? 'bottom-full mb-1' : 'top-full mt-1',
           )}
         >
@@ -301,7 +306,7 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
               )}
             >
               {o.icon ? <span className="inline-flex shrink-0 items-center text-muted">{o.icon}</span> : null}
-              <span className="min-w-0 flex-1 truncate">{o.label}</span>
+              <span className="min-w-0 flex-1 py-1 [overflow-wrap:anywhere]">{o.label}</span>
               {o.meta ? <span className="shrink-0 text-small text-muted">{o.meta}</span> : null}
               <span className="inline-flex w-4 shrink-0 justify-center text-accent">
                 {o.value === current ? <Check size={14} weight="bold" aria-hidden /> : null}
