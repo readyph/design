@@ -29,8 +29,6 @@ export interface ConfirmDialogProps {
   onCancel?: () => void;
   /** Keep the dialog open and show a spinner (async confirm). Cancel, Esc and the backdrop are ignored meanwhile. */
   loading?: boolean;
-  /** After the dialog closes, before focus returns to the opener. `event.preventDefault()` skips the return so the page can place focus itself. */
-  onCloseAutoFocus?: (event: Event) => void;
   /** Extra content under the consequence line. */
   children?: ReactNode;
 }
@@ -54,7 +52,6 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
   loading = false,
-  onCloseAutoFocus,
   children,
 }: ConfirmDialogProps) {
   const cancelRef = useRef<HTMLButtonElement>(null);
@@ -78,7 +75,6 @@ export function ConfirmDialog({
       size="confirm"
       hideClose
       initialFocus={cancelRef}
-      onCloseAutoFocus={onCloseAutoFocus}
       title={title}
       footer={
         <>
