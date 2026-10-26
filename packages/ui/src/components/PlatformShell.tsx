@@ -135,6 +135,7 @@ export function PlatformShell({
       )}
 
       <main
+        data-shell="sheet"
         aria-label={sheetLabel}
         className={cn(
           '@container/sheet row-start-1 flex min-h-0 min-w-0 flex-col overflow-hidden border border-border bg-surface rounded-sheet',
@@ -172,6 +173,7 @@ export function PlatformShell({
 
       {hasPhoneNav && (
         <nav
+          data-shell="phone-nav"
           aria-label={phoneNavLabel}
           className={cn(
             'hidden',
