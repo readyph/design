@@ -4,7 +4,8 @@
  *
  * Focus counts as lost when the active element (read from the root `container` lives in, so it also
  * works inside a shadow root) is any of:
- *  - `null`, `body` or the document element (the focused control was removed);
+ *  - `null`, `body` or the document element (for a container in a shadow root: focus outside the root counts
+ *    as the user's own, so it is left alone, unless it is on body) (the focused control was removed);
  *  - not connected to the document any more;
  *  - disabled (`:disabled`) or inside an `[inert]` subtree (Chrome keeps focus on such a control, but it is dead);
  *  - still inside `container` (e.g. the card's own button that was pressed).
@@ -19,7 +20,10 @@ export function focusIfLost(container: Element | null, target: HTMLElement | nul
   if (!target) return false;
   const root = (container?.getRootNode() ?? target.getRootNode()) as Document | ShadowRoot;
   const doc = target.ownerDocument;
-  const a: Element | null = 'activeElement' in root ? root.activeElement : doc.activeElement;
+  // A ShadowRoot's activeElement is null whenever focus is outside that root (light DOM, another shadow
+  // root): then the document's activeElement (the outside element or its host) says where focus really is.
+  const active = () => root.activeElement ?? doc.activeElement;
+  const a = active();
   const dead =
     !a ||
     a === doc.body ||
@@ -30,5 +34,5 @@ export function focusIfLost(container: Element | null, target: HTMLElement | nul
     (container?.contains(a) ?? false);
   if (!dead) return false;
   target.focus(options);
-  return ('activeElement' in root ? root.activeElement : doc.activeElement) === target;
+  return active() === target;
 }
