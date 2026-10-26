@@ -1,6 +1,6 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
-  ArrowRight, ArrowSquareOut, BookOpen, Brain, Buildings, ChatCircle, House, IdentificationCard, LinkBreak, Plugs, SlidersHorizontal, ListChecks, LockSimple, Plus, PlusSquare,
+  ArrowRight, ArrowSquareOut, Brain, Buildings, ChatCircle, IdentificationCard, LinkBreak, Plugs, SlidersHorizontal, ListChecks, LockSimple, Plus,
   ShieldCheck, UploadSimple, UserPlus, Users, X,
 } from '@phosphor-icons/react';
 import { AccountMenu } from '../components/AccountMenu';
@@ -15,14 +15,12 @@ import { DataList } from '../components/DataList';
 import { ErrorBlock } from '../components/ErrorBlock';
 import { Fact, FactsLine } from '../components/FactsLine';
 import { IconButton } from '../components/IconButton';
-import { IconRailContent, IconRailFoot, IconRailItem, IconRailMark, IconRailSpacer } from '../components/IconRail';
 import { LedaMark } from '../components/Leda';
 import { LedaNote } from '../components/LedaNote';
 import { Modal } from '../components/Modal';
 import { OnboardingStepper, type StepperStep } from '../components/OnboardingStepper';
 import { OpeningHours, type OpeningHoursValue } from '../components/OpeningHours';
 import { PlatformLogo } from '../components/PlatformLogo';
-import { PlatformShell } from '../components/PlatformShell';
 import { Select } from '../components/Select';
 import { SheetBar } from '../components/SheetBar';
 import { Skeleton } from '../components/Skeleton';
@@ -35,6 +33,7 @@ import { TryIt, type TryItAnswer } from '../components/TryIt';
 import { Toaster } from '../components/toast/Toaster';
 import { toast } from '../components/toast/toastStore';
 import { cn } from '../utils/cn';
+import { PortalFrame } from './PortalFrame';
 import { focusIfLost } from '../utils/focusIfLost';
 import { useMatchMedia } from '../utils/useMatchMedia';
 import {
@@ -972,21 +971,6 @@ export function PlatformPage({ platformId = 'autoworks', tab: tab0 = 'general', 
   const ask = <AskLedaBar variant="bar" scope={p ? shortName({ label: nameOf(p.id) }) : 'your platforms'} onOpen={() => toast({ description: 'Leda is ready.', leda: true })} />;
   const crumbs = [{ label: 'All platforms', href: '#platforms' }, ...(ob ? [{ label: 'Add a platform' }] : []), { label: p ? nameOf(p.id) : ob ? general.label || kind.name : 'Platform' }];
 
-  const rail = (
-    <IconRailContent>
-      <IconRailMark href="#home" />
-      <IconRailItem icon={House} label="Home" href="#home" />
-      <IconRailItem icon={PlusSquare} label="Platforms" href="#platforms" current />
-      <IconRailItem icon={Users} label="Team" href="#team" />
-      <IconRailItem icon={BookOpen} label="Memory" href="#memory" />
-      <IconRailItem icon={Plus} label="Add a platform" onClick={() => toast({ description: 'Choose a platform to add.' })} className="mt-2" />
-      <IconRailSpacer />
-      <IconRailFoot>
-        <AccountMenu name="Maria Santos" email="maria@santosauto.ph" role="Owner" applyToDocument={false} />
-      </IconRailFoot>
-    </IconRailContent>
-  );
-
   const obTitle = p ? `Set up ${nameOf(p.id)}` : `Add ${/^[AEIOU]/.test(kind.name) ? 'an' : 'a'} ${kind.name}`;
   const lastStep = ob ? ob.step === SECTIONS.length - 1 : false;
   const content = (() => {
@@ -1050,10 +1034,13 @@ export function PlatformPage({ platformId = 'autoworks', tab: tab0 = 'general', 
 
   return (
     <>
-      <PlatformShell
+      <PortalFrame
+        current="platforms"
+        pageName="Platform"
+        account={{ name: 'Maria Santos', email: 'maria@santosauto.ph', role: 'Owner' }}
+        onAddPlatform={() => toast({ description: 'Choose a platform to add.' })}
         placeLabel="This platform on your map"
         sheetLabel={p ? nameOf(p.id) : 'Platform'}
-        rail={rail}
         detail
         place={place}
         topBar={
@@ -1064,23 +1051,11 @@ export function PlatformPage({ platformId = 'autoworks', tab: tab0 = 'general', 
             <AccountMenu name="Maria Santos" email="maria@santosauto.ph" role="Owner" applyToDocument={false} />
           </>
         }
-        phoneNav={
-          <ul className="m-0 flex w-full list-none p-0">
-            {([[House, 'Home', '#home', false], [PlusSquare, 'Platforms', '#platforms', true], [Users, 'Team', '#team', false], [BookOpen, 'Memory', '#memory', false]] as const).map(([Ic, label, href, current]) => (
-              <li key={label} className="flex-1">
-                <a href={href} aria-current={current ? 'page' : undefined} className="flex h-full min-h-11 flex-col items-center justify-center gap-0.5 text-small text-muted aria-[current=page]:font-medium aria-[current=page]:text-text">
-                  <Ic aria-hidden size={20} />
-                  {label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        }
         sheetBar={<SheetBar actions={ask}><Breadcrumbs variant="sheet" aria-label="You are here" items={crumbs} /></SheetBar>}
         status={<StatusBar platforms={platforms.map((x) => ({ id: x.id, name: shortName({ label: nameOf(x.id) }), health: healthTone[x.isNew ? (needsLink(x) ? 'setup' : 'setting-up') : x.health] === 'ok' ? 'ok' : (healthTone[x.isNew ? (needsLink(x) ? 'setup' : 'setting-up') : x.health] as 'warn'), healthText: x.isNew || x.health !== 'ok' ? statusLabel(x).split(' since')[0].toLowerCase() : undefined, selected: x.id === p?.id, href: `#${x.id}` }))} people={{ count: 14 }} leda={{ used: 412, max: 1000 }} plan="Business" updatedAt="9:12 AM" />}
       >
         {content}
-      </PlatformShell>
+      </PortalFrame>
       <Toaster />
 
       <TryIt
