@@ -47,3 +47,4 @@ export * from './components/RevenueChart';
 export * from './components/TopicLibrary';
 export { focusIfLost } from './utils/focusIfLost';
 export * from './components/OpeningHours';
+export * from './components/Chat';
