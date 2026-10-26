@@ -74,6 +74,8 @@ ${darkExplicit}
   /* html stays at the browser default (16px) so Tailwind's rem scale is px-accurate (h-8 = 32px); the 14px body text size lives on body (RDY-303). */
   html { font-size: 100%; background: var(--frame); -webkit-font-smoothing: antialiased; }
   body { margin: 0; font-family: var(--font); font-size: var(--fs-body); line-height: var(--lh-body); background: var(--frame); color: var(--text); font-variant-numeric: tabular-nums; }
+  /* Content drawn straight on --frame (the place column) gets the frame-specific row rule; set data-surface="frame" on its root. */
+  [data-surface="frame"] { --rule: var(--frame-rule); }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   code, kbd, samp { font-family: var(--mono); font-size: 13px; }
   /* Reduced motion is handled per component (spec 4.7 keeps the 140ms fade and the halo opacity fade). */
