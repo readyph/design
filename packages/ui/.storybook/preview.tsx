@@ -50,6 +50,24 @@ const ThemedDocsContainer = (props: ComponentProps<typeof DocsContainer>) => {
   return <DocsContainer {...props} theme={dark ? themes.dark : themes.light} />;
 };
 
+/**
+ * Toolbar viewport menu (RDY-355). Keeps Storybook's three built-ins under their own ids (`mobile1`, `mobile2`, `tablet`:
+ * stories force them with `parameters.viewport.defaultViewport`) and adds the shell breakpoint boundaries and the
+ * desktop sizes. Component stories stay on "Responsive"; the five Prototypes pages open on `desktop` (their own files).
+ */
+const viewports = {
+  mobile1: { name: 'Small mobile (320 x 568)', styles: { width: '320px', height: '568px' }, type: 'mobile' },
+  mobile2: { name: 'Large mobile (414 x 896)', styles: { width: '414px', height: '896px' }, type: 'mobile' },
+  tablet: { name: 'Tablet (834 x 1112)', styles: { width: '834px', height: '1112px' }, type: 'tablet' },
+  bp320: { name: 'Shell 320 (narrowest)', styles: { width: '320px', height: '640px' }, type: 'mobile' },
+  bp375: { name: 'Shell 375 (phone)', styles: { width: '375px', height: '812px' }, type: 'mobile' },
+  bp640: { name: 'Shell 640 (last phone width)', styles: { width: '640px', height: '900px' }, type: 'tablet' },
+  bp641: { name: 'Shell 641 (first desktop width)', styles: { width: '641px', height: '900px' }, type: 'tablet' },
+  laptop: { name: 'Laptop (1280 x 800)', styles: { width: '1280px', height: '800px' }, type: 'desktop' },
+  desktop: { name: 'Desktop (1440 x 900)', styles: { width: '1440px', height: '900px' }, type: 'desktop' },
+  largeDesktop: { name: 'Large desktop (1920 x 1080)', styles: { width: '1920px', height: '1080px' }, type: 'desktop' },
+};
+
 const preview: Preview = {
   decorators: [withTheme],
   initialGlobals: { theme: 'system' },
@@ -70,6 +88,10 @@ const preview: Preview = {
   },
   parameters: {
     backgrounds: { disable: true },
+    // RDY-355: axe no longer runs on every story render in the browser (it was the slowest part of opening a story). It
+    // runs from the Accessibility panel ("Run test") and, for CI, from the vitest axe tests.
+    a11y: { manual: true },
+    viewport: { viewports },
     docs: { container: ThemedDocsContainer },
     options: {
       storySort: {

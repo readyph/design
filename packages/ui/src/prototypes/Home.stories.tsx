@@ -12,7 +12,7 @@ import { Home } from './Home';
 const meta: Meta<typeof Home> = {
   title: 'Prototypes/Home',
   component: Home,
-  parameters: { layout: 'fullscreen' },
+  parameters: { layout: 'fullscreen', viewport: { defaultViewport: 'desktop' } },
   argTypes: {
     set: { control: 'inline-radio', options: ['live', 'few', 'many'] },
     state: { control: 'inline-radio', options: ['live', 'quiet', 'loading', 'error'] },
