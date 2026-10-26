@@ -106,7 +106,7 @@ export interface QueueProps {
   onAction?: (id: string) => void;
   /** The `s` key on the cursor row. Pick the snooze time in the caller (default "later today"). */
   onSnooze?: (id: string) => void;
-  /** Pointer or cursor is on an item (or leaves it with `null`), e.g. to light its building on the map. */
+  /** The pointer enters an item or leaves it (`null`), e.g. to light its building on the map. Hover only (handover C19); the j / k cursor does not fire it. To follow the keyboard cursor on the map, use `onCursorChange`. */
   onItemHover?: (id: string | null) => void;
   /** Cursor row (controlled). */
   cursorId?: string | null;
@@ -210,7 +210,7 @@ function OpenItem({ item, current, onOpen, onAction, onHover, moveCursor }: { it
       </p>
       <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-2">
         {item.detail ? <p className="min-w-0 flex-1 basis-40 text-ui text-muted [overflow-wrap:anywhere]">{item.detail}</p> : <span className="flex-1" />}
-        <Button variant="secondary" aria-describedby={titleId} onClick={() => onAction?.(item.id)} className="ml-auto max-w-full">
+        <Button variant="secondary" aria-describedby={titleId} onClick={() => onAction?.(item.id)} className="ml-auto h-auto min-h-[var(--ctl-button)] max-w-full whitespace-normal py-1 text-left [overflow-wrap:anywhere]">
           {item.action}
         </Button>
       </div>
@@ -316,8 +316,7 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
   const activeFilter = filter !== undefined ? filter : innerFilter;
   const [open, setOpen] = useState<Set<QueueGroupKey>>(() => new Set(defaultOpenGroups));
   const [more, setMore] = useState(false);
-  const [note, setNote] = useState('');
-  const { current, moveCursor, announce } = useListCursor(rootRef, { shortcuts, cursorId, defaultCursorId, onCursorChange });
+    const { current, moveCursor, announce, say } = useListCursor(rootRef, { shortcuts, cursorId, defaultCursorId, onCursorChange });
 
   const setFilter = (id: string | null) => {
     if (filter === undefined) setInnerFilter(id);
@@ -363,6 +362,8 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
   }, [measure]);
 
   // `s` snoozes the cursor row. Same guards as j / k: never while typing, never under a dialog or menu.
+  const sayRef = useRef(say);
+  sayRef.current = say;
   const snoozeRef = useRef({ onSnooze, current, vItems });
   snoozeRef.current = { onSnooze, current, vItems };
   useEffect(() => {
@@ -381,11 +382,23 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
       if (!item || !s.onSnooze) return;
       e.preventDefault();
       s.onSnooze(item.id);
-      setNote(`Snooze asked for ${item.title}`);
+      sayRef.current(`Snooze asked for ${item.title}`);
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [shortcuts]);
+
+  // When the cursor row leaves the open list (snoozed, done), the cursor takes the item now at that index.
+  const prevOpen = useRef<{ ids: string[]; filter: string | null }>({ ids: vItems.map((i) => i.id), filter: activeFilter });
+  useEffect(() => {
+    const prev = prevOpen.current;
+    const ids = vItems.map((i) => i.id);
+    prevOpen.current = { ids, filter: activeFilter };
+    if (prev.filter !== activeFilter || current == null || ids.includes(current)) return;
+    const at = prev.ids.indexOf(current);
+    if (at < 0 || !ids.length) return;
+    moveCursor(ids[Math.min(at, ids.length - 1)]);
+  }, [vItems.map((i) => i.id).join('|'), activeFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggle = (k: QueueGroupKey) =>
     setOpen((prev) => {
@@ -435,7 +448,7 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <Title className="m-0 text-title text-text">{title}</Title>
             {!loading && count > 0 ? (
-              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-small font-medium tabular-nums text-accent-ink">
+              <span className="inline-flex h-6 min-w-[26px] items-center justify-center rounded-control bg-accent px-1.5 text-body font-semibold tabular-nums text-accent-ink">
                 {count}
                 <span className="sr-only"> open</span>
               </span>
@@ -492,7 +505,7 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
           aria-busy={loading || undefined}
           data-more={more ? 'true' : undefined}
           className={cn(
-            'min-h-0 flex-1 overflow-y-auto overscroll-contain scroll-pb-8 px-0 py-1',
+            'min-h-0 flex-initial overflow-y-auto overscroll-contain scroll-pb-8 px-0 py-1',
             'data-[more=true]:[mask-image:linear-gradient(to_bottom,#000_calc(100%-28px),transparent)]',
           )}
         >
@@ -544,7 +557,7 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
         </div>
 
         {hasPinned ? (
-          <div className="flex max-h-[45%] shrink-0 flex-col gap-0.5 overflow-y-auto overscroll-contain pt-1">
+          <div className="flex max-h-[45%] shrink-0 flex-col gap-0.5 overflow-y-auto overscroll-contain border-t border-rule pb-2.5 pt-1">
             {vWatching.length ? (
               <PinnedGroup kind="watching" count={vWatching.length} level={pinnedLevel} open={open.has('watching')} onToggle={() => toggle('watching')}>
                 <ul className="m-0 flex list-none flex-col gap-1 p-0 pb-1">
@@ -594,7 +607,7 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
 
         {shortcuts ? (
           <span role="status" aria-live="polite" className="sr-only">
-            {note && !announce ? note : announce}
+            {announce}
           </span>
         ) : null}
       </div>

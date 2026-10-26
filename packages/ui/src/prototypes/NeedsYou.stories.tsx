@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Breadcrumbs } from '../components/Breadcrumbs';
 import { Button } from '../components/Button';
 import { EmptyState } from '../components/EmptyState';
+import { PlatformShell } from '../components/PlatformShell';
 import { Queue, type QueueDoneItem, type QueueItem, type QueueSnoozedItem } from '../components/Queue';
 import { allPlatforms, done as doneSeed, items as itemSeed, snoozed as snoozedSeed, watching } from '../components/Queue.data';
 import { PlatformLogo } from '../components/PlatformLogo';
@@ -76,3 +77,15 @@ function Home({ phone = false }: { phone?: boolean }) {
 type Story = StoryObj;
 export const Desktop: Story = { render: () => <Home /> };
 export const Phone: Story = { render: () => <Home phone />, parameters: { viewport: { defaultViewport: 'mobile1' } } };
+
+/** The queue in the real PlatformShell place slot (place width follows the viewport: 460 / 400 / 380 / 320; phone below 640). */
+export const InShell: Story = {
+  parameters: { layout: 'fullscreen' },
+  render: () => (
+    <div className="h-screen">
+      <PlatformShell placeLabel="Place" place={<Queue items={itemSeed} watching={watching} snoozed={snoozedSeed} done={doneSeed} platforms={allPlatforms} />}>
+        <EmptyState title="Pick something from Needs you" description="Press j / k to move, Enter to open, s to snooze." />
+      </PlatformShell>
+    </div>
+  ),
+};

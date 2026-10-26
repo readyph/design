@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { useState } from 'react';
 import { Queue } from './Queue';
 import { allPlatforms, done, items, snoozed, watching } from './Queue.data';
 
@@ -106,5 +107,35 @@ describe('Queue', () => {
   it('marks urgent due times for screen readers', () => {
     render(<Queue {...base} />);
     expect(screen.getByText('Urgent, due')).toBeTruthy();
+  });
+
+  it('announces the latest message: snooze after j / k is heard', () => {
+    render(<Queue {...base} onSnooze={() => {}} />);
+    fireEvent.keyDown(document, { key: 'j' });
+    expect(screen.getByRole('status').textContent).toMatch(/1 of 4/);
+    fireEvent.keyDown(document, { key: 's' });
+    expect(screen.getByRole('status').textContent).toBe('Snooze asked for Alternator for the 11:00 Vios');
+  });
+
+  it('after a snooze the cursor takes the next item, so j goes one further', () => {
+    function Host() {
+      const [open, setOpen] = useState(items);
+      return <Queue {...base} items={open} onSnooze={(id) => setOpen(open.filter((i) => i.id !== id))} />;
+    }
+    render(<Host />);
+    fireEvent.keyDown(document, { key: 'j' });
+    fireEvent.keyDown(document, { key: 'j' });
+    fireEvent.keyDown(document, { key: 's' });
+    const cur = () => document.querySelector('[data-current="true"]')?.getAttribute('data-row-id');
+    expect(cur()).toBe('q3');
+    fireEvent.keyDown(document, { key: 'j' });
+    expect(cur()).toBe('q4');
+  });
+
+  it('lets a long unbreakable action label wrap inside the row', () => {
+    render(<Queue {...base} items={[{ ...items[0], action: 'Approve-the-replacement-order-now' }]} />);
+    const b = screen.getByRole('button', { name: 'Approve-the-replacement-order-now' });
+    expect(b.className).toContain('whitespace-normal');
+    expect(b.className).toContain('max-w-full');
   });
 });

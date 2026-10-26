@@ -49,6 +49,10 @@ export const LongTextNarrow320: Story = {
     ],
   },
 };
+export const LongActionLabel320: Story = {
+  decorators: col(320, 560),
+  args: { shortcuts: false, items: [{ ...items[0], action: 'Approve-the-replacement-order-for-Cubao-immediately' }, { ...items[1], action: 'Confirm purchase order and notify the supplier today' }] },
+};
 export const Phone390: Story = { decorators: col(390, 720), args: { shortcuts: false, items: items.slice(0, 4), defaultOpenGroups: ['done'] } };
 
 /** Live: j / k / Enter / s work on the page; Snooze and the action move items between groups. */
