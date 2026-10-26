@@ -1,0 +1,142 @@
+// @vitest-environment jsdom
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { createRef } from 'react';
+import { TownMap, placeLabels, type TownMapHandle } from './TownMap';
+import { eight, eightLinks, three, threeLinks, longName, cafe, hq, stockroom } from './TownMap.data';
+
+afterEach(cleanup);
+
+describe('TownMap', () => {
+  it('is a named group with a list of platform buttons and a hidden drawing', () => {
+    const { container } = render(<TownMap platforms={three} links={threeLinks} label="Map of 3 platforms and HQ" />);
+    const g = screen.getByRole('group', { name: 'Map of 3 platforms and HQ' });
+    const list = within(g).getByRole('list', { name: 'Platforms' });
+    expect(within(list).getAllByRole('button')).toHaveLength(4);
+    expect(container.querySelector('svg')!.getAttribute('aria-hidden')).toBe('true');
+    expect(screen.getByRole('button', { name: 'Auto Works Quezon City, Repair shop, slow' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'HQ, your team and plan, 1 need you' })).toBeTruthy();
+  });
+
+  it('says link status in words, not colour', () => {
+    render(<TownMap platforms={three} links={threeLinks} />);
+    const l = screen.getByRole('list', { name: 'Links between platforms' });
+    expect(within(l).getByText('Main Stockroom to Auto Works Quezon City, slow')).toBeTruthy();
+    expect(within(l).getByText('Café POS to HQ, broken')).toBeTruthy();
+  });
+
+  it('draws a building per kind, a generic office with the kind on its sign, and lots', async () => {
+    const { container } = render(<TownMap platforms={[stockroom, { ...cafe, mapType: undefined, kind: 'Books' }, hq, null]} links={[]} />);
+    await new Promise((r) => requestAnimationFrame(() => r(null)));
+    const objs = container.querySelectorAll('g.plot-obj');
+    expect(objs.length).toBeGreaterThan(10);
+    expect(container.innerHTML).toContain('>BOOKS<');
+    expect(container.innerHTML).toContain('light-dark(');
+    expect(container.innerHTML).toContain('var(--map-top)');
+  });
+
+  it('selects by click and Escape clears; selected is aria-pressed', () => {
+    const onSelect = vi.fn();
+    const { rerender } = render(<TownMap platforms={three} onSelect={onSelect} />);
+    fireEvent.click(screen.getByRole('button', { name: /^Café POS/ }));
+    expect(onSelect).toHaveBeenCalledWith('cafe');
+    rerender(<TownMap platforms={three} selected="cafe" onSelect={onSelect} />);
+    expect(screen.getByRole('button', { name: /^Café POS/ }).getAttribute('aria-pressed')).toBe('true');
+    fireEvent.keyDown(screen.getByRole('button', { name: /^Café POS/ }), { key: 'Escape' });
+    expect(onSelect).toHaveBeenLastCalledWith(null);
+  });
+
+  it('ignores selection while loading and hides controls', () => {
+    const onSelect = vi.fn();
+    render(<TownMap platforms={three} loading onSelect={onSelect} />);
+    fireEvent.click(screen.getByRole('button', { name: /^Café POS/ }));
+    expect(onSelect).not.toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: 'Rotate left' })).toBeNull();
+    expect(screen.getByRole('group', { name: 'Platform map' }).getAttribute('aria-busy')).toBe('true');
+  });
+
+  it('reports hover and keyboard focus the same way', () => {
+    const onHover = vi.fn();
+    render(<TownMap platforms={three} onHover={onHover} />);
+    const b = screen.getByRole('button', { name: /^Café POS/ });
+    fireEvent.mouseEnter(b);
+    fireEvent.mouseLeave(b);
+    fireEvent.focus(b);
+    fireEvent.blur(b);
+    expect(onHover.mock.calls.map((c) => c[0])).toEqual(['cafe', null, 'cafe', null]);
+  });
+
+  it('rotate and zoom are real buttons reachable by keyboard and call the scene without throwing', () => {
+    const ref = createRef<TownMapHandle>();
+    render(<TownMap ref={ref} platforms={three} links={threeLinks} />);
+    for (const n of ['Rotate left', 'Rotate right', 'Zoom out', 'Zoom in']) fireEvent.click(screen.getByRole('button', { name: n }));
+    expect(ref.current!.zoom(1)).toBeGreaterThan(1);
+    expect(ref.current!.state()).toEqual({ selected: null, focus: null, highlight: null });
+    expect(ref.current!.runVan('stockroom', 'autoworks')).toBe(true);
+    expect(ref.current!.runVan('nope', 'autoworks')).toBe(false);
+    expect(() => ref.current!.setDark(true)).not.toThrow();
+  });
+
+  it('state() reflects selected, focus and highlight props', () => {
+    const ref = createRef<TownMapHandle>();
+    render(<TownMap ref={ref} platforms={three} links={threeLinks} selected="cafe" highlight={['cafe', 'hq']} focus="hq" />);
+    expect(ref.current!.state()).toEqual({ selected: 'cafe', focus: 'hq', highlight: ['cafe', 'hq'] });
+  });
+
+  it('shows the error notice with Retry', () => {
+    const onRetry = vi.fn();
+    render(<TownMap platforms={three} error onRetry={onRetry} />);
+    fireEvent.click(within(screen.getByRole('alert')).getByRole('button', { name: 'Retry' }));
+    expect(onRetry).toHaveBeenCalled();
+  });
+
+  it('cancels its frames and observers on unmount', () => {
+    const cancel = vi.spyOn(window, 'cancelAnimationFrame');
+    const { unmount } = render(<TownMap platforms={eight} links={eightLinks} />);
+    unmount();
+    expect(cancel).toBeDefined();
+    cancel.mockRestore();
+  });
+
+  it('a caller className cannot change the map height or overflow', () => {
+    const { container } = render(<TownMap platforms={three} className="h-4 overflow-visible" />);
+    const inner = container.querySelector('.h-map-h')!;
+    expect(inner.className).toContain('overflow-hidden');
+    expect(inner.className).not.toContain('h-4');
+  });
+
+  it('long names are truncated in the label, full in the accessible name', () => {
+    render(<TownMap platforms={[longName, hq]} />);
+    expect(screen.getByRole('button', { name: new RegExp('^' + longName.name) })).toBeTruthy();
+  });
+});
+
+describe('placeLabels (collision pass)', () => {
+  const mk = (n: number, w = 120, spread = 40) =>
+    Array.from({ length: n }, (_, i) => ({ id: 'p' + i, ax: 60 + (i % 3) * spread + (i % 2) * 6, ay: 120 + Math.floor(i / 3) * 12, w, h: 20, priority: i === 0 ? 4 : 0 }));
+  const overlaps = (p: ReturnType<typeof placeLabels>) => {
+    let n = 0;
+    for (let i = 0; i < p.length; i++)
+      for (let j = i + 1; j < p.length; j++) if (p[i].x < p[j].x + p[j].w && p[j].x < p[i].x + p[i].w && p[i].y < p[j].y + p[j].h && p[j].y < p[i].y + p[i].h) n++;
+    return n;
+  };
+
+  it.each([[2, 460, 326], [3, 460, 326], [8, 460, 326], [8, 1000, 380]])('%i labels in %ix%i: none overlap, all inside with 8px margin', (n, W, H) => {
+    const p = placeLabels(mk(n, 110, W / 5), W, H);
+    expect(overlaps(p)).toBe(0);
+    for (const l of p) {
+      expect(l.x).toBeGreaterThanOrEqual(8);
+      expect(l.x + l.w).toBeLessThanOrEqual(W - 8);
+      expect(l.y).toBeGreaterThanOrEqual(4);
+      expect(l.y + l.h).toBeLessThanOrEqual(H - 4);
+    }
+  });
+
+  it('keeps long labels inside a phone strip and gives the selected label its spot first', () => {
+    const boxes = mk(3, 160, 30);
+    const p = placeLabels(boxes, 375, 160);
+    expect(p.every((l) => l.x >= 8 && l.x + l.w <= 375 - 8)).toBe(true);
+    const first = p.find((l) => l.id === 'p0')!;
+    expect(first.overlap).toBe(0);
+  });
+});

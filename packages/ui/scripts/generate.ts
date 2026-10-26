@@ -118,10 +118,16 @@ const preset = {
       keyframes: {
         'row-flash': { '0%, 40%': { backgroundColor: v('accent-tint') }, '100%': { backgroundColor: 'transparent' } },
         'tab-fade': { from: { opacity: '0' }, to: { opacity: '1' } },
+        'town-flow-a': { to: { strokeDashoffset: '-27' } },
+        'town-flow-b': { from: { strokeDashoffset: '13' }, to: { strokeDashoffset: '40' } },
       },
       animation: {
         'row-flash': 'row-flash var(--dur-row-flash) ease-out 1',
         'tab-fade': 'tab-fade var(--dur-tab) linear',
+        'town-flow-a': 'town-flow-a 1.6s linear infinite',
+        'town-flow-b': 'town-flow-b 1.6s linear infinite',
+        'town-flow-a-slow': 'town-flow-a 5s linear infinite',
+        'town-flow-b-slow': 'town-flow-b 5s linear infinite',
       },
       transitionTimingFunction: { subpage: v('ease-subpage'), halo: v('ease-halo') },
       transitionDuration: { hover: v('dur-hover'), 'hover-slow': v('dur-hover-slow'), tab: v('dur-tab'), 'subpage-in': v('dur-subpage-in'), 'subpage-out': v('dur-subpage-out') },
