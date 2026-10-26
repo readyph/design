@@ -1,10 +1,12 @@
-import type { ReactNode } from 'react';
+import { useEffect, useState, type MouseEvent, type ReactNode } from 'react';
 import { BookOpen, FileText, Graph, House, List, Plus, Users, type Icon } from '@phosphor-icons/react';
 import { AccountMenu } from '../components/AccountMenu';
 import { IconRailContent, IconRailFoot, IconRailItem, IconRailMark, IconRailSpacer, CountBadge } from '../components/IconRail';
 import { Menu } from '../components/Menu';
 import { PlatformShell, type PlatformShellProps } from '../components/PlatformShell';
 import { cn, focusRing } from '../utils/cn';
+import { focusIfLost } from '../utils/focusIfLost';
+import { arrivedByNav, clearHandoff, type Dest } from './protoNav';
 
 /**
  * Portal frame (prototype composition, NOT exported from the package index): the one chrome every Portal
@@ -22,6 +24,7 @@ const PAGES: { id: PortalPage; label: string; icon: Icon; href: string }[] = [
   { id: 'team', label: 'Team', icon: Users, href: '#team' },
   { id: 'memory', label: 'Memory', icon: BookOpen, href: '#memory' },
 ];
+const DEST: Record<PortalPage, Dest> = { home: { to: 'home' }, platforms: { to: 'platforms' }, reports: { to: 'reports' }, team: { to: 'team' }, memory: { to: 'memory' } };
 const byId = (id: PortalPage) => PAGES.find((p) => p.id === id)!;
 /** Rail order: Memory before Team. */
 const RAIL = ['home', 'platforms', 'reports', 'memory', 'team'].map((id) => byId(id as PortalPage));
@@ -41,6 +44,12 @@ export interface PortalFrameProps extends Omit<PlatformShellProps, 'rail' | 'rai
   teamCount?: number;
   /** "Add a platform" in the rail and under More. Omit to hide it. */
   onAddPlatform?: () => void;
+  /**
+   * Called with the destination when a rail item, phone tab, More entry, the ReadyPH mark or an account menu entry is chosen
+   * (RDY-357, prototype navigation). Optional and additive: omitted, the links keep their plain `#` hrefs and nothing else changes.
+   * A plain click on a link calls it instead of following the href; Ctrl/Cmd/Shift-click and middle-click keep the href.
+   */
+  onNavigate?: (dest: Dest) => void;
   /** Signed-in person for the account menu. */
   account?: { name: string; email: string; role: string };
 }
@@ -52,15 +61,24 @@ const tabClass = cn(
   'focus-visible:ring-offset-frame',
 );
 
-export function PortalFrame({ current, pageName, leda, topBar, teamCount = 0, onAddPlatform, account = defaultAccount, children, ...shell }: PortalFrameProps) {
+export function PortalFrame({ current, pageName, leda, topBar, teamCount = 0, onAddPlatform, account = defaultAccount, onNavigate, children, ...shell }: PortalFrameProps) {
+  const link = (dest: Dest) => onNavigate ? {
+    onClick: (e: MouseEvent<HTMLElement>) => {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      e.preventDefault();
+      onNavigate(dest);
+    },
+  } : {};
+  const acct = onNavigate ? { onSettings: () => onNavigate({ to: 'settings' }), onLogout: () => onNavigate({ to: 'logout' }) } : {};
+  useArrivalFocus(!!onNavigate);
   const name = pageName ?? byId(current).label;
   const rail = (
     <IconRailContent>
-      <IconRailMark href="#home" />
-      {RAIL.map((p) => <IconRailItem key={p.id} icon={p.icon} label={p.label} href={p.href} current={p.id === current} count={p.id === 'team' ? teamCount : 0} />)}
+      <IconRailMark href="#home" {...link({ to: 'home' })} />
+      {RAIL.map((p) => <IconRailItem key={p.id} icon={p.icon} label={p.label} href={p.href} {...link(DEST[p.id])} current={p.id === current} count={p.id === 'team' ? teamCount : 0} />)}
       {onAddPlatform ? <IconRailItem icon={Plus} label="Add a platform" onClick={onAddPlatform} className="mt-2" /> : null}
       <IconRailSpacer />
-      <IconRailFoot><AccountMenu name={account.name} email={account.email} role={account.role} applyToDocument={false} /></IconRailFoot>
+      <IconRailFoot><AccountMenu name={account.name} email={account.email} role={account.role} applyToDocument={false} {...acct} /></IconRailFoot>
     </IconRailContent>
   );
   const bar = topBar ?? (
@@ -68,7 +86,7 @@ export function PortalFrame({ current, pageName, leda, topBar, teamCount = 0, on
       <span className="font-semibold">ReadyPH</span>
       <span className="min-w-0 flex-1 truncate text-muted">{name}</span>
       {leda}
-      <AccountMenu name={account.name} email={account.email} role={account.role} applyToDocument={false} />
+      <AccountMenu name={account.name} email={account.email} role={account.role} applyToDocument={false} {...acct} />
     </>
   );
   const moreCurrent = current === 'memory';
@@ -78,7 +96,7 @@ export function PortalFrame({ current, pageName, leda, topBar, teamCount = 0, on
         const on = p.id === current;
         const n = p.id === 'team' ? teamCount : 0;
         return (
-          <a key={p.id} href={p.href} aria-current={on ? 'page' : undefined} aria-label={n ? `${p.label}, ${n}` : undefined} className={cn(tabClass, on && 'bg-frame-active font-medium text-text')}>
+          <a key={p.id} href={p.href} {...link(DEST[p.id])} aria-current={on ? 'page' : undefined} aria-label={n ? `${p.label}, ${n}` : undefined} className={cn(tabClass, on && 'bg-frame-active font-medium text-text')}>
             <p.icon size={20} aria-hidden />
             <span aria-hidden={n ? true : undefined}>{p.label}</span>
             <CountBadge count={n} />
@@ -95,11 +113,37 @@ export function PortalFrame({ current, pageName, leda, topBar, teamCount = 0, on
           </button>
         }
         items={[
-          { label: 'Memory', icon: BookOpen, href: byId('memory').href },
+          onNavigate ? { label: 'Memory', icon: BookOpen, onSelect: () => onNavigate(DEST.memory) } : { label: 'Memory', icon: BookOpen, href: byId('memory').href },
           ...(onAddPlatform ? [{ label: 'Add a platform', icon: Plus, onSelect: onAddPlatform }] : []),
         ]}
       />
     </div>
   );
   return <PlatformShell {...shell} rail={rail} railLabel="Portal" topBar={bar} phoneNav={phoneNav} phoneNavLabel="Portal">{children}</PlatformShell>;
+}
+
+/**
+ * After an in-prototype navigation the destination story re-mounts: put focus on the page's heading, but only when this
+ * mount follows a navigation (a fresh hand-off), and only while focus is lost (focusIfLost). Watches until the person
+ * touches the page, because the heading can be swapped when a loading state ends.
+ */
+function useArrivalFocus(enabled: boolean) {
+  const [arrived] = useState(() => enabled && arrivedByNav());
+  useEffect(() => {
+    if (!arrived) return;
+    clearHandoff();
+    const move = () => {
+      const h = Array.from(document.querySelectorAll<HTMLElement>('h1')).find((x) => x.getClientRects().length > 0 && !x.closest('.sb-nopreview'));
+      if (!h) return;
+      if (!h.hasAttribute('tabindex')) h.tabIndex = -1;
+      focusIfLost(null, h, { preventScroll: true });
+    };
+    move();
+    const mo = new MutationObserver(move);
+    mo.observe(document.body, { childList: true, subtree: true });
+    const stop = () => mo.disconnect();
+    document.addEventListener('pointerdown', stop, { once: true, capture: true });
+    document.addEventListener('keydown', stop, { once: true, capture: true });
+    return () => { mo.disconnect(); document.removeEventListener('pointerdown', stop, true); document.removeEventListener('keydown', stop, true); };
+  }, [arrived]);
 }

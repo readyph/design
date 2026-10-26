@@ -13,6 +13,7 @@ import { List, ListCell, ListRow } from "../components/List";
 import { ListGroup, ListGroups } from "../components/ListGroup";
 import { PlatformLogo } from "../components/PlatformLogo";
 import { PortalFrame } from "./PortalFrame";
+import { go as navGo, type Dest } from "./protoNav";
 import { StatusBar } from "../components/StatusBar";
 import { ProgressBar } from "../components/ProgressBar";
 import { SheetBar } from "../components/SheetBar";
@@ -754,7 +755,8 @@ export function MemoryPage({
         heading={null}
         pageName="Memory"
         teamCount={3}
-        onAddPlatform={() => toast.info("Add a platform opens.")}
+        onAddPlatform={() => navGo({ to: "platforms", add: true })}
+        onNavigate={(d: Dest) => (d.to === "memory" ? (inTopic ? back() : undefined) : navGo(d))}
         leda={<AskLedaBar variant="bar" scope="Memory" paused={tryShown} onOpen={() => openTry()} />}
         detail={inTopic || phoneSheet}
         placeLabel="Memory folders"

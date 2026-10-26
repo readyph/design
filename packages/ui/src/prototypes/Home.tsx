@@ -27,6 +27,7 @@ import { TownMap, type TownMapHandle } from '../components/TownMap';
 import { Toaster } from '../components/toast/Toaster';
 import { toast } from '../components/toast/toastStore';
 import { PortalFrame } from './PortalFrame';
+import { destFromHash, go } from './protoNav';
 import { focusIfLost } from '../utils/focusIfLost';
 import { useMatchMedia } from '../utils/useMatchMedia';
 import { ledaMode, mapSlots, queuePlatforms, sets, suggestions, type HomeCase, type HomePlatform, type HomeSetKey, type HomeState } from './Home.data';
@@ -351,7 +352,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
               onRetry={() => {
                 window.setTimeout(() => setFixed(true), 600);
               }}
-              onOpen={() => toast(`Opening ${p.name}…`)}
+              onOpen={() => go(p.hq ? { to: 'team' } : { to: 'platform', id: p.id })}
               lists={p.lists.map((l) => ({
                 ...l,
                 onViewAll: () => toast(`All ${l.total} in ${p.shortName ?? p.name}…`),
@@ -376,8 +377,8 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
             >
               {p.hq ? (
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <Button variant="secondary" onClick={() => toast('Opening Team…')}>Open Team</Button>
-                  <Button variant="secondary" onClick={() => toast('Opening Plan…')}>Open Plan</Button>
+                  <Button variant="secondary" onClick={() => go({ to: 'team' })}>Open Team</Button>
+                  <Button variant="secondary" onClick={() => go({ to: 'plan' })}>Open Plan</Button>
                 </div>
               ) : null}
             </PlatformToday>
@@ -404,7 +405,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
         <Breadcrumbs
           aria-label="Where this is"
           items={[
-            { label: p.name, logo: <PlatformLogo name={p.name} index={p.index} hq={p.hq} size={16} decorative /> },
+            { label: p.name, logo: <PlatformLogo name={p.name} index={p.index} hq={p.hq} size={16} decorative />, href: p.hq ? '#team' : `#${p.id}`, onClick: (e) => { e.preventDefault(); go(p.hq ? { to: 'team' } : { to: 'platform', id: p.id }); } },
             { label: p.kind },
           ]}
         />
@@ -415,7 +416,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
         <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
           <h2 ref={headingRef} tabIndex={-1} className="m-0 min-w-0 text-title text-text outline-none focus-visible:ring-2 focus-visible:ring-accent">{item.title}</h2>
           <div className="flex shrink-0 items-center gap-2">
-            <Button variant="secondary" rightIcon={ArrowSquareOut} onClick={() => toast(`Opening ${p.shortName ?? p.name}…`)}>Open {p.shortName ?? p.name}</Button>
+            <Button variant="secondary" rightIcon={ArrowSquareOut} onClick={() => go({ to: 'platform', id: p.id })}>Open {p.shortName ?? p.name}</Button>
             {isOpen ? (
               <span className="max-[640px]:hidden">
                 <Menu trigger={<Button variant="secondary" leftIcon={Clock}>Snooze</Button>} items={snoozeItems(id)} align="end" />
@@ -646,7 +647,8 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
       <PortalFrame
         current="home"
         teamCount={1}
-        onAddPlatform={() => toast('Add a platform…')}
+        onAddPlatform={() => go({ to: 'platforms', add: true })}
+        onNavigate={go}
         leda={askBar('bar', false)}
         place={place}
         placeLabel="Your platforms"
@@ -695,6 +697,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
                   key={m.id}
                   message={m}
                   onChip={(c) => send(c.label)}
+                  onAction={(a) => { if (a.href) go(destFromHash(a.href)); }}
                   onConfirm={(bid) => {
                     setBlockProposal(bid, 'writing');
                     return new Promise<void>((res) =>
