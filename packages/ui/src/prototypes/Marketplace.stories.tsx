@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Marketplace } from '../components/Marketplace';
 import { sampleCatalog } from '../components/Marketplace.sample';
 import { Button } from '../components/Button';
+import { LedaNote } from '../components/LedaNote';
 
 /** [For Review] RDY-280. Prototype only: stories are not exported from the package. */
 const meta: Meta = {
@@ -28,9 +29,9 @@ function Page({ leda = false }: { leda?: boolean }) {
         defaultPicked={leda ? 'pos' : null}
         ledaNote={
           leda ? (
-            <p className="rounded-card bg-accent-tint px-3 py-2 text-ui text-text">
+            <LedaNote>
               Picked from “Add a POS for the parts counter”. Nothing is added until you press Install and name it.
-            </p>
+            </LedaNote>
           ) : undefined
         }
         onInstall={(item) => {

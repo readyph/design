@@ -4,6 +4,7 @@ import { Marketplace, type MarketplaceProps } from './Marketplace';
 import { Button } from './Button';
 import { sampleCatalog } from './Marketplace.sample';
 import { Package } from '@phosphor-icons/react';
+import { LedaNote } from './LedaNote';
 
 const meta: Meta<typeof Marketplace> = {
   title: 'Components/Overlays/Marketplace',
@@ -51,9 +52,9 @@ export const PickedByLeda: Story = {
     <Demo
       defaultPicked="pos"
       ledaNote={
-        <p className="rounded-card bg-accent-tint px-3 py-2 text-ui text-text">
+        <LedaNote>
           Picked from “Add a POS for the parts counter”. Nothing is added until you press Install and name it.
-        </p>
+        </LedaNote>
       }
     />
   ),
@@ -80,3 +81,14 @@ export const LongNames: Story = {
 };
 
 export const CustomTitle: Story = { render: () => <Demo icon={Package} title="Add a platform to Cebu Hub" /> };
+
+const veryLong = 'Inventory, Warehouse, Consignment and Multi-branch Distribution Management for Large Cross-border Trading Groups and Their Partners';
+export const VeryLongPicked: Story = {
+  name: 'Very long name picked (footer stays one size)',
+  render: () => (
+    <Demo
+      defaultPicked="inventory"
+      items={[{ ...sampleCatalog[0], key: 'inventory', name: veryLong }, ...sampleCatalog.slice(1)]}
+    />
+  ),
+};

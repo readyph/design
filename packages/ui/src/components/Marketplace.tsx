@@ -237,21 +237,21 @@ function MarketplaceContent({
   const summary = pickedItem ? (
     <>
       <pickedItem.icon size={18} aria-hidden className="shrink-0 text-accent" />
-      <span className="min-w-0 break-words max-sm:truncate">
+      <span className="min-w-0 truncate">
         <b className="font-semibold text-text">{pickedItem.name}</b>
         {' · '}
         {pickedItem.hasApp ? 'opens in its own app' : 'no app yet, it works through its data links'}
       </span>
     </>
   ) : (
-    <span>Nothing picked yet</span>
+    <span className="min-w-0 truncate">Nothing picked yet</span>
   );
 
   return (
     <>
       <ModalHeader icon={icon} description={description}>{title}</ModalHeader>
       {ledaNote && <div className="mx-pad mt-3.5 shrink-0 max-sm:mx-4">{ledaNote}</div>}
-      <div className="mx-pad mt-4 shrink-0 max-sm:mx-4 max-sm:overflow-x-auto">
+      <div className="mx-pad mt-4 shrink-0 max-sm:mx-4 max-sm:overflow-x-auto max-sm:[&_button]:px-2">
         <SegmentedControl
           aria-label="Category"
           options={categories}
@@ -299,15 +299,15 @@ function MarketplaceContent({
       <ModalFooter className="max-sm:flex-row max-sm:flex-wrap max-sm:gap-2 max-sm:pb-[calc(8px+env(safe-area-inset-bottom))] max-sm:pt-2">
         <div
           role="status"
-          className="flex min-w-0 items-center gap-2 text-ui text-muted sm:mr-auto max-sm:basis-full"
+          className="flex min-w-0 items-center gap-2 text-ui text-muted sm:flex-1 max-sm:basis-full"
         >
           {summary}
         </div>
         <Dialog.Close asChild>
-          <Button variant="secondary" className="max-sm:h-11 max-sm:flex-1">Cancel</Button>
+          <Button variant="secondary" className="shrink-0 max-sm:h-11 max-sm:flex-1">Cancel</Button>
         </Dialog.Close>
-        <Button className="max-sm:h-11 max-sm:min-w-0 max-sm:flex-1 max-sm:overflow-hidden max-sm:[&_svg]:shrink-0 max-sm:[&>span]:min-w-0 max-sm:[&>span:not([aria-hidden])]:max-w-full" leftIcon={DownloadSimple} disabled={!pickedItem || status !== 'ready'} onClick={() => pickedItem && onInstall?.(pickedItem)}>
-          <span className="min-w-0 max-sm:truncate">{pickedItem ? `Install ${pickedItem.name}` : 'Install'}</span>
+        <Button className="min-w-0 overflow-hidden sm:max-w-[320px] max-sm:h-11 max-sm:flex-1 [&_svg]:shrink-0 [&>span]:min-w-0 [&>span:not([aria-hidden])]:max-w-full" leftIcon={DownloadSimple} disabled={!pickedItem || status !== 'ready'} onClick={() => pickedItem && onInstall?.(pickedItem)}>
+          <span className="min-w-0 truncate">{pickedItem ? `Install ${pickedItem.name}` : 'Install'}</span>
         </Button>
       </ModalFooter>
     </>

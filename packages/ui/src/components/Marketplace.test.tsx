@@ -188,4 +188,18 @@ describe('Marketplace', () => {
     expect(grid.className).not.toContain('hidden');
     expect(grid.className).not.toContain('grid-cols-5');
   });
+
+  it('footer cannot grow with content: summary and Install label truncate, Install is capped, Cancel never shrinks', async () => {
+    const name = 'Inventory, Warehouse, Consignment and Multi-branch Distribution Management for Large Cross-border Trading Groups';
+    const dlg = await openIt({ defaultPicked: 'inventory', items: [{ ...sampleCatalog[0], key: 'inventory', name }, ...sampleCatalog.slice(1)] });
+    const status = within(dlg).getAllByRole('status').find((e) => e.textContent?.includes(name))!;
+    expect(status.className).toMatch(/\bmin-w-0\b/);
+    expect(status.className).toMatch(/sm:flex-1/);
+    expect(status.querySelector('span.truncate')).not.toBeNull();
+    const btn = install();
+    expect(btn.className).toMatch(/sm:max-w-\[320px\]/);
+    expect(btn.className).toMatch(/\bmin-w-0\b/);
+    expect(btn.querySelector('span.truncate')?.textContent).toBe(`Install ${name}`);
+    expect(screen.getByRole('button', { name: 'Cancel' }).className).toMatch(/\bshrink-0\b/);
+  });
 });
