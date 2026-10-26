@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { PlatformShell } from '../components/PlatformShell';
-import { RolePicker } from '../components/RolePicker';
-import { eight, platforms, roleOptions, saved, lockedPlatforms } from '../components/RolePicker.data';
+import { PlatformShell } from './PlatformShell';
+import { RolePicker } from './RolePicker';
+import { eight, platforms, roleOptions, saved, lockedPlatforms } from './RolePicker.data';
 
 /** RDY-282 (C22). Prototype only: not exported from the package. The picker in the real PlatformShell sheet (scrolling), light and dark, desktop and phone. */
 const meta: Meta = {
-  title: 'Prototypes/Portal/[For Review] Role picker in the sheet',
+  title: 'Components/Forms/Role picker in the shell',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;

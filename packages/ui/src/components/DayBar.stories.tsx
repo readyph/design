@@ -5,7 +5,7 @@ const h = (hh: number, mm = 0) => hh * 60 + mm;
 const hours = { open: h(8), close: h(18) };
 
 const meta: Meta<typeof DayBar> = {
-  title: 'Components/Data/DayBar',
+  title: 'Components/Charts/DayBar',
   component: DayBar,
   tags: ['autodocs'],
   args: {

@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { OpeningHours, type OpeningHoursValue } from '../components/OpeningHours';
-import { companyWeek, nowSample, ownValue, publicHolidays, sameValue, todayIso } from '../components/OpeningHours.data';
-import { PlatformShell } from '../components/PlatformShell';
-import { Toaster } from '../components/toast/Toaster';
-import { toast } from '../components/toast/toastStore';
+import { OpeningHours, type OpeningHoursValue } from './OpeningHours';
+import { companyWeek, nowSample, ownValue, publicHolidays, sameValue, todayIso } from './OpeningHours.data';
+import { PlatformShell } from './PlatformShell';
+import { Toaster } from './toast/Toaster';
+import { toast } from './toast/toastStore';
 
 /** RDY-285 (C25). Prototype only: stories are not exported from the package. The editor in the real PlatformShell sheet, System tab. */
 const meta: Meta = {
-  title: 'Prototypes/Portal/Opening hours',
+  title: 'Components/Forms/OpeningHours in the shell',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;

@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { LedaMark, LedaThinking, LedaWordmark } from './Leda';
 
 const meta: Meta<typeof LedaMark> = {
-  title: 'Components/Leda mark',
+  title: 'Components/Leda/Leda mark',
   component: LedaMark,
   parameters: { layout: 'padded' },
 };

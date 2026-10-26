@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { PlatformShell } from '../components/PlatformShell';
-import { PlatformToday } from '../components/PlatformToday';
-import { autoWorks, cafe, jobs, stock, stockroom } from '../components/PlatformToday.data';
+import { PlatformShell } from './PlatformShell';
+import { PlatformToday } from './PlatformToday';
+import { autoWorks, cafe, jobs, stock, stockroom } from './PlatformToday.data';
 
 /** RDY-284 (C24). Prototype only: stories are not exported from the package. Blocks in the real PlatformShell place column. */
 const meta: Meta = {
-  title: 'Prototypes/Portal/Today blocks',
+  title: 'Components/Data display/Today blocks',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;

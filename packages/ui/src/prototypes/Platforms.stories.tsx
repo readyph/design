@@ -9,7 +9,7 @@ import { PlatformsPage } from './Platforms.page';
  * Opening a platform shows a toast; the real page is C15.
  */
 const meta: Meta<typeof PlatformsPage> = {
-  title: 'Prototypes/Portal/Platforms',
+  title: 'Prototypes/Platforms',
   component: PlatformsPage,
   parameters: { layout: 'fullscreen' },
 };

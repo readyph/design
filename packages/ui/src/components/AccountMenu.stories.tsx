@@ -4,7 +4,7 @@ import { userEvent, within } from '@storybook/test';
 import { AccountMenu } from './AccountMenu';
 
 const meta: Meta<typeof AccountMenu> = {
-  title: 'Components/AccountMenu',
+  title: 'Components/Navigation/AccountMenu',
   component: AccountMenu,
   parameters: {
     layout: 'fullscreen',
@@ -25,12 +25,15 @@ Desktop opens right of the rail, bottom-aligned with the avatar. Phone (<640px) 
 export default meta;
 type Story = StoryObj<typeof AccountMenu>;
 
-/** The menu is portaled, so the theme goes on documentElement. */
+/**
+ * The menu is portaled, so the theme goes on documentElement. The explicit Light / Dark stories force their theme;
+ * without `theme` the story follows the toolbar Theme switch (RDY-354).
+ */
 function Theme({ theme, children }: { theme?: 'light' | 'dark'; children: ReactNode }) {
   useEffect(() => {
+    if (!theme) return;
     const root = document.documentElement;
-    if (theme) root.setAttribute('data-theme', theme);
-    else root.removeAttribute('data-theme');
+    root.setAttribute('data-theme', theme);
     return () => root.removeAttribute('data-theme');
   }, [theme]);
   return <>{children}</>;
@@ -92,9 +95,9 @@ export const OpenDark: Story = {
 
 export const OpenOverBusyBackground: Story = {
   render: (a) => (
-    <Theme theme="light">
+    <Theme>
       <RailFrame busy>
-        <AccountMenu {...a} defaultTheme="light" />
+        <AccountMenu {...a} />
       </RailFrame>
     </Theme>
   ),
@@ -134,8 +137,8 @@ export const OpenPhoneDark: Story = {
 export const LongNames: Story = {
   args: { name: 'Maria Cristina Santos-Villanueva', email: 'maria.cristina.santos-villanueva@santosautoworks.com.ph' },
   render: (a) => (
-    <Theme theme="light">
-      <RailFrame><AccountMenu {...a} defaultTheme="light" /></RailFrame>
+    <Theme>
+      <RailFrame><AccountMenu {...a} /></RailFrame>
     </Theme>
   ),
   play: open,

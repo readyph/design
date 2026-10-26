@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { PlatformShell } from '../components/PlatformShell';
-import { SheetBar } from '../components/SheetBar';
-import { TopicLibraryPage } from '../components/TopicLibrary.sample';
+import { PlatformShell } from './PlatformShell';
+import { SheetBar } from './SheetBar';
+import { TopicLibraryPage } from './TopicLibrary.sample';
 
 /** RDY-287 (C27). Prototype only: stories are not exported from the package. Memory, Topics tab, in the real PlatformShell sheet. */
 const meta: Meta = {
-  title: 'Prototypes/Portal/Topic library',
+  title: 'Components/Data display/Topic library in the shell',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;

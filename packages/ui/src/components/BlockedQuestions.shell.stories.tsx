@@ -1,16 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useState } from 'react';
-import { PlatformShell } from '../components/PlatformShell';
-import { SheetBar } from '../components/SheetBar';
-import { Tabs } from '../components/Tabs';
-import { TownMap } from '../components/TownMap';
-import { three, threeLinks } from '../components/TownMap.data';
-import { Live } from '../components/BlockedQuestions.demo';
-import { Toaster } from '../components/toast/Toaster';
+import { PlatformShell } from './PlatformShell';
+import { SheetBar } from './SheetBar';
+import { Tabs } from './Tabs';
+import { TownMap } from './TownMap';
+import { three, threeLinks } from './TownMap.data';
+import { Live } from './BlockedQuestions.demo';
+import { Toaster } from './toast/Toaster';
 
 /** RDY-289. Prototype only: stories are not exported from the package. The platform's Leda & Memory tab in the real PlatformShell. The Memory tab is in Memory (RDY-259). */
 const meta: Meta = {
-  title: 'Prototypes/Portal/[For Review] Blocked questions',
+  title: 'Components/Data display/Blocked questions in the shell',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;

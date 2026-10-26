@@ -1,16 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useState } from 'react';
-import { Breadcrumbs } from '../components/Breadcrumbs';
-import { Button } from '../components/Button';
-import { EmptyState } from '../components/EmptyState';
-import { PlatformShell } from '../components/PlatformShell';
-import { Queue, type QueueDoneItem, type QueueItem, type QueueSnoozedItem } from '../components/Queue';
-import { allPlatforms, done as doneSeed, items as itemSeed, snoozed as snoozedSeed, watching } from '../components/Queue.data';
-import { PlatformLogo } from '../components/PlatformLogo';
+import { Breadcrumbs } from './Breadcrumbs';
+import { Button } from './Button';
+import { EmptyState } from './EmptyState';
+import { PlatformShell } from './PlatformShell';
+import { Queue, type QueueDoneItem, type QueueItem, type QueueSnoozedItem } from './Queue';
+import { allPlatforms, done as doneSeed, items as itemSeed, snoozed as snoozedSeed, watching } from './Queue.data';
+import { PlatformLogo } from './PlatformLogo';
 
 /** [For Review] RDY-279 (C19). Prototype only: stories are not exported from the package. The Needs you queue in the portal place column (map above it is C16, not built yet). */
 const meta: Meta = {
-  title: 'Prototypes/Portal/Needs you',
+  title: 'Components/Data display/Needs you',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;

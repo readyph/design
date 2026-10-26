@@ -6,7 +6,7 @@ import { MemoryPage } from './MemoryPage';
  * Portal Memory in the real PlatformShell: Topics, Blocked questions and Customer requests tabs, a topic's page, and Try it as a modal.
  */
 const meta: Meta<typeof MemoryPage> = {
-  title: 'Prototypes/Portal/Memory',
+  title: 'Prototypes/Memory',
   component: MemoryPage,
   parameters: { layout: 'fullscreen' },
 };

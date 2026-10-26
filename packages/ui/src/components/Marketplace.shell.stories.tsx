@@ -1,13 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useState } from 'react';
-import { Marketplace } from '../components/Marketplace';
-import { sampleCatalog } from '../components/Marketplace.sample';
-import { Button } from '../components/Button';
-import { LedaNote } from '../components/LedaNote';
+import { Marketplace } from './Marketplace';
+import { sampleCatalog } from './Marketplace.sample';
+import { Button } from './Button';
+import { LedaNote } from './LedaNote';
 
 /** RDY-280. Prototype only: stories are not exported from the package. */
 const meta: Meta = {
-  title: 'Prototypes/Portal/Marketplace',
+  title: 'Components/Overlays/Marketplace in the shell',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;

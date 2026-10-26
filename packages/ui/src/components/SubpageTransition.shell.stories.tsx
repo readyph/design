@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useEffect, useRef, useState } from 'react';
-import { PlatformShell } from '../components/PlatformShell';
-import { SheetBar } from '../components/SheetBar';
-import { Breadcrumbs } from '../components/Breadcrumbs';
-import { SubpageLane, SubpageTransition, type SubpageDirection } from '../components/SubpageTransition';
+import { PlatformShell } from './PlatformShell';
+import { SheetBar } from './SheetBar';
+import { Breadcrumbs } from './Breadcrumbs';
+import { SubpageLane, SubpageTransition, type SubpageDirection } from './SubpageTransition';
 
 /**
  * RDY-275 (C15). Prototype only: not exported from the package.
@@ -11,7 +11,7 @@ import { SubpageLane, SubpageTransition, type SubpageDirection } from '../compon
  * The rail, the map stand-in and the status bar never move. Try the Back button, the browser Back/Forward, Esc, and clicking quickly.
  */
 const meta: Meta = {
-  title: 'Prototypes/Portal/Subpage transition',
+  title: 'Components/Navigation/Subpage transition',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;

@@ -10,7 +10,7 @@ import { PlatformPage } from './Platform.page';
  * and C22 is person-by-platform while this Team tab is people-by-role (composed from Select and rows).
  */
 const meta: Meta<typeof PlatformPage> = {
-  title: 'Prototypes/Portal/Platform',
+  title: 'Prototypes/Platform',
   component: PlatformPage,
   parameters: { layout: 'fullscreen' },
 };

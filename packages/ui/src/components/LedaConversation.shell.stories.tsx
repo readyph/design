@@ -1,16 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useCallback, useRef, useState } from 'react';
-import { Chat, ChatComposer, ChatEmpty, ChatHeader, ChatMessage, ChatThread, usePersistedChat, type ChatChip, type ChatMessageData, type ChatProposalData } from '../components/Chat';
-import { chatSample } from '../components/Chat.sample';
-import { PlatformShell } from '../components/PlatformShell';
-import { SheetBar } from '../components/SheetBar';
-import { AskLedaBar } from '../components/AskLedaBar';
-import { Toaster } from '../components/toast/Toaster';
-import { toast } from '../components/toast/toastStore';
+import { Chat, ChatComposer, ChatEmpty, ChatHeader, ChatMessage, ChatThread, usePersistedChat, type ChatChip, type ChatMessageData, type ChatProposalData } from './Chat';
+import { chatSample } from './Chat.sample';
+import { PlatformShell } from './PlatformShell';
+import { SheetBar } from './SheetBar';
+import { AskLedaBar } from './AskLedaBar';
+import { Toaster } from './toast/Toaster';
+import { toast } from './toast/toastStore';
 
 /** [For Review] RDY-268 (C8). Prototype only: stories are not exported from the package. The panel in the real PlatformShell, with scripted answers. */
 const meta: Meta = {
-  title: 'Prototypes/Portal/Leda conversation',
+  title: 'Components/Leda/Leda conversation',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;

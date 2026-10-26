@@ -10,7 +10,7 @@ import { Home } from './Home';
  * (`./PortalFrame.tsx`, not exported from the package): Memory, Platforms and Platform detail adopt it instead of local chrome.
  */
 const meta: Meta<typeof Home> = {
-  title: 'Prototypes/Portal/Home',
+  title: 'Prototypes/Home',
   component: Home,
   parameters: { layout: 'fullscreen' },
   argTypes: {
