@@ -16,6 +16,7 @@ function Home({ many }: { many?: boolean }) {
   const [hover, setHover] = useState<string | null>(null);
   return (
     <PlatformShell
+      heading="Platforms"
       placeLabel="Platforms"
       place={
         <TownMap
