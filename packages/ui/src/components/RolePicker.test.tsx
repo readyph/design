@@ -73,6 +73,48 @@ describe('RolePicker', () => {
     fireEvent.click(within(dlg).getByRole('button', { name: 'Save and remove' }));
     expect(onSave).toHaveBeenCalledOnce();
   });
+  it('moves focus to the heading after Save, so it is not lost to the page', async () => {
+    function S() {
+      const [sv, setSv] = useState(saved);
+      const [v, setV] = useState(saved);
+      return <RolePicker platforms={platforms} roleOptions={roleOptions} value={v} savedValue={sv} onChange={setV} onSave={setSv} onDiscard={() => setV(sv)} />;
+    }
+    render(<S />);
+    choose('Role for Cubao Cafe', 'Staff');
+    const save = screen.getByRole('button', { name: 'Save changes' });
+    save.focus();
+    fireEvent.click(save);
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Roles on each platform' })));
+    expect(screen.getByRole('heading', { name: 'Roles on each platform' }).getAttribute('tabindex')).toBe('-1');
+  });
+  it('moves focus to the heading after Save and remove in the confirm, and after Discard', async () => {
+    function S() {
+      const [sv, setSv] = useState(saved);
+      const [v, setV] = useState(saved);
+      return <RolePicker platforms={platforms} roleOptions={roleOptions} value={v} savedValue={sv} onChange={setV} onSave={setSv} onDiscard={() => setV(sv)} />;
+    }
+    render(<S />);
+    choose('Role for Quezon City Auto Works', 'Not assigned');
+    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+    fireEvent.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Save and remove' }));
+    const h = () => screen.getByRole('heading', { name: 'Roles on each platform' });
+    await waitFor(() => expect(document.activeElement).toBe(h()));
+    choose('Role for Cubao Cafe', 'Staff');
+    const d = screen.getByRole('button', { name: 'Discard' });
+    d.focus();
+    fireEvent.click(d);
+    await waitFor(() => expect(document.activeElement).toBe(h()));
+  });
+  it('returns focus to Save when saving fails and keeps it there while saving is pending', async () => {
+    const { rerender } = render(<RolePicker platforms={platforms} roleOptions={roleOptions} value={{ ...saved, roles: { ...saved.roles, cf: 'staff' } }} savedValue={saved} onChange={() => {}} onSave={() => {}} onDiscard={() => {}} />);
+    const save = screen.getByRole('button', { name: 'Save changes' });
+    save.focus();
+    fireEvent.click(save);
+    await new Promise((r) => setTimeout(r, 30));
+    expect(document.activeElement).toBe(save);
+    rerender(<RolePicker platforms={platforms} roleOptions={roleOptions} value={{ ...saved, roles: { ...saved.roles, cf: 'staff' } }} savedValue={saved} onChange={() => {}} onSave={() => {}} onDiscard={() => {}} error="No." />);
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Save changes' })));
+  });
   it('shows busy and error states', () => {
     render(<H saving error="Could not save." />);
     expect(screen.getByRole('alert').textContent).toContain('Could not save.');

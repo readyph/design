@@ -116,6 +116,11 @@ export const RolePicker = forwardRef<HTMLDivElement, RolePickerProps>(function R
   const [confirm, setConfirm] = useState(false);
   const [announce, setAnnounce] = useState('');
   const first = useRef(true);
+  const heading = useRef<HTMLHeadingElement>(null);
+  const saveBtn = useRef<HTMLButtonElement>(null);
+  // Save and Discard disable themselves when they finish, which would drop focus to <body>.
+  // Remember that one of them was used; when the work is over, move focus somewhere real.
+  const used = useRef(false);
   const copy = { ...ACCESS, ...Object.fromEntries(Object.entries(accessCopy ?? {}).map(([k, v]) => [k, { ...ACCESS[k as CompanyAccess], can: v }])) } as typeof ACCESS;
 
   // Say what changed when Admin swaps the rows; focus stays on the radio.
@@ -133,13 +138,25 @@ export const RolePicker = forwardRef<HTMLDivElement, RolePickerProps>(function R
     ...optionsOf(p).map((r) => ({ value: r.id, label: r.name, textValue: r.name })),
   ];
 
+  useEffect(() => {
+    if (!used.current || saving || (dirty && !error)) return;
+    used.current = false;
+    // Save failed: the draft is still there, go back to Save. Otherwise the heading of the form.
+    const id = setTimeout(() => (dirty ? saveBtn.current : heading.current)?.focus(), 60);
+    return () => clearTimeout(id);
+  }, [dirty, saving, error]);
+
   const removed = platforms.filter((p) => (savedValue.roles[p.id] ?? null) && !(value.roles[p.id] ?? null) && !full);
   const nAssigned = platforms.filter((p) => value.roles[p.id]).length;
   const noRole = !full && nAssigned === 0 && platforms.length > 0;
   const off = readOnly || saving;
 
   const setRole = (id: string, role: string) => onChange({ ...value, roles: { ...value.roles, [id]: role === NOT_ASSIGNED ? null : role } });
-  const trySave = () => (removed.length ? setConfirm(true) : onSave(value));
+  const trySave = () => {
+    if (removed.length) return setConfirm(true);
+    used.current = true;
+    onSave(value);
+  };
 
   const accessChoices: CompanyAccess[] = value.access === 'owner' || savedValue.access === 'owner' ? ['owner', 'admin', 'member'] : ['admin', 'member'];
   const accessLocked = off || !!accessReason || value.access === 'owner';
@@ -159,7 +176,7 @@ export const RolePicker = forwardRef<HTMLDivElement, RolePickerProps>(function R
       ) : null}
 
       <section aria-labelledby={`${uid}-roles`} className="min-w-0">
-        <h3 id={`${uid}-roles`} className="text-ui font-medium text-text">
+        <h3 ref={heading} tabIndex={-1} id={`${uid}-roles`} className="text-ui font-medium text-text outline-none">
           Roles on each platform
         </h3>
         {full ? (
@@ -287,10 +304,10 @@ export const RolePicker = forwardRef<HTMLDivElement, RolePickerProps>(function R
             </p>
           ) : null}
           <div className="flex flex-wrap items-center gap-2">
-            <Button variant="primary" onClick={trySave} disabled={!dirty || saving} loading={saving} actionBar>
+            <Button ref={saveBtn} variant="primary" onClick={trySave} disabled={!dirty || saving} loading={saving} actionBar>
               {saveLabel}
             </Button>
-            <Button variant="secondary" onClick={onDiscard} disabled={!dirty || saving} actionBar>
+            <Button variant="secondary" onClick={() => { used.current = true; onDiscard(); }} disabled={!dirty || saving} actionBar>
               Discard
             </Button>
             {dirty ? (
@@ -313,6 +330,7 @@ export const RolePicker = forwardRef<HTMLDivElement, RolePickerProps>(function R
         onCancel={() => setConfirm(false)}
         onConfirm={() => {
           setConfirm(false);
+          used.current = true;
           onSave(value);
         }}
       />
