@@ -71,6 +71,7 @@ const preset = {
         "identity-text": "var(--identity-text)",
         "map-top": "var(--map-top)",
         "map-side": "var(--map-side)",
+        "map-side-2": "var(--map-side-2)",
         "map-road": "var(--map-road)",
         "map-window": "var(--map-window)",
         "map-window-soft": "var(--map-window-soft)",
@@ -261,11 +262,28 @@ const preset = {
           "to": {
             "opacity": "1"
           }
+        },
+        "town-flow-a": {
+          "to": {
+            "strokeDashoffset": "-27"
+          }
+        },
+        "town-flow-b": {
+          "from": {
+            "strokeDashoffset": "13"
+          },
+          "to": {
+            "strokeDashoffset": "40"
+          }
         }
       },
       "animation": {
         "row-flash": "row-flash var(--dur-row-flash) ease-out 1",
-        "tab-fade": "tab-fade var(--dur-tab) linear"
+        "tab-fade": "tab-fade var(--dur-tab) linear",
+        "town-flow-a": "town-flow-a 1.6s linear infinite",
+        "town-flow-b": "town-flow-b 1.6s linear infinite",
+        "town-flow-a-slow": "town-flow-a 5s linear infinite",
+        "town-flow-b-slow": "town-flow-b 5s linear infinite"
       },
       "transitionTimingFunction": {
         "subpage": "var(--ease-subpage)",
