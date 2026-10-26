@@ -8,13 +8,13 @@ import {
   useMemo,
   useRef,
   useState,
-  useSyncExternalStore,
   type HTMLAttributes,
   type MutableRefObject,
   type ReactNode,
   type UIEvent,
 } from 'react';
 import { cn } from '../utils/cn';
+import { useMatchMedia } from '../utils/useMatchMedia';
 
 /** 'in' = list to detail (new pane enters). 'out' = detail back to list (the detail leaves). */
 export type SubpageDirection = 'in' | 'out';
@@ -36,24 +36,21 @@ interface Ctx {
   reduced: boolean;
   openerRef: MutableRefObject<Opener | null>;
   restoreFocus?: () => HTMLElement | null;
-  register: (id: string) => () => void;
+  register: (id: string, getPane?: () => HTMLElement | null) => () => void;
+  screenEnded: (seq: number) => void;
   laneEnded: (id: string, seq: number) => void;
+  lanes: Map<string, (() => HTMLElement | null) | undefined>;
 }
 
 const SubpageCtx = createContext<Ctx | null>(null);
 
 const REDUCED = '(prefers-reduced-motion: reduce)';
-function subscribeReduced(cb: () => void) {
-  if (typeof window === 'undefined' || !window.matchMedia) return () => {};
-  const mq = window.matchMedia(REDUCED);
-  mq.addEventListener?.('change', cb);
-  return () => mq.removeEventListener?.('change', cb);
-}
-const reducedNow = () => typeof window !== 'undefined' && !!window.matchMedia && window.matchMedia(REDUCED).matches;
+/** The phone range of PlatformShell (640px and below). */
+export const SUBPAGE_PHONE = '(max-width: 640px)';
 
 /** True under `prefers-reduced-motion: reduce`. Live: follows the OS setting while mounted. */
 export function usePrefersReducedMotion(): boolean {
-  return useSyncExternalStore(subscribeReduced, reducedNow, () => false);
+  return useMatchMedia(REDUCED);
 }
 
 /** Reads a duration token (`--dur-subpage-in` ...) as milliseconds. */
@@ -127,7 +124,7 @@ export function SubpageTransition({ paneKey, direction = 'in', onExited, restore
     setSt({ key: paneKey, seq: st.seq + 1, running: st.seq + 1 > 0, direction });
   }
 
-  const lanes = useRef(new Set<string>());
+  const lanes = useRef(new Map<string, (() => HTMLElement | null) | undefined>());
   const ended = useRef({ seq: 0, set: new Set<string>() });
   const onExitedRef = useRef(onExited);
   useLayoutEffect(() => {
@@ -155,8 +152,8 @@ export function SubpageTransition({ paneKey, direction = 'in', onExited, restore
     return () => clearTimeout(t);
   }, [st.running, st.seq, st.direction, reduced, finish]);
 
-  const register = useCallback((id: string) => {
-    lanes.current.add(id);
+  const register = useCallback((id: string, getPane?: () => HTMLElement | null) => {
+    lanes.current.set(id, getPane);
     return () => {
       lanes.current.delete(id);
     };
@@ -165,21 +162,32 @@ export function SubpageTransition({ paneKey, direction = 'in', onExited, restore
     (id: string, seq: number) => {
       if (ended.current.seq !== seq) return;
       ended.current.set.add(id);
-      if (lanes.current.size > 0 && Array.from(lanes.current).every((l) => ended.current.set.has(l))) finish(seq);
+      if (lanes.current.size > 0 && Array.from(lanes.current.keys()).every((l) => ended.current.set.has(l))) finish(seq);
     },
     [finish],
   );
 
+  const screenEnded = finish;
   const value = useMemo<Ctx>(
-    () => ({ paneKey: st.key, seq: st.seq, direction: st.direction, running: st.running, reduced, openerRef, restoreFocus, register, laneEnded }),
-    [st, reduced, restoreFocus, register, laneEnded],
+    () => ({ paneKey: st.key, seq: st.seq, direction: st.direction, running: st.running, reduced, openerRef, restoreFocus, register, screenEnded, laneEnded, lanes: lanes.current }),
+    [st, reduced, restoreFocus, register, screenEnded, laneEnded],
   );
   return <SubpageCtx.Provider value={value}>{children}</SubpageCtx.Provider>;
 }
 
+/** Internal: what PlatformShell needs to slide the whole screen on a phone. Null outside a SubpageTransition. */
+export function useSubpageShell(): { running: boolean; direction: SubpageDirection; reduced: boolean; seq: number; screenEnded: (seq: number) => void } | null {
+  const c = useContext(SubpageCtx);
+  return c ? { running: c.running, direction: c.direction, reduced: c.reduced, seq: c.seq, screenEnded: c.screenEnded } : null;
+}
+/** Internal: PlatformShell sets this true when it has a place column, so on a phone each region is a whole screen. */
+export const SubpageScreensContext = createContext(false);
+
 export interface SubpageLaneProps extends Omit<HTMLAttributes<HTMLDivElement>, 'children'> {
   /** The side this lane's detail pane comes from. Column: 'left'. Sheet: 'right' (default). */
   from?: SubpageSide;
+  /** The host surface behind the lane, so panes are opaque and never show through while sliding. 'frame' for the place column, 'surface' (default) for the sheet. */
+  surface?: 'surface' | 'frame';
   /** Move focus into this lane's new pane (its `[data-subpage-focus]`, `h1`, then `h2`) when a transition starts. Default true. With several lanes the last one wins; set false on the others. */
   focus?: boolean;
   /** The pane scrolls (and its scroll position is restored on return). Set false when the content scrolls itself; mark that element `data-subpage-scroll`. Default true. */
@@ -208,13 +216,23 @@ function setInert(el: HTMLElement | null) {
  * One lane of a subpage transition: a clipped box that holds the current pane and, while a transition runs, the old one.
  * `className` is merged underneath the lane's layout, so a caller can colour or space it but not move or unclip it.
  * Must sit inside `SubpageTransition`.
+ *
+ * Note: while a pane slides it carries a transform, so a `position: fixed` child is positioned against the pane, not the viewport,
+ * until the transition ends. Portal overlays (Toaster, dialogs, menus) to `body`; sticky bars inside the pane are fine.
+ * On a phone, inside `PlatformShell` with a place column, the shell slides the whole screen (region) and the lanes only choose which
+ * content each region shows during the slide.
  */
-export function SubpageLane({ from = 'right', focus = true, scroll = true, className, children, ...rest }: SubpageLaneProps) {
+export function SubpageLane({ from = 'right', surface = 'surface', focus = true, scroll = true, className, children, ...rest }: SubpageLaneProps) {
   const ctx = useContext(SubpageCtx);
   if (!ctx) throw new Error('SubpageLane must be rendered inside SubpageTransition');
+  const curRef = useRef<HTMLDivElement | null>(null);
   const id = useId();
   const { register } = ctx;
-  useEffect(() => register(id), [register, id]);
+  useEffect(() => register(id, () => curRef.current), [register, id]);
+  const screens = useContext(SubpageScreensContext);
+  const phone = useMatchMedia(SUBPAGE_PHONE);
+  // Phone with a place column: each shell region is a whole screen and the shell slides it; the lanes only show the right content.
+  const screenMode = screens && phone;
 
   const [lane, setLane] = useState<{ seq: number; leaving: Leaving | null }>({ seq: ctx.seq, leaving: null });
   const latest = useRef<{ key: string; node: ReactNode }>({ key: ctx.paneKey, node: children });
@@ -229,8 +247,6 @@ export function SubpageLane({ from = 'right', focus = true, scroll = true, class
   const running = ctx.running && lane.seq === ctx.seq;
   const leaving = running ? lane.leaving : null;
   const dir = ctx.direction;
-
-  const curRef = useRef<HTMLDivElement | null>(null);
 
   // Scroll: remembered per pane key, restored when that pane (re)mounts.
   const scrolls = useRef(new Map<string, number>());
@@ -272,10 +288,21 @@ export function SubpageLane({ from = 'right', focus = true, scroll = true, class
     const pane = curRef.current;
     if (!pane) return;
     let target: HTMLElement | null = null;
-    if (ctx.direction === 'out') target = ctx.restoreFocus?.() ?? (ctx.openerRef.current ? findOpener(pane, ctx.openerRef.current) : null);
+    if (ctx.direction === 'out') {
+      target = ctx.restoreFocus?.() ?? null;
+      // The opener may sit in another lane (on a phone the visible list is the place column).
+      const o = ctx.openerRef.current;
+      if (!target && o) for (const get of ctx.lanes.values()) { const root = get?.(); const f = root && findOpener(root, o); if (f) { f.focus({ preventScroll: true }); if (document.activeElement === f) { target = f; break; } } }
+    }
     target ??= pane.querySelector<HTMLElement>('[data-subpage-focus]') ?? pane.querySelector<HTMLElement>('h1') ?? pane.querySelector<HTMLElement>('h2') ?? pane;
     if (!target.hasAttribute('tabindex') && !/^(A|BUTTON|INPUT|SELECT|TEXTAREA)$/.test(target.tagName)) target.setAttribute('tabindex', '-1');
     target.focus({ preventScroll: true });
+    if (document.activeElement !== target && target !== pane) {
+      // Hidden or detached opener: fall back to the pane heading.
+      const h = pane.querySelector<HTMLElement>('[data-subpage-focus]') ?? pane.querySelector<HTMLElement>('h1') ?? pane;
+      if (!h.hasAttribute('tabindex') && !/^(A|BUTTON|INPUT|SELECT|TEXTAREA)$/.test(h.tagName)) h.setAttribute('tabindex', '-1');
+      h.focus({ preventScroll: true });
+    }
   });
 
   const side = from;
@@ -288,7 +315,10 @@ export function SubpageLane({ from = 'right', focus = true, scroll = true, class
         : backIn[side];
   const leaveAnim = dir === 'in' ? driftOut[side] : cn('z-10', leaveOut[side]);
 
-  const paneBase = cn('col-start-1 row-start-1 h-full min-h-0 min-w-0 overscroll-contain', scroll ? 'overflow-y-auto' : 'overflow-hidden');
+  const showLeavingOnPhone = (from === 'left') === (dir === 'in');
+  const phoneLeaving = screenMode && leaving != null && !ctx.reduced;
+  const bg = surface === 'frame' ? 'bg-frame max-[640px]:bg-surface' : 'bg-surface';
+  const paneBase = cn(bg, 'col-start-1 row-start-1 h-full min-h-0 min-w-0 overscroll-contain', scroll ? 'overflow-y-auto' : 'overflow-hidden');
   const onEnd = (e: React.AnimationEvent<HTMLElement>) => {
     if (e.target === e.currentTarget && running) ctx.laneEnded(id, ctx.seq);
   };
@@ -317,7 +347,7 @@ export function SubpageLane({ from = 'right', focus = true, scroll = true, class
           aria-hidden="true"
           data-subpage-pane="leaving"
           onAnimationEnd={endsOnCurrent ? undefined : onEnd}
-          className={cn(paneBase, 'pointer-events-none', leaveAnim)}
+          className={cn(paneBase, 'pointer-events-none', phoneLeaving ? (showLeavingOnPhone ? '' : 'hidden') : leaveAnim)}
         >
           {leaving.node}
         </div>
@@ -333,7 +363,7 @@ export function SubpageLane({ from = 'right', focus = true, scroll = true, class
         data-subpage-pane="current"
         onScrollCapture={onScrollCapture(ctx.paneKey)}
         onAnimationEnd={endsOnCurrent ? onEnd : undefined}
-        className={cn(paneBase, curAnim)}
+        className={cn(paneBase, screenMode ? (phoneLeaving && showLeavingOnPhone ? 'hidden' : ctx.reduced && running ? 'animate-sub-fade' : '') : curAnim)}
       >
         {children}
       </div>

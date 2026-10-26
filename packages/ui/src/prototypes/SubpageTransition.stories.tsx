@@ -69,7 +69,7 @@ function Demo() {
         <div className="flex h-full min-h-0 flex-col gap-2">
           <div data-testid="map" className="grid h-40 shrink-0 place-items-center rounded-card bg-raised text-muted">Map stand-in (outside every lane)</div>
           <div className="min-h-0 flex-1">
-            <SubpageLane from="left" focus={false} aria-label="Place column">
+            <SubpageLane from="left" surface="frame" focus={false} aria-label="Place column">
               {p ? (
                 <div className="p-pad">
                   <h2 className="m-0 text-ui font-semibold">{p.name}</h2>

@@ -148,6 +148,22 @@ describe('SubpageTransition', () => {
     expect(back.scrollTop).toBe(120);
   });
 
+  it('panes are opaque so the incoming one never shows the old one through', () => {
+    const { rerender } = render(<Page k="list" />);
+    rerender(<Page k="a" />);
+    for (const pane of Array.from(document.querySelectorAll('[data-subpage-pane]'))) expect(pane.className).toMatch(/\bbg-(surface|frame)\b/);
+  });
+
+  it('works with an older matchMedia that only has addListener', () => {
+    const add = vi.fn();
+    const remove = vi.fn();
+    vi.stubGlobal('matchMedia', () => ({ matches: false, addListener: add, removeListener: remove }));
+    const { unmount } = render(<Page k="list" />);
+    expect(add).toHaveBeenCalled();
+    unmount();
+    expect(remove).toHaveBeenCalled();
+  });
+
   it('clears timers on unmount', () => {
     const onExited = vi.fn();
     const { rerender, unmount } = render(<Page k="list" onExited={onExited} />);
