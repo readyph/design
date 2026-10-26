@@ -35,7 +35,7 @@ export interface SelectProps {
   size?: 'sm' | 'md';
   invalid?: boolean;
   disabled?: boolean;
-  /** Long labels wrap inside the button and the list instead of being cut off (the button grows to fit; Try it, C30). */
+  /** Long labels wrap inside the button instead of being cut off (the button grows to fit; Try it, C30). The list always wraps. */
   wrap?: boolean;
   /** Name for the hidden input that carries the value in a form. */
   name?: string;
@@ -281,7 +281,7 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
           aria-labelledby={ariaLabelledBy}
           aria-label={ariaLabelledBy ? undefined : ariaLabel}
           className={cn(
-            'absolute left-0 z-50 max-h-[264px] min-w-full overflow-y-auto rounded-card border border-border bg-surface p-1 shadow-float',
+            'absolute left-0 z-50 max-h-[264px] w-max min-w-full max-w-[max(100%,min(32rem,calc(100vw-2rem)))] overflow-y-auto rounded-card border border-border bg-surface p-1 shadow-float',
             up ? 'bottom-full mb-1' : 'top-full mt-1',
           )}
         >
@@ -301,13 +301,12 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
               }}
               className={cn(
                 'flex min-h-8 cursor-pointer items-center gap-2 rounded-chip px-2 text-body text-text max-sm:min-h-10',
-                wrap && 'py-1.5',
                 i === active && 'bg-frame-hover',
                 o.disabled && 'cursor-not-allowed text-faint',
               )}
             >
               {o.icon ? <span className="inline-flex shrink-0 items-center text-muted">{o.icon}</span> : null}
-              <span className={cn('min-w-0 flex-1', wrap ? '[overflow-wrap:anywhere]' : 'truncate')}>{o.label}</span>
+              <span className="min-w-0 flex-1 py-1 [overflow-wrap:anywhere]">{o.label}</span>
               {o.meta ? <span className="shrink-0 text-small text-muted">{o.meta}</span> : null}
               <span className="inline-flex w-4 shrink-0 justify-center text-accent">
                 {o.value === current ? <Check size={14} weight="bold" aria-hidden /> : null}
