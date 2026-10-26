@@ -671,10 +671,10 @@ export function TopicLibrary({
             options={layoutOptions}
             value={layout}
             onChange={(v) => onLayoutChange?.(v as TopicLayout)}
-            className="order-2 shrink-0 max-[640px]:[&_button]:min-h-11 max-[640px]:[&_button]:min-w-11 @min-[640px]/lib:order-6 @min-[640px]/lib:ml-auto"
+            className="order-2 shrink-0 max-[640px]:[&_button]:min-h-11 max-[640px]:[&_button]:min-w-11"
           />
           {!inert && (onToggleAll || newButton) && canEdit ? (
-            <div className="order-3 ml-auto flex shrink-0 items-center gap-2 @min-[640px]/lib:order-2">
+            <div className="order-3 ml-auto flex shrink-0 items-center gap-2">
               {onToggleAll && topics.length > 0 ? (
                 <Button variant="secondary" leftIcon={allOn ? ToggleLeft : ToggleRight} onClick={() => onToggleAll(!allOn)}>
                   {allOn ? 'Turn all off' : 'Turn all on'}

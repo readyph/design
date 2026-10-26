@@ -3,9 +3,9 @@ import { PlatformShell } from '../components/PlatformShell';
 import { SheetBar } from '../components/SheetBar';
 import { TopicLibraryPage } from '../components/TopicLibrary.sample';
 
-/** [For Review] RDY-287 (C27). Prototype only: stories are not exported from the package. Memory, Topics tab, in the real PlatformShell sheet. */
+/** RDY-287 (C27). Prototype only: stories are not exported from the package. Memory, Topics tab, in the real PlatformShell sheet. */
 const meta: Meta = {
-  title: 'Prototypes/Portal/[For Review] Topic library',
+  title: 'Prototypes/Portal/Topic library',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;
