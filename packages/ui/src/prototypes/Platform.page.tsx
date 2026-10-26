@@ -337,7 +337,6 @@ export function PlatformPage({ platformId = 'autoworks', tab: tab0 = 'general', 
   const sameLink = (a: DataLink, b: DataLink) => a.from === b.from && a.to === b.to && a.kind === b.kind;
 
   const mapPlatforms: TownMapSlot[] = [
-    { id: 'hq', name: 'HQ', kind: 'Team and plan', status: 'ACTIVE', hq: true },
     ...platforms.map((x): TownMapSlot => {
       const h = healthOf(x);
       const k = kinds[x.kind];
@@ -947,9 +946,9 @@ export function PlatformPage({ platformId = 'autoworks', tab: tab0 = 'general', 
         highlight={hover}
         dimOthers
         loading={state === 'loading'}
-        caption={`${plural(platforms.length, 'platform')} + HQ`}
+        caption={`${plural(platforms.length, 'platform')} · ${links.length ? plural(links.length, 'data link') : 'no data links'}`}
         label="This platform on your map"
-        onSelect={(id) => { if (id && id !== 'hq' && id !== p?.id && !ob) { setPid(id); setDrafts({}); setTab('general'); setMemEdit(null); } }}
+        onSelect={(id) => { if (id && id !== p?.id && !ob) { setPid(id); setDrafts({}); setTab('general'); setMemEdit(null); } }}
         onHover={(id) => setHover(id ? [id] : null)}
       />
       <div className="px-2">

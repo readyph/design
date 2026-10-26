@@ -15,6 +15,15 @@ afterEach(() => { cleanup(); clearToasts(); });
 const setup = (props: PlatformPageProps) => render(<PlatformPage {...props} />);
 const tabOf = (name: RegExp) => screen.getByRole('tab', { name });
 
+describe('Platform map', () => {
+  it('shows platforms and data links only, with no HQ building', () => {
+    setup({ platformId: 'autoworks' });
+    expect(screen.getAllByText(/\d platforms? · (\d+ data links?|no data links)/).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/\+ HQ/)).toBeNull();
+    expect(screen.queryByText('HQ')).toBeNull();
+  });
+});
+
 describe('Platform page drafts', () => {
   it('marks the tab Unsaved, keeps the draft across tabs, and Discard resets it', async () => {
     const u = userEvent.setup();
