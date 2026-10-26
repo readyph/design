@@ -16,7 +16,7 @@ function Sheet({ many, slow }: { many?: boolean; slow?: boolean }) {
   const [value, setValue] = useState(saved);
   const [saving, setSaving] = useState(false);
   return (
-    <PlatformShell>
+    <PlatformShell heading="Maria Santos">
       <div className="mx-auto flex max-w-[640px] flex-col gap-4 p-6">
         <h2 className="text-title text-text">Maria Santos</h2>
         <p className="text-ui text-muted">What Maria does in each platform. Scroll the sheet: the dropdowns open upward near the bottom.</p>

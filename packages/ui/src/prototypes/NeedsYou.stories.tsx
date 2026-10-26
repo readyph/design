@@ -83,7 +83,7 @@ export const InShell: Story = {
   parameters: { layout: 'fullscreen' },
   render: () => (
     <div className="h-screen">
-      <PlatformShell placeLabel="Place" place={<Queue items={itemSeed} watching={watching} snoozed={snoozedSeed} done={doneSeed} platforms={allPlatforms} />}>
+      <PlatformShell heading={null} placeLabel="Place" place={<Queue items={itemSeed} watching={watching} snoozed={snoozedSeed} done={doneSeed} platforms={allPlatforms} />}>
         <EmptyState title="Pick something from Needs you" description="Press j / k to move, Enter to open, s to snooze." />
       </PlatformShell>
     </div>

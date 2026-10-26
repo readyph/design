@@ -27,7 +27,8 @@ const meta: Meta<typeof PlatformShell> = {
           '',
           '- Frame colour behind rail, place column and status bar. The sheet is a `surface` panel: 1px border, 8px radius, 8px inset from the top and right, container named `sheet` (`@container/sheet`, `@max-[760px]/sheet:`). `List` keeps its own `@container/list`; the two names do not collide.',
           '- `--place` is 460px, 400 below 1440, 380 below 1180, 320 below 960 (tokens).',
-          '- Landmarks: `nav` (rail, phone nav), `section` (place, labelled), `main` (sheet), `footer` (status). Pass items, not your own `nav`/`footer`, into `rail` and `status`.',
+          '- Landmarks: `nav` (rail, phone nav), `section` (place, labelled), `main` (sheet), `footer` (status). Pass items, not your own `nav`/`footer`, into `rail` and `status`. On phone with the place column showing, the sheet is hidden and the place section takes `role="main"`: one visible main at all times.',
+          '- `heading` (the platform name) renders a visually hidden `h1` in whichever region is visible (sheet, or place column on phone). Pass it unless your content already has its own `h1`; with no `heading`, the phone place column falls back to `placeLabel`. Pass `heading={null}` when the content renders its own `h1`: the shell then adds none (no fallback).',
           '- The shell fills its parent height (`h-dvh`). The sheet body and the place column scroll; the frame never does.',
           '- Phone (640px and below): 48px top bar (`topBar`), 60px bottom nav (`phoneNav`), one region at a time: the place column, or the sheet with `detail`. `actionBar` is the sticky foot of the sheet, phone detail only. Rail and status are hidden.',
           '- `className` is merged under the shell classes: add colour or margin, it cannot move the regions.',
@@ -182,7 +183,7 @@ export const PlaceColumnSurfaces: Story = {
       {...full}
       place={
         <div className="flex flex-col gap-4 pb-4">
-          <div className="h-[420px]"><Queue items={items} watching={watching} snoozed={snoozed} done={done} platforms={allPlatforms} shortcuts={false} defaultOpenGroups={['watching']} /></div>
+          <div className="h-[420px]"><Queue headingLevel={2} items={items} watching={watching} snoozed={snoozed} done={done} platforms={allPlatforms} shortcuts={false} defaultOpenGroups={['watching']} /></div>
           <ListGroups as="list" aria-label="Frame groups">
             <ListGroup title="Frame group" count={2}>
               {['One', 'Two'].map((t) => <ListRow key={t} rowId={t} label={t} onActivate={() => {}}><ListCell kind="lead">{t}</ListCell></ListRow>)}
