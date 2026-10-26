@@ -10,6 +10,8 @@ export const surfaces: Record<string, Pair> = {
   'raised-2': ['#eaeef3', '#404142'],
   border: ['#e1e5eb', '#37393a'],
   rule: ['#edf0f3', '#313133'],
+  /** The row rule on `--frame` (the place column): `rule` is ~1:1 on frame in light. Applied by `[data-surface="frame"]`. */
+  'frame-rule': ['#d8dde6', '#393b3c'],
   control: ['#c6ccd6', '#4b4d50'],
   text: ['#121722', '#e6e8eb'],
   muted: ['#535d6c', '#a9aeb5'],

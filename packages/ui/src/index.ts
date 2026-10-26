@@ -28,4 +28,5 @@ export * from './components/PlatformShell';
 export * from './components/ListGroup';
 export * from './components/Queue';
 export * from './components/StatusBar';
+export * from './components/PlatformToday';
 export * from './components/CommandPalette';
