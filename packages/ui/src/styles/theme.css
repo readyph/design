@@ -165,6 +165,8 @@
   --ease-subpage: cubic-bezier(0.22, 1, 0.36, 1);
   --dur-subpage-in: 240ms;
   --dur-subpage-out: 220ms;
+  --subpage-drift: 6%;
+  --subpage-dim: 0.55;
   --dur-leda-open: 240ms;
   --dur-leda-close: 220ms;
   --dur-tab: 120ms;
