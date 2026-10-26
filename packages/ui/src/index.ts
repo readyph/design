@@ -23,9 +23,11 @@ export * from './components/SheetBar';
 export { AccountMenu, AccountButton, applyTheme, initialsOf, type AccountMenuProps, type ThemeChoice } from './components/AccountMenu';
 export * from './components/Breadcrumbs';
 export * from './components/List';
+export * from './components/AskLedaBar';
 export * from './components/IconRail';
 export * from './components/PlatformShell';
 export * from './components/ListGroup';
+export * from './components/Marketplace';
 export * from './components/Queue';
 export * from './components/StatusBar';
 export * from './components/DayBar';
@@ -34,3 +36,4 @@ export { toast, useToast, useToasts, addToast, dismissToast, clearToasts, TOAST_
 export * from './components/PlatformToday';
 export * from './components/CommandPalette';
 export * from './components/SubpageTransition';
+export * from './components/TownMap';

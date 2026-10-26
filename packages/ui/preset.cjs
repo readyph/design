@@ -71,6 +71,7 @@ const preset = {
         "identity-text": "var(--identity-text)",
         "map-top": "var(--map-top)",
         "map-side": "var(--map-side)",
+        "map-side-2": "var(--map-side-2)",
         "map-road": "var(--map-road)",
         "map-window": "var(--map-window)",
         "map-window-soft": "var(--map-window-soft)",
@@ -235,7 +236,11 @@ const preset = {
       "width": {
         "rail": "var(--rail)",
         "place": "var(--place)",
-        "leda-w": "var(--leda-w)"
+        "leda-w": "var(--leda-w)",
+        "leda-w-overview": "var(--leda-w-overview)"
+      },
+      "maxWidth": {
+        "leda-w-overview": "var(--leda-w-overview)"
       },
       "height": {
         "status": "var(--status)",
@@ -244,6 +249,9 @@ const preset = {
       },
       "boxShadow": {
         "float": "var(--shadow-float)"
+      },
+      "backgroundImage": {
+        "halo": "conic-gradient(var(--hl0), var(--hl1), var(--hl2), var(--hl3), var(--hl0))"
       },
       "keyframes": {
         "row-flash": {
@@ -341,6 +349,49 @@ const preset = {
           "to": {
             "opacity": "1"
           }
+        },
+        "town-flow-a": {
+          "to": {
+            "strokeDashoffset": "-27"
+          }
+        },
+        "town-flow-b": {
+          "from": {
+            "strokeDashoffset": "13"
+          },
+          "to": {
+            "strokeDashoffset": "40"
+          }
+        },
+        "halo-spin": {
+          "from": {
+            "transform": "translate(-50%, -50%) rotate(0deg)"
+          },
+          "to": {
+            "transform": "translate(-50%, -50%) rotate(360deg)"
+          }
+        },
+        "halo-fade": {
+          "0%": {
+            "opacity": "0"
+          },
+          "18%, 70%": {
+            "opacity": "var(--halo-peak, 1)"
+          },
+          "100%": {
+            "opacity": "0"
+          }
+        },
+        "halo-fade-reduced": {
+          "0%": {
+            "opacity": "0"
+          },
+          "50%": {
+            "opacity": "1"
+          },
+          "100%": {
+            "opacity": "0"
+          }
         }
       },
       "animation": {
@@ -354,7 +405,14 @@ const preset = {
         "sub-drift-r": "sub-drift-r var(--dur-subpage-in) var(--ease-subpage) forwards",
         "sub-back-l": "sub-back-l var(--dur-subpage-out) var(--ease-subpage) backwards",
         "sub-back-r": "sub-back-r var(--dur-subpage-out) var(--ease-subpage) backwards",
-        "sub-fade": "sub-fade var(--dur-reduced-fade) linear backwards"
+        "sub-fade": "sub-fade var(--dur-reduced-fade) linear backwards",
+        "town-flow-a": "town-flow-a 1.6s linear infinite",
+        "town-flow-b": "town-flow-b 1.6s linear infinite",
+        "town-flow-a-slow": "town-flow-a 5s linear infinite",
+        "town-flow-b-slow": "town-flow-b 5s linear infinite",
+        "halo-spin": "halo-spin var(--dur-halo) var(--ease-halo) 1 both",
+        "halo-fade": "halo-fade var(--dur-halo) var(--ease-halo) 1 both",
+        "halo-fade-reduced": "halo-fade-reduced var(--dur-halo-reduced) ease-in-out 1 both"
       },
       "transitionTimingFunction": {
         "subpage": "var(--ease-subpage)",
