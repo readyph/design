@@ -21,6 +21,7 @@ const preset = {
         "raised-2": "var(--raised-2)",
         "border": "var(--border)",
         "rule": "var(--rule)",
+        "frame-rule": "var(--frame-rule)",
         "control": "var(--control)",
         "text": "var(--text)",
         "muted": "var(--muted)",
