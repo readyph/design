@@ -1,0 +1,75 @@
+<!-- RDY-356: fit the large toolbar viewports (Laptop 1280, Desktop 1440, Large desktop 1920) inside the preview pane.
+     The viewport addon gives the preview iframe a fixed CSS size, so on a pane narrower or shorter than that the canvas
+     spilled over the addons panel and the sidebar. The manager (this page) owns the iframe element, so the fix lives here
+     and behaves like a normal browser window: the page is fitted to the pane WIDTH. The iframe keeps its nominal width
+     (the story, its media queries and the shell breakpoints still see 1920, 1440, 1280) and is shown with
+     `transform: scale(paneWidth / nominalWidth)`; its CSS height is set to paneHeight / scale (never above the
+     nominal height), so the story sees a window as tall as the pane (100dvh shells fill the pane, nothing scrolls or
+     clips, and the picture does not shrink just because the pane is short). When the pane is at least as wide as the viewport there is no scaling and
+     the height only shrinks to the pane if the nominal height does not fit. The layout box is shrunk to the scaled size
+     with negative margins. Pointer hit-testing follows the transform. Only sizes 1024px wide and up are touched:
+     phones, tablets and Responsive keep today's behaviour, and the standalone "Open canvas in new tab" page (iframe.html)
+     never loads this file. -->
+<script>
+  (function () {
+    var SELECTOR = 'iframe[data-is-storybook="true"]';
+    var MIN_NOMINAL_WIDTH = 1024;
+    var frame = null;
+    var queued = false;
+
+    function clear(f) {
+      if (f.style.transform) f.style.removeProperty('transform');
+      if (f.style.transformOrigin) f.style.removeProperty('transform-origin');
+      if (f.style.marginRight) f.style.removeProperty('margin-right');
+      if (f.style.marginBottom) f.style.removeProperty('margin-bottom');
+      if (f.style.height) f.style.removeProperty('height');
+    }
+
+    function fit() {
+      queued = false;
+      var f = document.querySelector(SELECTOR);
+      if (!f) return;
+      if (f !== frame) {
+        frame = f;
+        if (typeof ResizeObserver !== 'undefined') {
+          var ro = new ResizeObserver(schedule);
+          ro.observe(f);
+          if (f.parentElement) ro.observe(f.parentElement);
+        }
+        new MutationObserver(schedule).observe(f, { attributes: true, attributeFilter: ['class'] });
+      }
+      var host = f.parentElement;
+      // The addon sets the nominal size through a class, so dropping our inline height (below) shows it again. Everything
+      // runs synchronously in one frame: nothing paints in between and the observers only see the final size.
+      if (f.style.height) f.style.removeProperty('height');
+      // offsetWidth/offsetHeight are layout sizes: unaffected by our transform, so there is no feedback loop.
+      var w = f.offsetWidth, h = f.offsetHeight;
+      var availW = host ? host.clientWidth : 0, availH = host ? host.clientHeight : 0;
+      if (!w || !h || !availW || !availH || w < MIN_NOMINAL_WIDTH) { clear(f); return; }
+      var scale = Math.floor(Math.min(1, availW / w) * 1000) / 1000;
+      if (scale >= 1) {
+        // The width fits: no scaling. Only keep the box inside the pane vertically.
+        clear(f);
+        if (h > availH) f.style.height = availH + 'px';
+        return;
+      }
+      // Never taller than the nominal height: a tall narrow pane must not turn Large desktop into a 1920 x 2200 window.
+      var targetH = Math.min(h, Math.floor(availH / scale));
+      f.style.height = targetH + 'px';
+      f.style.transformOrigin = 'top left';
+      f.style.transform = 'scale(' + scale + ')';
+      f.style.marginRight = -(w - w * scale) + 'px';
+      f.style.marginBottom = -(targetH - targetH * scale) + 'px';
+    }
+
+    function schedule() {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(fit);
+    }
+
+    window.addEventListener('resize', schedule);
+    new MutationObserver(schedule).observe(document.documentElement, { childList: true, subtree: true });
+    schedule();
+  })();
+</script>

@@ -12,7 +12,7 @@ import { Team } from './Team';
 const meta: Meta<typeof Team> = {
   title: 'Prototypes/Team',
   component: Team,
-  parameters: { layout: 'fullscreen', viewport: { defaultViewport: 'desktop' } },
+  parameters: { layout: 'fullscreen' },
   argTypes: {
     set: { control: 'inline-radio', options: ['live', 'few', 'many'] },
     state: { control: 'inline-radio', options: ['live', 'loading', 'error', 'solo', 'noaccess', 'manager', 'over'] },
