@@ -50,11 +50,11 @@ describe('PlatformToday', () => {
     expect(screen.queryByRole('button', { name: 'Plain row' })).toBeNull();
   });
 
-  it('marks the frame surface so rules use --frame-rule; the sheet does not', () => {
+  it('marks the frame surface so rules use --frame-rule; the sheet resets it', () => {
     const { container, rerender } = render(<PlatformToday platform={autoWorks} lists={[jobs]} />);
     expect(container.querySelector('section')?.getAttribute('data-surface')).toBe('frame');
     rerender(<PlatformToday platform={autoWorks} lists={[jobs]} surface="surface" />);
-    expect(container.querySelector('section')?.hasAttribute('data-surface')).toBe(false);
+    expect(container.querySelector('section')?.getAttribute('data-surface')).toBe('surface');
   });
 
   it('lists do not take j / k by default; shortcuts turns them on', () => {
