@@ -172,6 +172,16 @@ describe('focus after a save removes the row', () => {
     outside.remove();
   });
 
+  it('does not pull focus from another control inside the library (shared focusIfLost)', () => {
+    const { outside, view } = setup();
+    fireEvent.click(screen.getAllByRole('switch')[1]);
+    const search = screen.getByLabelText('Search every folder');
+    search.focus();
+    view.rerender(<TopicLibrary topics={on.filter((t) => t.id !== on[1].id)} counts={counts} filter="on" />);
+    expect(document.activeElement).toBe(search);
+    outside.remove();
+  });
+
   it('ignores a stale toggle on a later, unrelated change', () => {
     const { outside, view } = setup();
     fireEvent.click(screen.getAllByRole('switch')[0]); // row stays shown

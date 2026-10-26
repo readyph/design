@@ -13,6 +13,7 @@ import {
 } from 'react';
 import { Database, FolderOpen, Funnel, ListBullets, Lock, LockSimple, MagnifyingGlass, PencilSimpleLine, Plus, SquaresFour, ToggleLeft, ToggleRight, X } from '@phosphor-icons/react';
 import { cn, focusRing } from '../utils/cn';
+import { focusIfLost } from '../utils/focusIfLost';
 import { Button } from './Button';
 import { EmptyState } from './EmptyState';
 import { ErrorBlock } from './ErrorBlock';
@@ -227,23 +228,6 @@ function TopicSwitch({ topic, index, readOnly, h }: { topic: TopicItem; index: n
   );
 }
 
-/*
- * Focus is "lost" only when nothing sensible holds it: no element, the body, a node that left the document, a
- * disabled control, or anything inside an `[inert]` subtree. Anywhere else the user chose it, so we never move it.
- * Same rule as the shared `focusIfLost` (RDY-269); kept as one small function here so it can be swapped for it.
- */
-function focusIsLost(): boolean {
-  let a: Element | null = document.activeElement;
-  // Follow open shadow roots; when a root has no active element, keep the host (document.activeElement).
-  while (a && (a as HTMLElement).shadowRoot) {
-    const inner: Element | null = (a as HTMLElement).shadowRoot!.activeElement;
-    if (!inner) break;
-    a = inner;
-  }
-  if (!a || a === document.body || a === document.documentElement || !a.isConnected) return true;
-  return a.matches(':disabled') || !!a.closest('[inert]');
-}
-
 const linkClass = cn('group/link block min-w-0 rounded-chip text-left', focusRing);
 
 const TopicRow = memo(function TopicRow({
@@ -437,8 +421,8 @@ export function TopicLibrary({
     // The toggled row is still shown: nothing to repair, and the intent must not outlive this update.
     if (!rows.length || rows.some((r) => r.dataset.rowId === p.id)) return;
     // The row left the shown set. Move focus only if it was lost with it; never pull it back from elsewhere.
-    if (!focusIsLost()) return;
-    rows[Math.min(p.index, rows.length - 1)].querySelector<HTMLElement>('[role="switch"]')?.focus();
+    // No container: focus sitting on another control inside the library is the user's own choice too.
+    focusIfLost(null, rows[Math.min(p.index, rows.length - 1)].querySelector<HTMLElement>('[role="switch"]'));
   }, [topics]);
 
   /* ----- search: debounced, highlight from the committed query ----- */
