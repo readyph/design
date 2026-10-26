@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { OnboardingStepper, type StepperStep } from './OnboardingStepper';
 
 afterEach(cleanup);
@@ -37,7 +37,7 @@ describe('OnboardingStepper', () => {
     expect(screen.getByText('In progress')).toBeTruthy();
   });
 
-  it('locked step is aria-disabled, described by its reason, and never changes step', () => {
+  it('locked step is aria-disabled, described by its reason, and never changes step', async () => {
     const p = setup();
     const b = screen.getByRole('button', { name: /^Connections/ });
     expect(b.getAttribute('aria-disabled')).toBe('true');
@@ -45,7 +45,21 @@ describe('OnboardingStepper', () => {
     expect(document.getElementById(b.getAttribute('aria-describedby')!)?.textContent).toBe('Add the platform first.');
     fireEvent.click(b);
     expect(p.onStepChange).not.toHaveBeenCalled();
-    expect(screen.getByRole('status').textContent).toContain('Add the platform first.');
+    await waitFor(() => expect(screen.getByRole('status').textContent).toContain('Add the platform first.'));
+  });
+
+  it('announces again on a repeated press of the same locked step', async () => {
+    setup();
+    const region = screen.getByRole('status');
+    let changes = 0;
+    new MutationObserver((m) => { changes += m.length; }).observe(region, { childList: true, characterData: true, subtree: true });
+    const b = screen.getByRole('button', { name: /^Connections/ });
+    fireEvent.click(b);
+    await waitFor(() => expect(region.textContent).toContain('locked'));
+    const first = changes;
+    fireEvent.click(b);
+    await waitFor(() => expect(changes).toBeGreaterThan(first + 1));
+    await waitFor(() => expect(region.textContent).toContain('locked'));
   });
 
   it('opens another step, but not the current one', () => {
@@ -93,11 +107,11 @@ describe('OnboardingStepper', () => {
     expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'System' }));
   });
 
-  it('live region starts empty and speaks only progress changes', () => {
+  it('live region starts empty and speaks only progress changes', async () => {
     const { rerender } = render(<OnboardingStepper steps={steps} current="b" onStepChange={() => {}} />);
     expect(screen.getByRole('status').textContent).toBe('');
     rerender(<OnboardingStepper steps={steps.map((s) => (s.id === 'b' ? { ...s, status: 'done' as const } : s))} current="c" onStepChange={() => {}} />);
-    expect(screen.getByRole('status').textContent).toBe('2 of 4 steps done.');
+    await waitFor(() => expect(screen.getByRole('status').textContent).toBe('2 of 4 steps done.'));
   });
 
   it('works controlled and never touches the URL', () => {

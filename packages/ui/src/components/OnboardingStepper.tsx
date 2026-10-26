@@ -79,7 +79,7 @@ function StepIcon({ status, locked, current, n }: { status: StepperStatus; locke
 
 /**
  * Onboarding stepper (C21): a layout and state component for guided setup. Left (desktop): the step list as an `<ol>` with a
- * progress bar; right: the open section (heading, optional intro, your form) and a sticky footer. Below 720px of its own width
+ * progress bar; right: the open section (heading, optional intro, your form) and a sticky footer. Below 720px (719px and under) of its own width
  * the list becomes a row of chips (scrolls sideways) above the section.
  * Controlled: pass `current` and handle `onStepChange`; read and write `?id=…&setup=N` yourself.
  */
@@ -97,6 +97,14 @@ export const OnboardingStepper = forwardRef<HTMLDivElement, OnboardingStepperPro
   const prevCurrent = useRef(current);
   const prevDone = useRef<number | null>(null);
   const [say, setSay] = useState('');
+  const frame = useRef(0);
+  // Clear, then set on the next frame: the same text twice still changes the region, so it is read again.
+  const announce = (text: string) => {
+    setSay('');
+    cancelAnimationFrame(frame.current);
+    frame.current = requestAnimationFrame(() => setSay(text));
+  };
+  useEffect(() => () => cancelAnimationFrame(frame.current), []);
 
   const index = Math.max(0, steps.findIndex((s) => s.id === current));
   const step = steps[index];
@@ -119,19 +127,20 @@ export const OnboardingStepper = forwardRef<HTMLDivElement, OnboardingStepperPro
     if (el && list && list.scrollWidth > list.clientWidth) {
       const a = el.getBoundingClientRect();
       const l = list.getBoundingClientRect();
-      list.scrollLeft = Math.max(0, list.scrollLeft + a.left - l.left - (l.width - a.width) / 2);
+      const wider = a.width >= l.width;
+      list.scrollLeft = Math.max(0, list.scrollLeft + a.left - l.left - (wider ? 0 : (l.width - a.width) / 2));
     }
   }, [current]);
 
   // The live region starts empty and speaks only the progress change; the heading focus announces the new step itself.
   useEffect(() => {
-    if (prevDone.current !== null && prevDone.current !== done) setSay(`${done} of ${steps.length} steps done.`);
+    if (prevDone.current !== null && prevDone.current !== done) announce(`${done} of ${steps.length} steps done.`);
     prevDone.current = done;
   }, [done, steps.length]);
 
   const choose = (s: StepperStep) => {
     if (s.locked) {
-      setSay(`${s.label} is locked.${s.reason ? ` ${s.reason}` : ''}`);
+      announce(`${s.label} is locked.${s.reason ? ` ${s.reason}` : ''}`);
       return;
     }
     if (s.id !== current) onStepChange(s.id);
@@ -142,15 +151,15 @@ export const OnboardingStepper = forwardRef<HTMLDivElement, OnboardingStepperPro
 
   return (
     <div ref={ref} className={cn(className, '@container/stepper w-full min-w-0')}>
-      <div className="grid w-full min-w-0 grid-cols-[14rem_minmax(0,1fr)] items-start gap-x-8 @max-[720px]/stepper:grid-cols-1 @max-[720px]/stepper:gap-y-4">
-        <div className="sticky top-0 z-10 flex min-w-0 flex-col gap-4 bg-surface py-1 @max-[720px]/stepper:gap-3">
-          <ol ref={listRef} aria-label={listLabel} className="m-0 flex list-none flex-col gap-1 p-0 @max-[720px]/stepper:flex-row @max-[720px]/stepper:gap-2 @max-[720px]/stepper:overflow-x-auto @max-[720px]/stepper:px-1 @max-[720px]/stepper:py-1">
+      <div className="grid w-full min-w-0 grid-cols-[14rem_minmax(0,1fr)] items-start gap-x-8 @max-[719.98px]/stepper:grid-cols-1 @max-[719.98px]/stepper:gap-y-4">
+        <div className="sticky top-0 z-10 flex min-w-0 flex-col gap-4 bg-surface py-1 @max-[719.98px]/stepper:gap-3">
+          <ol ref={listRef} aria-label={listLabel} className="m-0 flex list-none flex-col gap-1 p-0 @max-[719.98px]/stepper:flex-row @max-[719.98px]/stepper:gap-2 @max-[719.98px]/stepper:overflow-x-auto @max-[719.98px]/stepper:px-1 @max-[719.98px]/stepper:py-1">
             {steps.map((s, i) => {
               const status = s.status ?? 'todo';
               const isCurrent = s.id === current;
               const reasonId = s.locked && s.reason ? `${uid}-r${i}` : undefined;
               return (
-                <li key={s.id} className="relative min-w-0 @max-[720px]/stepper:shrink-0">
+                <li key={s.id} className="relative min-w-0 @max-[719.98px]/stepper:max-w-[min(16rem,80cqw)] @max-[719.98px]/stepper:shrink-0">
                   <button
                     type="button"
                     onClick={() => choose(s)}
@@ -159,21 +168,21 @@ export const OnboardingStepper = forwardRef<HTMLDivElement, OnboardingStepperPro
                     aria-describedby={reasonId}
                     className={cn(
                       'flex w-full items-start gap-2.5 rounded-control border px-2.5 py-2 text-left text-ui transition-colors duration-hover',
-                      '@max-[720px]/stepper:min-h-11 @max-[720px]/stepper:w-auto @max-[720px]/stepper:items-center @max-[720px]/stepper:rounded-full @max-[720px]/stepper:px-3 @max-[720px]/stepper:py-1.5',
+                      '@max-[719.98px]/stepper:min-h-11 @max-[719.98px]/stepper:w-auto @max-[719.98px]/stepper:items-center @max-[719.98px]/stepper:rounded-full @max-[719.98px]/stepper:px-3 @max-[719.98px]/stepper:py-1.5',
                       focusRing,
                       status === 'skipped' && !isCurrent ? 'border-dashed border-control' : 'border-transparent',
                       isCurrent ? 'border-solid border-control bg-raised font-semibold text-text' : 'text-text',
                       s.locked ? 'cursor-not-allowed text-muted' : !isCurrent && 'hover:bg-raised',
                     )}
                   >
-                    <span className="mt-px @max-[720px]/stepper:mt-0"><StepIcon status={status} locked={!!s.locked} current={isCurrent} n={i + 1} /></span>
-                    <span className="flex min-w-0 flex-col @max-[720px]/stepper:flex-row @max-[720px]/stepper:items-center @max-[720px]/stepper:gap-1.5">
+                    <span className="mt-px @max-[719.98px]/stepper:mt-0"><StepIcon status={status} locked={!!s.locked} current={isCurrent} n={i + 1} /></span>
+                    <span className="flex min-w-0 flex-col @max-[719.98px]/stepper:flex-row @max-[719.98px]/stepper:items-center @max-[719.98px]/stepper:gap-1.5">
                       <span className="[overflow-wrap:anywhere]">{s.label}</span>
-                      <span className={cn('text-small font-normal text-muted', '@max-[720px]/stepper:sr-only')}>
+                      <span className={cn('text-small font-normal text-muted', '@max-[719.98px]/stepper:sr-only')}>
                         {s.locked ? 'Locked' : isCurrent ? 'In progress' : word[status]}
                       </span>
                       {s.locked && s.reason && (
-                        <span id={reasonId} className="text-small font-normal text-muted [overflow-wrap:anywhere] @max-[720px]/stepper:sr-only">{s.reason}</span>
+                        <span id={reasonId} className="text-small font-normal text-muted [overflow-wrap:anywhere] @max-[719.98px]/stepper:sr-only">{s.reason}</span>
                       )}
                     </span>
                   </button>
@@ -181,7 +190,7 @@ export const OnboardingStepper = forwardRef<HTMLDivElement, OnboardingStepperPro
               );
             })}
           </ol>
-          <ProgressBar layout="full" tone="accent" value={done} max={steps.length} label={readout} className="@max-[720px]/stepper:px-1" />
+          <ProgressBar layout="full" tone="accent" value={done} max={steps.length} label={readout} className="@max-[719.98px]/stepper:px-1" />
         </div>
 
         <section aria-labelledby={`${uid}-h`} className="flex min-w-0 flex-col">
@@ -196,21 +205,20 @@ export const OnboardingStepper = forwardRef<HTMLDivElement, OnboardingStepperPro
           <div
             role="group"
             aria-label="Step actions"
-            className="sticky bottom-0 z-10 mt-6 flex flex-wrap items-center gap-2 border-t border-border bg-surface py-3"
+            className="sticky bottom-0 z-10 mt-6 flex flex-wrap items-center gap-2 border-t border-border bg-surface py-3 @max-[719.98px]/stepper:flex-col @max-[719.98px]/stepper:items-stretch @max-[719.98px]/stepper:gap-1 @max-[719.98px]/stepper:py-2"
           >
-            {!first && onBack && (
-              <Button variant="text" actionBar disabled={busy} onClick={onBack}>Back</Button>
+            {((!first && onBack) || onFinishLater) && (
+              <div className="flex items-center gap-2 @max-[719.98px]/stepper:gap-1">
+                {!first && onBack && <Button variant="text" actionBar disabled={busy} onClick={onBack}>Back</Button>}
+                {onFinishLater && <Button variant="text" actionBar disabled={busy} onClick={onFinishLater}>Finish later</Button>}
+              </div>
             )}
-            {onFinishLater && (
-              <Button variant="text" actionBar disabled={busy} onClick={onFinishLater}>Finish later</Button>
-            )}
-            <span className="flex-1" aria-hidden />
-            {skippable && (
-              <Button variant="secondary" actionBar disabled={busy} onClick={onSkip}>Skip for now</Button>
-            )}
-            <Button actionBar loading={continueLoading} disabled={busy || continueDisabled} onClick={onContinue}>
-              {continueLabel}
-            </Button>
+            <div className="ml-auto flex items-center gap-2 @max-[719.98px]/stepper:ml-0 @max-[719.98px]/stepper:[&>*]:flex-1">
+              {skippable && <Button variant="secondary" actionBar disabled={busy} onClick={onSkip}>Skip for now</Button>}
+              <Button actionBar loading={continueLoading} disabled={busy || continueDisabled} onClick={onContinue}>
+                {continueLabel}
+              </Button>
+            </div>
           </div>
         </section>
       </div>

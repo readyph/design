@@ -18,7 +18,7 @@ const meta: Meta<typeof OnboardingStepper> = {
         component: [
           'Onboarding stepper (C21): layout and state for guided setup. The forms are yours (slot `children`); the stepper owns the step list, progress bar, section heading and the footer.',
           '',
-          '- Wide (over 720px of its own width, `@container/stepper`): a 14rem step list (`<ol>`) with the C40 progress bar under it, the section on the right. Narrow or phone: the list becomes a row of 44px chips that scrolls sideways, the progress bar stays under it. The list and the footer stick (top / bottom) inside the sheet that scrolls.',
+          '- Wide (720px or more of its own width, `@container/stepper`): a 14rem step list (`<ol>`) with the C40 progress bar under it, the section on the right. Narrow or phone: the list becomes a row of 44px chips (719px and under; 720px shows the list), each at most 16rem or 80% of the width, label wrapping that scrolls sideways, the progress bar stays under it. The list and the footer stick (top / bottom) inside the sheet that scrolls.',
           '- States are never colour alone: done = check icon + "Done", skipped = dashed outline + dashed-circle icon + "Skipped", locked = lock icon + "Locked" + the reason, current = filled number + `aria-current="step"` + "In progress". On chips the words stay for assistive tech (`sr-only`), the icons stay visible.',
           '- Footer: Back (hidden on step 1; goes back, changes no status), Finish later (calls you; keep drafts yourself), Skip for now (marks skipped and moves on; hidden on a `required` step or without `onSkip`), and the primary (`continueLabel`: "Add and continue" on step 1, "Save and continue" after). `busy` disables all; `continueLoading` shows the spinner on the primary.',
           '',
@@ -133,6 +133,20 @@ export const LongNames: Story = {
     </OnboardingStepper>
   ),
 };
+
+const many: StepperStep[] = [
+  { id: 's1', label: 'General info', status: 'done', required: true },
+  { id: 's2', label: 'System', status: 'done' },
+  { id: 's3', label: 'Opening hours', status: 'skipped' },
+  { id: 's4', label: 'Team', status: 'done' },
+  { id: 's5', label: 'Connections' },
+  { id: 's6', label: 'Payments', locked: true, reason: 'Connect a bank account first.' },
+  { id: 's7', label: 'Notifications' },
+  { id: 's8', label: 'Leda & Memory' },
+  { id: 's9', label: 'Review and publish', locked: true, reason: 'Finish the steps before it.' },
+];
+/** Nine steps, mixed done, skipped and locked: the chip row scrolls and keeps the open chip in view. */
+export const ManySteps: Story = { render: () => <Demo initial="s5" seed={many} /> };
 
 const rail = (
   <ul className="m-0 flex list-none flex-col items-center gap-1 p-0 pt-inset">
