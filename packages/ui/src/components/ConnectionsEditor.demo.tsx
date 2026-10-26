@@ -4,11 +4,15 @@ import { Toaster } from './toast/Toaster';
 import { cebu, cubao, main, optRead, optShare, pasig, readsFrom, sharesWith } from './ConnectionsEditor.sample';
 
 /** Controlled demo page for the stories and tests (not exported from the package). */
-export function Demo({ inSheet = false, ...props }: Partial<ConnectionsEditorProps> & { inSheet?: boolean; r?: Connection[]; s?: Connection[]; a?: ConnectionOption[] }) {
+export function Demo({ inSheet = false, delay = 0, fail = false, ...props }: Partial<ConnectionsEditorProps> & { inSheet?: boolean; /** ms the fake save takes */ delay?: number; /** the save is rejected */ fail?: boolean; r?: Connection[]; s?: Connection[]; a?: ConnectionOption[] }) {
   const [reads, setReads] = useState(props.r ?? [readsFrom(cebu), readsFrom(main, 'slow')]);
   const [shares, setShares] = useState(props.s ?? [sharesWith(cubao, 'paused', 'Paused · Cubao is offline')]);
   const [all] = useState(props.a ?? [optRead(cebu), optRead(main), optShare(cubao), optShare(pasig), optRead(pasig)]);
   const [hover, setHover] = useState('Hover a row to light its buildings and road.');
+  const save = (apply: () => void): void | Promise<void> => {
+    if (!delay && !fail) return void apply();
+    return new Promise<void>((res, rej) => setTimeout(() => (fail ? rej(new Error('save failed')) : (apply(), res())), delay));
+  };
   const taken = new Set([...reads, ...shares].map((c) => c.id));
   return (
     <Page inSheet={inSheet}>
@@ -22,8 +26,14 @@ export function Demo({ inSheet = false, ...props }: Partial<ConnectionsEditorPro
           reads={reads}
           shares={shares}
           available={all.filter((o) => !taken.has(o.connection.id))}
-          onAdd={(o) => (o.direction === 'reads' ? setReads((x) => [...x, o.connection]) : setShares((x) => [...x, o.connection]))}
-          onRemove={(c, d) => (d === 'reads' ? setReads((x) => x.filter((y) => y.id !== c.id)) : setShares((x) => x.filter((y) => y.id !== c.id)))}
+          onAdd={(o, ch) =>
+            save(() => {
+              const put = (x: Connection[]) => (ch.index == null ? [...x, o.connection] : [...x.slice(0, ch.index), o.connection, ...x.slice(ch.index)]);
+              if (o.direction === 'reads') setReads(put);
+              else setShares(put);
+            })
+          }
+          onRemove={(c, d) => save(() => (d === 'reads' ? setReads((x) => x.filter((y) => y.id !== c.id)) : setShares((x) => x.filter((y) => y.id !== c.id))))}
           onHover={(c) => setHover(c ? `Lighting Café POS, ${c.platform.name} and the road between them.` : 'Hover a row to light its buildings and road.')}
           {...props}
         />

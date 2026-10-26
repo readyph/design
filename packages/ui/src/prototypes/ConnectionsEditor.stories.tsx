@@ -18,3 +18,10 @@ export const FromLeda: StoryObj = {
   name: 'Entry: Leda prefilled',
   render: () => sheet(<Demo inSheet defaultChoice="shares:catalog:pasig" ledaNote={<LedaNote>Pasig Loyalty could use your catalog for rewards. Nothing is shared until you press Add connection.</LedaNote>} />),
 };
+export const SlowSave: StoryObj = {
+  name: 'Stress: slow save (800 ms)',
+  render: () => sheet(<><Demo inSheet delay={800} /><label className="block p-pad text-ui text-text">Another field <input aria-label="Another field" className="ml-2 h-8 rounded-control border border-control bg-surface px-2" /></label></>),
+};
+export const SlowSave2s: StoryObj = { name: 'Stress: very slow save (2 s)', render: () => sheet(<Demo inSheet delay={2000} />) };
+export const FailedSave: StoryObj = { name: 'Stress: save fails', render: () => sheet(<Demo inSheet delay={800} fail />) };
+export const DeepLinkSlow: StoryObj = { name: 'Stress: deep link, slow save', render: () => sheet(<Demo inSheet delay={800} flashId="reads:stock:main" />) };

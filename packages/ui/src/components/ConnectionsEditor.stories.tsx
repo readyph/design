@@ -50,3 +50,15 @@ export const WithLeda: Story = {
 export const AllConnected: Story = { render: () => <Demo r={[readsFrom(cebu)]} s={[]} a={[optRead(cebu)]} /> };
 export const Loading: Story = { render: () => <Demo status="loading" /> };
 export const ErrorState: Story = { name: 'Error', render: () => <Demo status="error" onRetry={() => {}} /> };
+
+export const SlowSave: Story = {
+  name: 'Stress: slow save (800 ms), type elsewhere',
+  render: () => (
+    <div>
+      <Demo delay={800} />
+      <label className="block p-pad text-ui text-text">Another field <input aria-label="Another field" className="ml-2 h-8 rounded-control border border-control bg-surface px-2" /></label>
+    </div>
+  ),
+};
+export const VerySlowSave: Story = { name: 'Stress: very slow save (2 s)', render: () => <Demo delay={2000} /> };
+export const FailedSave: Story = { name: 'Stress: save fails', render: () => <Demo delay={800} fail /> };

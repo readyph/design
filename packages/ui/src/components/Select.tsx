@@ -276,7 +276,7 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
           aria-labelledby={ariaLabelledBy}
           aria-label={ariaLabelledBy ? undefined : ariaLabel}
           className={cn(
-            'absolute left-0 z-50 max-h-[264px] min-w-full overflow-y-auto rounded-card border border-border bg-surface p-1 shadow-float',
+            'absolute left-0 z-50 max-h-[264px] min-w-full max-w-[max(100%,min(32rem,calc(100vw-2rem)))] overflow-y-auto rounded-card border border-border bg-surface p-1 shadow-float',
             up ? 'bottom-full mb-1' : 'top-full mt-1',
           )}
         >

@@ -1,6 +1,7 @@
-import { forwardRef, useEffect, useMemo, useRef, useState, type HTMLAttributes, type ReactNode } from 'react';
+import { forwardRef, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type HTMLAttributes, type ReactNode } from 'react';
 import { Info, Plus } from '@phosphor-icons/react';
 import { cn } from '../utils/cn';
+import { focusIfLost } from '../utils/focusIfLost';
 import { Button } from './Button';
 import { ConfirmDialog } from './ConfirmDialog';
 import { ErrorBlock } from './ErrorBlock';
@@ -58,6 +59,8 @@ export interface ConnectionOption {
 export interface ConnectionChange {
   /** True when the call is an Undo, so the page can skip the van and a second toast. */
   undo: boolean;
+  /** On the Undo of a Remove: the row's old position in its group, so the page can put it back there. */
+  index?: number;
 }
 
 export interface ConnectionsEditorProps extends Omit<HTMLAttributes<HTMLDivElement>, 'children'> {
@@ -69,10 +72,10 @@ export interface ConnectionsEditorProps extends Omit<HTMLAttributes<HTMLDivEleme
   shares: Connection[];
   /** Every link not made yet. Ones already in `reads` or `shares`, and ones to `platformId`, are filtered out here. */
   available?: ConnectionOption[];
-  /** Saves at once. The editor shows the Undo toast and moves focus to the new row. */
-  onAdd?: (option: ConnectionOption, change: ConnectionChange) => void;
+  /** Saves at once. The editor shows the Undo toast and, once the new row is on screen, moves focus to it only if focus was lost. May return a promise: a rejection drops the pending focus move. */
+  onAdd?: (option: ConnectionOption, change: ConnectionChange) => void | Promise<unknown>;
   /** Called after the Remove dialog is confirmed, and for the Undo of an Add. */
-  onRemove?: (connection: Connection, direction: ConnectionDirection, change: ConnectionChange) => void;
+  onRemove?: (connection: Connection, direction: ConnectionDirection, change: ConnectionChange) => void | Promise<unknown>;
   /** A row is hovered or focused (the page lights its two buildings and the road); `null` when it leaves. */
   onHover?: (connection: Connection | null, direction: ConnectionDirection | null) => void;
   /** Deep link: this row flashes once and its Remove button takes focus. */
@@ -116,7 +119,14 @@ function removeOf(root: HTMLElement | null, id: string): HTMLElement | null {
   return row?.querySelector<HTMLElement>('[data-remove]') ?? null;
 }
 
-type Pending = { type: 'row'; id: string } | { type: 'add' };
+/**
+ * A focus move waiting for the page to catch up (a save can be slow). Keyed so a newer action supersedes it; it fires
+ * at most once, through `focusIfLost`, so it never takes focus from where the user went meanwhile.
+ * `row`: focus that row's Remove once it exists. `gone`: once row `id` has left, focus the first of `then` that
+ * exists, else the Add dropdown.
+ */
+type DistributiveOmit<T> = T extends unknown ? Omit<T, 'key'> : never;
+type Intent = { key: number; type: 'row'; id: string } | { key: number; type: 'gone'; id: string; then: string[] };
 
 /**
  * Connections editor (C26, RDY-286): the platform's data links as two groups of ruled rows ("Reads from", "Shares
@@ -155,10 +165,12 @@ export const ConnectionsEditor = forwardRef<HTMLDivElement, ConnectionsEditorPro
 ) {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const selectRef = useRef<HTMLButtonElement | null>(null);
-  const pending = useRef<Pending | null>(null);
+  const intent = useRef<Intent | null>(null);
+  const seq = useRef(0);
+  const flashed = useRef<string | null>(null);
+  const hintId = useId();
   const [choice, setChoice] = useState(defaultChoice);
   const [confirm, setConfirm] = useState<{ connection: Connection; direction: ConnectionDirection } | null>(null);
-  const [tick, setTick] = useState(0);
 
   const taken = useMemo(() => new Set([...reads.map((c) => keyOf('reads', c)), ...shares.map((c) => keyOf('shares', c))]), [reads, shares]);
   const options = useMemo(() => {
@@ -173,46 +185,92 @@ export const ConnectionsEditor = forwardRef<HTMLDivElement, ConnectionsEditorPro
   const picked = options.find((o) => o.id === choice) ?? null;
   const ready = status === 'ready';
 
-  // Move focus once the page has re-rendered with the new lists. Radix may hand focus back after the dialog closes,
-  // so a second look checks that focus really is inside the editor.
-  useEffect(() => {
-    const p = pending.current;
-    if (!p) return;
+  const arm = (i: DistributiveOmit<Intent>) => {
+    const key = ++seq.current;
+    intent.current = { ...i, key } as Intent;
+    return key;
+  };
+  // A rejected save never happens: drop its focus move (only if nothing newer replaced it).
+  const track = (key: number, result: void | Promise<unknown>) => {
+    if (result && typeof (result as Promise<unknown>).then === 'function') {
+      (result as Promise<unknown>).catch(() => {
+        if (intent.current?.key === key) intent.current = null;
+      });
+    }
+  };
+
+  // Fires when the page's lists change. No timers: it runs in the same commit that shows (or removes) the row.
+  // While the Remove dialog is still closing its focus trap would pull focus back, so wait for it to leave the page.
+  const settleIntent = () => {
+    const i = intent.current;
     const root = rootRef.current;
-    const find = () =>
-      p.type === 'row'
-        ? removeOf(root, p.id)
-        : selectRef.current ?? root;
-    const target = find();
-    if (!target) return;
-    pending.current = null;
-    const go = () => {
-      const t = find() ?? root;
-      if (t === root && root && !root.hasAttribute('tabindex')) root.setAttribute('tabindex', '-1');
-      t?.focus({ preventScroll: false });
-    };
-    go();
-    const id = window.setTimeout(() => {
-      if (!root?.contains(document.activeElement) || document.activeElement === root) go();
-    }, 60);
-    return () => window.clearTimeout(id);
-  }, [reads, shares, options.length, tick]);
+    if (!i || !root) return;
+    if (i.type === 'row') {
+      const b = removeOf(root, i.id);
+      if (!b) return;
+      intent.current = null;
+      focusIfLost(root, b);
+      return;
+    }
+    if (removeOf(root, i.id)) return; // not gone yet
+    if (document.querySelector('[role="alertdialog"]')) {
+      const mo = new MutationObserver(() => {
+        if (document.querySelector('[role="alertdialog"]')) return;
+        mo.disconnect();
+        if (intent.current === i) settleIntent();
+      });
+      mo.observe(document.body, { childList: true, subtree: true });
+      return;
+    }
+    intent.current = null;
+    let target: HTMLElement | null = null;
+    for (const id of i.then) target = target ?? removeOf(root, id);
+    if (!target) {
+      target = selectRef.current;
+      if (!target) {
+        root.setAttribute('tabindex', '-1');
+        target = root;
+      }
+    }
+    focusIfLost(root, target);
+  };
+  useLayoutEffect(settleIntent, [reads, shares, options.length]);
 
-  // Deep link: take focus on the flashed row's Remove button, once per flashId.
+  // The user went somewhere else (not the dialog or the toast): the move is no longer wanted.
   useEffect(() => {
-    if (!flashId || !ready) return;
-    const el = removeOf(rootRef.current, flashId);
-    if (!el) return;
-    el.focus();
-    el.closest('[data-conn-id]')?.scrollIntoView?.({ block: 'nearest' });
-  }, [flashId, ready, reads.length, shares.length]);
+    const away = (e: Event) => {
+      if (!intent.current) return;
+      const t = e.target instanceof Element ? e.target : null;
+      if (t && !rootRef.current?.contains(t) && !t.closest('[role="alertdialog"],[role="status"]')) intent.current = null;
+    };
+    document.addEventListener('focusin', away);
+    document.addEventListener('pointerdown', away);
+    return () => {
+      document.removeEventListener('focusin', away);
+      document.removeEventListener('pointerdown', away);
+    };
+  }, []);
 
-  const add = (o: ConnectionOption, undo = false) => {
+  // Deep link: take focus on the flashed row's Remove, once per flashId (and only if focus was lost).
+  useLayoutEffect(() => {
+    if (!flashId || !ready || flashed.current === flashId) return;
+    const b = removeOf(rootRef.current, flashId);
+    if (!b) return;
+    flashed.current = flashId;
+    focusIfLost(rootRef.current, b);
+    b.closest('[data-conn-id]')?.scrollIntoView?.({ block: 'nearest' });
+  }, [flashId, ready, reads, shares]);
+
+  const add = (o: ConnectionOption, undo = false, index?: number) => {
     if (o.connection.platform.id === platformId || (!undo && taken.has(keyOf(o.direction, o.connection)))) return;
-    onAdd?.(o, { undo });
-    pending.current = { type: 'row', id: o.connection.id };
-    setTick((t) => t + 1);
-    if (!undo) toast.undo(`Connection added · ${o.label}`, () => onRemove?.(o.connection, o.direction, { undo: true }));
+    const key = arm({ type: 'row', id: o.connection.id });
+    track(key, onAdd?.(o, { undo, index }));
+    if (!undo) {
+      toast.undo(`Connection added · ${o.label}`, () => {
+        const k = arm({ type: 'gone', id: o.connection.id, then: [] });
+        track(k, onRemove?.(o.connection, o.direction, { undo: true }));
+      });
+    }
   };
   const onAddClick = () => {
     if (!picked) return; // aria-disabled until a choice: the button stays focusable
@@ -224,15 +282,11 @@ export const ConnectionsEditor = forwardRef<HTMLDivElement, ConnectionsEditorPro
     const { connection: c, direction } = confirm;
     const list = direction === 'reads' ? reads : shares;
     const i = list.findIndex((x) => x.id === c.id);
-    const next = list[i + 1] ?? list[i - 1] ?? null;
-    pending.current = next ? { type: 'row', id: next.id } : { type: 'add' };
+    const then = [list[i + 1], list[i - 1]].filter(Boolean).map((x) => x.id);
     setConfirm(null);
-    onRemove?.(c, direction, { undo: false });
-    setTick((t) => t + 1);
-    toast.undo(`Connection removed · ${wordsOf(direction, c)}`, () => {
-      pending.current = { type: 'row', id: c.id };
-      add({ id: `undo:${c.id}`, direction, label: wordsOf(direction, c), connection: c }, true);
-    });
+    const key = arm({ type: 'gone', id: c.id, then });
+    track(key, onRemove?.(c, direction, { undo: false }));
+    toast.undo(`Connection removed · ${wordsOf(direction, c)}`, () => add({ id: `undo:${c.id}`, direction, label: wordsOf(direction, c), connection: c }, true, i));
   };
 
   const multi = useMemo(() => {
@@ -366,9 +420,10 @@ export const ConnectionsEditor = forwardRef<HTMLDivElement, ConnectionsEditorPro
                   onValueChange={setChoice}
                   options={options.map((o) => ({ value: o.id, label: o.label, textValue: o.label, meta: o.connection.platform.kind }))}
                 />
-                <Button variant="secondary" leftIcon={Plus} actionBar aria-disabled={!picked || undefined} className={cn(!picked && 'cursor-not-allowed opacity-50')} onClick={onAddClick}>
+                <Button variant="secondary" leftIcon={Plus} actionBar aria-disabled={!picked || undefined} aria-describedby={picked ? undefined : hintId} title={picked ? undefined : 'Choose a connection first'} className={cn(!picked && 'cursor-not-allowed opacity-50')} onClick={onAddClick}>
                   Add connection
                 </Button>
+                <span id={hintId} className="sr-only">Choose a connection first</span>
               </div>
             ) : (
               <p className="m-0 text-ui text-muted">{reads.length + shares.length ? 'Everything it can connect to is connected.' : 'Nothing to connect to yet.'}</p>
