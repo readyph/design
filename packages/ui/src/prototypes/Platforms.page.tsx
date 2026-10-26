@@ -498,6 +498,7 @@ export function PlatformsPage({ set: setKey = 'duo', state: initial = 'live', ad
         onAddPlatform={() => addPlatform()}
         placeLabel="Your platforms"
         sheetLabel="All platforms"
+        heading={null}
         place={
           <Place
             set={set}
