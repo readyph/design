@@ -264,8 +264,10 @@ export function Team({ set = 'live', state = 'live', person, startInvite = false
       window.history.pushState({ rphTeam: depth.current, id: next.id }, '');
     }
   };
+  const lastOpened = useRef('');
   const openPerson = (id: string) => {
     if (!db.members[id]) return;
+    lastOpened.current = id;
     go({ type: 'person', id });
   };
   const back = () => {
@@ -983,7 +985,7 @@ export function Team({ set = 'live', state = 'live', person, startInvite = false
 
   return (
     <>
-      <SubpageTransition paneKey={subKey} direction={dir}>
+      <SubpageTransition paneKey={subKey} direction={dir} restoreFocus={() => document.getElementById(`team-open-${lastOpened.current}`) ?? document.querySelector<HTMLElement>('[data-shell-place] h1')}>
         <PortalFrame
           current="team"
           pageName="Team"
@@ -996,6 +998,7 @@ export function Team({ set = 'live', state = 'live', person, startInvite = false
           sheetBar={sheetBar}
           sheetLabel={personId ? byId(personId).name : 'Everyone'}
           detail={phone && !!personId}
+          heading={null}
           topBar={detailBar}
           status={
             <StatusBar
@@ -1044,7 +1047,7 @@ export function Team({ set = 'live', state = 'live', person, startInvite = false
               <div role="group" aria-label="The invite email" className="rounded-card border border-border bg-raised px-4 py-4 text-ui text-text">
                 <p className="m-0 font-semibold">{me.name} invited you to ReadyPH</p>
                 <p className="m-0 mt-2">{me.short} added you to the team{w.length ? ` as ${andList(w)}` : ''}{v.company === 'admin' ? ', and as an admin of the Portal' : ''}. Set your password to join.</p>
-                <span className="mt-3 inline-flex h-8 items-center rounded-control bg-accent px-3 text-ui font-medium text-on-accent">Join the team</span>
+                <span className="mt-3 inline-flex h-8 items-center rounded-control bg-accent px-3 text-ui font-medium text-accent-ink">Join the team</span>
                 <p className="m-0 mt-3 text-small text-muted">The link works for 7 days. To {v.email}.</p>
               </div>
             );
