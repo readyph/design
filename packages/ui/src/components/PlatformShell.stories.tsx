@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { expect, userEvent, within } from '@storybook/test';
 import type { Meta, StoryObj } from '@storybook/react';
 import { House, Graph, FileText, Users, DotsThree, MagnifyingGlass } from '@phosphor-icons/react';
 import { PlatformShell } from './PlatformShell';
@@ -199,5 +200,28 @@ export const PlaceColumnSurfaces: Story = {
   ),
 };
 
-/** Phone: the shell is all --surface, so the frame scope resets (rules and ring offset on --surface). Check at 375 and 320. */
-export const PlaceColumnSurfacesPhone: Story = { ...PlaceColumnSurfaces, parameters: { viewport: { defaultViewport: 'mobile1' } } };
+/**
+ * Phone: the shell is all --surface, so the frame scope resets (rules, sticky header band and ring offset on --surface; RDY-306). Check at 375 and 320.
+ * The play step reads computed styles: the "Auto repair" header paints the place column's colour, and the focused Open button's ring offset is that colour.
+ */
+export const PlaceColumnSurfacesPhone: Story = {
+  ...PlaceColumnSurfaces,
+  parameters: { viewport: { defaultViewport: 'mobile1' } },
+  play: async ({ canvasElement }) => {
+    if (!window.matchMedia('(max-width: 640px)').matches) return;
+    const canvas = within(canvasElement);
+    const place = canvasElement.querySelector('[data-shell-place]') as HTMLElement;
+    // Resolve --surface to the colour the browser paints (rgb) with a probe, so the check holds in light and dark.
+    const probe = place.appendChild(document.createElement('div'));
+    probe.style.background = 'var(--surface)';
+    const surface = getComputedStyle(probe).backgroundColor;
+    probe.remove();
+    const header = canvas.getByRole('heading', { name: 'Auto Works Quezon City' }).closest('header') as HTMLElement;
+    await expect(getComputedStyle(header).backgroundColor).toBe(surface);
+    const open = canvas.getByRole('button', { name: 'Open Auto Works Quezon City' });
+    await userEvent.tab();
+    open.focus();
+    // Focus ring = 2px offset in the scope colour, then the accent ring.
+    await expect(getComputedStyle(open).boxShadow).toContain(surface);
+  },
+};
