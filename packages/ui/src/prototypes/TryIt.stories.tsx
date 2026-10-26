@@ -17,7 +17,7 @@ function Page({ fixed }: { fixed: boolean }) {
   const [open, setOpen] = useState(false);
   const [sw, setSw] = useState(defaultSwitches);
   return (
-    <PlatformShell place={<div className="px-3 text-ui text-muted">Memory</div>} placeLabel="Memory" detail sheetLabel="Leda & Memory">
+    <PlatformShell heading="Memory" place={<div className="px-3 text-ui text-muted">Memory</div>} placeLabel="Memory" detail sheetLabel="Leda & Memory">
       <div className="mx-auto w-full max-w-[720px] px-4 py-6">
         <p className="text-body text-muted">Off means Leda can't answer any customer question that needs that topic.</p>
         <Button variant="secondary" className="mt-3" onClick={() => setOpen(true)}>Try it</Button>

@@ -12,15 +12,15 @@ export default meta;
 
 const blocks = (
   <div className="flex flex-col gap-10 px-3 pb-6">
-    <PlatformToday platform={autoWorks} kind="Auto repair" onOpen={() => {}} leda="acts" facts={[{ value: 7, label: 'open jobs' }, { value: 2, label: 'late', tone: 'bad' }]} lists={[{ ...jobs, onViewAll: () => {} }]} />
-    <PlatformToday platform={stockroom} kind="Inventory" onOpen={() => {}} leda="reads" facts={[{ value: 412, label: 'products' }]} lists={[{ ...stock, onViewAll: () => {} }]} />
-    <PlatformToday platform={cafe} kind="Point of sale" onOpen={() => {}} leda="reads" facts={[{ value: 64, label: 'sales' }]} activity={[{ id: 'a', at: '10:12 AM', text: 'Closed shift for Lia Santos' }]} />
+    <PlatformToday level={2} platform={autoWorks} kind="Auto repair" onOpen={() => {}} leda="acts" facts={[{ value: 7, label: 'open jobs' }, { value: 2, label: 'late', tone: 'bad' }]} lists={[{ ...jobs, onViewAll: () => {} }]} />
+    <PlatformToday level={2} platform={stockroom} kind="Inventory" onOpen={() => {}} leda="reads" facts={[{ value: 412, label: 'products' }]} lists={[{ ...stock, onViewAll: () => {} }]} />
+    <PlatformToday level={2} platform={cafe} kind="Point of sale" onOpen={() => {}} leda="reads" facts={[{ value: 64, label: 'sales' }]} activity={[{ id: 'a', at: '10:12 AM', text: 'Closed shift for Lia Santos' }]} />
   </div>
 );
 
 export const InPlaceColumn: StoryObj = {
   render: () => (
-    <PlatformShell place={blocks} placeLabel="Today">
+    <PlatformShell heading="Today" place={blocks} placeLabel="Today">
       <div className="p-6 text-ui text-muted">Sheet</div>
     </PlatformShell>
   ),

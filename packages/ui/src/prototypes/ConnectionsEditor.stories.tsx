@@ -10,7 +10,7 @@ const meta: Meta = {
 };
 export default meta;
 
-const sheet = (node: React.ReactNode) => <PlatformShell sheetLabel="Connections">{node}</PlatformShell>;
+const sheet = (node: React.ReactNode) => <PlatformShell heading="Auto Works" sheetLabel="Connections">{node}</PlatformShell>;
 
 export const InSheet: StoryObj = { name: 'Entry: platform Connections tab', render: () => sheet(<Demo inSheet />) };
 export const FromConnectData: StoryObj = { name: 'Entry: Connect data link (flash)', render: () => sheet(<Demo inSheet flashId="reads:stock:main" />) };

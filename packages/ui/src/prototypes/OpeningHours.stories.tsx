@@ -26,6 +26,7 @@ function SystemTab({ initial }: { initial: OpeningHoursValue }) {
         today={todayIso}
         now={nowSample}
         platformName="Auto Works"
+        headingLevel={2}
         savedValue={saved}
         onDiscard={() => setValue(saved)}
         onSave={(v) => {
@@ -43,7 +44,7 @@ function SystemTab({ initial }: { initial: OpeningHoursValue }) {
 
 const shell = (initial: OpeningHoursValue) => (
   <>
-    <PlatformShell place={<div className="px-3 text-ui text-muted">Auto Works</div>} placeLabel="Auto Works" detail sheetLabel="System">
+    <PlatformShell heading="Auto Works" place={<div className="px-3 text-ui text-muted">Auto Works</div>} placeLabel="Auto Works" detail sheetLabel="System">
       <SystemTab initial={initial} />
     </PlatformShell>
     <Toaster />
