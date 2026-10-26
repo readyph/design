@@ -38,4 +38,5 @@ export * from './components/PlatformToday';
 export * from './components/CommandPalette';
 export * from './components/SubpageTransition';
 export * from './components/TownMap';
+export * from './components/TopicLibrary';
 export { focusIfLost } from './utils/focusIfLost';
