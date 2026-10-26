@@ -6,12 +6,12 @@ import { Breadcrumbs } from '../components/Breadcrumbs';
 import { SubpageLane, SubpageTransition, type SubpageDirection } from '../components/SubpageTransition';
 
 /**
- * [For Review] RDY-275 (C15). Prototype only: not exported from the package.
+ * RDY-275 (C15). Prototype only: not exported from the package.
  * Platforms list to a platform page inside PlatformShell. The place column slides from the left, the sheet from the right.
  * The rail, the map stand-in and the status bar never move. Try the Back button, the browser Back/Forward, Esc, and clicking quickly.
  */
 const meta: Meta = {
-  title: 'Prototypes/Portal/[For Review] Subpage transition',
+  title: 'Prototypes/Portal/Subpage transition',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;
