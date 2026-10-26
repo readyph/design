@@ -1,0 +1,5 @@
+---
+'@readyph/ui': minor
+---
+
+Sheet bar and tabs (C5): `Tabs` and `TabPanel` rebuilt on the new tokens, plus a new `SheetBar` (48px, 24px side padding, tabs or breadcrumb left, Leda bar and buttons right). New `variant` values: `editor` (closable tabs, 96-180px, shrink before the strip scrolls; Delete closes; preview tabs are italic and `onPin` fires on double-click), `fixed`, `vertical` (icon, name, status word; `statusTone="warn"` for "Unsaved") and `chips` (44px on phone, chosen chip scrolls into view). Panels fade in over 120ms (opacity only, kept under reduced motion). The preset gains a `tab-fade` animation. API changes for consumers (portal, inventory, sms): the default `variant` is now `fixed`; `underline` and `pill` still work as aliases of `fixed` and `chips`. The list needs `aria-label` (defaults to "Tabs"). New optional `TabItem` fields: `leading`, `closable`, `preview`, `status`, `statusTone`; new props `onClose`, `onPin`. The close X is a pointer-only affordance inside the tab (a tablist may hold only tabs): keyboard users press Delete (`aria-keyshortcuts`). Tabs belong only on Home, platform.html and Memory.

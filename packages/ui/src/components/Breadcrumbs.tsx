@@ -83,7 +83,7 @@ export const Breadcrumbs = forwardRef<HTMLElement, BreadcrumbsProps>(function Br
     body = (
       <ol className="flex min-w-0 list-none items-center gap-2 p-0">
         {back && (
-          <li className="flex min-w-0 max-w-[50%] shrink-0">
+          <li className="flex min-w-0 max-w-[14rem] shrink">
             <Action
               crumb={back}
               className={cn(
@@ -97,7 +97,7 @@ export const Breadcrumbs = forwardRef<HTMLElement, BreadcrumbsProps>(function Br
             </Action>
           </li>
         )}
-        <li className="flex min-w-0 items-baseline gap-2 text-ui">
+        <li className="flex min-w-[4.5rem] items-baseline gap-2 text-ui">
           {back && (
             <span aria-hidden className="text-muted">
               /
@@ -152,7 +152,7 @@ export const Breadcrumbs = forwardRef<HTMLElement, BreadcrumbsProps>(function Br
   }
 
   return (
-    <div className={cn('min-w-0', className)}>
+    <div className={cn('min-w-0', variant === 'sheet' && 'min-w-[9rem]', className)}>
       <nav ref={ref} aria-label={label} className="min-w-0">
         {body}
       </nav>
