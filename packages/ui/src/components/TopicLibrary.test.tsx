@@ -141,3 +141,58 @@ describe('useTopicLayout', () => {
     set.mockRestore();
   });
 });
+
+describe('focus after a save removes the row', () => {
+  const on = sampleTopics.filter((t) => t.on);
+  const counts = countTopics(sampleTopics);
+  const setup = () => {
+    const outside = document.createElement('input');
+    document.body.appendChild(outside);
+    const view = render(<TopicLibrary topics={on} counts={counts} filter="on" />);
+    return { outside, view };
+  };
+
+  it('does not pull focus back from an outside input (async save)', () => {
+    const { outside, view } = setup();
+    fireEvent.click(screen.getAllByRole('switch')[1]); // user toggles, save is pending
+    outside.focus(); // user clicks into another field meanwhile
+    view.rerender(<TopicLibrary topics={on.filter((t) => t.id !== on[1].id)} counts={counts} filter="on" />);
+    expect(document.activeElement).toBe(outside);
+    outside.remove();
+  });
+
+  it('moves focus to the next switch when the focused row vanished', () => {
+    const { outside, view } = setup();
+    const sw = screen.getAllByRole('switch')[1];
+    sw.focus();
+    fireEvent.click(sw);
+    view.rerender(<TopicLibrary topics={on.filter((t) => t.id !== on[1].id)} counts={counts} filter="on" />);
+    expect(document.activeElement?.getAttribute('role')).toBe('switch');
+    expect(document.activeElement?.getAttribute('aria-label')).toContain(on[2].title);
+    outside.remove();
+  });
+
+  it('ignores a stale toggle on a later, unrelated change', () => {
+    const { outside, view } = setup();
+    fireEvent.click(screen.getAllByRole('switch')[0]); // row stays shown
+    view.rerender(<TopicLibrary topics={[...on]} counts={counts} filter="on" />);
+    expect(document.activeElement).toBe(document.body);
+    view.rerender(<TopicLibrary topics={on.slice(2)} counts={counts} filter="on" />);
+    expect(document.activeElement).toBe(document.body);
+    outside.remove();
+  });
+});
+
+describe('IME', () => {
+  it('Escape and Enter do nothing while composing', () => {
+    vi.useFakeTimers();
+    const onQueryChange = vi.fn();
+    lib({ onQueryChange, query: 'x' });
+    const input = screen.getByLabelText('Search every folder') as HTMLInputElement;
+    fireEvent.keyDown(input, { key: 'Escape', isComposing: true });
+    expect(input.value).toBe('x');
+    expect(onQueryChange).not.toHaveBeenCalled();
+    fireEvent.keyDown(input, { key: 'Escape' });
+    expect(input.value).toBe('');
+  });
+});

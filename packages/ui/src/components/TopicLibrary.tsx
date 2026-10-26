@@ -192,7 +192,7 @@ function LockMark({ topic }: { topic: TopicItem }) {
 function SourceMark({ topic }: { topic: TopicItem }) {
   const Ic = topic.sourceKind === 'custom' ? PencilSimpleLine : Database;
   return (
-    <span className="inline-flex min-w-0 items-center gap-1.5 text-ui text-muted">
+    <span className="flex w-full min-w-0 max-w-full items-center gap-1.5 text-ui text-muted">
       <Ic aria-hidden size={14} className="shrink-0" />
       <span className="min-w-0 truncate">{topic.source}</span>
     </span>
@@ -202,7 +202,7 @@ function SourceMark({ topic }: { topic: TopicItem }) {
 function FolderMark({ topic }: { topic: TopicItem }) {
   if (!topic.folder) return null;
   return (
-    <span className="inline-flex min-w-0 items-center gap-1.5 text-ui text-muted">
+    <span className="flex w-full min-w-0 max-w-full items-center gap-1.5 text-ui text-muted">
       {topic.folder.logo ? <span className="inline-flex shrink-0">{topic.folder.logo}</span> : null}
       <span className="min-w-0 truncate">{topic.folder.label}</span>
     </span>
@@ -220,10 +220,28 @@ function TopicSwitch({ topic, index, readOnly, h }: { topic: TopicItem; index: n
         checked={topic.on}
         disabled={readOnly}
         aria-label={`Customers' Leda can use ${topic.title}`}
+        className="max-[640px]:before:absolute max-[640px]:before:-inset-x-[5px] max-[640px]:before:-inset-y-3 max-[640px]:before:content-['']"
         onCheckedChange={(next) => h.toggle(topic, next, index)}
       />
     </span>
   );
+}
+
+/*
+ * Focus is "lost" only when nothing sensible holds it: no element, the body, a node that left the document, a
+ * disabled control, or anything inside an `[inert]` subtree. Anywhere else the user chose it, so we never move it.
+ * Same rule as the shared `focusIfLost` (RDY-269); kept as one small function here so it can be swapped for it.
+ */
+function focusIsLost(): boolean {
+  let a: Element | null = document.activeElement;
+  // Follow open shadow roots; when a root has no active element, keep the host (document.activeElement).
+  while (a && (a as HTMLElement).shadowRoot) {
+    const inner: Element | null = (a as HTMLElement).shadowRoot!.activeElement;
+    if (!inner) break;
+    a = inner;
+  }
+  if (!a || a === document.body || a === document.documentElement || !a.isConnected) return true;
+  return a.matches(':disabled') || !!a.closest('[inert]');
 }
 
 const linkClass = cn('group/link block min-w-0 rounded-chip text-left', focusRing);
@@ -415,12 +433,12 @@ export function TopicLibrary({
     pending.current = null;
     const root = rootRef.current;
     if (!p || !root) return;
-    const active = document.activeElement;
-    if (active && active !== document.body && root.contains(active)) return;
     const rows = Array.from(root.querySelectorAll<HTMLElement>('[data-row-id]'));
-    if (!rows.length) return;
-    const row = rows.find((r) => r.dataset.rowId === p.id) ?? rows[Math.min(p.index, rows.length - 1)];
-    row.querySelector<HTMLElement>('[role="switch"]')?.focus();
+    // The toggled row is still shown: nothing to repair, and the intent must not outlive this update.
+    if (!rows.length || rows.some((r) => r.dataset.rowId === p.id)) return;
+    // The row left the shown set. Move focus only if it was lost with it; never pull it back from elsewhere.
+    if (!focusIsLost()) return;
+    rows[Math.min(p.index, rows.length - 1)].querySelector<HTMLElement>('[role="switch"]')?.focus();
   }, [topics]);
 
   /* ----- search: debounced, highlight from the committed query ----- */
@@ -443,6 +461,7 @@ export function TopicLibrary({
     searchRef.current?.focus();
   };
   const onSearchKey = (e: ReactKeyboardEvent<HTMLInputElement>) => {
+    if (e.nativeEvent.isComposing || e.keyCode === 229) return; // an IME is composing: Enter and Esc belong to it
     if (e.key === 'Enter') {
       e.preventDefault();
       if (text !== queryRef.current) emitRef.current?.(text);
@@ -642,7 +661,7 @@ export function TopicLibrary({
               onChange={(e) => setText(e.target.value)}
               onKeyDown={onSearchKey}
               aria-label="Search every folder"
-              placeholder="Search every folder, like “warranty” or “GCash”"
+              placeholder="Search every folder"
               autoComplete="off"
               spellCheck={false}
               enterKeyHint="search"
@@ -677,7 +696,9 @@ export function TopicLibrary({
 
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           {businesses && businesses.length > 0 ? (
-            <Select size="sm" aria-label="Business" options={businesses} value={business} onValueChange={onBusinessChange} className="w-52 max-w-full" />
+            <div className="min-w-0 flex-1 @min-[640px]/lib:w-52 @min-[640px]/lib:flex-none">
+              <Select size="sm" aria-label="Business" options={businesses} value={business} onValueChange={onBusinessChange} className="w-full min-w-0" />
+            </div>
           ) : null}
           <SegmentedControl
             size="md"
@@ -687,8 +708,8 @@ export function TopicLibrary({
             onChange={(v) => onFilterChange?.(v as TopicFilter)}
             className="hidden @min-[640px]/lib:inline-flex"
           />
-          <div className="@min-[640px]/lib:hidden">
-            <Select size="sm" aria-label="Show" options={filterSelect} value={filter} onValueChange={(v) => onFilterChange?.(v as TopicFilter)} className="w-40" />
+          <div className="min-w-0 flex-1 @min-[640px]/lib:hidden">
+            <Select size="sm" aria-label="Show" options={filterSelect} value={filter} onValueChange={(v) => onFilterChange?.(v as TopicFilter)} className="w-full min-w-0" />
           </div>
           <SegmentedControl
             size="md"
@@ -696,7 +717,7 @@ export function TopicLibrary({
             options={layoutOptions}
             value={layout}
             onChange={(v) => onLayoutChange?.(v as TopicLayout)}
-            className="ml-auto"
+            className="ml-auto shrink-0 max-[640px]:[&_button]:min-h-11 max-[640px]:[&_button]:min-w-11"
           />
         </div>
       </div>

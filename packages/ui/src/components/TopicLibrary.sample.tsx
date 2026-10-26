@@ -67,7 +67,10 @@ export function TopicLibraryPage({ initial = sampleTopics, ...props }: Partial<T
   const shown = useMemo(() => searched.filter((t) => passes(t, filter)), [searched, filter]);
   const folder = business ? FOLDERS[business] : undefined;
   const scope = useMemo(() => (business ? inBusiness : topics), [business, inBusiness, topics]);
-  const allOn = scope.length > 0 && scope.every((t) => t.on);
+  const safe = scope.filter((t) => !t.locked);
+  // "Turn all on" leaves sensitive topics off, so "all on" means every non-sensitive topic is on.
+  const allOn = safe.length > 0 && safe.every((t) => t.on);
+  const canBulk = allOn ? scope.some((t) => t.on) : safe.some((t) => !t.on);
 
   const set = (ids: string[], on: boolean) => setTopics((ts) => ts.map((t) => (ids.includes(t.id) ? { ...t, on } : t)));
   const onToggle = (t: TopicItem, next: boolean) => {
@@ -100,7 +103,7 @@ export function TopicLibraryPage({ initial = sampleTopics, ...props }: Partial<T
         layout={layout}
         onLayoutChange={setLayout}
         onToggle={onToggle}
-        onToggleAll={(next) => setAsk(next)}
+        onToggleAll={canBulk ? (next) => setAsk(next) : undefined}
         allOn={allOn}
         onNew={() => toast.info('New topic opens a blank page.')}
         {...props}
@@ -118,11 +121,10 @@ export function TopicLibraryPage({ initial = sampleTopics, ...props }: Partial<T
         onConfirm={confirm}
       >
         {!ask ? (
-          <ul className="m-0 list-disc pl-5 text-ui text-muted">
-            {targets.slice(0, 5).map((t) => (
+          <ul tabIndex={0} aria-label="Topics that go quiet" className="m-0 max-h-48 list-disc overflow-y-auto pl-5 text-ui text-muted">
+            {targets.map((t) => (
               <li key={t.id}>{t.title}</li>
             ))}
-            {targets.length > 5 ? <li>and {targets.length - 5} more</li> : null}
           </ul>
         ) : null}
       </ConfirmDialog>
