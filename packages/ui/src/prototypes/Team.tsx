@@ -591,7 +591,7 @@ export function Team({ set = 'live', state = 'live', person, startInvite = false
         <ListHeaderCell><span className="sr-only">Actions</span></ListHeaderCell>
       </>
     );
-    const roleCells = (roles: Record<string, string | null | undefined>, dim: boolean) => {
+    const chipsOf = (roles: Record<string, string | null | undefined>) => {
       const assigned = plats.filter((p) => roles[p.id]);
       const chips = !assigned.length ? (
         <span className="text-ui text-muted">No platforms yet</span>
@@ -611,6 +611,10 @@ export function Team({ set = 'live', state = 'live', person, startInvite = false
           ))}
         </span>
       );
+      return chips;
+    };
+    const roleCells = (roles: Record<string, string | null | undefined>, dim: boolean) => {
+      const chips = chipsOf(roles);
       return COLS ? (
         <>
           {plats.map((p) => {
@@ -646,6 +650,22 @@ export function Team({ set = 'live', state = 'live', person, startInvite = false
       const st = db.members[m.id]!;
       const sus = st.status === 'SUSPENDED';
       const [tone, word] = statusTone(null, sus);
+      if (phone) {
+        return (
+          <ListRow key={m.id} rowId={m.id} label={m.name} dimmed={sus} onActivate={() => openPerson(m.id)} flash={flash === m.id}>
+            <ListCell flush className="grid grid-cols-[32px_minmax(0,1fr)_auto] items-start gap-x-3 gap-y-0.5">
+              <span className="row-span-3 mt-0.5"><Initials text={m.initials} /></span>
+              <span className="min-w-0 text-body font-semibold">
+                <a id={`team-open-${m.id}`} href={`#team-${m.id}`} onClick={(e) => { e.preventDefault(); openPerson(m.id); }} className={cn('rounded-chip hover:underline hover:underline-offset-4', focusRing)}>{m.name}</a>
+                {m.id === AS ? <span className="ml-1 text-ui font-normal text-muted">(you)</span> : null}
+              </span>
+              <span className="self-center">{sus ? <StatusDot status={tone} label={word} /> : null}</span>
+              <span className="col-span-2 text-small text-muted">{accessCopy[st.company].name}{m.title ? ` · ${m.title}` : ''}</span>
+              <span className="col-span-2 mt-0.5 block">{chipsOf(Object.fromEntries(plats.map((p) => [p.id, roleAt(m.id, p.id)])))}</span>
+            </ListCell>
+          </ListRow>
+        );
+      }
       const sub = sus ? "Can't sign in" : resetLeft(m.id) > 0 ? 'Reset link sent just now' : m.last === 'Now' ? 'Here now' : m.last.replace('Today, ', 'Today ');
       const menu = memberMenuItems(m);
       return (
@@ -669,6 +689,26 @@ export function Team({ set = 'live', state = 'live', person, startInvite = false
     };
     const inviteRow = (v: Invite) => {
       const [tone, word, sub] = statusTone(v, false);
+      if (phone) {
+        const again = v.sent || v.status === 'EXPIRED';
+        return (
+          <ListRow key={v.id} rowId={v.id} label={firstOf(v)} flash={flash === v.id}>
+            <ListCell flush className="grid grid-cols-[32px_minmax(0,1fr)_auto] items-start gap-x-3 gap-y-0.5">
+              <span className="row-span-3 mt-0.5"><Initials text={invInitials(v)} invite /></span>
+              <span className="min-w-0 text-body font-semibold">{firstOf(v)}</span>
+              <span className="self-center"><StatusDot status={tone} label={word} /></span>
+              <span className="col-span-2 text-small text-muted">{accessCopy[v.company].name} when they join</span>
+              <span className="col-span-2 mt-0.5 block">{chipsOf(Object.fromEntries(plats.map((p) => [p.id, v.roles[p.id] ?? null])))}</span>
+              {can.invite() ? (
+                <span className="col-span-3 mt-1.5 flex gap-2">
+                  <Button variant="secondary" onClick={() => doSend(v.id)}>{again ? 'Resend' : 'Send invite'}</Button>
+                  <Button variant="text" onClick={() => setCfm({ kind: 'revoke', id: v.id })}>Revoke</Button>
+                </span>
+              ) : null}
+            </ListCell>
+          </ListRow>
+        );
+      }
       return (
         <ListRow key={v.id} rowId={v.id} label={firstOf(v)} flash={flash === v.id} onMouseEnter={() => setHover(Object.keys(v.roles))} onMouseLeave={() => setHover(null)}>
           <ListCell kind="lead" className="flex items-start gap-3">
@@ -902,6 +942,13 @@ export function Team({ set = 'live', state = 'live', person, startInvite = false
               readOnlyReason="Only an owner or admin can change roles."
               accessReason={can.manage() ? g ?? undefined : undefined}
               accessCopy={{ owner: accessCopy.owner.can, admin: accessCopy.admin.can, member: accessCopy.member.can }}
+              rolesIntro={`What ${m.short} does in each one. A different role on each is fine. The same as each platform's Team tab.`}
+              accessIntro="Who can change the Portal itself: platforms, the team, the plan and billing."
+              removeConfirm={{
+                title: (gone) => `Take ${m.short} off ${andList(gone.map((p) => shortOf(p.id)))}?`,
+                description: (gone) => `${m.short} can't open ${andList(gone.map((p) => p.name))} once you save. Their records there stay, and their other changes save too.`,
+                confirmLabel: (gone) => (gone.length === 1 ? 'Remove and save' : `Remove from ${gone.length} and save`),
+              }}
               saving={saving}
               onChange={setDraft}
               onDiscard={() => setDraft(null)}
@@ -973,7 +1020,7 @@ export function Team({ set = 'live', state = 'live', person, startInvite = false
   const detailBar = phone && personId ? (
     <>
       <IconButton icon={ArrowLeft} label="Back to Team" onClick={back} />
-      <span className="min-w-0 flex-1 truncate text-ui font-semibold">{byId(personId).name}</span>
+      <span className="min-w-0 flex-1 truncate text-ui font-semibold">Team</span>
       {askBar('bar', false)}
       <AccountMenu name={me.name} email={me.email} role={accessCopy[company(AS)].name} applyToDocument={false} />
     </>
@@ -1005,8 +1052,8 @@ export function Team({ set = 'live', state = 'live', person, startInvite = false
               platforms={home.platforms.map((p) => ({ id: p.id, name: p.shortName ?? p.name, color: p.index, health: (p.status === 'ACTIVE' ? 'ok' : p.status === 'DEGRADED' ? 'warn' : 'bad') as StatusBarHealth }))}
               people={effMode === 'noaccess' ? undefined : { count: active.length }}
               invites={{ count: effMode === 'live' ? pendingInv.length : 0 }}
-              leda={effMode === 'noaccess' ? undefined : { used: home.plan.used, max: home.plan.max }}
-              plan={effMode === 'noaccess' ? undefined : PLAN}
+              leda={{ used: home.plan.used, max: home.plan.max }}
+              plan={PLAN}
               updatedAt={fmt(SAMPLE_NOW)}
             />
           }

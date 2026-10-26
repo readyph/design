@@ -75,6 +75,23 @@ describe('RolePicker', () => {
     fireEvent.click(within(dlg).getByRole('button', { name: 'Save and remove' }));
     expect(onSave).toHaveBeenCalledOnce();
   });
+  it('shows the optional intros and custom removal words, and nothing extra by default', () => {
+    const { unmount } = render(<H />);
+    expect(screen.queryByText('Intro roles')).toBeNull();
+    expect(screen.queryByText('Intro access')).toBeNull();
+    unmount();
+    const onSave = vi.fn();
+    render(<H spy={{ onSave }} rolesIntro="Intro roles" accessIntro="Intro access" removeConfirm={{ title: (r) => `Take Maria off ${r[0].name}?`, description: 'Gone.', confirmLabel: 'Remove and save' }} />);
+    expect(screen.getByText('Intro roles')).toBeTruthy();
+    expect(screen.getByText('Intro access')).toBeTruthy();
+    choose('Role for Cebu Parts Stockroom', 'Not assigned');
+    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+    const dlg = screen.getByRole('alertdialog');
+    expect(within(dlg).getByText('Take Maria off Cebu Parts Stockroom?')).toBeTruthy();
+    expect(within(dlg).getByText('Gone.')).toBeTruthy();
+    fireEvent.click(within(dlg).getByRole('button', { name: 'Remove and save' }));
+    expect(onSave).toHaveBeenCalledOnce();
+  });
   const heading = () => screen.getByRole('heading', { name: 'Roles on each platform' });
   /** A page with a slow save: `finish()` ends it (ok or error) when the test says so. */
   function Slow({ onEnd }: { onEnd: (finish: (ok: boolean) => void) => void }) {

@@ -105,7 +105,15 @@ describe('Team', () => {
     await user.click(screen.getByRole('option', { name: 'Not assigned' }));
     expect(save.getAttribute('aria-disabled')).toBeNull();
     await user.click(save);
-    expect(screen.getByRole('alertdialog')).toBeTruthy();
+    const dlg = screen.getByRole('alertdialog');
+    expect(within(dlg).getByText('Take Grace off Auto Works?')).toBeTruthy();
+    expect(within(dlg).getByRole('button', { name: 'Remove and save' })).toBeTruthy();
+  });
+
+  it('a person: both sections carry the handover intro lines', () => {
+    render(<Team person="grace" />);
+    expect(screen.getByText("What Grace does in each one. A different role on each is fine. The same as each platform's Team tab.")).toBeTruthy();
+    expect(screen.getByText('Who can change the Portal itself: platforms, the team, the plan and billing.')).toBeTruthy();
   });
 
   it('suspend: menu, confirm with the handover copy, toast with Undo restores', async () => {
