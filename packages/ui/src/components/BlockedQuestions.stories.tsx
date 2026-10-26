@@ -24,7 +24,7 @@ const meta: Meta<typeof BlockedQuestions> = {
           '',
           '**API note for Leonardo.** `items: {id, question, scope}[]`, `scopes: {id, label, icon?}[]` (the company first; `everyScope`, default `company`), `replies: Record<scopeId, string>`, `scope` (fixed scope for a platform tab; hides the dropdown and tags, adds the "N more questions are blocked for every business" line, `inheritedLink` for "in Memory"), `onBlock({question, scope})`, `onRemove(item, {undo})` (called with `undo: false` after the confirm, and `undo: true` when Undo is chosen: put the item back), `onTry(item)` (opens the Try-it tester C30), `onEditReply(scope, text)`. Handlers may return promises; rejecting with an `Error` shows its message. `readOnly` + `readOnlyNote`, `status` (`ready | loading | error`, `onRetry`), `maxLength` (160), `replyMaxLength` (400), `maxItems` (200), `intro`, `shortcuts`. The caller owns the data and the ids; the component never changes `items`.',
           '',
-          'Prototype: `blockedSection`, `replies`, `addBlocked`, `removeBlocked` in `round-2/final/memory.js` and `platform.js`. Stories for the page compositions are under Prototypes / Portal.',
+          'Prototype: `blockedSection`, `replies`, `addBlocked`, `removeBlocked` in `round-2/final/memory.js` and `platform.js`. Stories for the page compositions are in this component\'s in-the-shell stories and on the Prototypes pages.',
         ].join('\n'),
       },
     },

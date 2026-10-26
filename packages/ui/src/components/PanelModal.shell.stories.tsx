@@ -1,13 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useState } from 'react';
 import { Buildings } from '@phosphor-icons/react';
-import { Modal } from '../components/Modal';
-import { Badge } from '../components/Badge';
-import { Select } from '../components/Select';
+import { Modal } from './Modal';
+import { Badge } from './Badge';
+import { Select } from './Select';
 
 /** [For Review] RDY-273. Prototype only: stories are not exported from the package. */
 const meta: Meta = {
-  title: 'Prototypes/Portal/[For Review] Panel modal',
+  title: 'Components/Overlays/Panel modal',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;

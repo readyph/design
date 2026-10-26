@@ -5,4 +5,14 @@ import { Meta } from '@storybook/blocks';
 # ReadyPH UI
 
 The design system has been reset (RDY-244). The previous components, tokens and styles are preserved on the `legacy` branch.
-New components and tokens are added through the Portal redesign (RDY-243). Prototypes live under `Prototypes/<Platform>/…` and are never published.
+New components and tokens are added through the Portal redesign (RDY-243). 
+
+## How Storybook is organised
+
+- **Introduction**, then **Foundations**, then **Components**, then **Prototypes**.
+- **Components** holds every part, grouped by family. A component that has a stories file for the part alone and another for how it sits in the Portal has both: the second one is named "Component in the shell" (or a plain name when it is a Portal-only composition, such as Needs you or Panel modal).
+- **Prototypes** holds only the five Portal pages, in nav order: **Home**, **Platforms**, **Platform** (detail and onboarding), **Team**, **Memory**. Each page's states are its stories. Prototypes are never published.
+
+## Light and dark
+
+Use the **Theme** switch in the toolbar (System, Light, Dark; System follows the OS). It sets `data-theme` on the document, the same attribute the design tokens use, so tokens, the real PlatformShell and portalled content (Modal, Menu, Toaster, Select) all switch, in the canvas and in docs. Add `?globals=theme:dark` to a story URL to open it dark.

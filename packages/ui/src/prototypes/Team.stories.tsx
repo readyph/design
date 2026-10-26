@@ -10,7 +10,7 @@ import { Team } from './Team';
  * Guards (own access, creator, last admin, suspend, reset link rules) show their reason instead of acting.
  */
 const meta: Meta<typeof Team> = {
-  title: 'Prototypes/Portal/Team',
+  title: 'Prototypes/Team',
   component: Team,
   parameters: { layout: 'fullscreen' },
   argTypes: {

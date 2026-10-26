@@ -1,16 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useState } from 'react';
 import { DotsThree, Plus } from '@phosphor-icons/react';
-import { List, ListCell, ListHeader, ListHeaderCell, ListMetric, ListMetrics, ListRow } from '../components/List';
-import { PlatformLogo } from '../components/PlatformLogo';
-import { StatusDot, type StatusTone } from '../components/StatusDot';
-import { Button } from '../components/Button';
-import { IconButton } from '../components/IconButton';
-import { Menu } from '../components/Menu';
+import { List, ListCell, ListHeader, ListHeaderCell, ListMetric, ListMetrics, ListRow } from './List';
+import { PlatformLogo } from './PlatformLogo';
+import { StatusDot, type StatusTone } from './StatusDot';
+import { Button } from './Button';
+import { IconButton } from './IconButton';
+import { Menu } from './Menu';
 
 /** [For Review] RDY-278 (C18). Prototype only: stories are not exported from the package. Platforms sheet, All platforms list. */
 const meta: Meta = {
-  title: 'Prototypes/Portal/Platforms list',
+  title: 'Components/Data display/Platforms list',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;

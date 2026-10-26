@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { PlatformShell } from '../components/PlatformShell';
-import { Demo } from '../components/ConnectionsEditor.demo';
-import { LedaNote } from '../components/LedaNote';
+import { PlatformShell } from './PlatformShell';
+import { Demo } from './ConnectionsEditor.demo';
+import { LedaNote } from './LedaNote';
 
 /** RDY-286 (C26). Prototype only: stories are not exported from the package. Connections tab in the real PlatformShell sheet. */
 const meta: Meta = {
-  title: 'Prototypes/Portal/Connections editor',
+  title: 'Components/Lists/ConnectionsEditor in the shell',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;

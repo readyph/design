@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { PlatformShell } from '../components/PlatformShell';
-import { TownMap } from '../components/TownMap';
-import { eight, eightLinks, three, threeLinks } from '../components/TownMap.data';
+import { PlatformShell } from './PlatformShell';
+import { TownMap } from './TownMap';
+import { eight, eightLinks, three, threeLinks } from './TownMap.data';
 
 /** [For Review] RDY-276 (C16). Prototype only: not exported from the package. The map at the top of Home's place column, real PlatformShell. */
 const meta: Meta = {
-  title: 'Prototypes/Portal/[For Review] Home map',
+  title: 'Components/Data display/Platform map in the Home shell',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;

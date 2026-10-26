@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { PlatformShell } from '../components/PlatformShell';
-import { OverviewCharts } from '../components/OverviewCharts';
-import { autoWorks, cafe, hardware, stockroom } from '../components/OverviewCharts.data';
-import { Fact, FactsLine } from '../components/FactsLine';
+import { PlatformShell } from './PlatformShell';
+import { OverviewCharts } from './OverviewCharts';
+import { autoWorks, cafe, hardware, stockroom } from './OverviewCharts.data';
+import { Fact, FactsLine } from './FactsLine';
 
 /** RDY-291 (C31). Prototype only: stories are not exported from the package. The charts in the real PlatformShell sheet. */
 const meta: Meta = {
-  title: 'Prototypes/Portal/Overview charts',
+  title: 'Components/Data/Overview charts in the shell',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;

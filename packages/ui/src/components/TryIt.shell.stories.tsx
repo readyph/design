@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { TryIt } from '../components/TryIt';
-import { defaultSwitches, sampleAbouts, sampleAsk, sampleQuestions } from '../components/TryIt.sample';
-import { PlatformShell } from '../components/PlatformShell';
-import { Button } from '../components/Button';
-import { Switch } from '../components/Switch';
+import { TryIt } from './TryIt';
+import { defaultSwitches, sampleAbouts, sampleAsk, sampleQuestions } from './TryIt.sample';
+import { PlatformShell } from './PlatformShell';
+import { Button } from './Button';
+import { Switch } from './Switch';
 
 /** RDY-290 (C30). Prototype only: stories are not exported from the package. Try it in the real PlatformShell. */
 const meta: Meta = {
-  title: 'Prototypes/Portal/Try it',
+  title: 'Components/Overlays/Try it in the shell',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;
