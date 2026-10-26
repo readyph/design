@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { AskLedaBar } from './AskLedaBar';
 
@@ -13,7 +13,7 @@ const meta: Meta<typeof AskLedaBar> = {
           'Ask Leda bar (C6, replaces `LedaLauncher`). A real button; click, Cmd/Ctrl+K and "/" call `onOpen(source)`. The command palette (C7) and the conversation panel (C8) are separate components.',
           '',
           '- `bar` (default): 320px wide, 34px tall, in the sheet bar. At 640px and below it is a 44px icon button (24px mark, no halo).',
-          '- `overview`: 560px (full width when narrower), 44px tall, 22px mark.',
+          '- `overview`: 560px max, centred in grid and flex-center parents (full width when narrower), 44px tall, 22px mark.',
           '- Halo: conic gradient ring + glow, one 2.8s pass. First pass 1.2s after load, then every 17s, plus once after 10s idle. Skipped while the tab is hidden or `paused` (palette open); the rhythm restarts afterwards. `shine="hold"` freezes it.',
           '- Reduced motion: no rotation or glow; the ring fades for 1.6s; the mark Scan stays still.',
           '- Leda colours paint only the mark and the halo. `className` places the bar (margin); it cannot change the width or height.',
@@ -51,14 +51,37 @@ export const PaletteOpen: Story = {
   },
 };
 
-/** Overview in grid, flex and block parents: none may scroll sideways at 320/375/560/1280 (check with the viewport toolbar). */
+/** Reads the left offset and width of the bar inside it, so placement is checkable without devtools. */
+function Probe({ label, children }: { label: string; children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [m, setM] = useState('');
+  useEffect(() => {
+    const read = () => {
+      const el = ref.current?.querySelector('[data-ask-leda]') as HTMLElement | null;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      setM(`x=${Math.round(r.left)} w=${Math.round(r.width)}`);
+    };
+    read();
+    window.addEventListener('resize', read);
+    return () => window.removeEventListener('resize', read);
+  }, []);
+  return (
+    <div ref={ref}>
+      <p data-testid={`probe-${label}`} className="mb-1 text-tiny text-muted">{label}: {m}</p>
+      {children}
+    </div>
+  );
+}
+
+/** Overview in grid, flex and block parents: grid and flex centre it (560px max), block stays left; none scrolls sideways at 320/375/560/1280. The readout shows each bar's x offset and width. */
 export const OverviewParents: Story = {
   parameters: { viewport: { defaultViewport: 'mobile1' } },
   render: (a) => (
     <div className="flex flex-col gap-4 bg-surface p-4">
-      <div className="grid place-items-center"><AskLedaBar {...a} variant="overview" scope="grid" shortcuts={false} /></div>
-      <div className="flex justify-center"><AskLedaBar {...a} variant="overview" scope="flex" shortcuts={false} /></div>
-      <div><AskLedaBar {...a} variant="overview" scope="block" shortcuts={false} /></div>
+      <Probe label="grid"><div className="grid place-items-center"><AskLedaBar {...a} variant="overview" scope="grid" shortcuts={false} /></div></Probe>
+      <Probe label="flex"><div className="flex justify-center"><AskLedaBar {...a} variant="overview" scope="flex" shortcuts={false} /></div></Probe>
+      <Probe label="block"><div><AskLedaBar {...a} variant="overview" scope="block" shortcuts={false} /></div></Probe>
     </div>
   ),
 };

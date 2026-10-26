@@ -116,7 +116,7 @@ const VARIANT = {
     mark: 20,
   },
   overview: {
-    outer: 'flex w-full',
+    outer: 'flex w-full max-w-leda-w-overview',
     wrap: 'w-full max-w-leda-w-overview',
     bar: 'h-[var(--ctl-touch)]',
     mark: 22,

@@ -68,7 +68,9 @@ describe('AskLedaBar overview shrinks in any parent', () => {
     expect(wrap.className).toContain('max-w-leda-w-overview');
     expect(wrap.className).not.toMatch(/(^| )w-leda-w-overview( |$)/);
     expect(outer.className).toContain('w-full');
+    expect(outer.className).toContain('max-w-leda-w-overview');
     expect(outer.className).not.toContain('shrink-0');
+    expect(outer.className).not.toMatch(/(^| )w-10( |$)/);
   });
   it('bar variant keeps its fixed width', () => {
     const { container } = render(<AskLedaBar />);
