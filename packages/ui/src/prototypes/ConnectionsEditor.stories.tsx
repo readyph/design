@@ -3,9 +3,9 @@ import { PlatformShell } from '../components/PlatformShell';
 import { Demo } from '../components/ConnectionsEditor.demo';
 import { LedaNote } from '../components/LedaNote';
 
-/** [For Review] RDY-286 (C26). Prototype only: stories are not exported from the package. Connections tab in the real PlatformShell sheet. */
+/** RDY-286 (C26). Prototype only: stories are not exported from the package. Connections tab in the real PlatformShell sheet. */
 const meta: Meta = {
-  title: 'Prototypes/Portal/[For Review] Connections editor',
+  title: 'Prototypes/Portal/Connections editor',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;
