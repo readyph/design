@@ -183,7 +183,7 @@ export const PlaceColumnSurfaces: Story = {
       {...full}
       place={
         <div className="flex flex-col gap-4 pb-4">
-          <div className="h-[420px]"><Queue items={items} watching={watching} snoozed={snoozed} done={done} platforms={allPlatforms} shortcuts={false} defaultOpenGroups={['watching']} /></div>
+          <div className="h-[420px]"><Queue headingLevel={2} items={items} watching={watching} snoozed={snoozed} done={done} platforms={allPlatforms} shortcuts={false} defaultOpenGroups={['watching']} /></div>
           <ListGroups as="list" aria-label="Frame groups">
             <ListGroup title="Frame group" count={2}>
               {['One', 'Two'].map((t) => <ListRow key={t} rowId={t} label={t} onActivate={() => {}}><ListCell kind="lead">{t}</ListCell></ListRow>)}
