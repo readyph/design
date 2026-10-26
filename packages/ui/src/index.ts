@@ -41,6 +41,7 @@ export * from './components/OnboardingStepper';
 export * from './components/RolePicker';
 export * from './components/SubpageTransition';
 export * from './components/TownMap';
+export * from './components/BlockedQuestions';
 export * from './components/WeekChart';
 export * from './components/OverviewCharts';
 export * from './components/Sparkline';
