@@ -33,6 +33,7 @@ import { Toaster } from '../components/toast/Toaster';
 import { toast } from '../components/toast/toastStore';
 import { Badge } from '../components/Badge';
 import { PortalFrame } from './PortalFrame';
+import { go as navGo, type Dest } from './protoNav';
 import { cn, focusRing } from '../utils/cn';
 import { focusIfLost } from '../utils/focusIfLost';
 import { useMatchMedia } from '../utils/useMatchMedia';
@@ -1038,7 +1039,8 @@ export function Team({ set = 'live', state = 'live', person, startInvite = false
           pageName="Team"
           account={{ name: me.name, email: me.email, role: accessCopy[company(AS)].name }}
           teamCount={effMode === 'live' ? unsent.length : 0}
-          onAddPlatform={() => toast('Add a platform…')}
+          onAddPlatform={() => navGo({ to: 'platforms', add: true })}
+          onNavigate={(d: Dest) => (d.to === 'team' ? (personId ? back() : undefined) : navGo(d))}
           leda={askBar('bar', false)}
           place={place}
           placeLabel="Your team"

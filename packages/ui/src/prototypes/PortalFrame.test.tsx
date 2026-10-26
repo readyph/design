@@ -79,4 +79,37 @@ describe('PortalFrame', () => {
     expect(tabs.queryByRole('link', { current: 'page', hidden: true })).toBeNull();
     expect(tabs.getByRole('button', { name: 'More', hidden: true }).getAttribute('aria-current')).toBe('page');
   });
+
+  it('onNavigate: rail, mark, phone tabs, More and account entries report their destination; modified clicks keep the href', async () => {
+    const nav = vi.fn();
+    const user = userEvent.setup();
+    frame({ onNavigate: nav, current: 'home' });
+    const [rail, phone] = screen.getAllByRole('navigation', { hidden: true });
+    await user.click(within(rail!).getByRole('link', { name: 'ReadyPH home', hidden: true }));
+    await user.click(within(rail!).getByRole('link', { name: 'Platforms', hidden: true }));
+    await user.click(within(rail!).getByRole('link', { name: 'Reports', hidden: true }));
+    await user.click(within(rail!).getByRole('link', { name: 'Memory', hidden: true }));
+    await user.click(within(rail!).getByRole('link', { name: 'Team, 2', hidden: true }));
+    await user.click(within(phone!).getByRole('link', { name: 'Platforms', hidden: true }));
+    await user.click(within(phone!).getByText('More'));
+    await user.click(await screen.findByRole('menuitem', { name: 'Memory' }));
+    expect(nav.mock.calls.map((c) => c[0])).toEqual([
+      { to: 'home' }, { to: 'platforms' }, { to: 'reports' }, { to: 'memory' }, { to: 'team' }, { to: 'platforms' }, { to: 'memory' },
+    ]);
+    nav.mockClear();
+    await user.keyboard('{Control>}');
+    await user.click(within(rail!).getByRole('link', { name: 'Platforms', hidden: true }));
+    await user.keyboard('{/Control}');
+    expect(nav).not.toHaveBeenCalled();
+  });
+
+  it('without onNavigate the links keep their hrefs and a click is not intercepted', async () => {
+    frame();
+    const [rail] = screen.getAllByRole('navigation', { hidden: true });
+    const a = within(rail!).getByRole('link', { name: 'Platforms', hidden: true });
+    expect(a.getAttribute('href')).toBe('#platforms');
+    const ev = new MouseEvent('click', { bubbles: true, cancelable: true, button: 0 });
+    a.dispatchEvent(ev);
+    expect(ev.defaultPrevented).toBe(false);
+  });
 });
