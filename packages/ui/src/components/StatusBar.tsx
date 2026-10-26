@@ -1,4 +1,4 @@
-import { forwardRef, type ReactNode } from 'react';
+import { forwardRef, useEffect, useRef, useState, type ReactNode } from 'react';
 import { EnvelopeSimple, Users } from '@phosphor-icons/react';
 import { LedaMark } from './Leda';
 import { PlatformLogo, type PlatformLogoProps } from './PlatformLogo';
@@ -95,36 +95,36 @@ const interactive =
   'outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-frame';
 const dropUpdated = '@max-[960px]/status:hidden';
 const dropPlan = '@max-[780px]/status:hidden';
-const dropInviteWord = '@max-[640px]/status:hidden';
-const showNamesWide = 'hidden @min-[1180px]/status:inline';
+const dropInviteWord = '@max-[780px]/status:hidden';
 
 interface ItemProps {
   href?: string;
   onSelect?: () => void;
   selected?: boolean;
   'aria-label'?: string;
+  title?: string;
   className?: string;
   children: ReactNode;
 }
 
 /** One strip item: a link with `href`, a button with `onSelect`, otherwise plain text. */
-function Item({ href, onSelect, selected, 'aria-label': label, className, children }: ItemProps) {
+function Item({ href, onSelect, selected, 'aria-label': label, title, className, children }: ItemProps) {
   if (href) {
     return (
-      <a href={href} onClick={onSelect} aria-label={label} aria-current={selected ? 'true' : undefined} className={cn(item, interactive, className)}>
+      <a href={href} title={title} onClick={onSelect} aria-label={label} aria-current={selected ? 'true' : undefined} className={cn(item, interactive, className)}>
         {children}
       </a>
     );
   }
   if (onSelect) {
     return (
-      <button type="button" onClick={onSelect} aria-label={label} aria-pressed={selected === undefined ? undefined : selected} className={cn(item, interactive, className)}>
+      <button type="button" title={title} onClick={onSelect} aria-label={label} aria-pressed={selected === undefined ? undefined : selected} className={cn(item, interactive, className)}>
         {children}
       </button>
     );
   }
   return (
-    <span aria-label={label} role={label ? 'group' : undefined} className={cn(item, className)}>
+    <span title={title} aria-label={label} role={label ? 'group' : undefined} className={cn(item, className)}>
       {children}
     </span>
   );
@@ -139,10 +139,10 @@ const plural = (n: number, one: string, many: string) => `${n.toLocaleString('en
  * Drop it into `PlatformShell`'s `status` slot: the shell supplies the `footer` landmark (`aria-label="Status"`),
  * so this renders a plain container and list, never its own `footer`.
  *
- * Items, in order: a logo per platform (name beside it with 3 or fewer platforms or from 1180px; a platform that is not
- * running always shows its name and a plain word, "Marikina slow"; with 4+ platforms all running and names hidden, "All running"),
+ * Items, in order: a logo per platform (name beside it only with 3 or fewer platforms; with 4+ running platforms are logo-only with a title tooltip; a platform that is not
+ * running always shows its name and a plain word, "Marikina slow"; 4+ platforms all running add "All running"),
  * people, invites waiting, Leda usage (16px mark + 56px minibar, warn from 80%), plan, "Updated 9:12 AM".
- * Narrow widths (the bar's own width) drop Updated, then the plan, then the invite word; controls are never dropped.
+ * Narrow widths (the bar's own width) drop Updated (below 960), then the plan and the invite word together (780); controls are never dropped.
  * Items are plain text unless given `href` (link) or `onSelect` (button). A hidden live region announces health changes only.
  */
 export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function StatusBar(
@@ -158,6 +158,16 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
   const words = (p: StatusBarPlatform) => p.healthText ?? healthWord[p.health ?? 'ok'];
 
   const announce = platforms.length === 0 ? '' : problems.length ? problems.map((p) => `${p.name} ${words(p)}`).join(', ') : 'All platforms running';
+  // The live region starts empty and speaks only when the set of non-running platforms changes.
+  const healthKey = problems.map((p) => `${p.id}:${p.health}:${words(p)}`).join('|');
+  const lastKey = useRef(healthKey);
+  const [message, setMessage] = useState('');
+  useEffect(() => {
+    if (lastKey.current !== healthKey) {
+      lastKey.current = healthKey;
+      setMessage(announce);
+    }
+  }, [healthKey, announce]);
 
   const sections: { key: string; cls: string; node: ReactNode }[] = [];
 
@@ -173,6 +183,7 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
                   onSelect={p.onSelect}
                   selected={p.selected}
                   aria-label={bad ? `${p.name} ${words(p)}` : p.name}
+                  title={`${p.name}: ${words(p)}`}
                   className="min-w-0"
                 >
                   <PlatformLogo name={p.name} src={p.logoSrc} color={p.color} initials={p.initials} index={i + 1} decorative />
@@ -183,7 +194,7 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
                       <span>{words(p)}</span>
                     </>
                   ) : (
-                    <span className={cn('max-w-[16ch] truncate', namesAlways ? 'inline' : showNamesWide)}>{p.name}</span>
+                    namesAlways && <span className="max-w-[16ch] truncate">{p.name}</span>
                   )}
                 </Item>
               </li>
@@ -197,7 +208,7 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
             </li>
           )}
           {showSummary && (
-            <li className="flex shrink-0 @min-[1180px]/status:hidden">
+            <li className="flex shrink-0">
               <Item>
                 <span className="size-[7px] shrink-0 rounded-full bg-ok-dot" aria-hidden="true" />
                 All running
@@ -212,7 +223,7 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
     sections.push({ key: 'people', cls: "flex shrink-0", node: (
         <Item href={people.href} onSelect={people.onSelect} aria-label={plural(people.count, 'person', 'people')}>
           <Users size={14} aria-hidden="true" />
-          <span className="tabular-nums">{people.count.toLocaleString('en-US')}</span>
+          <span className="tabular-nums">{plural(people.count, 'person', 'people')}</span>
         </Item>
       ) });
   }
@@ -233,7 +244,11 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
     sections.push({ key: 'leda', cls: "flex shrink-0", node: (
         <Item href={leda.href} onSelect={leda.onSelect}>
           <LedaMark size={16} decorative />
+          <span>Leda</span>
           <ProgressBar value={leda.used} max={leda.max} warnAt={warnAt} aria-label={text} />
+          <span className="tabular-nums">
+            {leda.used.toLocaleString('en-US')} / {leda.max.toLocaleString('en-US')}
+          </span>
         </Item>
       ) });
   }
@@ -261,7 +276,7 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
         ))}
       </ul>
       <span role="status" aria-live="polite" className="sr-only">
-        {announce}
+        {message}
       </span>
     </div>
   );

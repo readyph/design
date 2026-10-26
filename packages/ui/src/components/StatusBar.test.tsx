@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { PlatformShell } from './PlatformShell';
 import { StatusBar } from './StatusBar';
 
@@ -31,12 +31,46 @@ describe('StatusBar', () => {
     render(<StatusBar platforms={[{ id: 'a', name: 'Books', health: 'bad' }, { id: 'b', name: 'Stock' }]} />);
     expect(screen.getByText('offline')).toBeTruthy();
     expect(screen.getByLabelText('Books offline')).toBeTruthy();
-    expect(screen.getByRole('status').textContent).toBe('Books offline');
   });
-  it('4+ platforms all running show the All running summary; announce says so', () => {
-    render(<StatusBar platforms={p(4)} />);
-    expect(screen.getByText('All running')).toBeTruthy();
+  it('live region starts empty, stays silent on same-props rerender, announces a health change', () => {
+    const ok = [{ id: 'a', name: 'Books' }, { id: 'b', name: 'Stock' }];
+    const bad = [{ id: 'a', name: 'Books', health: 'bad' as const }, { id: 'b', name: 'Stock' }];
+    const { rerender } = render(<StatusBar platforms={ok} />);
+    expect(screen.getByRole('status').textContent).toBe('');
+    rerender(<StatusBar platforms={[...ok]} />);
+    expect(screen.getByRole('status').textContent).toBe('');
+    act(() => { rerender(<StatusBar platforms={bad} />); });
+    expect(screen.getByRole('status').textContent).toBe('Books offline');
+    act(() => { rerender(<StatusBar platforms={ok} />); });
     expect(screen.getByRole('status').textContent).toBe('All platforms running');
+  });
+  it('already-offline platform on mount is not announced', () => {
+    render(<StatusBar platforms={[{ id: 'a', name: 'Books', health: 'bad' }]} />);
+    expect(screen.getByRole('status').textContent).toBe('');
+  });
+  it('4+ platforms: running are logo-only with a title; a non-running keeps name and word; All running summary', () => {
+    const { rerender } = render(<StatusBar platforms={p(4)} />);
+    expect(screen.getByText('All running')).toBeTruthy();
+    expect(screen.queryByText('Plat 0')).toBeNull();
+    expect(screen.getByLabelText('Plat 0').getAttribute('title')).toBe('Plat 0: running');
+    rerender(<StatusBar platforms={p(4).map((x, i) => (i === 1 ? { ...x, health: 'warn' as const } : x))} />);
+    expect(screen.getByText('Plat 1')).toBeTruthy();
+    expect(screen.getByText('slow')).toBeTruthy();
+    expect(screen.queryByText('All running')).toBeNull();
+  });
+  it('3 or fewer platforms show names beside the logo', () => {
+    render(<StatusBar platforms={p(3)} />);
+    expect(screen.getByText('Plat 2')).toBeTruthy();
+  });
+  it('people and Leda show text, not colour alone', () => {
+    render(<StatusBar people={{ count: 12 }} leda={{ used: 1742, max: 2000 }} />);
+    expect(screen.getByText('12 people')).toBeTruthy();
+    expect(screen.getByText('Leda')).toBeTruthy();
+    expect(screen.getByText('1,742 / 2,000')).toBeTruthy();
+  });
+  it('invite word drops with the plan at 780', () => {
+    render(<StatusBar invites={{ count: 2 }} />);
+    expect(screen.getByText('invites waiting').className).toContain('@max-[780px]/status:hidden');
   });
   it('items are plain text, links or buttons; selected buttons are pressed', () => {
     const onSelect = vi.fn();

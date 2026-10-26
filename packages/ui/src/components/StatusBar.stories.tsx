@@ -25,8 +25,8 @@ const meta: Meta<typeof StatusBar> = {
         component: [
           'Status bar (C4): 34px strip on the frame colour, 12px muted. Put it in `PlatformShell`\'s `status` slot; the shell supplies the `footer` landmark with `aria-label="Status"`, so StatusBar renders a plain container and list (set `aria-label` on it only outside the shell).',
           '',
-          '- Platforms: logo per platform; name beside it with 3 or fewer platforms or from 1180px; a platform that is not running always shows its name and a plain word ("Marikina Branch slow"). 4+ platforms all running and names hidden: "All running". Past `maxPlatforms` (8) a "+N" item.',
-          '- Narrow (the bar\'s own width, container query): drops Updated (below 960), then the plan (780), then the invite word (640); the count stays. Controls are never dropped. Phone: the shell hides the status row.',
+          '- Platforms: logo per platform; name beside it only with 3 or fewer platforms (4+ running platforms are logo-only with a title tooltip); a platform that is not running always shows its name and a plain word ("Marikina Branch slow"). 4+ all running add "All running". Past `maxPlatforms` (8) a "+N" item.',
+          '- Narrow (the bar\'s own width, container query): drops Updated (below 960), then the plan and invite word together (780); the count stays. Controls are never dropped. Phone: the shell hides the status row.',
           '- Items are plain text; give `href` (link) or `onSelect` (button, `aria-pressed` with `selected`) to make one interactive.',
           '- `aria-live`: a hidden polite region announces health changes only ("Books offline"), never the time.',
           '',
@@ -55,6 +55,24 @@ export const Platforms3: Story = { name: '3 platforms, one slow', render: () => 
 export const Platforms8: Story = {
   name: '8 platforms, one offline',
   render: () => <InShell {...base} platforms={make(8).map((p, i) => (i === 2 ? { ...p, health: 'bad' as const } : p))} />,
+};
+export const Platforms8Several: Story = {
+  name: '8 platforms, several not running',
+  render: () => <InShell {...base} platforms={make(8).map((p, i) => (i === 1 ? { ...p, health: 'warn' as const } : i === 4 ? { ...p, health: 'bad' as const } : i === 6 ? { ...p, health: 'neutral' as const } : p))} />,
+};
+export const LiveRegion: Story = {
+  name: 'Live region (toggle health)',
+  render: () => {
+    const [off, setOff] = useState(false);
+    return (
+      <div>
+        <button type="button" onClick={() => setOff((v) => !v)} className="m-3 rounded-chip border border-control px-3 py-1 text-small">
+          {off ? 'Restore Books' : 'Take Books offline'}
+        </button>
+        <InShell {...base} platforms={make(4).map((p, i) => (i === 2 && off ? { ...p, health: 'bad' as const } : p))} />
+      </div>
+    );
+  },
 };
 export const AllRunning: Story = { name: '8 platforms, all running', render: () => <InShell {...base} platforms={make(8)} /> };
 export const Overflow: Story = {
