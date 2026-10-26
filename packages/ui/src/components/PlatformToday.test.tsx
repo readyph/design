@@ -57,6 +57,13 @@ describe('PlatformToday', () => {
     expect(container.querySelector('section')?.getAttribute('data-surface')).toBe('surface');
   });
 
+  it('paints the header with the scope background variable, not a fixed colour (RDY-306)', () => {
+    const { container } = render(<PlatformToday platform={autoWorks} lists={[jobs]} />);
+    const header = container.querySelector('header') as HTMLElement;
+    expect(header.className).toContain('bg-[var(--scope-bg)]');
+    expect(header.className).not.toMatch(/\bbg-(frame|surface)\b/);
+  });
+
   it('lists do not take j / k by default; shortcuts turns them on', () => {
     const { unmount } = render(<PlatformToday platform={autoWorks} lists={[jobs]} />);
     fireEvent.keyDown(document.body, { key: 'j' });
