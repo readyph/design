@@ -104,6 +104,8 @@ export interface PlatformTodayProps extends Omit<HTMLAttributes<HTMLElement>, 't
   /** The platform failed to load: an inline error block in place of the lists; the header still shows. */
   error?: boolean;
   onRetry?: () => void;
+  /** Button text on the error block. Default "Try again". */
+  retryLabel?: string;
   /** "Last loaded 9:10 AM" on the error block. */
   lastLoaded?: string;
   /** Heading level of the platform name. Default 3. */
@@ -148,7 +150,7 @@ function Chip({ link, from }: { link: TodayLink; from: string }) {
   const body = (
     <>
       <PlatformLogo {...link.platform} decorative size={16} />
-      {link.ref ? <span className="min-w-0 font-medium [overflow-wrap:anywhere]">{link.ref} </span> : null}
+      {link.ref ? <span className="shrink-0 whitespace-nowrap font-medium">{link.ref}</span> : null}
       <span className="min-w-0 [overflow-wrap:anywhere]">{link.text}</span>
       <span className="sr-only"> in {link.platform.name}</span>
     </>
@@ -188,7 +190,7 @@ function Row({ item, platform, label }: { item: TodayItem; platform: string; lab
         {/* Narrow block: title, detail, meta, chip stacked. From 360px the quantity, state and time sit at the end of the title line. */}
         <div className={cn('grid grid-cols-1 gap-x-3', long ? sideLong.grid : sideShort.grid)}>
           <div className="text-ui">
-            {item.ref ? <span className="mr-1.5 text-small text-muted">{item.ref}</span> : null}
+            {item.ref ? <span className="mr-1.5 whitespace-nowrap text-small text-muted">{item.ref}</span> : null}
             {item.onActivate ? (
               <button
                 type="button"
@@ -261,6 +263,7 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
     loading = false,
     error = false,
     onRetry,
+    retryLabel,
     lastLoaded,
     level = 3,
     shortcuts = false,
@@ -280,7 +283,7 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
   const body = loading ? (
     <SkeletonBlock />
   ) : error ? (
-    <ErrorBlock thing={platform.name} lastLoaded={lastLoaded} onRetry={onRetry} className="mt-4" />
+    <ErrorBlock thing={platform.name} lastLoaded={lastLoaded} onRetry={onRetry} retryLabel={retryLabel} className="mt-4" />
   ) : lists.length > 0 ? (
     <ListGroups shortcuts={shortcuts} aria-label={`${platform.name} today`}>
       {lists.map((l) => {
