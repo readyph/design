@@ -35,3 +35,4 @@ export { toast, useToast, useToasts, addToast, dismissToast, clearToasts, TOAST_
 export * from './components/PlatformToday';
 export * from './components/CommandPalette';
 export * from './components/TownMap';
+export * from './components/BlockedQuestions';

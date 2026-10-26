@@ -1,0 +1,59 @@
+import type { Meta, StoryObj } from '@storybook/react';
+import { useState } from 'react';
+import { Live } from '../components/BlockedQuestions.demo';
+import { Toaster } from '../components/toast/Toaster';
+
+/** RDY-289. Prototype only: stories are not exported from the package. */
+const meta: Meta = {
+  title: 'Prototypes/Portal/[For Review] Blocked questions',
+  parameters: { layout: 'fullscreen' },
+};
+export default meta;
+type Story = StoryObj;
+
+function Try({ on }: { on: string | null }) {
+  return on ? (
+    <p role="status" className="mt-3 text-ui text-muted [overflow-wrap:anywhere]">
+      Try it (C30, not built yet) would open on: {on}
+    </p>
+  ) : null;
+}
+
+function MemoryPage() {
+  const [tried, setTried] = useState<string | null>(null);
+  return (
+    <main className="min-h-screen bg-surface px-4 py-6 text-text sm:p-pad">
+      <div className="mx-auto w-full max-w-[760px]">
+        <h1 className="text-title">Memory</h1>
+        <h2 className="mt-6 text-header font-semibold">Blocked questions</h2>
+        <div className="mt-2">
+          <Live onTry={(i) => setTried(i.question)} />
+        </div>
+        <Try on={tried} />
+      </div>
+      <Toaster />
+    </main>
+  );
+}
+
+function PlatformTab() {
+  const [tried, setTried] = useState<string | null>(null);
+  return (
+    <main className="min-h-screen bg-surface px-4 py-6 text-text sm:p-pad">
+      <div className="mx-auto w-full max-w-[760px]">
+        <h1 className="text-title">Auto Works Quezon City</h1>
+        <h2 className="mt-6 text-header font-semibold">Leda &amp; Memory · Blocked questions</h2>
+        <div className="mt-2">
+          <Live scope="autoworks" onTry={(i) => setTried(i.question)} inheritedLink={<a className="text-accent underline" href="#memory">in Memory</a>} />
+        </div>
+        <Try on={tried} />
+      </div>
+      <Toaster />
+    </main>
+  );
+}
+
+export const MemoryBlockedTab: Story = { name: 'Memory: Blocked questions tab', render: () => <MemoryPage /> };
+export const PlatformLedaMemoryTab: Story = { name: 'Platform: Leda & Memory tab', render: () => <PlatformTab /> };
+export const PlatformPhone: Story = { name: 'Platform tab on a phone (375)', parameters: { viewport: { defaultViewport: 'mobile1' } }, render: () => <PlatformTab /> };
+
