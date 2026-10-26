@@ -63,4 +63,14 @@ describe('Select', () => {
     expect(onChange).toHaveBeenCalled();
     expect((container.querySelector('input[name=f]') as HTMLInputElement).value).toBe('c');
   });
+  it('wraps long option labels instead of truncating', async () => {
+    const long = 'Read stock from Pasig Loyalty Program for Fieldwork Rewards and Seasonal Offers';
+    render(<Select aria-label="x" options={[{ value: 'l', label: long }]} />);
+    screen.getByRole('combobox').focus();
+    await userEvent.keyboard('{ArrowDown}');
+    const label = screen.getByText(long);
+    expect(label.className).not.toContain('truncate');
+    expect(label.className).toContain('overflow-wrap:anywhere');
+    expect(screen.getByRole('listbox').className).toContain('w-max');
+  });
 });
