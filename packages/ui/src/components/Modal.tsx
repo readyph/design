@@ -35,6 +35,11 @@ export interface ModalProps {
   role?: 'dialog' | 'alertdialog';
   /** Element that takes focus on open instead of the first control (e.g. Cancel in a confirmation). */
   initialFocus?: RefObject<HTMLElement | null>;
+  /**
+   * Runs when the modal has closed and focus is about to return to the opener. Call `event.preventDefault()` to skip
+   * that return and decide yourself (for example with `focusIfLost`). Not calling it keeps the default.
+   */
+  onCloseAutoFocus?: (event: Event) => void;
   className?: string;
 }
 
@@ -148,6 +153,7 @@ function ModalRoot({
   hideClose = false,
   role,
   initialFocus,
+  onCloseAutoFocus,
   'aria-label': ariaLabel,
   className,
 }: ModalProps) {
@@ -177,6 +183,8 @@ function ModalRoot({
             if (t instanceof Element && t.closest('[role="listbox"], [role="combobox"][aria-expanded="true"]')) e.preventDefault();
           }}
           onCloseAutoFocus={(e) => {
+            onCloseAutoFocus?.(e);
+            if (e.defaultPrevented) return;
             // Controlled use has no Dialog.Trigger, so return focus to whatever opened the modal.
             if (!trigger && opener.current?.isConnected) {
               e.preventDefault();
