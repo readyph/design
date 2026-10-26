@@ -138,4 +138,47 @@ describe('Queue', () => {
     expect(b.className).toContain('whitespace-normal');
     expect(b.className).toContain('max-w-full');
   });
+
+  it('retryLabel renames the error buttons', () => {
+    const err = [{ platform: allPlatforms[0]! }];
+    const { rerender } = render(<Queue {...base} errors={err} onRetry={() => {}} />);
+    expect(screen.getByRole('button', { name: 'Try again' })).toBeTruthy();
+    rerender(<Queue {...base} errors={err} onRetry={() => {}} retryLabel="Retry" />);
+    expect(screen.queryByRole('button', { name: 'Try again' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeTruthy();
+  });
+
+  it('does not scroll while loading (no focusable content inside), and scrolls otherwise', () => {
+    const { container, rerender } = render(<Queue {...base} loading />);
+    const box = () => container.querySelector('[aria-busy], .overflow-y-auto, .overflow-hidden') as HTMLElement;
+    expect(box().className).toContain('overflow-hidden');
+    expect(box().className).not.toContain('overflow-y-auto');
+    rerender(<Queue {...base} />);
+    expect(container.querySelector('ul')!.parentElement!.className).toContain('overflow-y-auto');
+  });
+
+  it('belowHeadline sits between the headline and the list', () => {
+    render(<Queue {...base} belowHeadline={<button type="button">Ask Leda</button>} />);
+    const headline = screen.getByText(/4 decisions\. First/);
+    const ask = screen.getByRole('button', { name: 'Ask Leda' });
+    const list = screen.getByRole('list', { name: 'Needs you' });
+    expect(headline.compareDocumentPosition(ask) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(ask.compareDocumentPosition(list) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('the cursor row carries the primary button, the others secondary', () => {
+    render(<Queue {...base} defaultCursorId={items[0]!.id} />);
+    const classes = () => within(screen.getByRole('list', { name: 'Needs you' })).getAllByRole('button').map((b) => b.className);
+    const [first, second] = classes();
+    expect(first).not.toBe(second);
+    fireEvent.keyDown(document, { key: 'j' });
+    expect(classes().slice(0, 2)).toEqual([second, first]);
+  });
+
+  it('forced colors: plain rows hide the border, the cursor row uses Highlight', () => {
+    render(<Queue {...base} defaultCursorId={items[0]!.id} />);
+    const rows = within(screen.getByRole('list', { name: 'Needs you' })).getAllByRole('listitem');
+    expect(rows[1]!.className).toContain('forced-colors:border-[Canvas]');
+    expect(rows[0]!.className).toContain('forced-colors:data-[current=true]:border-[Highlight]');
+  });
 });

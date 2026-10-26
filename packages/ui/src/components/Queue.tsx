@@ -100,6 +100,10 @@ export interface QueueProps {
   /** Platforms that failed to load; the rest still shows. */
   errors?: QueueError[];
   onRetry?: (platformId: string) => void;
+  /** Button text on each error block. Default "Try again". */
+  retryLabel?: string;
+  /** Under Leda's headline, above the list (e.g. the Leda ask bar on a phone). */
+  belowHeadline?: ReactNode;
   /** Row click, Enter on the cursor row, or Enter on a pinned row. */
   onOpen?: (id: string) => void;
   /** The row's action button. */
@@ -130,7 +134,9 @@ const sourceOf = (x: QueueBase) => x.source ?? x.platform.name;
 /** Row surface: no hairline, 8px apart; hover on --frame-hover, the cursor row lifts to --surface with a border. */
 const rowSurface =
   'relative rounded-card border border-transparent px-3 py-2.5 transition-colors duration-hover motion-reduce:transition-none ' +
-  'hover:bg-frame-hover data-[current=true]:border-border data-[current=true]:bg-surface';
+  'hover:bg-frame-hover data-[current=true]:border-border data-[current=true]:bg-surface ' +
+  // Forced colors paint transparent borders: hide them on plain rows, mark the cursor row with Highlight.
+  'forced-colors:border-[Canvas] forced-colors:data-[current=true]:border-[Highlight]';
 
 interface RowProps {
   data: QueueBase;
@@ -210,7 +216,7 @@ function OpenItem({ item, current, onOpen, onAction, onHover, moveCursor }: { it
       </p>
       <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-2">
         {item.detail ? <p className="min-w-0 flex-1 basis-40 text-ui text-muted [overflow-wrap:anywhere]">{item.detail}</p> : <span className="flex-1" />}
-        <Button variant="secondary" aria-describedby={titleId} onClick={() => onAction?.(item.id)} className="ml-auto h-auto min-h-[var(--ctl-button)] max-w-full whitespace-normal py-1 text-left [overflow-wrap:anywhere]">
+        <Button variant={current ? 'primary' : 'secondary'} aria-describedby={titleId} onClick={() => onAction?.(item.id)} className="ml-auto h-auto min-h-[var(--ctl-button)] max-w-full whitespace-normal py-1 text-left [overflow-wrap:anywhere]">
           {item.action}
         </Button>
       </div>
@@ -297,6 +303,8 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
     loading = false,
     errors = [],
     onRetry,
+    retryLabel,
+    belowHeadline,
     onOpen,
     onAction,
     onSnooze,
@@ -497,6 +505,7 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
             </span>
             <span className="min-w-0 [overflow-wrap:anywhere]">{loading ? 'Looking at your platforms…' : summary}</span>
           </p>
+          {belowHeadline ? <div className="mt-2">{belowHeadline}</div> : null}
         </header>
 
         <div
@@ -505,14 +514,16 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
           aria-busy={loading || undefined}
           data-more={more ? 'true' : undefined}
           className={cn(
-            'min-h-0 flex-initial overflow-y-auto overscroll-contain scroll-pb-8 px-0 py-1',
+            // While loading the skeletons are not focusable, so the box must not scroll (axe scrollable-region-focusable).
+            'min-h-0 flex-initial overscroll-contain scroll-pb-8 px-0 py-1',
+            loading ? 'overflow-hidden' : 'overflow-y-auto',
             'data-[more=true]:[mask-image:linear-gradient(to_bottom,#000_calc(100%-28px),transparent)]',
           )}
         >
           {vErrors.length ? (
             <div className="mb-2 flex flex-col gap-2 px-3">
               {vErrors.map((e) => (
-                <ErrorBlock key={e.platform.id} thing={`${e.platform.name} items`} lastLoaded={e.lastLoaded} retrying={e.retrying} onRetry={onRetry ? () => onRetry(e.platform.id) : undefined} />
+                <ErrorBlock key={e.platform.id} thing={`${e.platform.name} items`} lastLoaded={e.lastLoaded} retrying={e.retrying} retryLabel={retryLabel} onRetry={onRetry ? () => onRetry(e.platform.id) : undefined} />
               ))}
             </div>
           ) : null}
