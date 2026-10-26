@@ -110,13 +110,13 @@ export function useAskLedaShine(enabled: boolean) {
 
 const VARIANT = {
   bar: {
-    outer: 'inline-flex shrink-0 max-w-full',
-    wrap: 'w-leda-w max-[640px]:w-[var(--ctl-touch)]',
+    outer: 'inline-flex w-auto max-w-full shrink-0 basis-auto',
+    wrap: 'w-leda-w shrink-0 max-[640px]:w-[var(--ctl-touch)]',
     bar: 'h-[var(--ctl-leda-bar)] max-[640px]:h-[var(--ctl-touch)] max-[640px]:justify-center max-[640px]:px-0',
     mark: 20,
   },
   overview: {
-    outer: 'flex w-full max-w-leda-w-overview',
+    outer: 'flex w-full max-w-leda-w-overview shrink basis-auto',
     wrap: 'w-full max-w-leda-w-overview',
     bar: 'h-[var(--ctl-touch)]',
     mark: 22,

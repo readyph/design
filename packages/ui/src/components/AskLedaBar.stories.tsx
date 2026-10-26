@@ -85,3 +85,18 @@ export const OverviewParents: Story = {
     </div>
   ),
 };
+
+/** Caller className stress (RDY-266 round 4): real props; the button must keep its size whatever layout classes are passed. */
+const STRESS = ['w-40', 'min-w-0 w-40', 'w-96', 'w-[400px]', 'max-w-xs', 'basis-40', 'shrink', 'shrink-0', 'ml-4'];
+export const ClassNameStress: Story = {
+  parameters: { docs: { disable: true } },
+  render: (a) => (
+    <div className="flex flex-col gap-3 bg-surface p-4">
+      {(['bar', 'overview'] as const).map((variant) => STRESS.map((c) => (
+        <div key={`${variant}${c}`} data-case={`${variant}|${c}`} className={variant === 'overview' ? 'flex justify-center' : 'flex'}>
+          <AskLedaBar {...a} variant={variant} className={c} shine="hold" />
+        </div>
+      )))}
+    </div>
+  ),
+};
