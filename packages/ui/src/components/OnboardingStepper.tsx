@@ -41,7 +41,7 @@ export interface OnboardingStepperProps {
   continueLabel?: string;
   continueLoading?: boolean;
   continueDisabled?: boolean;
-  /** Disables every footer button while a save runs (the primary shows the spinner through `continueLoading`). */
+  /** Marks every footer button `aria-disabled` (still focusable, clicks ignored) while a save runs (the primary shows the spinner through `continueLoading`). */
   busy?: boolean;
   /** Save and go to the next step. */
   onContinue?: () => void;
