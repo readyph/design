@@ -10,26 +10,25 @@ const meta: Meta<typeof RevenueChart> = {
 export default meta;
 type Story = StoryObj<typeof RevenueChart>;
 
-const C = { store: '#1e3a8a', pos: '#3b6fd4', mobile: '#3b82f6', wholesale: '#bcd3f7' };
 
 const datasets: Record<string, RevenueSeries[]> = {
   Month: [
-    { label: 'Storefront', value: '₱1.77k', amount: 1.77, color: C.store },
-    { label: 'POS', value: '₱0.88k', amount: 0.88, color: C.pos },
-    { label: 'Mobile app', value: '₱3.53k', amount: 3.53, color: C.mobile },
-    { label: 'Wholesale', value: '₱2.65k', amount: 2.65, color: C.wholesale },
+    { label: 'Storefront', value: '₱1.77k', amount: 1.77 },
+    { label: 'POS', value: '₱0.88k', amount: 0.88 },
+    { label: 'Mobile app', value: '₱3.53k', amount: 3.53 },
+    { label: 'Wholesale', value: '₱2.65k', amount: 2.65 },
   ],
   Week: [
-    { label: 'Storefront', value: '₱0.42k', amount: 0.42, color: C.store },
-    { label: 'POS', value: '₱0.21k', amount: 0.21, color: C.pos },
-    { label: 'Mobile app', value: '₱0.91k', amount: 0.91, color: C.mobile },
-    { label: 'Wholesale', value: '₱0.63k', amount: 0.63, color: C.wholesale },
+    { label: 'Storefront', value: '₱0.42k', amount: 0.42 },
+    { label: 'POS', value: '₱0.21k', amount: 0.21 },
+    { label: 'Mobile app', value: '₱0.91k', amount: 0.91 },
+    { label: 'Wholesale', value: '₱0.63k', amount: 0.63 },
   ],
   Quarter: [
-    { label: 'Storefront', value: '₱5.1k', amount: 5.1, color: C.store },
-    { label: 'POS', value: '₱2.6k', amount: 2.6, color: C.pos },
-    { label: 'Mobile app', value: '₱10.4k', amount: 10.4, color: C.mobile },
-    { label: 'Wholesale', value: '₱7.9k', amount: 7.9, color: C.wholesale },
+    { label: 'Storefront', value: '₱5.1k', amount: 5.1 },
+    { label: 'POS', value: '₱2.6k', amount: 2.6 },
+    { label: 'Mobile app', value: '₱10.4k', amount: 10.4 },
+    { label: 'Wholesale', value: '₱7.9k', amount: 7.9 },
   ],
 };
 

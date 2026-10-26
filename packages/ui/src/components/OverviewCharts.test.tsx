@@ -96,7 +96,79 @@ describe('WeekChart', () => {
   });
 });
 
+describe('missing and non-finite data', () => {
+  const bad = [NaN, 5, null, Infinity, -Infinity, undefined, 3] as unknown as (number | null)[];
+  it('bars: writes No data / Closed as text and never prints NaN or Infinity', () => {
+    const { container } = render(<WeekChart title="x" labels={['a', 'b', 'c', 'd', 'e', 'f', 'g']} values={bad} />);
+    expect(container.innerHTML).not.toMatch(/NaN|Infinity/);
+    const cells = [...container.querySelectorAll('tbody td')].map((t) => t.textContent);
+    expect(cells).toEqual(['No data', '5', 'Closed', 'No data', 'No data', 'No data', '3']);
+    expect(container.querySelector('svg')!.getAttribute('aria-label')).toContain('a No data');
+  });
+  it('bars: Infinity does not stretch the scale', () => {
+    const { container } = render(<WeekChart title="x" labels={['a', 'b']} values={[Infinity, 5]} />);
+    const ticks = [...container.querySelectorAll('svg text')].map((t) => t.textContent);
+    expect(ticks).not.toContain('Infinity');
+    expect(container.innerHTML).not.toMatch(/NaN|Infinity/);
+  });
+  it('diverging: non-finite magnitudes are missing, not zero-drawn, and read No data', () => {
+    const { container, getByRole } = render(<WeekChart title="x" kind="diverging" labels={['a', 'b']} up={[NaN, 4]} down={[Infinity, undefined as unknown as number]} />);
+    expect(container.innerHTML).not.toMatch(/NaN|Infinity/);
+    expect(container.querySelectorAll('rect.fill-chart-1')).toHaveLength(1);
+    fireEvent.keyDown(getByRole('group'), { key: 'Home' });
+    expect(container.textContent).toContain('In No data, Out No data');
+  });
+  it('share bar: non-finite parts get no segment and a dash in the legend; the total ignores them', () => {
+    setWidth(1000);
+    const { container } = render(<OverviewCharts platforms={[{ ...autoWorks, shares: [{ title: 'Jobs', total: NaN, parts: [{ label: 'A', value: NaN }, { label: 'B', value: 2 }, { label: 'C', value: Infinity }] }] }]} />);
+    expect(container.innerHTML).not.toMatch(/NaN|Infinity/);
+    const li = [...container.querySelectorAll('ul li')].map((l) => l.textContent);
+    expect(li).toEqual(['A —', 'B 2', 'C —']);
+    expect(container.querySelectorAll('svg[aria-hidden=true] rect')).toHaveLength(1);
+  });
+});
+
+describe('announcements', () => {
+  it('speaks only keyboard moves, never mouse hover, and is not the described-by target', () => {
+    const { getByRole, container } = render(<WeekChart title="x" labels={['a', 'b']} values={[1, 2]} />);
+    const svg = container.querySelector('svg')!;
+    fireEvent.pointerMove(svg, { clientX: 100, clientY: 5 });
+    expect(container.querySelector('[aria-live]')!.textContent).toBe('');
+    expect(getByRole('group').getAttribute('aria-describedby')).toBeNull();
+    fireEvent.keyDown(getByRole('group'), { key: 'ArrowRight' });
+    expect(container.querySelector('[aria-live]')!.textContent).toBe('a: 1');
+  });
+});
+
 describe('OverviewCharts', () => {
+  it('shows the chart note under the figure in rows and stacked, and in the header in columns', () => {
+    setWidth(1000);
+    const { container, rerender } = render(<OverviewCharts platforms={[autoWorks, stockroom, cafe]} />);
+    expect(screen.getAllByText('Closed Sundays')).toHaveLength(1);
+    expect(container.querySelector('h4 + span')!.textContent).toBe('Closed Sundays');
+    rerender(<OverviewCharts platforms={[autoWorks, stockroom, cafe, hardware]} />);
+    expect(container.querySelector('h4 + span')).toBeNull();
+    expect(screen.getAllByText('Closed Sundays')).toHaveLength(1);
+  });
+  it('sends focus to the heading after Retry only when focus was lost', () => {
+    setWidth(1000);
+    const p = { ...cafe, name: 'Lia', state: 'error' as const, onRetry: () => {} };
+    const { rerender } = render(<OverviewCharts platforms={[p]} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    (document.activeElement as HTMLElement).blur?.();
+    rerender(<OverviewCharts platforms={[{ ...p, state: 'ready' }]} />);
+    expect(document.activeElement?.tagName).toBe('H3');
+  });
+  it('leaves focus alone when the user moved elsewhere during the retry', () => {
+    setWidth(1000);
+    const p = { ...cafe, name: 'Lia', state: 'error' as const, onRetry: () => {} };
+    const { rerender } = render(<><input aria-label="elsewhere" /><OverviewCharts platforms={[p]} /></>);
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    screen.getByLabelText('elsewhere').focus();
+    rerender(<><input aria-label="elsewhere" /><OverviewCharts platforms={[{ ...p, state: 'ready' }]} /></>);
+    expect(document.activeElement).toBe(screen.getByLabelText('elsewhere'));
+  });
+
   it('gives up to three platforms a column each and four or more a row each', () => {
     setWidth(1000);
     const { container, rerender } = render(<OverviewCharts platforms={[autoWorks, stockroom, cafe]} />);

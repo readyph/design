@@ -60,6 +60,7 @@ export const EdgeData: StoryObj = {
       <Edge title="All equal" values={[40, 40, 40, 40, 40, 40, 40]} />
       <Edge title="With negatives" values={[120, -40, 80, null, -10, 60, 90]} />
       <Edge title="Huge numbers" values={[1.2e9, 3.4e9, null, 2.2e9, 9.9e9, 5e9, 7.7e9]} />
+      <Edge title="NaN, Infinity, null, undefined" values={[NaN, 5, null, Infinity, undefined as unknown as number, 8, 3]} />
       <Edge title="Empty" values={[]} />
       <Edge title="Single day" values={[12]} />
     </div>

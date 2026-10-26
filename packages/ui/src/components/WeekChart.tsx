@@ -54,8 +54,10 @@ export interface WeekChartProps {
   compact?: boolean;
   /** What the chart is, for the spoken text and the table caption: "Revenue, last 7 days". */
   title: string;
-  /** Word for a day without a value. Default "Closed". */
+  /** Word for a day whose value is `null` (closed). Default "Closed". */
   closedLabel?: string;
+  /** Word for a value that is missing or not a finite number (NaN, Infinity, undefined). Default "No data". */
+  noDataLabel?: string;
   /** Replaces the generated summary. */
   'aria-label'?: string;
   /** Merged on the wrapper only. */
@@ -105,7 +107,7 @@ function xPicks(labels: string[], slot: number): Set<number> {
 export const WeekChart = forwardRef<HTMLDivElement, WeekChartProps>(function WeekChart(
   {
     kind = 'bars', labels, values = [], up = [], down = [], highlight, aboveLabel = 'In', belowLabel = 'Out',
-    format, tickFormat, locale, unit, tickCount = 4, compact = false, title, closedLabel = 'Closed', 'aria-label': ariaLabel, className,
+    format, tickFormat, locale, unit, tickCount = 4, compact = false, title, closedLabel = 'Closed', noDataLabel = 'No data', 'aria-label': ariaLabel, className,
   },
   ref,
 ) {
@@ -132,14 +134,18 @@ export const WeekChart = forwardRef<HTMLDivElement, WeekChartProps>(function Wee
   const n = labels.length;
   const diverging = kind === 'diverging';
   const hl = highlight === undefined ? n - 1 : highlight;
-  const vals: (number | null)[] = diverging ? labels.map((_, i) => up[i] ?? 0) : labels.map((_, i) => values[i] ?? null);
-  const downs = labels.map((_, i) => down[i] ?? 0);
+  // Non-finite numbers (NaN, Infinity) and undefined are missing data: never drawn, never in the scale, written as text.
+  const fin = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+  const vals: (number | null)[] = diverging ? labels.map((_, i) => (fin(up[i]) ? up[i] : null)) : labels.map((_, i) => (fin(values[i]) ? (values[i] as number) : null));
+  const downs: (number | null)[] = labels.map((_, i) => (fin(down[i]) ? down[i] : null));
+  // null in `values` is a day without a value on purpose (closed); anything else that is not finite is "no data"
+  const missingWord = (i: number) => (!diverging && values[i] === null ? closedLabel : noDataLabel);
 
   const W = width > 0 ? width : FALLBACK_W;
   const plotH = compact ? 56 : diverging ? 150 : 128;
 
   // domain and ticks
-  const dataMax = diverging ? Math.max(0, ...vals.map((v) => v ?? 0), ...downs) : Math.max(0, ...vals.map((v) => v ?? 0));
+  const dataMax = diverging ? Math.max(0, ...vals.map((v) => v ?? 0), ...downs.map((v) => v ?? 0)) : Math.max(0, ...vals.map((v) => v ?? 0));
   const dataMin = diverging ? 0 : Math.min(0, ...vals.map((v) => v ?? 0));
   const ticks = niceTicks(dataMin, dataMax, diverging && compact ? Math.min(tickCount, 1) : tickCount);
   const lo = diverging ? -ticks[ticks.length - 1] : ticks[0];
@@ -161,8 +167,8 @@ export const WeekChart = forwardRef<HTMLDivElement, WeekChartProps>(function Wee
   const picks = xPicks(labels, slot);
 
   const valueAt = (i: number): string => {
-    if (diverging) return `${aboveLabel} ${fmt(vals[i] ?? 0)}, ${belowLabel} ${fmt(downs[i])}`;
-    return vals[i] == null ? closedLabel : fmt(vals[i] as number);
+    if (diverging) return `${aboveLabel} ${vals[i] == null ? noDataLabel : fmt(vals[i] as number)}, ${belowLabel} ${downs[i] == null ? noDataLabel : fmt(downs[i] as number)}`;
+    return vals[i] == null ? missingWord(i) : fmt(vals[i] as number);
   };
 
   const summary = useMemo(() => {
@@ -170,13 +176,15 @@ export const WeekChart = forwardRef<HTMLDivElement, WeekChartProps>(function Wee
     const parts = labels.map((l, i) => `${l} ${valueAt(i)}`);
     return `${title}${unit ? ` (${unit})` : ''}. ${parts.join(', ')}.`;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ariaLabel, labels, vals, downs, fmt, title, unit, aboveLabel, belowLabel, closedLabel]);
+  }, [ariaLabel, labels, vals, downs, fmt, title, unit, aboveLabel, belowLabel, closedLabel, noDataLabel]);
 
-  const move = useCallback((i: number | null) => {
+  const move = useCallback((i: number | null, speak = false) => {
     setActive(i);
-    if (i !== null) setAnnounce(`${labels[i]}: ${valueAt(i)}`);
+    if (!speak) return;
+    if (i === null) setAnnounce('');
+    else setAnnounce(`${labels[i]}: ${valueAt(i)}`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [labels, vals, downs, fmt, aboveLabel, belowLabel, closedLabel]);
+  }, [labels, vals, downs, fmt, aboveLabel, belowLabel, closedLabel, noDataLabel]);
 
   const onKey = (e: KeyboardEvent<HTMLDivElement>) => {
     if (n === 0) return;
@@ -186,8 +194,8 @@ export const WeekChart = forwardRef<HTMLDivElement, WeekChartProps>(function Wee
     else if (e.key === 'ArrowLeft') next = Math.max(0, cur - 1);
     else if (e.key === 'Home') next = 0;
     else if (e.key === 'End') next = n - 1;
-    else if (e.key === 'Escape') { move(null); return; }
-    if (next !== null) { e.preventDefault(); move(next); }
+    else if (e.key === 'Escape') { move(null, true); return; }
+    if (next !== null) { e.preventDefault(); move(next, true); }
   };
 
   const onPointer = (e: PointerEvent<SVGSVGElement>) => {
@@ -208,7 +216,7 @@ export const WeekChart = forwardRef<HTMLDivElement, WeekChartProps>(function Wee
   if (active !== null && active < n) {
     const l2 = valueAt(active);
     const w = Math.max(l2.length, labels[active].length) * 6.6 + 16;
-    const top = diverging ? y(vals[active] ?? 0) : vals[active] == null ? y0 : y(Math.max(0, vals[active] as number));
+    const top = diverging ? y(Math.max(vals[active] ?? 0, 0)) : vals[active] == null ? y0 : y(Math.max(0, vals[active] as number));
     const x = Math.max(0, Math.min(W - w, cx(active) - w / 2));
     tip = { x, y: Math.max(0, top - 46), w, l1: labels[active], l2 };
   }
@@ -220,9 +228,8 @@ export const WeekChart = forwardRef<HTMLDivElement, WeekChartProps>(function Wee
         tabIndex={n ? 0 : undefined}
         role="group"
         aria-label={`${title}. Use the left and right arrow keys to read each day.`}
-        aria-describedby={`${id}-live`}
         onKeyDown={onKey}
-        onBlur={() => move(null)}
+        onBlur={() => move(null, true)}
         className={cn('block w-full min-w-0 max-w-full overflow-hidden rounded-chip', focusRing)}
       >
         <svg role="img" aria-label={summary} width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="block max-w-full tabular-nums" onPointerMove={onPointer} onPointerDown={onPointer} onPointerLeave={() => move(null)}>
@@ -240,7 +247,7 @@ export const WeekChart = forwardRef<HTMLDivElement, WeekChartProps>(function Wee
             const isHl = !diverging && i === hl;
             const bx = cx(i) - bw / 2;
             if (diverging) {
-              const dn = downs[i];
+              const dn = downs[i] ?? 0;
               return (
                 <g key={`${l}-${i}`}>
                   {(v ?? 0) > 0 && <rect x={bx} y={y(v as number)} width={bw} height={Math.max(1, y0 - y(v as number))} className="fill-chart-1 forced-colors:fill-[Highlight]" />}
@@ -296,7 +303,7 @@ export const WeekChart = forwardRef<HTMLDivElement, WeekChartProps>(function Wee
           {labels.map((l, i) => (
             <tr key={`${l}-${i}`}>
               <th scope="row">{l}</th>
-              {diverging ? (<><td>{fmt(vals[i] ?? 0)}</td><td>{fmt(downs[i])}</td></>) : <td>{vals[i] == null ? closedLabel : fmt(vals[i] as number)}</td>}
+              {diverging ? (<><td>{vals[i] == null ? noDataLabel : fmt(vals[i] as number)}</td><td>{downs[i] == null ? noDataLabel : fmt(downs[i] as number)}</td></>) : <td>{vals[i] == null ? missingWord(i) : fmt(vals[i] as number)}</td>}
             </tr>
           ))}
         </tbody>

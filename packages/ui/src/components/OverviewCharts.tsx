@@ -1,5 +1,6 @@
-import { forwardRef, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { forwardRef, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { cn, focusRing } from '../utils/cn';
+import { focusIfLost } from '../utils/focusIfLost';
 import { Badge, type BadgeTone } from './Badge';
 import { ErrorBlock } from './ErrorBlock';
 import { PlatformLogo, type PlatformLogoProps } from './PlatformLogo';
@@ -48,7 +49,9 @@ const partSwatch: Record<ShareTone, string> = {
  */
 export function ShareBar({ title, total, parts, onOpen, className }: ShareBarProps) {
   const id = useId();
-  const sum = parts.reduce((t, p) => t + Math.max(0, p.value), 0);
+  // a part that is not a finite number is missing: no segment, no share of the total, "—" in the legend
+  const ok = (v: number) => Number.isFinite(v);
+  const sum = parts.reduce((t, p) => t + (ok(p.value) ? Math.max(0, p.value) : 0), 0);
   let grey = 0;
   const resolved = parts.map((p) => {
     const tone: ShareTone = p.tone ?? 'neutral';
@@ -64,12 +67,12 @@ export function ShareBar({ title, total, parts, onOpen, className }: ShareBarPro
         ) : (
           <span id={id} className="min-w-0 truncate text-ui font-medium text-text">{title}</span>
         )}
-        {total !== undefined && <b className="shrink-0 text-ui font-semibold tabular-nums text-text">{total}</b>}
+        {total !== undefined && <b className="shrink-0 text-ui font-semibold tabular-nums text-text">{typeof total === 'number' && !ok(total) ? '\u2014' : total}</b>}
       </div>
       {sum > 0 && (
         <svg aria-hidden width="100%" height={6} className="block overflow-hidden rounded-full bg-raised forced-colors:bg-[Canvas]">
           {resolved.map((p, i) => {
-            if (p.value <= 0) return null;
+            if (!ok(p.value) || p.value <= 0) return null;
             const x = (at / sum) * 100;
             const w = (p.value / sum) * 100;
             at += p.value;
@@ -83,7 +86,7 @@ export function ShareBar({ title, total, parts, onOpen, className }: ShareBarPro
         {resolved.map((p, i) => (
           <li key={`${p.label}-${i}`} className="inline-flex items-center gap-1.5">
             <span aria-hidden className={cn('size-2 shrink-0 rounded-full', p.tone === 'neutral' ? (p.alt ? 'bg-share-2' : 'bg-share-1') : partSwatch[p.tone])} />
-            {p.label} <b className="font-semibold tabular-nums text-text">{p.value}</b>
+            {p.label} <b className="font-semibold tabular-nums text-text">{ok(p.value) ? p.value : '\u2014'}</b>
           </li>
         ))}
       </ul>
@@ -162,30 +165,31 @@ interface BlockProps {
 function PlatformBlock({ p, layout, locale }: BlockProps) {
   const nameId = useId();
   const headRef = useRef<HTMLHeadingElement | null>(null);
-  const hadFocus = useRef(false);
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const retried = useRef(false);
   const state = p.state ?? 'ready';
   const row = layout === 'row';
   const compactChart = row;
   const logoSize = row || layout === 'stack-row' ? 16 : 24;
 
-  // After a successful Retry the button is gone. Keep focus where the user was only if it fell to the page.
-  useEffect(() => {
-    if (state !== 'error' && hadFocus.current) {
-      hadFocus.current = false;
-      if (document.activeElement === document.body || document.activeElement === null) headRef.current?.focus();
+  // After Retry the pressed button is gone: send focus to the heading only if focus was really lost (shared util).
+  useLayoutEffect(() => {
+    if (state !== 'error' && retried.current) {
+      retried.current = false;
+      focusIfLost(sectionRef.current, headRef.current);
     }
   }, [state]);
 
   const retry = p.onRetry
     ? () => {
-        hadFocus.current = true;
+        retried.current = true;
         p.onRetry?.();
       }
     : undefined;
 
   const name = (
-    <h3 ref={headRef} tabIndex={-1} id={nameId} className="m-0 min-w-0 truncate text-ui font-semibold text-text outline-none">
-      {p.onOpen ? <button type="button" onClick={p.onOpen} className={cn('max-w-full truncate rounded-chip hover:underline', focusRing)}>{p.name}</button> : p.name}
+    <h3 ref={headRef} tabIndex={-1} id={nameId} title={p.name} className="m-0 min-w-0 truncate text-ui font-semibold text-text outline-none">
+      {p.onOpen ? <button type="button" title={p.name} onClick={p.onOpen} className={cn('max-w-full truncate rounded-chip hover:underline', focusRing)}>{p.name}</button> : p.name}
     </h3>
   );
   const identity = (
@@ -207,6 +211,7 @@ function PlatformBlock({ p, layout, locale }: BlockProps) {
       <div className="min-w-0">
         <p className="m-0 flex flex-wrap items-baseline gap-x-2"><span className="text-overview-figure font-medium tabular-nums text-text">{p.figure.value}</span><span className="text-ui text-muted">{p.figure.label}</span></p>
         {p.sub && <p className="m-0 text-small tabular-nums text-muted">{p.sub}</p>}
+        {layout !== 'col' && p.chart?.note && <p className="m-0 text-small text-muted">{p.chart.note}</p>}
       </div>
     );
 
@@ -219,19 +224,17 @@ function PlatformBlock({ p, layout, locale }: BlockProps) {
       <p className="m-0 text-ui text-muted">No 7-day history yet</p>
     ) : (
       <div className="min-w-0">
-        {(!row || p.chart.note) && (
-          <div className="mb-1 flex items-baseline justify-between gap-3">
-            {row ? <span /> : <h4 className="m-0 min-w-0 truncate text-ui font-medium text-text">{p.chart.title}</h4>}
-            {p.chart.note && <span className="shrink-0 text-small text-muted">{p.chart.note}</span>}
-          </div>
-        )}
+        <div className="mb-1 flex items-baseline justify-between gap-3">
+          <h4 title={p.chart.title} className="m-0 min-w-0 truncate text-ui font-medium text-text">{p.chart.title}</h4>
+          {layout === 'col' && p.chart.note && <span className="min-w-0 shrink-0 truncate text-small text-muted" title={p.chart.note}>{p.chart.note}</span>}
+        </div>
         <WeekChart {...p.chart} locale={p.chart.locale ?? locale} compact={compactChart} tickCount={p.chart.tickCount ?? (compactChart ? 2 : 4)} />
       </div>
     );
 
   if (row || layout === 'stack-row') {
     return (
-      <section aria-labelledby={nameId} aria-busy={state === 'loading' || undefined} className={cn('grid min-w-0 gap-x-6 gap-y-3 border-t border-rule py-row-y-tight first:border-t-0', layout === 'row' ? 'grid-cols-[minmax(0,15rem)_minmax(0,11rem)_minmax(0,1fr)] items-center' : 'grid-cols-1')}>
+      <section ref={sectionRef} aria-labelledby={nameId} aria-busy={state === 'loading' || undefined} className={cn('grid min-w-0 gap-x-6 gap-y-3 border-t border-rule py-row-y-tight first:border-t-0', layout === 'row' ? 'grid-cols-[minmax(0,15rem)_minmax(0,11rem)_minmax(0,1fr)] items-center' : 'grid-cols-1')}>
         {identity}
         {figure}
         <div className="min-w-0">{chart}</div>
@@ -239,7 +242,7 @@ function PlatformBlock({ p, layout, locale }: BlockProps) {
     );
   }
   return (
-    <section aria-labelledby={nameId} aria-busy={state === 'loading' || undefined} className="flex min-w-0 flex-col gap-3">
+    <section ref={sectionRef} aria-labelledby={nameId} aria-busy={state === 'loading' || undefined} className="flex min-w-0 flex-col gap-3">
       <header className="flex min-w-0 items-center justify-between gap-3">
         {identity}
         {p.status && state !== 'error' && <StatusPart status={p.status} />}
@@ -269,14 +272,21 @@ export const OverviewCharts = forwardRef<HTMLDivElement, OverviewChartsProps>(fu
 ) {
   const box = useRef<HTMLDivElement | null>(null);
   const [width, setWidth] = useState(0);
+  const [rem, setRem] = useState(16);
+  const probe = useRef<HTMLSpanElement | null>(null);
   useLayoutEffect(() => {
     const el = box.current;
     if (!el) return;
-    const read = () => setWidth(Math.floor(el.clientWidth));
+    // text zoom: the row columns are in rem, so the fold point scales with the root font size
+    const read = () => {
+      setWidth(Math.floor(el.clientWidth));
+      setRem(probe.current?.getBoundingClientRect().width || 16);
+    };
     read();
     if (typeof ResizeObserver === 'undefined') return;
     const ro = new ResizeObserver(read);
     ro.observe(el);
+    if (probe.current) ro.observe(probe.current); // 1rem wide: it resizes when the text is zoomed
     return () => ro.disconnect();
   }, []);
   const setRefs = (node: HTMLDivElement | null) => {
@@ -285,10 +295,11 @@ export const OverviewCharts = forwardRef<HTMLDivElement, OverviewChartsProps>(fu
     else if (ref) ref.current = node;
   };
 
-  const stacked = width > 0 && width < stackBelow;
+  const stacked = width > 0 && width < (stackBelow * Math.max(16, rem)) / 16;
   const many = platforms.length >= 4;
   return (
-    <div ref={setRefs} role="region" aria-label={ariaLabel} className={cn('block w-full min-w-0 max-w-full', className)}>
+    <div ref={setRefs} role="region" aria-label={ariaLabel} className={cn('relative block w-full min-w-0 max-w-full', className)}>
+      <span ref={probe} aria-hidden className="pointer-events-none invisible absolute left-0 top-0 h-0 w-4" />
       {many ? (
         <div className="flex flex-col">
           {platforms.map((p) => <PlatformBlock key={p.id} p={p} layout={stacked ? 'stack-row' : 'row'} locale={locale} />)}
