@@ -28,3 +28,12 @@ describe('cn', () => {
     expect(cn('text-ui', false && 'x', { 'text-muted': true })).toBe('text-ui text-muted');
   });
 });
+
+describe('cn preset width keys', () => {
+  it('treats leda-w keys as widths and max-widths', () => {
+    expect(cn('w-40', 'w-leda-w')).toBe('w-leda-w');
+    expect(cn('w-leda-w', 'w-96')).toBe('w-96');
+    expect(cn('max-w-xs', 'max-w-leda-w-overview')).toBe('max-w-leda-w-overview');
+    expect(cn('text-muted', 'w-leda-w')).toBe('text-muted w-leda-w');
+  });
+});

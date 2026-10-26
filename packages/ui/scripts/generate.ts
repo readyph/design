@@ -75,13 +75,13 @@ ${darkExplicit}
   html { font-size: 100%; background: var(--frame); -webkit-font-smoothing: antialiased; }
   body { margin: 0; font-family: var(--font); font-size: var(--fs-body); line-height: var(--lh-body); background: var(--frame); color: var(--text); font-variant-numeric: tabular-nums; }
   /* Surface scope. PlatformShell's place column and PlatformToday set data-surface="frame": content drawn straight on --frame gets the frame row rule and
-     the focus-ring offset on --frame. A sheet nested inside sets data-surface="surface" to restore the sheet values (nearest ancestor wins). */
+     the focus-ring offset on --frame. --scope-bg is the scope's resolved background: sticky bars paint it (bg-[var(--scope-bg)]) so they follow the phone reset. A sheet nested inside sets data-surface="surface" to restore the sheet values (nearest ancestor wins). */
   :root { --rule-sheet: var(--rule); }
-  [data-surface="frame"] { --rule: var(--frame-rule); --ring-offset-bg: var(--frame); }
-  [data-surface="surface"] { --rule: var(--rule-sheet); --ring-offset-bg: var(--surface); }
+  [data-surface="frame"] { --rule: var(--frame-rule); --scope-bg: var(--frame); --ring-offset-bg: var(--scope-bg); }
+  [data-surface="surface"] { --rule: var(--rule-sheet); --scope-bg: var(--surface); --ring-offset-bg: var(--scope-bg); }
   /* Phone (the shell's max-[640px]): the whole shell is --surface, so the place column's frame scope resets, including PlatformToday blocks inside it. */
   @media (max-width: 640px) {
-    [data-shell-place][data-surface="frame"], [data-shell-place] [data-surface="frame"] { --rule: var(--rule-sheet); --ring-offset-bg: var(--surface); }
+    [data-shell-place][data-surface="frame"], [data-shell-place] [data-surface="frame"] { --rule: var(--rule-sheet); --scope-bg: var(--surface); --ring-offset-bg: var(--scope-bg); }
   }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   code, kbd, samp { font-family: var(--mono); font-size: 13px; }
@@ -122,14 +122,20 @@ const preset = {
       fontSize,
       borderRadius: Object.fromEntries(Object.keys(radius).map((k) => [k, v(`r-${k}`)])),
       spacing: Object.fromEntries(Object.keys(spacing).map((k) => [k, v(k)])),
-      width: { rail: v('rail'), place: v('place'), 'leda-w': v('leda-w') },
+      width: { rail: v('rail'), place: v('place'), 'leda-w': v('leda-w'), 'leda-w-overview': v('leda-w-overview') },
+      maxWidth: { 'leda-w-overview': v('leda-w-overview') },
       height: { status: v('status'), 'map-h': v('map-h'), 'sheet-bar': v('sheet-bar') },
       boxShadow: { float: v('shadow-float') },
+      backgroundImage: { halo: `conic-gradient(${v('hl0')}, ${v('hl1')}, ${v('hl2')}, ${v('hl3')}, ${v('hl0')})` },
       keyframes: {
         'row-flash': { '0%, 40%': { backgroundColor: v('accent-tint') }, '100%': { backgroundColor: 'transparent' } },
         'tab-fade': { from: { opacity: '0' }, to: { opacity: '1' } },
         'town-flow-a': { to: { strokeDashoffset: '-27' } },
         'town-flow-b': { from: { strokeDashoffset: '13' }, to: { strokeDashoffset: '40' } },
+        // Ask Leda halo (RDY-266, handover 4.7): one revolution + an opacity envelope; the reduced-motion fade has no rotation.
+        'halo-spin': { from: { transform: 'translate(-50%, -50%) rotate(0deg)' }, to: { transform: 'translate(-50%, -50%) rotate(360deg)' } },
+        'halo-fade': { '0%': { opacity: '0' }, '18%, 70%': { opacity: 'var(--halo-peak, 1)' }, '100%': { opacity: '0' } },
+        'halo-fade-reduced': { '0%': { opacity: '0' }, '50%': { opacity: '1' }, '100%': { opacity: '0' } },
       },
       animation: {
         'row-flash': 'row-flash var(--dur-row-flash) ease-out 1',
@@ -138,6 +144,9 @@ const preset = {
         'town-flow-b': 'town-flow-b 1.6s linear infinite',
         'town-flow-a-slow': 'town-flow-a 5s linear infinite',
         'town-flow-b-slow': 'town-flow-b 5s linear infinite',
+        'halo-spin': 'halo-spin var(--dur-halo) var(--ease-halo) 1 both',
+        'halo-fade': 'halo-fade var(--dur-halo) var(--ease-halo) 1 both',
+        'halo-fade-reduced': 'halo-fade-reduced var(--dur-halo-reduced) ease-in-out 1 both',
       },
       transitionTimingFunction: { subpage: v('ease-subpage'), halo: v('ease-halo') },
       transitionDuration: { hover: v('dur-hover'), 'hover-slow': v('dur-hover-slow'), tab: v('dur-tab'), 'subpage-in': v('dur-subpage-in'), 'subpage-out': v('dur-subpage-out') },
