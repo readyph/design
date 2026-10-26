@@ -72,7 +72,7 @@ describe('Platforms page', () => {
   it('opens the marketplace from the rail plus and from a Not shared yet Add with the reader picked', async () => {
     const user = userEvent.setup();
     renderPage();
-    await user.click(within(screen.getByRole('navigation', { name: 'Portal' })).getByRole('button', { name: 'Add a platform' }));
+    await user.click(within(screen.getAllByRole('navigation', { name: 'Portal' })[0]).getByRole('button', { name: 'Add a platform' }));
     expect(screen.getByRole('dialog', { name: 'Add a platform' })).toBeTruthy();
     await user.keyboard('{Escape}');
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
@@ -149,7 +149,7 @@ describe('axe', () => {
   for (const [name, props] of cases) {
     it(`has no axe violations (${name})`, async () => {
       const { container } = renderPage(props);
-      const r = await axe.run(container, { rules: { 'color-contrast': { enabled: false }, region: { enabled: false } } });
+      const r = await axe.run(container, { rules: { 'color-contrast': { enabled: false }, region: { enabled: false }, /* jsdom has no CSS, so the rail and phone nav (both "Portal" in PortalFrame) both show; the real-browser axe pass covers it */ 'landmark-unique': { enabled: false } } });
       expect(r.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`)).toEqual([]);
     });
   }

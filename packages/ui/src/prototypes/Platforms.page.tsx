@@ -1,6 +1,5 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { ArrowRight, BookOpen, DotsThree, House, Plugs, Plus, PlusSquare, Users, Warning } from '@phosphor-icons/react';
-import { AccountMenu } from '../components/AccountMenu';
+import { ArrowRight, DotsThree, Plugs, Plus, PlusSquare, Warning } from '@phosphor-icons/react';
 import { AskLedaBar } from '../components/AskLedaBar';
 import { Breadcrumbs } from '../components/Breadcrumbs';
 import { Button } from '../components/Button';
@@ -9,7 +8,6 @@ import { ConfirmDialog } from '../components/ConfirmDialog';
 import { EmptyState } from '../components/EmptyState';
 import { ErrorBlock } from '../components/ErrorBlock';
 import { IconButton } from '../components/IconButton';
-import { IconRailContent, IconRailFoot, IconRailItem, IconRailMark, IconRailSpacer } from '../components/IconRail';
 import { LedaMark } from '../components/Leda';
 import { LedaNote } from '../components/LedaNote';
 import { List, ListCell, ListHeader, ListHeaderCell, ListMetric, ListMetrics, ListRow } from '../components/List';
@@ -18,7 +16,6 @@ import { Marketplace } from '../components/Marketplace';
 import { sampleCatalog } from '../components/Marketplace.sample';
 import { Menu } from '../components/Menu';
 import { PlatformLogo } from '../components/PlatformLogo';
-import { PlatformShell } from '../components/PlatformShell';
 import { SheetBar } from '../components/SheetBar';
 import { Skeleton } from '../components/Skeleton';
 import { StatusBar, type StatusBarPlatform } from '../components/StatusBar';
@@ -26,6 +23,7 @@ import { StatusDot } from '../components/StatusDot';
 import { TownMap } from '../components/TownMap';
 import { Toaster } from '../components/toast/Toaster';
 import { toast } from '../components/toast/toastStore';
+import { PortalFrame } from './PortalFrame';
 import { focusIfLost } from '../utils/focusIfLost';
 import { useMatchMedia } from '../utils/useMatchMedia';
 import {
@@ -492,52 +490,14 @@ export function PlatformsPage({ set: setKey = 'duo', state: initial = 'live', ad
 
   return (
     <>
-      <PlatformShell
-        railLabel="Portal"
-        phoneNavLabel="Portal, phone"
+      <PortalFrame
+        current="platforms"
+        pageName="Platforms"
+        leda={<AskLedaBar variant="bar" scope="your platforms" shortcuts={false} paused={palette} onOpen={() => setPalette(true)} />}
+        teamCount={0}
+        onAddPlatform={() => addPlatform()}
         placeLabel="Your platforms"
         sheetLabel="All platforms"
-        rail={
-          <IconRailContent>
-            <IconRailMark href="#home" />
-            <IconRailItem icon={House} label="Home" href="#home" />
-            <IconRailItem icon={PlusSquare} label="Platforms" href="#platforms" current />
-            <IconRailItem icon={Users} label="Team" href="#team" />
-            <IconRailItem icon={BookOpen} label="Memory" href="#memory" />
-            <IconRailItem icon={Plus} label="Add a platform" onClick={() => addPlatform()} className="mt-2" />
-            <IconRailSpacer />
-            <IconRailFoot>
-              <AccountMenu name="Maria Santos" email="maria@santosauto.ph" role="Owner" applyToDocument={false} />
-            </IconRailFoot>
-          </IconRailContent>
-        }
-        topBar={
-          <>
-            <span className="font-semibold">ReadyPH</span>
-            <span className="min-w-0 flex-1 truncate text-muted">{live && !empty ? plural(set.platforms.length, 'platform') : 'Platforms'}</span>
-            <AskLedaBar variant="bar" scope="your platforms" shortcuts={false} paused={palette} onOpen={() => setPalette(true)} />
-            <AccountMenu name="Maria Santos" email="maria@santosauto.ph" role="Owner" applyToDocument={false} />
-          </>
-        }
-        phoneNav={
-          <ul className="m-0 flex w-full list-none p-0">
-            {(
-              [
-                [House, 'Home', '#home', false],
-                [PlusSquare, 'Platforms', '#platforms', true],
-                [Users, 'Team', '#team', false],
-                [BookOpen, 'Memory', '#memory', false],
-              ] as const
-            ).map(([Ic, label, href, current]) => (
-              <li key={label} className="flex-1">
-                <a href={href} aria-current={current ? 'page' : undefined} className="flex h-full min-h-11 flex-col items-center justify-center gap-0.5 text-small text-muted aria-[current=page]:font-medium aria-[current=page]:text-text">
-                  <Ic aria-hidden size={20} />
-                  {label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        }
         place={
           <Place
             set={set}
@@ -584,7 +544,7 @@ export function PlatformsPage({ set: setKey = 'duo', state: initial = 'live', ad
             {stateBlock}
           </div>
         )}
-      </PlatformShell>
+      </PortalFrame>
       <Toaster />
       <CommandPalette
         open={palette}
