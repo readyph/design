@@ -8,7 +8,7 @@ import { three, threeLinks } from '../components/TownMap.data';
 import { Live } from '../components/BlockedQuestions.demo';
 import { Toaster } from '../components/toast/Toaster';
 
-/** RDY-289. Prototype only: stories are not exported from the package. Both pages sit in the real PlatformShell sheet. */
+/** RDY-289. Prototype only: stories are not exported from the package. The platform's Leda & Memory tab in the real PlatformShell. The Memory tab is in [For Review] Memory (RDY-259). */
 const meta: Meta = {
   title: 'Prototypes/Portal/[For Review] Blocked questions',
   parameters: { layout: 'fullscreen' },
@@ -24,39 +24,11 @@ function Tried({ on }: { on: string | null }) {
   ) : null;
 }
 
-const memoryTabs = [
-  { value: 'topics', label: 'Topics', badge: 12 },
-  { value: 'blocked', label: 'Blocked questions', badge: 5 },
-  { value: 'requests', label: 'Customer requests' },
-];
 const platformTabs = [
   { value: 'info', label: 'General info' },
   { value: 'leda', label: 'Leda & Memory' },
   { value: 'connections', label: 'Connections' },
 ];
-
-function MemoryPage() {
-  const [tried, setTried] = useState<string | null>(null);
-  return (
-    <PlatformShell
-      sheetLabel="Memory"
-      sheetBar={
-        <SheetBar>
-          <Tabs variant="fixed" aria-label="Memory" items={memoryTabs} defaultValue="blocked" />
-        </SheetBar>
-      }
-    >
-      <div className="mx-auto w-full max-w-[760px] px-4 py-6 sm:px-6">
-        <h1 className="text-header">Blocked questions</h1>
-        <div className="mt-2">
-          <Live onTry={(i) => setTried(i.question)} />
-        </div>
-        <Tried on={tried} />
-      </div>
-      <Toaster />
-    </PlatformShell>
-  );
-}
 
 function PlatformTab() {
   const [tried, setTried] = useState<string | null>(null);
@@ -85,7 +57,6 @@ function PlatformTab() {
   );
 }
 
-export const MemoryBlockedTab: Story = { name: 'Memory: Blocked questions tab', render: () => <MemoryPage /> };
 export const PlatformLedaMemoryTab: Story = { name: 'Platform: Leda & Memory tab', render: () => <PlatformTab /> };
 export const PlatformPhone: Story = { name: 'Platform tab on a phone (375)', parameters: { viewport: { defaultViewport: 'mobile1' } }, render: () => <PlatformTab /> };
 

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 import { cn, focusRing } from '../utils/cn';
 import { PlatformLogo } from './PlatformLogo';
 import { ConfirmDialog } from './ConfirmDialog';
@@ -34,6 +34,8 @@ export const manyTopics: TopicItem[] = Array.from({ length: 240 }, (_, i) => {
   return { ...s, id: `m${i}`, title: `${s.title} ${Math.floor(i / sampleTopics.length) + 1}`, on: i % 3 !== 0 };
 });
 
+export const FOLDER_NAMES = FOLDERS;
+
 export const businessOptions: SelectOption[] = [
   { value: '', label: 'All businesses' },
   ...Object.entries(FOLDERS).map(([value, label]) => ({ value, label, icon: <PlatformLogo name={label} size={16} decorative /> })),
@@ -51,9 +53,25 @@ const passes = (t: TopicItem, f: TopicFilter) => f === 'all' || (f === 'on' ? t.
  * A page around TopicLibrary: filters by business, search and filter, saves a switch at once with Undo, and asks
  * before Turn all (off lists the topics that go quiet; on turns on only the safe ones).
  */
-export function TopicLibraryPage({ initial = sampleTopics, ...props }: Partial<TopicLibraryProps> & { initial?: TopicItem[] }) {
-  const [topics, setTopics] = useState(initial);
-  const [business, setBusiness] = useState('');
+export function TopicLibraryPage({
+  initial = sampleTopics,
+  store,
+  business: businessProp,
+  onBusiness,
+  ...props
+}: Partial<TopicLibraryProps> & {
+  initial?: TopicItem[];
+  /** Controlled topics (a page that shares them with a folder list or a topic page). */
+  store?: [TopicItem[], Dispatch<SetStateAction<TopicItem[]>>];
+  /** Controlled business filter (a folder list or map in step with it). */
+  business?: string;
+  onBusiness?: (value: string) => void;
+}) {
+  const own = useState(initial);
+  const [topics, setTopics] = store ?? own;
+  const ownBusiness = useState('');
+  const business = businessProp ?? ownBusiness[0];
+  const setBusiness = (v: string) => (onBusiness ?? ownBusiness[1])(v);
   const [filter, setFilter] = useState<TopicFilter>('all');
   const [query, setQuery] = useState('');
   const [layout, setLayout] = useTopicLayout('rph-mem-layout-demo');
