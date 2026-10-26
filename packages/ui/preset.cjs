@@ -252,10 +252,19 @@ const preset = {
           "100%": {
             "backgroundColor": "transparent"
           }
+        },
+        "tab-fade": {
+          "from": {
+            "opacity": "0"
+          },
+          "to": {
+            "opacity": "1"
+          }
         }
       },
       "animation": {
-        "row-flash": "row-flash var(--dur-row-flash) ease-out 1"
+        "row-flash": "row-flash var(--dur-row-flash) ease-out 1",
+        "tab-fade": "tab-fade var(--dur-tab) linear"
       },
       "transitionTimingFunction": {
         "subpage": "var(--ease-subpage)",
