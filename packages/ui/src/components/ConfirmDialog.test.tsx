@@ -101,4 +101,18 @@ describe('ConfirmDialog', () => {
     expect(screen.getByRole('button', { name: 'Cancel' }).className).toContain('var(--ctl-touch)');
     expect(screen.getByRole('button', { name: 'Delete' }).className).toContain('var(--ctl-touch)');
   });
+  it('returns focus to the opener by default, and onCloseAutoFocus can take that over with preventDefault', async () => {
+    const { unmount } = render(<Demo />);
+    await userEvent.click(screen.getByText('Open'));
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    await vi.waitFor(() => expect(document.activeElement).toBe(screen.getByText('Open')));
+    unmount();
+    const seen = vi.fn((e: Event) => e.preventDefault());
+    render(<Demo onCloseAutoFocus={seen} />);
+    await userEvent.click(screen.getByText('Open'));
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    await vi.waitFor(() => expect(seen).toHaveBeenCalled());
+    await new Promise((r) => setTimeout(r, 50));
+    expect(document.activeElement).not.toBe(screen.getByText('Open'));
+  });
 });

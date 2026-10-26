@@ -1,5 +1,0 @@
----
-'@readyph/ui': minor
----
-
-Queue "Needs you" (RDY-279, C19, new): `Queue`. Header (22px title, filled count, platform filter menu with logos and open counts, "X only" chip with clear), Leda headline, a scrolling list (28px bottom fade while more is below, scroll contained) and three pinned groups folded to one line each (Leda is watching, Snoozed, Done today). Props: `items` (`QueueItem`: platform, source, due, urgent, title, detail, action), `watching`, `snoozed`, `done`, `platforms`, `filter` / `defaultFilter` / `onFilterChange`, `headline`, `loading`, `errors` + `onRetry`, `onOpen`, `onAction`, `onSnooze`, `onItemHover` (light the building on the map), `cursorId` / `onCursorChange`, `shortcuts`, `defaultOpenGroups`. Keys j / k / Enter use the `List` cursor hook; `s` snoozes the cursor row. Only one component per page keeps the page shortcuts: give other Lists `shortcuts={false}`. Rows are a list with `aria-current`, not a listbox, because each holds a real action button. Designed for --frame (the place column, 320-460px); the fade is a mask so it works on any surface.
