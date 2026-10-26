@@ -2,6 +2,7 @@ import { useEffect, useState, type ComponentProps } from 'react';
 import { DocsContainer } from '@storybook/blocks';
 import { themes } from '@storybook/theming';
 import type { Decorator, Preview } from '@storybook/react';
+import { useGlobals } from '@storybook/preview-api';
 import '../src/styles/globals.css';
 
 export const tags = ['autodocs'];
@@ -20,6 +21,25 @@ const withTheme: Decorator = (Story, context) => {
     if (theme === 'light' || theme === 'dark') root.setAttribute('data-theme', theme);
     else root.removeAttribute('data-theme');
   }
+  return <Story />;
+};
+
+/**
+ * Default size of the five Prototypes pages (RDY-356). They open on Desktop 1440 when no size has been picked, and keep whatever
+ * the toolbar says afterwards. They do not set `parameters.viewport.defaultViewport` for that: the viewport addon applies that
+ * parameter to the toolbar every time it changes between stories, which reset a chosen Large desktop / Laptop on the next page.
+ * The phone stories still set `defaultViewport: 'mobile1'` themselves and are skipped here.
+ */
+const withPrototypeViewport: Decorator = (Story, context) => {
+  const [globals, updateGlobals] = useGlobals();
+  const chosen = globals.viewport as string | undefined;
+  const wants = context.viewMode === 'story' && context.title.startsWith('Prototypes/') && !context.parameters.viewport?.defaultViewport;
+  const unset = !chosen || chosen === 'reset';
+  useEffect(() => {
+    if (wants && unset) updateGlobals({ viewport: 'desktop' });
+    // Only when the story changes: choosing Responsive on a page later is respected.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [context.id]);
   return <Story />;
 };
 
@@ -69,10 +89,12 @@ const viewports = {
 };
 
 const preview: Preview = {
-  decorators: [withTheme],
+  decorators: [withTheme, withPrototypeViewport],
   // a11y.manual global: the panel reads the global before the story parameter, so the global is what shows "Run test" (RDY-355).
-  initialGlobals: { theme: 'system', a11y: { manual: true } },
+  initialGlobals: { theme: 'system', a11y: { manual: true }, rphRefresh: 0 },
   globalTypes: {
+    // Hidden (no toolbar item): the manager nudges it so the viewport tool re-renders after a story change (see manager.ts, RDY-356).
+    rphRefresh: { description: 'Internal: re-renders the toolbar' },
     theme: {
       description: 'Colour theme (light, dark, or follow the system)',
       toolbar: {
