@@ -101,7 +101,9 @@ interface Row {
  * grouped listbox. NEW (not the reverted RDY-176/199 `CommandPalette`).
  *
  * Shortcuts: this component registers NO global keys. `AskLedaBar` owns Cmd/Ctrl+K and "/" (one bar per page, its
- * `shortcuts` prop) and calls `onOpen`; the page sets `open` here and passes `paused={open}` to the bar. Inside the
+ * `shortcuts` prop, ON for ONE bar per page) and calls `onOpen(source)`; the page sets `open` here (Cmd/Ctrl+K TOGGLES, so
+ * `setOpen((o) => (src === 'shortcut' ? !o : true))`) and passes `paused={open}` to the bar (paused only stops the shine; the
+ * bar's keys keep firing, which is what lets Cmd+K close the palette). Inside the
  * palette: arrows move, Enter runs, Esc closes (first press, text and all), Tab stays inside.
  *
  * ARIA: a Radix dialog (focus trap, portal, `aria-modal`) holding a combobox input (`aria-activedescendant`) that
@@ -140,10 +142,13 @@ export function CommandPalette({
   const viaKeys = useRef(false);
   const composing = useRef(false);
 
-  // Uncontrolled text starts empty (or at defaultQuery) each time the palette opens.
-  useEffect(() => {
+  // Uncontrolled text starts empty (or at defaultQuery) each time the palette opens. Derived during render (not in an
+  // effect) so the first paint after opening is already clean and keys typed right away are never appended to old text.
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
     if (open && !isControlled) setInner(defaultQuery);
-  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+  }
 
   const text = query.trim();
 
@@ -233,6 +238,10 @@ export function CommandPalette({
             e.preventDefault();
             inputRef.current?.focus();
           }}
+          onEscapeKeyDown={(e) => {
+            // Esc during IME composition cancels the composition; it must not close the palette.
+            if (composing.current || e.isComposing || e.keyCode === 229) e.preventDefault();
+          }}
           onCloseAutoFocus={(e) => {
             if (opener.current?.isConnected) {
               e.preventDefault();
@@ -270,11 +279,12 @@ export function CommandPalette({
               onKeyDown={onKeyDown}
               onCompositionStart={() => { composing.current = true; }}
               onCompositionEnd={() => { composing.current = false; }}
-              className="min-w-0 flex-1 border-0 bg-transparent text-[15px] leading-[20px] text-text outline-none placeholder:text-faint max-sm:text-[16px]"
+              className="min-w-0 flex-1 border-0 bg-transparent text-[15px] leading-[20px] text-text outline-none placeholder:text-muted max-sm:text-[16px]"
             />
           </div>
 
-          <div tabIndex={0} className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-1.5 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent max-sm:max-h-none max-sm:flex-1 sm:max-h-[min(460px,60vh)]">
+          {/* tabIndex=0 is kept on purpose: axe `scrollable-region-focusable` fails a scroller with no focusable content (options are display-only; the input drives them). */}
+          <div tabIndex={0} className="min-h-0 flex-1 overflow-y-auto outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent overscroll-contain p-1.5 max-sm:max-h-none max-sm:flex-1 sm:max-h-[min(460px,60vh)]">
             {hasList && (
               <div id={listId} role="listbox" aria-label="Results" aria-busy={loading || undefined}>
                 {shown.map((g) => (

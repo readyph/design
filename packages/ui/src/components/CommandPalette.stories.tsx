@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ChatCircleText, Gear, House, Package, Plus, Users } from '@phosphor-icons/react';
 import { CommandPalette, type CommandPaletteGroup, type CommandPaletteProps } from './CommandPalette';
 import { PlatformLogo } from './PlatformLogo';
@@ -96,7 +96,8 @@ const meta: Meta<typeof CommandPalette> = {
           '',
           '```tsx',
           'const [open, setOpen] = useState(false);',
-          '<AskLedaBar onOpen={() => setOpen(true)} paused={open} />',
+          '// Cmd/Ctrl+K TOGGLES; click and "/" only open. The bar keeps firing its keys while `paused`, so it can close the palette.',
+          '<AskLedaBar onOpen={(src) => setOpen((o) => (src === \'shortcut\' ? !o : true))} paused={open} />',
           '<CommandPalette open={open} onOpenChange={setOpen} groups={groups} onSelect={run} onAsk={askLeda}',
           '  conversationMessages={thread.length} onOpenConversation={openPanel} />',
           '```',
@@ -105,6 +106,7 @@ const meta: Meta<typeof CommandPalette> = {
           '- With text and `onAsk`, a first "Ask" group offers `Ask Leda: "text"` (Enter). With no text and `conversationMessages > 0`, a "Leda" group offers "Open your conversation with Leda (N messages)".',
           '- `onSelect(item, group)` runs after the palette asks to close. `query` / `onQueryChange` control the text (uncontrolled text resets on open).',
           '- Keys: arrows move (wrapping), Enter runs (ignored during IME composition), Esc closes (one press, text and all), Tab stays in the dialog. Focus returns to the opener (or `returnFocusRef`).',
+          '- **One bar per page keeps `shortcuts` on.** Home has two bars (the 320px sheet bar and the overview bar): give one `shortcuts={false}`, otherwise both listeners fire and cancel each other out (open then close). See the "Wiring (Cmd+K toggles)" story.',
           '- Pass `paused` to `AskLedaBar` while open so the halo and Scan stop. Leda\'s Aurora plays in the input row only while `loading`.',
         ].join('\n'),
       },
@@ -125,3 +127,24 @@ export const Phone: Story = {
   parameters: { viewport: { defaultViewport: 'mobile1' } },
   render: () => <Harness conversationMessages={2} />,
 };
+
+/** Stand-in for the page's single shortcut owner (`AskLedaBar` with `shortcuts` on). Cmd/Ctrl+K toggles, "/" opens. */
+function Wired() {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setOpen((o) => !o); }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
+  return (
+    <main className="min-h-[640px] p-4">
+      <h1 className="sr-only">Command palette wiring</h1>
+      <p className="text-small text-muted">Press Cmd/Ctrl+K: it opens the palette, and pressing it again closes it. Only one listener is mounted per page.</p>
+      <Backdrop />
+      <CommandPalette open={open} onOpenChange={setOpen} groups={groups} onSelect={() => {}} onAsk={() => {}} />
+    </main>
+  );
+}
+export const Wiring: Story = { name: 'Wiring (Cmd+K toggles)', render: () => <Wired /> };

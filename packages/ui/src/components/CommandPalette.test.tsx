@@ -126,6 +126,45 @@ describe('CommandPalette', () => {
     expect(onSelect).toHaveBeenCalledWith('Home');
   });
 
+  it('reopens with an empty input on first paint and typed text is not polluted', async () => {
+    const seen: string[] = [];
+    function Probe() {
+      const [open, setOpen] = useState(false);
+      return (
+        <>
+          <button onClick={() => setOpen(true)}>Open</button>
+          <CommandPalette open={open} onOpenChange={setOpen} groups={groups} onSelect={() => {}} />
+        </>
+      );
+    }
+    // Records the input's value the moment it is first inserted in the DOM (before any later effect or timer).
+    const mo = new MutationObserver(() => {
+      const i = document.querySelector('input[role=combobox]') as HTMLInputElement | null;
+      if (i && !i.dataset.seen) { i.dataset.seen = '1'; seen.push(i.value); }
+    });
+    mo.observe(document.body, { childList: true, subtree: true });
+    render(<Probe />);
+    await userEvent.click(screen.getByText('Open'));
+    await userEvent.keyboard('stock{Escape}');
+    await userEvent.click(screen.getByText('Open'));
+    await Promise.resolve();
+    mo.disconnect();
+    expect(seen).toEqual(['', '']);
+    expect((screen.getByRole('combobox') as HTMLInputElement).value).toBe('');
+    await userEvent.keyboard('go');
+    expect((screen.getByRole('combobox') as HTMLInputElement).value).toBe('go');
+  });
+
+  it('Esc during IME composition does not close; a plain Esc does', async () => {
+    const input = await opened();
+    fireEvent.compositionStart(input);
+    fireEvent.keyDown(input, { key: 'Escape', isComposing: true, keyCode: 229 });
+    expect(screen.getByRole('dialog')).toBeTruthy();
+    fireEvent.compositionEnd(input);
+    fireEvent.keyDown(input, { key: 'Escape' });
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
   it('keeps focus inside on Tab', async () => {
     await opened();
     await userEvent.tab();
