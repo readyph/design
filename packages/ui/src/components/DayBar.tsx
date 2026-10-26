@@ -88,6 +88,15 @@ interface PlacedMark {
   short: string;
 }
 
+/** True when the label already says the time, in the formatter's form or as hour:minute (12 or 24 hour). */
+function hasTime(label: string, at: number, fmt: (m: number) => string): boolean {
+  if (label.includes(fmt(at))) return true;
+  const mm = ((Math.round(at) % 1440) + 1440) % 1440;
+  const h = Math.floor(mm / 60), m = String(mm % 60).padStart(2, '0');
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return [`${h}:${m}`, `${String(h).padStart(2, '0')}:${m}`, `${h12}:${m}`].some((t) => new RegExp(`(^|\\D)${t}(\\D|$)`).test(label));
+}
+
 const textW = (t: string) => t.length * CHAR_W + 6;
 
 /** Places each label beside its own line. Never across another line, never over another label; a new row only when needed. */
@@ -138,7 +147,13 @@ function place(marks: PlacedMark[], W: number, compact: boolean): Placed[] {
   return out;
 }
 
-const toneClass = { default: { line: 'stroke-text', fill: 'fill-text', text: 'fill-text' }, bad: { line: 'stroke-bad', fill: 'fill-bad', text: 'fill-bad' } } as const;
+// Forced colors (Windows high contrast): Chromium keeps SVG fill and stroke, so each is mapped to a system colour here.
+// Ink is CanvasText; urgent is Highlight (still told apart by shape and label); the strip gets a CanvasText outline.
+const toneClass = {
+  default: { line: 'stroke-text forced-colors:stroke-[CanvasText]', fill: 'fill-text forced-colors:fill-[CanvasText]', text: 'fill-text forced-colors:fill-[CanvasText]' },
+  bad: { line: 'stroke-bad forced-colors:stroke-[Highlight]', fill: 'fill-bad forced-colors:fill-[Highlight]', text: 'fill-bad forced-colors:fill-[CanvasText]' },
+} as const;
+const fcMuted = 'forced-colors:fill-[CanvasText]';
 
 /**
  * Day bar (C23): an SVG strip across the platform's business hours on the raised ground (18px, 4px radius)
@@ -216,7 +231,7 @@ export const DayBar = forwardRef<HTMLDivElement, DayBarProps>(function DayBar(
     if (now !== undefined) parts.push(`${nowLabel} ${fmt(now)}${edgeOf(now) ? (edgeOf(now) === 'before' ? ', before opening' : ', after closing') : ''}`);
     marks.forEach((m) => {
       const e = edgeOf(m.at);
-      parts.push(`${m.label}${m.label.includes(fmt(m.at)) ? '' : ` at ${fmt(m.at)}`}${m.tone === 'bad' ? ', urgent' : ''}${e === 'before' ? ', before opening' : e === 'after' ? ', after closing' : ''}`);
+      parts.push(`${m.label}${hasTime(m.label, m.at, fmt) ? '' : ` at ${fmt(m.at)}`}${m.tone === 'bad' ? ', urgent' : ''}${e === 'before' ? ', before opening' : e === 'after' ? ', after closing' : ''}`);
     });
     return `${parts.join('. ')}.`;
   })();
@@ -232,15 +247,15 @@ export const DayBar = forwardRef<HTMLDivElement, DayBarProps>(function DayBar(
       <svg role="img" aria-label={spoken} width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="block max-w-full">
         {closed ? (
           <>
-            <rect x={0} y={top} width={W} height={BAR_H} rx={4} className="fill-raised" />
-            <text x={PAD} y={top + 13} className="fill-muted text-small">{closedLabel}</text>
+            <rect x={0} y={top} width={W} height={BAR_H} rx={4} className="fill-raised forced-colors:fill-[Canvas] forced-colors:stroke-[CanvasText]" />
+            <text x={PAD} y={top + 13} className={cn("fill-muted text-small", fcMuted)}>{closedLabel}</text>
           </>
         ) : (
           <>
-            <rect x={0} y={top} width={W} height={BAR_H} rx={4} className="fill-raised" />
-            {nowX !== null && nowX > 0 && <rect x={0} y={top} width={nowX} height={BAR_H} rx={4} className="fill-raised-2" />}
+            <rect x={0} y={top} width={W} height={BAR_H} rx={4} className="fill-raised forced-colors:fill-[Canvas] forced-colors:stroke-[CanvasText]" />
+            {nowX !== null && nowX > 0 && <rect x={0} y={top} width={nowX} height={BAR_H} rx={4} className="fill-raised-2 forced-colors:fill-[Canvas]" />}
             {nowX !== null && windowEnd !== null && windowEnd > nowX && (
-              <rect x={nowX} y={top} width={windowEnd - nowX} height={BAR_H} className="fill-accent-tint-2" />
+              <rect x={nowX} y={top} width={windowEnd - nowX} height={BAR_H} className="fill-accent-tint-2 forced-colors:fill-[Highlight]" />
             )}
             {labels.map((l) => {
               const m = l.mark;
@@ -279,7 +294,7 @@ export const DayBar = forwardRef<HTMLDivElement, DayBarProps>(function DayBar(
           </>
         )}
         {!closed && ticks.map((t) => (
-          <text key={t.h} x={t.x} y={tickY} textAnchor={t.anchor} className="fill-muted text-small">{fmt(t.h * 60)}</text>
+          <text key={t.h} x={t.x} y={tickY} textAnchor={t.anchor} className={cn("fill-muted text-small", fcMuted)}>{fmt(t.h * 60)}</text>
         ))}
       </svg>
     </div>

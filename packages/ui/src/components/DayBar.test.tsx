@@ -85,6 +85,19 @@ describe('DayBar', () => {
     expect((container.firstChild as HTMLElement).className).toContain('mt-4');
     expect((container.firstChild as HTMLElement).className).toContain('w-full');
   });
+  it('does not repeat the time when the label already has it (default formatter drops :00)', () => {
+    const { getByRole } = render(<DayBar hours={hours} now={h(9, 12)} locale="en-US" marks={[{ kind: 'due', at: h(10, 15), label: 'Leave by 10:15 AM', tone: 'bad' }, { kind: 'deadline', at: h(11), label: 'Promised 11:00 AM' }]} />);
+    expect(getByRole('img').getAttribute('aria-label')).toBe('Business hours 8 AM to 6 PM. Now 9:12 AM. Leave by 10:15 AM, urgent. Promised 11:00 AM.');
+  });
+  it('adds the time when the label has none', () => {
+    const { getByRole } = render(<DayBar hours={hours} locale="en-US" marks={[{ kind: 'due', at: h(11), label: 'Order cut-off' }]} />);
+    expect(getByRole('img').getAttribute('aria-label')).toContain('Order cut-off at 11 AM');
+  });
+  it('maps colours to system colours in forced colors', () => {
+    const { container } = render(<DayBar {...base} />);
+    expect(container.querySelector('rect')!.getAttribute('class')).toContain('forced-colors:fill-[Canvas]');
+    expect(container.querySelector('[data-mark=due] line')!.getAttribute('class')).toContain('forced-colors:stroke-[Highlight]');
+  });
   it('formats with the locale by default and takes no clock from the browser', () => {
     const { getByRole } = render(<DayBar hours={hours} now={h(9, 12)} locale="en-US" />);
     expect(getByRole('img').getAttribute('aria-label')).toBe('Business hours 8 AM to 6 PM. Now 9:12 AM.');
