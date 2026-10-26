@@ -96,6 +96,43 @@ describe('LedaProposal', () => {
     expect(document.activeElement?.textContent).toContain('Reorder level is now 30.');
   });
 
+  it('does not steal focus when the user moved elsewhere during a slow write, and announces instead', () => {
+    function Host({ s }: { s: LedaProposalProps['state'] }) {
+      return (
+        <>
+          <LedaProposal {...props} state={s} after="Reorder level is now 30." />
+          <input aria-label="Other" />
+        </>
+      );
+    }
+    const { rerender } = render(<Host s="waiting" />);
+    const b = screen.getByRole('button', { name: 'Confirm' });
+    b.focus();
+    fireEvent.click(b);
+    rerender(<Host s="writing" />);
+    const other = screen.getByLabelText('Other') as HTMLInputElement;
+    other.focus();
+    rerender(<Host s="done" />);
+    expect(document.activeElement).toBe(other);
+    expect(screen.getByRole('group').querySelector('[role=status]')!.textContent).toBe('Written. Reorder level is now 30.');
+  });
+
+  it('moves focus to the result when focus was lost (body) after the write', () => {
+    const { rerender } = render(<LedaProposal {...props} />);
+    const b = screen.getByRole('button', { name: 'Confirm' });
+    b.focus();
+    fireEvent.click(b);
+    rerender(<LedaProposal {...props} state="writing" />);
+    rerender(<LedaProposal {...props} state="done" after="All set." />);
+    expect(document.activeElement?.textContent).toContain('All set.');
+  });
+
+  it('puts the total row in a tfoot', () => {
+    const { container } = render(<LedaProposal {...props} />);
+    expect(container.querySelector('tfoot')?.textContent).toContain('Total');
+    expect(container.querySelector('tbody')?.textContent).not.toContain('Total');
+  });
+
   it('Discard moves focus to the discarded line', () => {
     function Host() {
       const [s, setS] = useState<LedaProposalProps['state']>('waiting');

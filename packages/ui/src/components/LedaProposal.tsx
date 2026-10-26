@@ -3,6 +3,7 @@ import { ArrowRight, Check, CheckCircle, Warning } from '@phosphor-icons/react';
 import { cn, focusRing } from '../utils/cn';
 import { LedaMark } from './Leda';
 import { Button } from './Button';
+import { focusIfLost } from '../utils/focusIfLost';
 
 /**
  * Leda proposal / confirm card (RDY-269, handover C9). A raised box in which Leda shows exactly what she
@@ -54,7 +55,7 @@ export interface LedaProposalProps extends Omit<HTMLAttributes<HTMLDivElement>, 
   discardLabel?: string;
   /**
    * The write. Called once per click: further clicks are ignored until `state` leaves and returns to
-   * `waiting`, or (if you return a promise) until it settles. Set `state="writing"` right away.
+   * `waiting`, or (if you return a promise) until it settles. Set `state="writing"` right away. If the write fails, set `state="waiting"` again and pass the error through `warning` (the card has no error state of its own).
    */
   onConfirm?: () => void | Promise<unknown>;
   /** One click, no dialog: the consumer shows `toast.undo` and returns `state` to `waiting` on Undo. */
@@ -108,6 +109,7 @@ export const LedaProposal = forwardRef<HTMLDivElement, LedaProposalProps>(functi
   const titleId = `${uid}t`;
   const writesId = `${uid}w`;
   const resultRef = useRef<HTMLParagraphElement>(null);
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const latched = useRef(false);
   const movedFocus = useRef(false);
   const wantFocus = useRef(false);
@@ -126,10 +128,8 @@ export const LedaProposal = forwardRef<HTMLDivElement, LedaProposalProps>(functi
     movedFocus.current = false;
     if (wantFocus.current && (state === 'done' || state === 'discarded')) {
       wantFocus.current = false;
-      if (resultRef.current) {
-        resultRef.current.focus();
-        movedFocus.current = true;
-      }
+      // Only if focus was lost (or is still in the card): never pull it from where the user went meanwhile.
+      movedFocus.current = focusIfLost(rootRef.current, resultRef.current);
     }
     if (state === 'waiting') wantFocus.current = false;
   }, [state]);
@@ -166,11 +166,25 @@ export const LedaProposal = forwardRef<HTMLDivElement, LedaProposalProps>(functi
     onDiscard?.();
   };
 
+  const row = (l: LedaProposalLine, i: number) => (
+    <tr key={i} className={cn('border-t align-top', l.total ? 'border-control font-semibold' : 'border-raised-2')}>
+      <th scope="row" className="min-w-0 py-1.5 pr-2 text-left font-[inherit]">
+        <span className={cn(!l.total && 'font-normal')}>{l.label}</span>
+        {l.detail && <span className="block font-normal text-muted">{l.detail}</span>}
+      </th>
+      <td className="w-[42%] min-w-0 py-1.5 text-right tabular-nums">{l.value}</td>
+    </tr>
+  );
+
   const result = 'm-0 rounded-control outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-raised';
 
   return (
     <div
-      ref={ref}
+      ref={(el) => {
+        rootRef.current = el;
+        if (typeof ref === 'function') ref(el);
+        else if (ref) ref.current = el;
+      }}
       role="group"
       aria-labelledby={titleId}
       aria-busy={writing || undefined}
@@ -224,17 +238,8 @@ export const LedaProposal = forwardRef<HTMLDivElement, LedaProposalProps>(functi
           {lines && lines.length > 0 && (
             <table className="mt-2.5 w-full table-fixed border-collapse text-small">
               <caption className={sr}>{linesLabel}</caption>
-              <tbody>
-                {lines.map((l, i) => (
-                  <tr key={i} className={cn('border-t align-top', l.total ? 'border-control font-semibold' : 'border-raised-2')}>
-                    <th scope="row" className="min-w-0 py-1.5 pr-2 text-left font-[inherit]">
-                      <span className={cn(!l.total && 'font-normal')}>{l.label}</span>
-                      {l.detail && <span className="block font-normal text-muted">{l.detail}</span>}
-                    </th>
-                    <td className="w-[42%] min-w-0 py-1.5 text-right tabular-nums">{l.value}</td>
-                  </tr>
-                ))}
-              </tbody>
+              <tbody>{lines.filter((l) => !l.total).map(row)}</tbody>
+              {lines.some((l) => l.total) && <tfoot>{lines.filter((l) => l.total).map(row)}</tfoot>}
             </table>
           )}
 

@@ -18,7 +18,7 @@ const meta: Meta<typeof LedaProposal> = {
           '',
           'States: `waiting` -> `writing` (Aurora on the mark, `aria-busy`, "Writing…") -> `done` (green result line, optional next action) or `discarded`. Undo from the toast returns it to `waiting`. A card made on another page shows "Open {page} to confirm" (`openPage`).',
           '',
-          'Rules. Discard is one click, no dialog: show `toast.undo` and set `state` back to `waiting` on Undo. While writing, Confirm and Discard are `aria-disabled` (not `disabled`) so focus stays on Confirm. After Confirm or Discard here, focus moves to the result line; other state changes are announced once in a polite live region. Notes and warnings carry spoken prefixes ("Note:", "Warning:"), so no meaning is colour alone. Built for 440px (the Leda overlay) and phone; works to 320px. `className` is applied first: margin and width only.',
+          'Rules. Failed write: return `state` to `waiting` and pass the error through `warning` (see FailedWrite). Focus after a write moves to the result only if it was lost (`focusIfLost`); if the user went elsewhere it stays put and the live region announces. Discard is one click, no dialog: show `toast.undo` and set `state` back to `waiting` on Undo. While writing, Confirm and Discard are `aria-disabled` (not `disabled`) so focus stays on Confirm. After Confirm or Discard here, focus moves to the result line; other state changes are announced once in a polite live region. Notes and warnings carry spoken prefixes ("Note:", "Warning:"), so no meaning is colour alone. Built for 440px (the Leda overlay) and phone; works to 320px. `className` is applied first: margin and width only.',
           '',
           '```tsx',
           '<LedaProposal id="CMD-RL" title="Raise oil filter reorder level to 30" writes={["Oil filter reorder level: 20 to 30"]}',
@@ -101,6 +101,11 @@ export const Interactive: Story = {
       </>
     );
   },
+};
+
+export const FailedWrite: Story = {
+  parameters: { docs: { description: { story: 'There is no error state. When the write fails, the consumer returns `state` to `waiting` and passes the error through `warning`; Confirm works again.' } } },
+  render: () => frame(<LedaProposal {...base} warning="Couldn't write: the stockroom sheet is locked by another user. Nothing was changed." confirmLabel="Try again" />),
 };
 
 const long = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
