@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { cn, focusRing } from '../utils/cn';
 import { PlatformLogo } from './PlatformLogo';
 import { ConfirmDialog } from './ConfirmDialog';
 import { Toaster } from './toast/Toaster';
@@ -121,7 +122,7 @@ export function TopicLibraryPage({ initial = sampleTopics, ...props }: Partial<T
         onConfirm={confirm}
       >
         {!ask ? (
-          <ul tabIndex={0} aria-label="Topics that go quiet" className="m-0 max-h-48 list-disc overflow-y-auto pl-5 text-ui text-muted">
+          <ul tabIndex={0} aria-label="Topics that go quiet" className={cn('m-0 max-h-48 list-disc overflow-y-auto rounded-chip pl-5 text-ui text-muted', focusRing)}>
             {targets.map((t) => (
               <li key={t.id}>{t.title}</li>
             ))}

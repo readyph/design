@@ -220,7 +220,7 @@ function TopicSwitch({ topic, index, readOnly, h }: { topic: TopicItem; index: n
         checked={topic.on}
         disabled={readOnly}
         aria-label={`Customers' Leda can use ${topic.title}`}
-        className="max-[640px]:before:absolute max-[640px]:before:-inset-x-[5px] max-[640px]:before:-inset-y-3 max-[640px]:before:content-['']"
+        className="max-[640px]:before:absolute max-[640px]:before:-inset-x-[6px] max-[640px]:before:-inset-y-[13px] max-[640px]:before:content-['']"
         onCheckedChange={(next) => h.toggle(topic, next, index)}
       />
     </span>
@@ -649,9 +649,8 @@ export function TopicLibrary({
   const inert = loading || error;
   return (
     <div ref={rootRef} className={cn('@container/lib min-w-0', className)}>
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
-          <div className="relative min-w-0 flex-1 basis-60 @min-[640px]/lib:max-w-[420px]">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
+          <div className="relative order-1 min-w-0 flex-1 basis-40 @min-[640px]/lib:max-w-[420px] @min-[640px]/lib:basis-60">
             <MagnifyingGlass aria-hidden size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
             <input
               ref={searchRef}
@@ -682,8 +681,16 @@ export function TopicLibrary({
               </button>
             ) : null}
           </div>
+          <SegmentedControl
+            size="md"
+            aria-label="View as"
+            options={layoutOptions}
+            value={layout}
+            onChange={(v) => onLayoutChange?.(v as TopicLayout)}
+            className="order-2 shrink-0 max-[640px]:[&_button]:min-h-11 max-[640px]:[&_button]:min-w-11 @min-[640px]/lib:order-6 @min-[640px]/lib:ml-auto"
+          />
           {!inert && (onToggleAll || newButton) && canEdit ? (
-            <div className="ml-auto flex shrink-0 items-center gap-2">
+            <div className="order-3 ml-auto flex shrink-0 items-center gap-2 @min-[640px]/lib:order-2">
               {onToggleAll && topics.length > 0 ? (
                 <Button variant="secondary" leftIcon={allOn ? ToggleLeft : ToggleRight} onClick={() => onToggleAll(!allOn)}>
                   {allOn ? 'Turn all off' : 'Turn all on'}
@@ -692,11 +699,9 @@ export function TopicLibrary({
               {newButton}
             </div>
           ) : null}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <div aria-hidden className="hidden basis-full @min-[640px]/lib:order-3 @min-[640px]/lib:block" />
           {businesses && businesses.length > 0 ? (
-            <div className="min-w-0 flex-1 @min-[640px]/lib:w-52 @min-[640px]/lib:flex-none">
+            <div className="order-4 min-w-0 flex-1 basis-40 @min-[640px]/lib:w-52 @min-[640px]/lib:flex-none @min-[640px]/lib:basis-auto">
               <Select size="sm" aria-label="Business" options={businesses} value={business} onValueChange={onBusinessChange} className="w-full min-w-0" />
             </div>
           ) : null}
@@ -706,20 +711,11 @@ export function TopicLibrary({
             options={filterOptions}
             value={filter}
             onChange={(v) => onFilterChange?.(v as TopicFilter)}
-            className="hidden @min-[640px]/lib:inline-flex"
+            className="order-5 hidden @min-[640px]/lib:inline-flex"
           />
-          <div className="min-w-0 flex-1 @min-[640px]/lib:hidden">
+          <div className="order-5 min-w-0 flex-1 basis-40 @min-[640px]/lib:hidden">
             <Select size="sm" aria-label="Show" options={filterSelect} value={filter} onValueChange={(v) => onFilterChange?.(v as TopicFilter)} className="w-full min-w-0" />
           </div>
-          <SegmentedControl
-            size="md"
-            aria-label="View as"
-            options={layoutOptions}
-            value={layout}
-            onChange={(v) => onLayoutChange?.(v as TopicLayout)}
-            className="ml-auto shrink-0 max-[640px]:[&_button]:min-h-11 max-[640px]:[&_button]:min-w-11"
-          />
-        </div>
       </div>
 
       {readOnly ? (
