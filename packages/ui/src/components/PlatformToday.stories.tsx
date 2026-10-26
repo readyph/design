@@ -68,3 +68,22 @@ export const Hq: Story = {
   },
 };
 export const OnSurface: Story = { args: { facts, leda: 'acts', surface: 'surface', lists: [jobs] } };
+/** Rows with `onActivate`: the title is a real button (Tab reaches it; Enter and Space activate it). The last activated row id is written to `data-activated` on the block's wrapper. */
+export const ActivatableRows: Story = {
+  args: {
+    facts,
+    leda: 'acts',
+    lists: [
+      {
+        ...jobs,
+        onViewAll: () => {},
+        items: jobs.items.map((i) => ({
+          ...i,
+          onActivate: () => {
+            document.body.dataset.activated = i.id;
+          },
+        })),
+      },
+    ],
+  },
+};
