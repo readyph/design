@@ -276,7 +276,7 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
           aria-labelledby={ariaLabelledBy}
           aria-label={ariaLabelledBy ? undefined : ariaLabel}
           className={cn(
-            'absolute left-0 z-50 max-h-[264px] min-w-full overflow-y-auto rounded-card border border-border bg-surface p-1 shadow-float',
+            'absolute left-0 z-50 max-h-[264px] w-max min-w-full max-w-[max(100%,min(32rem,calc(100vw-2rem)))] overflow-y-auto rounded-card border border-border bg-surface p-1 shadow-float',
             up ? 'bottom-full mb-1' : 'top-full mt-1',
           )}
         >
@@ -301,7 +301,7 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
               )}
             >
               {o.icon ? <span className="inline-flex shrink-0 items-center text-muted">{o.icon}</span> : null}
-              <span className="min-w-0 flex-1 truncate">{o.label}</span>
+              <span className="min-w-0 flex-1 py-1 [overflow-wrap:anywhere]">{o.label}</span>
               {o.meta ? <span className="shrink-0 text-small text-muted">{o.meta}</span> : null}
               <span className="inline-flex w-4 shrink-0 justify-center text-accent">
                 {o.value === current ? <Check size={14} weight="bold" aria-hidden /> : null}
