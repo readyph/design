@@ -169,23 +169,53 @@ function Chip({ link, from }: { link: TodayLink; from: string }) {
   );
 }
 
-function Row({ item, platform, label }: { item: TodayItem; platform: string; label: string }) {
+const sideShort = {
+  grid: '@min-[360px]/today:grid-cols-[minmax(0,1fr)_auto]',
+  meta: '@min-[360px]/today:col-start-2 @min-[360px]/today:row-start-1 @min-[360px]/today:mt-0 @min-[360px]/today:justify-end',
+};
+const sideLong = {
+  grid: '@min-[440px]/today:grid-cols-[minmax(0,1fr)_auto]',
+  meta: '@min-[440px]/today:col-start-2 @min-[440px]/today:row-start-1 @min-[440px]/today:mt-0 @min-[440px]/today:justify-end',
+};
+
+function Row({ item, platform, label, frame }: { item: TodayItem; platform: string; label: string; frame: boolean }) {
+  const title = <span className="font-medium">{item.title}</span>;
+  const hasMeta = Boolean(item.state || item.qty || item.at);
+  // A long state pill ("Waiting for part") squeezes the title, so it stays underneath until the block is wider.
+  const long = (item.state?.length ?? 0) > 12;
   return (
     <ListRow rowId={`${platform}:${item.id}`} label={label} onActivate={item.onActivate} className="py-row-y-tight">
       <ListCell kind="lead">
-        <div className="text-ui">
-          {item.ref ? <span className="mr-1.5 text-small text-muted">{item.ref}</span> : null}
-          <span className="font-medium">{item.title}</span>
-        </div>
-        {item.detail ? <div className="text-small text-muted">{item.detail}</div> : null}
-        {item.state || item.qty || item.at ? (
-          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-            {item.qty ? <b className="text-ui font-medium tabular-nums">{item.qty}</b> : null}
-            {item.state ? <Badge tone={item.tone ?? 'neutral'}>{item.state}</Badge> : null}
-            {item.at ? <span className="text-small tabular-nums text-muted">{item.at}</span> : null}
+        {/* Narrow block: title, detail, meta, chip stacked. From 360px the quantity, state and time sit at the end of the title line. */}
+        <div className={cn('grid grid-cols-1 gap-x-3', long ? sideLong.grid : sideShort.grid)}>
+          <div className="text-ui">
+            {item.ref ? <span className="mr-1.5 text-small text-muted">{item.ref}</span> : null}
+            {item.onActivate ? (
+              <button
+                type="button"
+                onClick={item.onActivate}
+                className={cn(
+                  'm-0 cursor-pointer border-0 bg-transparent p-0 text-left font-[inherit] text-[length:inherit] text-text hover:underline',
+                  focusRing,
+                  frame && 'focus-visible:ring-offset-frame',
+                )}
+              >
+                {title}
+              </button>
+            ) : (
+              title
+            )}
           </div>
-        ) : null}
-        {item.link ? <Chip link={item.link} from={platform} /> : null}
+          {item.detail ? <div className="text-small text-muted">{item.detail}</div> : null}
+          {hasMeta ? (
+            <div className={cn('mt-1 flex flex-wrap items-center gap-x-2 gap-y-1', long ? sideLong.meta : sideShort.meta)}>
+              {item.qty ? <b className="text-ui font-medium tabular-nums">{item.qty}</b> : null}
+              {item.state ? <Badge tone={item.tone ?? 'neutral'}>{item.state}</Badge> : null}
+              {item.at ? <span className="text-small tabular-nums text-muted">{item.at}</span> : null}
+            </div>
+          ) : null}
+          {item.link ? <div className="justify-self-start max-w-full"><Chip link={item.link} from={platform} /></div> : null}
+        </div>
       </ListCell>
     </ListRow>
   );
@@ -280,7 +310,7 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
             }
           >
             {rows.map((it) => (
-              <Row key={it.id} item={it} platform={platform.name} label={`${l.title}: ${typeof it.title === 'string' ? it.title : it.ref ?? ''}`} />
+              <Row key={it.id} item={it} frame={surface === 'frame'} platform={platform.name} label={`${l.title}: ${typeof it.title === 'string' ? it.title : it.ref ?? ''}`} />
             ))}
           </ListGroup>
         );
@@ -307,6 +337,7 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
       ref={ref}
       aria-labelledby={nameId}
       aria-busy={loading || undefined}
+      data-surface={surface === 'frame' ? 'frame' : undefined}
       className={cn('@container/today relative min-w-0', className)}
       {...rest}
     >

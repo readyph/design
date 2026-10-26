@@ -37,6 +37,26 @@ describe('PlatformToday', () => {
     expect(onSelect).toHaveBeenCalledOnce();
   });
 
+  it('a row with onActivate has a real title button (focusable, click opens once); without it, plain text', () => {
+    const onActivate = vi.fn();
+    const l = { ...jobs, items: [{ ...jobs.items[0], title: 'Brake pads', onActivate }, { ...jobs.items[1], title: 'Plain row' }] };
+    render(<PlatformToday platform={autoWorks} lists={[l]} />);
+    const b = screen.getByRole('button', { name: 'Brake pads' });
+    b.focus();
+    expect(document.activeElement).toBe(b);
+    expect(b.getAttribute('type')).toBe('button');
+    fireEvent.click(b);
+    expect(onActivate).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('button', { name: 'Plain row' })).toBeNull();
+  });
+
+  it('marks the frame surface so rules use --frame-rule; the sheet does not', () => {
+    const { container, rerender } = render(<PlatformToday platform={autoWorks} lists={[jobs]} />);
+    expect(container.querySelector('section')?.getAttribute('data-surface')).toBe('frame');
+    rerender(<PlatformToday platform={autoWorks} lists={[jobs]} surface="surface" />);
+    expect(container.querySelector('section')?.hasAttribute('data-surface')).toBe(false);
+  });
+
   it('lists do not take j / k by default; shortcuts turns them on', () => {
     const { unmount } = render(<PlatformToday platform={autoWorks} lists={[jobs]} />);
     fireEvent.keyDown(document.body, { key: 'j' });
