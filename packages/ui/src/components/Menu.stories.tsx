@@ -4,7 +4,7 @@ import { DotsThree, PencilSimple, Trash, Copy, ArrowSquareOut } from '@phosphor-
 import { Menu } from './Menu';
 
 const meta: Meta<typeof Menu> = {
-  title: 'Components/Menu',
+  title: 'Components/Overlays/Menu',
   component: Menu,
   parameters: {
     layout: 'centered',

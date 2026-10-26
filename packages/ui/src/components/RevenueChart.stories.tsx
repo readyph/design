@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { RevenueChart, type RevenueSeries } from './RevenueChart';
 
 const meta: Meta<typeof RevenueChart> = {
-  title: 'Components/Data/RevenueChart',
+  title: 'Components/Charts/RevenueChart',
   component: RevenueChart,
   parameters: { layout: 'padded' },
 };

@@ -1,3 +1,6 @@
+import { useEffect, useState, type ComponentProps } from 'react';
+import { DocsContainer } from '@storybook/blocks';
+import { themes } from '@storybook/theming';
 import type { Decorator, Preview } from '@storybook/react';
 import '../src/styles/globals.css';
 
@@ -20,6 +23,33 @@ const withTheme: Decorator = (Story, context) => {
   return <Story />;
 };
 
+/**
+ * Docs pages follow the same switch: the docs chrome (page, tables, code) uses Storybook's dark theme when the
+ * document is dark, so the dark components never sit on a white page. Watches `data-theme` and the OS setting (System).
+ */
+function useIsDark() {
+  const read = () => {
+    const t = document.documentElement.getAttribute('data-theme');
+    return t === 'dark' || (t !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  };
+  const [dark, setDark] = useState(read);
+  useEffect(() => {
+    const update = () => setDark(read());
+    const mo = new MutationObserver(update);
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    mq.addEventListener('change', update);
+    update();
+    return () => { mo.disconnect(); mq.removeEventListener('change', update); };
+  }, []);
+  return dark;
+}
+
+const ThemedDocsContainer = (props: ComponentProps<typeof DocsContainer>) => {
+  const dark = useIsDark();
+  return <DocsContainer {...props} theme={dark ? themes.dark : themes.light} />;
+};
+
 const preview: Preview = {
   decorators: [withTheme],
   initialGlobals: { theme: 'system' },
@@ -40,12 +70,14 @@ const preview: Preview = {
   },
   parameters: {
     backgrounds: { disable: true },
+    docs: { container: ThemedDocsContainer },
     options: {
       storySort: {
         order: [
           'Introduction',
           'Foundations',
           'Components',
+          ['Actions', 'Charts', 'Data display', 'Feedback', 'Forms', 'Identity', 'Layout', 'Leda', 'Lists', 'Navigation', 'Overlays'],
           'Prototypes',
           ['Home', 'Platforms', 'Platform', 'Team', 'Memory'],
         ],

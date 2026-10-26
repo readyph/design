@@ -7,7 +7,7 @@ import { PlatformShell } from './PlatformShell';
 import { CountBadge, IconRail, IconRailContent, IconRailFoot, IconRailItem, IconRailMark, IconRailSpacer } from './IconRail';
 
 const meta: Meta<typeof IconRail> = {
-  title: 'Components/IconRail',
+  title: 'Components/Navigation/IconRail',
   component: IconRail,
   parameters: {
     layout: 'fullscreen',
@@ -38,11 +38,12 @@ States: default muted, hover \`--frame-hover\`, current \`--frame-active\` + \`a
 export default meta;
 type Story = StoryObj<typeof IconRail>;
 
+/** Explicit Light / Dark stories force their theme; without `theme` the story follows the toolbar Theme switch (RDY-354). */
 function Theme({ theme, children }: { theme?: 'light' | 'dark'; children: ReactNode }) {
   useEffect(() => {
+    if (!theme) return;
     const root = document.documentElement;
-    if (theme) root.setAttribute('data-theme', theme);
-    else root.removeAttribute('data-theme');
+    root.setAttribute('data-theme', theme);
     return () => root.removeAttribute('data-theme');
   }, [theme]);
   return <>{children}</>;
@@ -93,7 +94,7 @@ export const Dark: Story = {
 /** Hover (tooltip to the right) on Platforms. */
 export const TooltipOnHover: Story = {
   render: () => (
-    <Theme theme="light">
+    <Theme>
       <Frame><FullRail /></Frame>
     </Theme>
   ),
@@ -144,7 +145,7 @@ export const StatesDark: Story = { render: () => <States theme="dark" /> };
 /** Avatar menu open from the rail foot: the button holds `--frame-active`. */
 export const AccountMenuOpen: Story = {
   render: () => (
-    <Theme theme="light">
+    <Theme>
       <Frame><FullRail /></Frame>
     </Theme>
   ),
@@ -193,7 +194,7 @@ const shellPage = (
 /** The rail in the real PlatformShell `rail` slot: exactly one navigation landmark at desktop width. */
 export const InShellRailSlot: Story = {
   render: () => (
-    <Theme theme="light">
+    <Theme>
       <PlatformShell rail={<ShellRail />} phoneNav={<ShellPhoneNav />} status={<span>All running</span>}>
         {shellPage}
       </PlatformShell>
