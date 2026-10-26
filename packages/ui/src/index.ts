@@ -34,3 +34,4 @@ export { Toaster, type ToasterProps } from './components/toast/Toaster';
 export { toast, useToast, useToasts, addToast, dismissToast, clearToasts, TOAST_DURATION, type ToastMessage, type ToastTone, type ToastOptions, type ToastAction } from './components/toast/toastStore';
 export * from './components/PlatformToday';
 export * from './components/CommandPalette';
+export * from './components/ConnectionsEditor';
