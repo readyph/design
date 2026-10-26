@@ -198,3 +198,6 @@ export const PlaceColumnSurfaces: Story = {
     </PlatformShell>
   ),
 };
+
+/** Phone: the shell is all --surface, so the frame scope resets (rules and ring offset on --surface). Check at 375 and 320. */
+export const PlaceColumnSurfacesPhone: Story = { ...PlaceColumnSurfaces, parameters: { viewport: { defaultViewport: 'mobile1' } } };

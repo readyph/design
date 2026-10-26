@@ -79,6 +79,10 @@ ${darkExplicit}
   :root { --rule-sheet: var(--rule); }
   [data-surface="frame"] { --rule: var(--frame-rule); --ring-offset-bg: var(--frame); }
   [data-surface="surface"] { --rule: var(--rule-sheet); --ring-offset-bg: var(--surface); }
+  /* Phone (the shell's max-[640px]): the whole shell is --surface, so the place column's frame scope resets, including PlatformToday blocks inside it. */
+  @media (max-width: 640px) {
+    [data-shell-place][data-surface="frame"], [data-shell-place] [data-surface="frame"] { --rule: var(--rule-sheet); --ring-offset-bg: var(--surface); }
+  }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   code, kbd, samp { font-family: var(--mono); font-size: 13px; }
   /* Reduced motion is handled per component (spec 4.7 keeps the 140ms fade and the halo opacity fade). */
