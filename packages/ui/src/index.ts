@@ -25,4 +25,5 @@ export * from './components/List';
 export * from './components/IconRail';
 export * from './components/PlatformShell';
 export * from './components/ListGroup';
+export * from './components/Queue';
 export * from './components/StatusBar';
