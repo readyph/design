@@ -1,4 +1,4 @@
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import {
   ArrowRight, ArrowSquareOut, Brain, Buildings, ChatCircle, IdentificationCard, LinkBreak, Plugs, SlidersHorizontal, ListChecks, LockSimple, Plus,
   ShieldCheck, UploadSimple, UserPlus, Users, X,
@@ -34,6 +34,7 @@ import { Toaster } from '../components/toast/Toaster';
 import { toast } from '../components/toast/toastStore';
 import { cn } from '../utils/cn';
 import { PortalFrame } from './PortalFrame';
+import { go, useHandoff } from './protoNav';
 import { focusIfLost } from '../utils/focusIfLost';
 import { useMatchMedia } from '../utils/useMatchMedia';
 import {
@@ -170,7 +171,10 @@ function ToggleRow({ title, text, lock, meta, onTry, tryLabel, checked, onChange
 }
 
 /* ---------- the page ---------- */
-export function PlatformPage({ platformId = 'autoworks', tab: tab0 = 'general', onboard, state = 'live', flash, dialog, dirtyTab }: PlatformPageProps) {
+export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00 = 'general', onboard, state = 'live', flash, dialog, dirtyTab }: PlatformPageProps) {
+  const arrived = useHandoff('platform');
+  const platformId = arrived?.platform && !onboard ? arrived.platform : platformId0;
+  const tab0 = arrived?.tab && !onboard ? arrived.tab : tab00;
   const uid = useId();
   const phone = useMatchMedia(PHONE);
   const [platforms, setPlatforms] = useState<PlatformRec[]>(platformsStart);
@@ -241,6 +245,8 @@ export function PlatformPage({ platformId = 'autoworks', tab: tab0 = 'general', 
   const setDraft = <K extends keyof Drafts>(sec: K, v: Drafts[K]) => setDrafts((x) => ({ ...x, [sec]: v }));
   const clearDraft = (sec: SectionId) => setDrafts((x) => { const n = { ...x }; delete n[sec as keyof Drafts]; return n; });
   const anyDirty = !ob && (['general', 'system', 'team'] as SectionId[]).some(isDirty);
+  const dirtyRef = useRef(false);
+  dirtyRef.current = anyDirty;
 
   useEffect(() => {
     if (!anyDirty) return undefined;
@@ -256,7 +262,8 @@ export function PlatformPage({ platformId = 'autoworks', tab: tab0 = 'general', 
       const t = e.target as HTMLElement | null;
       if (t && (t.closest('input, textarea, select, [contenteditable="true"]') || t.closest('[role="dialog"], [role="alertdialog"], [role="listbox"], [role="menu"]'))) return;
       if (document.querySelector('[role="dialog"], [role="alertdialog"], [role="listbox"], [role="menu"]')) return;
-      toast({ description: 'Back to All platforms.' });
+      if (dirtyRef.current) toast({ description: 'Save or discard your changes first.' });
+      else go({ to: 'platforms' });
     };
     document.addEventListener('keydown', h);
     return () => document.removeEventListener('keydown', h);
@@ -650,7 +657,7 @@ export function PlatformPage({ platformId = 'autoworks', tab: tab0 = 'general', 
                 <li key={id} data-person={id} className="flex flex-wrap items-center gap-x-3 gap-y-2 py-3">
                   <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-full bg-raised text-small font-semibold text-muted">{x.initials}</span>
                   <span className="min-w-0 flex-1 basis-40">
-                    <a href="#team" className={cn(link, 'text-body font-medium no-underline hover:underline')}>{x.name}</a>
+                    <a href="#team" onClick={(e) => { e.preventDefault(); go({ to: 'team' }); }} className={cn(link, 'text-body font-medium no-underline hover:underline')}>{x.name}</a>
                     <span className="block text-small text-muted">
                       {x.access === 'member' ? x.title : <Badge tone="neutral">{x.access === 'owner' ? 'Admin · Owner' : 'Admin'}</Badge>}{elsewhere(id)}
                     </span>
@@ -671,7 +678,7 @@ export function PlatformPage({ platformId = 'autoworks', tab: tab0 = 'general', 
               <li key={v.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-3">
                 <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-full border border-dashed border-control bg-surface text-small font-semibold text-muted">{v.name.split(' ').map((w) => w[0]).join('')}</span>
                 <span className="min-w-0 flex-1 basis-40">
-                  <a href="#team" className={cn(link, 'text-body font-medium no-underline hover:underline')}>{v.name}</a>
+                  <a href="#team" onClick={(e) => { e.preventDefault(); go({ to: 'team' }); }} className={cn(link, 'text-body font-medium no-underline hover:underline')}>{v.name}</a>
                   <span className="block text-small text-muted">{v.sent ? 'Invited, not joined yet' : 'Invite not sent yet'}</span>
                 </span>
                 <span className="text-ui text-muted">{rs.find((r) => r.id === v.roleId)?.name} when they join</span>
@@ -691,7 +698,7 @@ export function PlatformPage({ platformId = 'autoworks', tab: tab0 = 'general', 
           {rs.map((r) => <div key={r.id}><dt className="inline font-semibold text-text">{r.name}</dt> <dd className="m-0 inline">{(r.about ?? '').replace(/\.$/, '').replace(/^./, (c) => c.toLowerCase())}</dd></div>)}
         </dl>
         <p className="m-0 mt-2 text-small text-muted">The roles of {kind.lower}. Someone can hold a different role on each platform.</p>
-        <p className="m-0 mt-3 text-ui"><a href="#team" className={cn(link, 'inline-flex items-center gap-1.5')}><Users aria-hidden size={16} />Roles, invites and everyone on Team</a></p>
+        <p className="m-0 mt-3 text-ui"><a href="#team" onClick={(e) => { e.preventDefault(); go({ to: 'team' }); }} className={cn(link, 'inline-flex items-center gap-1.5')}><Users aria-hidden size={16} />Roles, invites and everyone on Team</a></p>
       </>
     );
   };
@@ -830,7 +837,7 @@ export function PlatformPage({ platformId = 'autoworks', tab: tab0 = 'general', 
             scope={pId}
             shortcuts={false}
             intro="Leda won’t answer these, even when a topic could. Every one gets the same reply."
-            inheritedLink={<a className={link} href="#memory">in Memory</a>}
+            inheritedLink={<a className={link} href="#memory" onClick={(e) => { e.preventDefault(); go({ to: 'memory' }); }}>in Memory</a>}
             onBlock={({ question }) => writeLeda({ ...leda, blocked: [...leda.blocked, { id: `n${Date.now()}`, question, scope: pId }] })}
             onRemove={(item, { undo }) => writeLeda({ ...leda, blocked: undo ? [item, ...leda.blocked] : leda.blocked.filter((b) => b.id !== item.id) })}
             onEditReply={(_s, text) => writeLeda({ ...leda, reply: text })}
@@ -849,7 +856,7 @@ export function PlatformPage({ platformId = 'autoworks', tab: tab0 = 'general', 
         </section>
 
         <p className="m-0 flex items-start gap-2 text-ui text-muted"><ShieldCheck aria-hidden size={18} className="mt-0.5 shrink-0" /><span>{neverShared} Your team’s own use of Leda follows their role on the Team tab.</span></p>
-        <a href="#memory" className={cn(link, 'inline-flex items-center gap-2 text-ui no-underline hover:underline')}><Brain aria-hidden size={18} />Manage all platforms in Memory<ArrowRight aria-hidden size={16} /></a>
+        <a href="#memory" onClick={(e) => { e.preventDefault(); go({ to: 'memory' }); }} className={cn(link, 'inline-flex items-center gap-2 text-ui no-underline hover:underline')}><Brain aria-hidden size={18} />Manage all platforms in Memory<ArrowRight aria-hidden size={16} /></a>
       </div>
     );
   };
@@ -969,7 +976,7 @@ export function PlatformPage({ platformId = 'autoworks', tab: tab0 = 'general', 
   );
 
   const ask = <AskLedaBar variant="bar" scope={p ? shortName({ label: nameOf(p.id) }) : 'your platforms'} onOpen={() => toast({ description: 'Leda is ready.', leda: true })} />;
-  const crumbs = [{ label: 'All platforms', href: '#platforms' }, ...(ob ? [{ label: 'Add a platform' }] : []), { label: p ? nameOf(p.id) : ob ? general.label || kind.name : 'Platform' }];
+  const crumbs = [{ label: 'All platforms', href: '#platforms', onClick: (e: MouseEvent) => { e.preventDefault(); go({ to: 'platforms' }); } }, ...(ob ? [{ label: 'Add a platform' }] : []), { label: p ? nameOf(p.id) : ob ? general.label || kind.name : 'Platform' }];
 
   const obTitle = p ? `Set up ${nameOf(p.id)}` : `Add ${/^[AEIOU]/.test(kind.name) ? 'an' : 'a'} ${kind.name}`;
   const lastStep = ob ? ob.step === SECTIONS.length - 1 : false;
@@ -989,7 +996,7 @@ export function PlatformPage({ platformId = 'autoworks', tab: tab0 = 'general', 
       return (
         <div className="p-pad">
           <p role="status" className="m-0 text-body text-text">This platform is no longer connected.</p>
-          <Button className="mt-3" variant="secondary" onClick={() => toast({ description: 'Back to All platforms.' })}>All platforms</Button>
+          <Button className="mt-3" variant="secondary" onClick={() => go({ to: 'platforms' })}>All platforms</Button>
         </div>
       );
     }
@@ -1039,7 +1046,8 @@ export function PlatformPage({ platformId = 'autoworks', tab: tab0 = 'general', 
         pageName="Platform"
         heading={null}
         account={{ name: 'Maria Santos', email: 'maria@santosauto.ph', role: 'Owner' }}
-        onAddPlatform={() => toast({ description: 'Choose a platform to add.' })}
+        onAddPlatform={() => go({ to: 'platforms', add: true })}
+        onNavigate={go}
         placeLabel="This platform on your map"
         sheetLabel={p ? nameOf(p.id) : 'Platform'}
         detail

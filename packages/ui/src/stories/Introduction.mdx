@@ -13,6 +13,18 @@ New components and tokens are added through the Portal redesign (RDY-243).
 - **Components** holds every part, grouped by family (Actions, Charts, Data display, Feedback, Forms, Identity, Layout, Leda, Lists, Navigation, Overlays), none loose at the top. A component that has a stories file for the part alone and another for how it sits in the Portal has both: the second one is named "Component in the shell" (or a plain name when it is a Portal-only composition, such as Needs you or Panel modal).
 - **Prototypes** holds only the five Portal pages, in nav order: **Home**, **Platforms**, **Platform** (detail and onboarding), **Team**, **Memory**. Each page's states are its stories. Prototypes are never published.
 
+## Walking the prototype pages
+
+The five pages are one connected prototype (RDY-357): the rail, the phone nav and its More menu, the ReadyPH mark, platform rows and Open buttons, breadcrumbs and Back links, "Add a platform" and the "Team" / "Memory" links inside pages take you to the matching page's story, so you never have to use the sidebar. Each link lands on the page's default state (Home: Live, Platforms: Two platforms, Platform: General info for the platform you picked, Team: Everyone or the person, Memory: Topics). "Add a platform" opens the Platforms page with the marketplace open.
+
+- **Theme and viewport stay.** Navigation goes through Storybook, which keeps the toolbar globals (theme, viewport). On a phone-wide canvas the links open the page's Phone story, so the phone view survives too. In "Open canvas in new tab" (`iframe.html`) the link changes the canvas URL and carries `globals` along.
+- **Destinations without a page** (Reports, Plan, Account settings, Log out, a platform with no Platform page) show a short toast saying so. They are not dead links and they do not error.
+- **Focus** lands on the destination page's heading after a link, so a keyboard walk keeps its place.
+- **In docs view** the links do nothing.
+- Platform pages exist for Auto Works, Stockroom and Café only (the Platform page's own data); other platforms in the Platforms and Home lists show the toast.
+
+How it works: `src/prototypes/protoNav.ts` (prototype only, not exported) holds a typed map from a destination to a story id, tested against the stories. `PortalFrame` has an optional `onNavigate` prop (default none: the real apps are unaffected). The page you leave hands the platform, tab or person to the next page through `sessionStorage` for a few seconds.
+
 ## Light and dark
 
 Use the **Theme** switch in the toolbar (System, Light, Dark; System follows the OS). It sets `data-theme` on the document, the same attribute the design tokens use, so tokens, the real PlatformShell and portalled content (Modal, Menu, Toaster, Select) all switch, in the canvas and in docs. Add `?globals=theme:dark` to a story URL to open it dark.

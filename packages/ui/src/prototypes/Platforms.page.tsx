@@ -24,6 +24,7 @@ import { TownMap } from '../components/TownMap';
 import { Toaster } from '../components/toast/Toaster';
 import { toast } from '../components/toast/toastStore';
 import { PortalFrame } from './PortalFrame';
+import { go } from './protoNav';
 import { focusIfLost } from '../utils/focusIfLost';
 import { useMatchMedia } from '../utils/useMatchMedia';
 import {
@@ -77,8 +78,8 @@ function RowMenu({ p, onDisconnect }: { p: PlatformData; onDisconnect: (p: Platf
     <Menu
       trigger={<IconButton icon={DotsThree} label={`More for ${p.name}`} />}
       items={[
-        { label: 'Edit details', onSelect: () => open(`${p.name} details`) },
-        { label: 'Connect data', icon: Plugs, onSelect: () => open(`${p.name} connections`) },
+        { label: 'Edit details', onSelect: () => go({ to: 'platform', id: p.id, tab: 'general' }) },
+        { label: 'Connect data', icon: Plugs, onSelect: () => go({ to: 'platform', id: p.id, tab: 'connections' }) },
         { type: 'separator' },
         { label: 'Disconnect', danger: true, onSelect: () => onDisconnect(p) },
       ]}
@@ -143,7 +144,7 @@ function PlatformList({ set, shortcuts, onFocusPlatform, onAdd, onDisconnect }: 
             key={p.id}
             rowId={p.id}
             label={p.name}
-            onActivate={() => open(p.name)}
+            onActivate={() => go({ to: 'platform', id: p.id })}
             onMouseEnter={() => onFocusPlatform([p.id])}
             onMouseLeave={() => onFocusPlatform(null)}
           >
@@ -154,7 +155,7 @@ function PlatformList({ set, shortcuts, onFocusPlatform, onAdd, onDisconnect }: 
                   href={`#${p.id}`}
                   onClick={(e) => {
                     e.preventDefault();
-                    open(p.name);
+                    go({ to: 'platform', id: p.id });
                   }}
                   className="block rounded-chip text-body font-semibold text-text hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                 >
@@ -182,7 +183,7 @@ function PlatformList({ set, shortcuts, onFocusPlatform, onAdd, onDisconnect }: 
             </ListCell>
             <ListCell kind="actions">
               {setupNeeded(set, p) ? (
-                <Button variant="primary" onClick={() => open(`${p.name} setup`)}>
+                <Button variant="primary" onClick={() => go({ to: 'platform', id: p.id })}>
                   Finish setup
                 </Button>
               ) : hasApp(p.kind) ? (
@@ -276,7 +277,7 @@ function Place({ set, state, phone, focusIds, onFocusPlatform, onAdd, onRetry, s
         focus={live && ids?.length === 1 ? ids[0] : null}
         highlight={live && ids && ids.length > 1 ? ids : null}
         onSelect={(id) => {
-          if (live && id) open(byId(set, id)?.name ?? '');
+          if (live && id) go({ to: 'platform', id });
         }}
         onHover={setMapHover}
       />
@@ -342,7 +343,7 @@ function Place({ set, state, phone, focusIds, onFocusPlatform, onAdd, onRetry, s
                     </span>
                   </ListCell>
                   <ListCell kind="actions">
-                    <Button variant="secondary" onClick={() => open(`${p.name} connections`)}>
+                    <Button variant="secondary" onClick={() => go({ to: 'platform', id: p.id, tab: 'connections' })}>
                       Connect data
                     </Button>
                   </ListCell>
@@ -395,7 +396,7 @@ function LinkRow({ set, l, onFocusPlatform }: { set: PlatformSet; l: DataLink; o
     <ListRow
       rowId={id}
       label={`${from.name} to ${to.name}, ${dataKindName[l.kind]}`}
-      onActivate={() => open(`${to.name} connections`)}
+      onActivate={() => go({ to: 'platform', id: to.id, tab: 'connections' })}
       onMouseEnter={() => onFocusPlatform([l.from, l.to])}
       onMouseLeave={() => onFocusPlatform(null)}
     >
@@ -404,7 +405,7 @@ function LinkRow({ set, l, onFocusPlatform }: { set: PlatformSet; l: DataLink; o
           href={`#${to.id}-connections`}
           onClick={(e) => {
             e.preventDefault();
-            open(`${to.name} connections`);
+            go({ to: 'platform', id: to.id, tab: 'connections' });
           }}
           className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5 rounded-chip text-body text-text hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
@@ -496,6 +497,7 @@ export function PlatformsPage({ set: setKey = 'duo', state: initial = 'live', ad
         leda={<AskLedaBar variant="bar" scope="your platforms" shortcuts={false} paused={palette} onOpen={() => setPalette(true)} />}
         teamCount={0}
         onAddPlatform={() => addPlatform()}
+        onNavigate={go}
         placeLabel="Your platforms"
         sheetLabel="All platforms"
         heading={null}
