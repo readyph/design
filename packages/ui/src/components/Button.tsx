@@ -10,6 +10,11 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   /** Show a spinner and disable interaction. */
   loading?: boolean;
+  /**
+   * Keep the button focusable while it is busy: `loading` and `disabled` then set `aria-disabled` (and swallow clicks)
+   * instead of the `disabled` attribute, so focus stays on the pressed button during a save.
+   */
+  keepFocus?: boolean;
   /** Stretch to the container width. */
   fullWidth?: boolean;
   /** Phone action bars: 44px touch height at phone width (otherwise 40px phone, 32px desktop). */
@@ -34,16 +39,18 @@ export const variants: Record<ButtonVariant, string> = {
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-  { variant = 'primary', loading = false, fullWidth = false, actionBar = false, leftIcon: Left, rightIcon: Right, disabled, className, children, type = 'button', ...rest },
+  { variant = 'primary', loading = false, keepFocus = false, fullWidth = false, actionBar = false, leftIcon: Left, rightIcon: Right, disabled, className, children, type = 'button', onClick, ...rest },
   ref,
 ) {
   return (
     <button
       ref={ref}
       type={type}
-      disabled={disabled || loading}
+      disabled={keepFocus ? undefined : disabled || loading}
+      aria-disabled={keepFocus && (disabled || loading) ? true : undefined}
       aria-busy={loading || undefined}
-      className={cn(base, focusRing, variants[variant], actionBar && 'max-[640px]:h-[var(--ctl-touch)]', fullWidth && 'w-full', className)}
+      onClick={keepFocus && (disabled || loading) ? (e) => e.preventDefault() : onClick}
+      className={cn(base, focusRing, keepFocus && 'aria-disabled:cursor-not-allowed aria-disabled:opacity-70', variants[variant], actionBar && 'max-[640px]:h-[var(--ctl-touch)]', fullWidth && 'w-full', className)}
       {...rest}
     >
       {loading && (
