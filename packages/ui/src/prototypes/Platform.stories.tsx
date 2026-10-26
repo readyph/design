@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { PlatformPage } from './Platform.page';
 
 /**
- * [For Review] RDY-257. Prototype only: not exported from the package. Portal Platform detail and onboarding (handover 2.3) in the real PlatformShell:
+ * RDY-257. Prototype only: not exported from the package. Portal Platform detail and onboarding (handover 2.3) in the real PlatformShell:
  * the map (this building focused, its partners lit) and the vertical tab list in the place column, the five sections in the sheet
  * (General info, System, Team, Connections, Leda & Memory), each with its own draft ("Unsaved" on its tab, Save and Discard, the browser's
  * "Leave site?" prompt), and the onboarding steps (`?new=<kind>`, resumable at `?id=…&setup=N`). Composed only from @readyph/ui parts.
@@ -10,7 +10,7 @@ import { PlatformPage } from './Platform.page';
  * and C22 is person-by-platform while this Team tab is people-by-role (composed from Select and rows).
  */
 const meta: Meta<typeof PlatformPage> = {
-  title: 'Prototypes/Portal/[For Review] Platform',
+  title: 'Prototypes/Portal/Platform',
   component: PlatformPage,
   parameters: { layout: 'fullscreen' },
 };
