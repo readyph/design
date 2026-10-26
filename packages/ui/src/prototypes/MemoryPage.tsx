@@ -1,30 +1,19 @@
 import { useMemo, useState } from "react";
 import {
   Books,
-  FileText,
-  Graph,
-  House,
   LockSimple,
   Plus,
-  Users,
 } from "@phosphor-icons/react";
-import { AccountButton } from "../components/AccountMenu";
 import { AskLedaBar } from "../components/AskLedaBar";
 import { Breadcrumbs } from "../components/Breadcrumbs";
 import { Button } from "../components/Button";
 import { EmptyState } from "../components/EmptyState";
 import { ErrorBlock } from "../components/ErrorBlock";
-import {
-  IconRailContent,
-  IconRailFoot,
-  IconRailItem,
-  IconRailMark,
-  IconRailSpacer,
-} from "../components/IconRail";
 import { List, ListCell, ListRow } from "../components/List";
 import { ListGroup, ListGroups } from "../components/ListGroup";
 import { PlatformLogo } from "../components/PlatformLogo";
-import { PlatformShell } from "../components/PlatformShell";
+import { PortalFrame } from "./PortalFrame";
+import { StatusBar } from "../components/StatusBar";
 import { ProgressBar } from "../components/ProgressBar";
 import { SheetBar } from "../components/SheetBar";
 import { Skeleton } from "../components/Skeleton";
@@ -63,7 +52,6 @@ import {
   replies as blockedRepliesSeed,
   scopes as blockedScopes,
 } from "../components/BlockedQuestions.data";
-import { LedaMark } from "../components/Leda";
 import { Select } from "../components/Select";
 import { focusRing } from "../utils/cn";
 import type { TopicItem } from "../components/TopicLibrary";
@@ -744,68 +732,33 @@ export function MemoryPage({
 
   return (
     <SubpageTransition paneKey={view} direction={dir}>
-      <PlatformShell
+      <PortalFrame
+        current="memory"
+        pageName="Memory"
+        teamCount={3}
+        onAddPlatform={() => toast.info("Add a platform opens.")}
+        leda={<AskLedaBar variant="bar" scope="Memory" paused={tryShown} onOpen={() => openTry()} />}
         detail={inTopic || phoneSheet}
         placeLabel="Memory folders"
         place={place}
         sheetLabel="Memory"
         sheetBar={sheetBar}
-        rail={
-          <IconRailContent>
-            <IconRailMark href="#home" />
-            <IconRailItem icon={House} label="Home" href="#home" />
-            <IconRailItem icon={Graph} label="Platforms" href="#platforms" />
-            <IconRailItem icon={FileText} label="Reports" href="#reports" />
-            <IconRailItem icon={Books} label="Memory" href="#memory" current />
-            <IconRailItem icon={Users} label="Team" href="#team" count={3} />
-            <IconRailSpacer />
-            <IconRailFoot>
-              <AccountButton name="Maria Santos" />
-            </IconRailFoot>
-          </IconRailContent>
-        }
-        topBar={
-          <>
-            <span className="font-semibold">ReadyPH</span>
-            <span className="min-w-0 flex-1 truncate text-muted">Memory</span>
-            <button
-              type="button"
-              aria-label="Ask Leda"
-              className={`grid size-11 shrink-0 place-items-center rounded-control ${focusRing}`}
-              onClick={() => openTry()}
-            >
-              <LedaMark size={24} decorative />
-            </button>
-            <AccountButton name="Maria Santos" />
-          </>
-        }
-        phoneNav={
-          <ul className="m-0 flex w-full list-none p-0">
-            {[
-              [House, "Home"],
-              [Graph, "Platforms"],
-              [Books, "Memory"],
-              [Users, "Team"],
-            ].map(([Ic, l]) => {
-              const I = Ic as typeof House;
-              return (
-                <li key={l as string} className="flex-1">
-                  <a
-                    href={`#${(l as string).toLowerCase()}`}
-                    aria-current={l === "Memory" ? "page" : undefined}
-                    className="flex h-full min-h-11 flex-col items-center justify-center gap-0.5 text-small text-muted aria-[current=page]:text-text"
-                  >
-                    <I size={20} aria-hidden="true" />
-                    {l as string}
-                  </a>
-                </li>
-              );
-            })}
-          </ul>
+        status={
+          <StatusBar
+            platforms={[
+              { id: "autoworks", name: "Auto Works", color: 1 },
+              { id: "cafe", name: "Café POS", color: 2 },
+              { id: "stockroom", name: "Main Stockroom", color: 3 },
+            ]}
+            people={{ count: 9 }}
+            leda={{ used: 1742, max: 2000 }}
+            plan="Starter"
+            updatedAt="9:12 AM"
+          />
         }
       >
         <SubpageLane>{sheet}</SubpageLane>
-      </PlatformShell>
+      </PortalFrame>
       <TryIt
         open={tryShown}
         onOpenChange={setTryShown}

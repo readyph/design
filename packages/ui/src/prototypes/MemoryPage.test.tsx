@@ -82,4 +82,17 @@ describe('Memory page', () => {
     expect(within(main).getByText(/stock do you have left/)).toBeTruthy();
     await waitFor(() => expect(document.activeElement).toBe(filter));
   });
+
+  it('uses the shared Portal frame: Memory is current in the rail and More is current on the phone nav', async () => {
+    const user = userEvent.setup();
+    render(<MemoryPage />);
+    const rail = screen.getAllByRole('navigation', { name: 'Portal' });
+    const memoryLinks = screen.getAllByRole('link', { name: 'Memory' }).filter((a) => a.getAttribute('aria-current') === 'page');
+    expect(rail.length).toBeGreaterThan(0);
+    expect(memoryLinks.length).toBeGreaterThan(0);
+    const more = screen.getByRole('button', { name: 'More' });
+    expect(more.getAttribute('aria-current')).toBe('page');
+    await user.click(more);
+    expect(screen.getByRole('menuitem', { name: 'Memory' })).toBeTruthy();
+  });
 });

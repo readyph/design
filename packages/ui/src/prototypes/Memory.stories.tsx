@@ -26,4 +26,5 @@ export const Empty: Story = { args: { state: 'empty' } };
 export const Full: Story = { args: { state: 'full' } };
 export const ReadOnly: Story = { args: { readOnly: true } };
 export const PhoneFolders: Story = { name: 'Phone: folders', parameters: phone };
+export const PhoneRequests: Story = { name: 'Phone: requests', args: { initialTab: 'requests', startDetail: true }, parameters: phone };
 export const PhoneTopics: Story = { name: 'Phone: topics', args: { startDetail: true }, parameters: phone };
