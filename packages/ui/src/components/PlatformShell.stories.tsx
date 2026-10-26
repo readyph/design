@@ -221,6 +221,13 @@ export const PlaceColumnSurfacesPhone: Story = {
     const open = canvas.getByRole('button', { name: 'Open Auto Works Quezon City' });
     await userEvent.tab();
     open.focus();
+    if (window.matchMedia('(forced-colors: active)').matches) {
+      // Forced-colors drops box-shadow: the focus indicator is a visible 2px outline instead.
+      const cs = getComputedStyle(open);
+      await expect(cs.outlineStyle).toBe('solid');
+      await expect(parseFloat(cs.outlineWidth)).toBeGreaterThanOrEqual(2);
+      return;
+    }
     // Focus ring = 2px offset in the scope colour, then the accent ring.
     await expect(getComputedStyle(open).boxShadow).toContain(surface);
   },

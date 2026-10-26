@@ -284,7 +284,7 @@ export function CommandPalette({
           </div>
 
           {/* tabIndex=0 is kept on purpose: axe `scrollable-region-focusable` fails a scroller with no focusable content (options are display-only; the input drives them). */}
-          <div tabIndex={0} className="min-h-0 flex-1 overflow-y-auto outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent overscroll-contain p-1.5 max-sm:max-h-none max-sm:flex-1 sm:max-h-[min(460px,60vh)]">
+          <div tabIndex={0} className="min-h-0 flex-1 overflow-y-auto outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent forced-colors:outline-0 forced-colors:focus-visible:outline forced-colors:focus-visible:outline-2 forced-colors:focus-visible:outline-[Highlight] overscroll-contain p-1.5 max-sm:max-h-none max-sm:flex-1 sm:max-h-[min(460px,60vh)]">
             {hasList && (
               <div id={listId} role="listbox" aria-label="Results" aria-busy={loading || undefined}>
                 {shown.map((g) => (
