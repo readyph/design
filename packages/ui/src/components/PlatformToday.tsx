@@ -129,7 +129,6 @@ export function pickTodayRows<T extends { tone?: string }>(items: readonly T[], 
   return [...keep].sort((a, b) => a - b).map((k) => items[k]);
 }
 
-const surfaceBg = { frame: 'bg-frame', surface: 'bg-surface' } as const;
 const SHOWN_FACTS = 3;
 
 function LedaFact({ mode }: { mode: TodayLedaMode }) {
@@ -178,7 +177,7 @@ const sideLong = {
   meta: '@min-[440px]/today:col-start-2 @min-[440px]/today:row-start-1 @min-[440px]/today:mt-0 @min-[440px]/today:justify-end',
 };
 
-function Row({ item, platform, label, frame }: { item: TodayItem; platform: string; label: string; frame: boolean }) {
+function Row({ item, platform, label }: { item: TodayItem; platform: string; label: string }) {
   const title = <span className="font-medium">{item.title}</span>;
   const hasMeta = Boolean(item.state || item.qty || item.at);
   // A long state pill ("Waiting for part") squeezes the title, so it stays underneath until the block is wider.
@@ -197,7 +196,6 @@ function Row({ item, platform, label, frame }: { item: TodayItem; platform: stri
                 className={cn(
                   'm-0 cursor-pointer border-0 bg-transparent p-0 text-left font-[inherit] text-[length:inherit] text-text hover:underline',
                   focusRing,
-                  frame && 'focus-visible:ring-offset-frame',
                 )}
               >
                 {title}
@@ -310,7 +308,7 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
             }
           >
             {rows.map((it) => (
-              <Row key={it.id} item={it} frame={surface === 'frame'} platform={platform.name} label={`${l.title}: ${typeof it.title === 'string' ? it.title : it.ref ?? ''}`} />
+              <Row key={it.id} item={it} platform={platform.name} label={`${l.title}: ${typeof it.title === 'string' ? it.title : it.ref ?? ''}`} />
             ))}
           </ListGroup>
         );
@@ -341,7 +339,7 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
       className={cn('@container/today relative min-w-0', className)}
       {...rest}
     >
-      <header className={cn('sticky top-0 z-10 flex items-start gap-2.5 border-b border-control pb-2.5 pt-0.5', surfaceBg[surface])}>
+      <header className={cn('sticky top-0 z-10 flex items-start gap-2.5 border-b border-control bg-[var(--scope-bg)] pb-2.5 pt-0.5')}>
         <PlatformLogo {...platform} name={platform.name} decorative size={24} className="mt-px" />
         <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2.5">
           <Heading id={nameId} className="m-0 min-w-0 text-left text-body font-semibold leading-[22px] text-text [overflow-wrap:anywhere]">
