@@ -734,6 +734,7 @@ export function MemoryPage({
     <SubpageTransition paneKey={view} direction={dir}>
       <PortalFrame
         current="memory"
+        heading={null}
         pageName="Memory"
         teamCount={3}
         onAddPlatform={() => toast.info("Add a platform opens.")}
