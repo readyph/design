@@ -68,6 +68,21 @@ export interface RolePickerProps extends Omit<HTMLAttributes<HTMLDivElement>, 'o
   error?: ReactNode;
   /** Label of the Save button. */
   saveLabel?: string;
+  /** Optional line under the "Roles on each platform" heading. Nothing is shown by default. */
+  rolesIntro?: ReactNode;
+  /** Optional line under the "Portal access" heading. Nothing is shown by default. */
+  accessIntro?: ReactNode;
+  /**
+   * Words for the confirm that asks before a saved role is removed. Each part may be text or a function of the
+   * platforms being removed. Defaults: "Remove access?", "<names>: <subject> will no longer be able to open it.", "Save and remove".
+   */
+  removeConfirm?: RolePickerRemoveConfirm;
+}
+
+export interface RolePickerRemoveConfirm {
+  title?: ReactNode | ((removed: RolePickerPlatform[]) => ReactNode);
+  description?: ReactNode | ((removed: RolePickerPlatform[]) => ReactNode);
+  confirmLabel?: string | ((removed: RolePickerPlatform[]) => string);
 }
 
 const ACCESS: Record<CompanyAccess, { name: string; can: string }> = {
@@ -105,6 +120,9 @@ export const RolePicker = forwardRef<HTMLDivElement, RolePickerProps>(function R
     saving = false,
     error,
     saveLabel = 'Save changes',
+    rolesIntro,
+    accessIntro,
+    removeConfirm,
     className,
     ...rest
   },
@@ -194,6 +212,7 @@ export const RolePicker = forwardRef<HTMLDivElement, RolePickerProps>(function R
         <h3 ref={heading} tabIndex={-1} id={`${uid}-roles`} className="text-ui font-medium text-text outline-0">
           Roles on each platform
         </h3>
+        {rolesIntro ? <p className="m-0 mt-1 text-small text-muted">{rolesIntro}</p> : null}
         {full ? (
           <div className="mt-3 flex items-center gap-3 border-y border-rule py-3 text-small text-muted">
             <span aria-hidden className="flex shrink-0 items-center">
@@ -263,6 +282,7 @@ export const RolePicker = forwardRef<HTMLDivElement, RolePickerProps>(function R
           <h3 id={accessHeading} className="text-ui font-medium text-text">
             Portal access
           </h3>
+          {accessIntro ? <p className="m-0 mt-1 text-small text-muted">{accessIntro}</p> : null}
           {accessReason ? (
             <p id={`${uid}-access-why`} className="mt-2 flex items-start gap-2 rounded-card bg-raised px-3 py-2 text-small text-text">
               <Lock aria-hidden size={14} className="mt-0.5 shrink-0 text-muted" />
@@ -357,9 +377,13 @@ export const RolePicker = forwardRef<HTMLDivElement, RolePickerProps>(function R
       <ConfirmDialog
         open={confirm}
         onOpenChange={setConfirm}
-        title="Remove access?"
-        description={`${removed.map((p) => p.name).join(', ')}: ${subject} will no longer be able to open ${removed.length > 1 ? 'them' : 'it'}.`}
-        confirmLabel="Save and remove"
+        title={typeof removeConfirm?.title === 'function' ? (removed.length ? removeConfirm.title(removed) : null) : (removeConfirm?.title ?? 'Remove access?')}
+        description={
+          typeof removeConfirm?.description === 'function'
+            ? (removed.length ? removeConfirm.description(removed) : null)
+            : (removeConfirm?.description ?? `${removed.map((p) => p.name).join(', ')}: ${subject} will no longer be able to open ${removed.length > 1 ? 'them' : 'it'}.`)
+        }
+        confirmLabel={typeof removeConfirm?.confirmLabel === 'function' ? (removed.length ? removeConfirm.confirmLabel(removed) : 'Save and remove') : (removeConfirm?.confirmLabel ?? 'Save and remove')}
         tone="danger"
         onCancel={() => setConfirm(false)}
         onCloseAutoFocus={(e) => {
