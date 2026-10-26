@@ -8,7 +8,7 @@ import { three, threeLinks } from '../components/TownMap.data';
 import { Live } from '../components/BlockedQuestions.demo';
 import { Toaster } from '../components/toast/Toaster';
 
-/** RDY-289. Prototype only: stories are not exported from the package. The platform's Leda & Memory tab in the real PlatformShell. The Memory tab is in [For Review] Memory (RDY-259). */
+/** RDY-289. Prototype only: stories are not exported from the package. The platform's Leda & Memory tab in the real PlatformShell. The Memory tab is in Memory (RDY-259). */
 const meta: Meta = {
   title: 'Prototypes/Portal/[For Review] Blocked questions',
   parameters: { layout: 'fullscreen' },

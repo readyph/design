@@ -566,6 +566,23 @@ export function MemoryPage({
   } else if (tab === "topics") {
     body = (
       <>
+        {!phone ? (
+          <Breadcrumbs
+            aria-label="Folder"
+            className="mb-2 min-[1500px]:hidden"
+            items={[
+              {
+                label: "Memory",
+                href: "#memory",
+                onClick: (e: { preventDefault: () => void }) => {
+                  e.preventDefault();
+                  setFolder("");
+                },
+              },
+              { label: folder ? FOLDER_NAMES[folder] : "All topics" },
+            ]}
+          />
+        ) : null}
         <h1 className="text-header">What customers&rsquo; Leda knows</h1>
         {loading ? null : (
           <p className="mb-4 mt-1 text-ui text-muted">

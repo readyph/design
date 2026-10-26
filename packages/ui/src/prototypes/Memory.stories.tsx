@@ -2,11 +2,11 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { MemoryPage } from './MemoryPage';
 
 /**
- * [For Review] RDY-259 (handover 2.5). Prototype only: stories are not exported from the package.
+ * RDY-259 (handover 2.5). Prototype only: stories are not exported from the package.
  * Portal Memory in the real PlatformShell: Topics, Blocked questions and Customer requests tabs, a topic's page, and Try it as a modal.
  */
 const meta: Meta<typeof MemoryPage> = {
-  title: 'Prototypes/Portal/[For Review] Memory',
+  title: 'Prototypes/Portal/Memory',
   component: MemoryPage,
   parameters: { layout: 'fullscreen' },
 };
