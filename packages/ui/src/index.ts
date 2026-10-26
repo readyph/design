@@ -45,5 +45,6 @@ export * from './components/OverviewCharts';
 export * from './components/Sparkline';
 export * from './components/RevenueChart';
 export * from './components/TopicLibrary';
+export * from './components/TopicDocument';
 export { focusIfLost } from './utils/focusIfLost';
 export * from './components/OpeningHours';
