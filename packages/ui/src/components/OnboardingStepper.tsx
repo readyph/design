@@ -215,13 +215,13 @@ export const OnboardingStepper = forwardRef<HTMLDivElement, OnboardingStepperPro
           >
             {((!first && onBack) || onFinishLater) && (
               <div className="flex items-center gap-2 @max-[719.98px]/stepper:gap-1">
-                {!first && onBack && <Button variant="text" actionBar disabled={busy} onClick={onBack}>Back</Button>}
-                {onFinishLater && <Button variant="text" actionBar disabled={busy} onClick={onFinishLater}>Finish later</Button>}
+                {!first && onBack && <Button variant="text" actionBar keepFocus disabled={busy} onClick={onBack}>Back</Button>}
+                {onFinishLater && <Button variant="text" actionBar keepFocus disabled={busy} onClick={onFinishLater}>Finish later</Button>}
               </div>
             )}
             <div className="ml-auto flex items-center gap-2 @max-[719.98px]/stepper:ml-0 @max-[719.98px]/stepper:[&>*]:flex-1">
-              {skippable && <Button variant="secondary" actionBar disabled={busy} onClick={onSkip}>Skip for now</Button>}
-              <Button actionBar loading={continueLoading} disabled={busy || continueDisabled} onClick={onContinue}>
+              {skippable && <Button variant="secondary" actionBar keepFocus disabled={busy} onClick={onSkip}>Skip for now</Button>}
+              <Button actionBar keepFocus loading={continueLoading} disabled={busy || continueDisabled} onClick={onContinue}>
                 {continueLabel}
               </Button>
             </div>

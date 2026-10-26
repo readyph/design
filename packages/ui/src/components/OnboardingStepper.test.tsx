@@ -94,10 +94,20 @@ describe('OnboardingStepper', () => {
     expect(screen.queryByRole('button', { name: 'Skip for now' })).toBeNull();
   });
 
-  it('busy disables the footer; loading disables the primary', () => {
-    setup({ busy: true, continueLoading: true });
-    for (const n of ['Back', 'Skip for now', 'Finish later']) expect((screen.getByRole('button', { name: n }) as HTMLButtonElement).disabled).toBe(true);
-    expect((screen.getByRole('button', { name: /Save and continue/ }) as HTMLButtonElement).disabled).toBe(true);
+  it('busy marks the footer aria-disabled and keeps buttons focusable; clicks do nothing', () => {
+    const onContinue = vi.fn();
+    setup({ busy: true, continueLoading: true, onContinue });
+    for (const n of ['Back', 'Skip for now', 'Finish later', /Save and continue/]) {
+      const b = screen.getByRole('button', { name: n }) as HTMLButtonElement;
+      expect(b.disabled).toBe(false);
+      expect(b.getAttribute('aria-disabled')).toBe('true');
+    }
+    const c = screen.getByRole('button', { name: /Save and continue/ });
+    expect(c.getAttribute('aria-busy')).toBe('true');
+    c.focus();
+    fireEvent.click(c);
+    expect(onContinue).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(c);
   });
 
   it('moves focus to the heading when the step changes, not on first render', () => {
@@ -163,6 +173,15 @@ describe('OnboardingStepper', () => {
       btn.focus();
       fireEvent.click(btn);
       await waitFor(() => expect(document.activeElement).toBe(heading('Team')));
+    });
+
+    it('the pressed Continue keeps focus while saving', () => {
+      render(<Harness delay={50} />);
+      const btn = screen.getByRole('button', { name: 'Save and continue' });
+      btn.focus();
+      fireEvent.click(btn);
+      expect(document.activeElement).toBe(btn);
+      expect(btn.getAttribute('aria-busy')).toBe('true');
     });
 
     it('does not steal focus from the form input the user is typing in during the save', async () => {
