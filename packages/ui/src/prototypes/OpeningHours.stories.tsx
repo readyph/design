@@ -8,7 +8,7 @@ import { toast } from '../components/toast/toastStore';
 
 /** RDY-285 (C25). Prototype only: stories are not exported from the package. The editor in the real PlatformShell sheet, System tab. */
 const meta: Meta = {
-  title: 'Prototypes/Portal/[For Review] Opening hours',
+  title: 'Prototypes/Portal/Opening hours',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;
