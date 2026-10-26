@@ -103,4 +103,16 @@ describe('PlatformToday', () => {
     render(<PlatformToday platform={{ name: 'HQ', hq: true }} kind="Team and plan" lists={[jobs]}><p>Plan bar</p></PlatformToday>);
     expect(screen.getByText('Plan bar')).toBeTruthy();
   });
+
+  it('retryLabel renames the error button; refs stay whole', () => {
+    const { rerender } = render(<PlatformToday platform={autoWorks} error onRetry={() => {}} />);
+    expect(screen.getByRole('button', { name: 'Try again' })).toBeTruthy();
+    rerender(<PlatformToday platform={autoWorks} error onRetry={() => {}} retryLabel="Retry" />);
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeTruthy();
+    cleanup();
+    const item = { id: 'a', ref: 'JO-0412', title: 'Vios', link: { platform: stockroom, ref: 'ALT-NCP150', text: '0 on hand' } };
+    render(<PlatformToday platform={autoWorks} lists={[{ id: 'l', title: 'Jobs', total: 1, items: [item] }]} />);
+    expect(screen.getByText('JO-0412').className).toContain('whitespace-nowrap');
+    expect(screen.getByText('ALT-NCP150').className).toContain('whitespace-nowrap');
+  });
 });
