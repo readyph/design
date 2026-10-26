@@ -83,7 +83,7 @@ const topWord: Record<LedaProposalState, string> = {
 };
 
 const sr = 'absolute -m-px h-px w-px overflow-hidden whitespace-nowrap border-0 p-0 [clip:rect(0,0,0,0)]';
-const onRaised = 'focus-visible:ring-offset-raised';
+const onRaised = 'focus-visible:ring-offset-raised forced-colors:outline-0 forced-colors:focus-visible:outline forced-colors:focus-visible:outline-2 forced-colors:focus-visible:outline-[Highlight]';
 const marker =
   "relative min-w-0 py-[3px] pl-4 before:absolute before:left-0.5 before:top-3 before:h-[1.5px] before:w-1.5 before:bg-accent before:content-[''] forced-colors:before:bg-[CanvasText]";
 const markerMuted = "text-muted before:h-0 before:border-t-[1.5px] before:border-dashed before:border-muted before:bg-transparent";
@@ -176,7 +176,7 @@ export const LedaProposal = forwardRef<HTMLDivElement, LedaProposalProps>(functi
     </tr>
   );
 
-  const result = 'm-0 rounded-control outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-raised';
+  const result = 'm-0 rounded-control outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-raised forced-colors:outline-0 forced-colors:focus-visible:outline forced-colors:focus-visible:outline-2 forced-colors:focus-visible:outline-[Highlight]';
 
   return (
     <div

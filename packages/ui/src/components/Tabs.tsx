@@ -74,7 +74,7 @@ function syncControls(root: HTMLElement) {
 }
 
 /** Inset ring: the strips scroll, so an outside ring would be clipped. */
-const ring = 'outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent';
+const ring = 'outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent forced-colors:outline-0 forced-colors:focus-visible:outline forced-colors:focus-visible:outline-2 forced-colors:focus-visible:outline-[Highlight]';
 
 const toSurface = (v: TabsVariant) => (v === 'underline' ? 'fixed' : v === 'pill' ? 'chips' : v);
 

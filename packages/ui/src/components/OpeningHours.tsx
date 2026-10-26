@@ -359,7 +359,7 @@ export const OpeningHours = forwardRef<HTMLDivElement, OpeningHoursProps>(functi
 
       <section className="flex min-w-0 flex-col gap-4">
         <div className="flex flex-col gap-0.5">
-          <H ref={heading} tabIndex={-1} className={cn(sectionTitle, 'outline-none focus-visible:underline')}>
+          <H ref={heading} tabIndex={-1} className={cn(sectionTitle, 'outline-0 focus-visible:underline')}>
             Opening hours
           </H>
           <p className={sectionHint}>Customers&rsquo; Leda uses these to answer &ldquo;Are you open?&rdquo;</p>
