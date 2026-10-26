@@ -62,6 +62,7 @@ function PlatformTab() {
   const [tried, setTried] = useState<string | null>(null);
   return (
     <PlatformShell
+      detail
       placeLabel="Platforms"
       place={<TownMap platforms={three} links={threeLinks} caption="3 platforms + HQ" />}
       sheetLabel="Auto Works Quezon City"
