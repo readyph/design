@@ -6,9 +6,9 @@ import { PlatformShell } from '../components/PlatformShell';
 import { Button } from '../components/Button';
 import { Switch } from '../components/Switch';
 
-/** [For Review] RDY-290 (C30). Prototype only: stories are not exported from the package. Try it in the real PlatformShell. */
+/** RDY-290 (C30). Prototype only: stories are not exported from the package. Try it in the real PlatformShell. */
 const meta: Meta = {
-  title: 'Prototypes/Portal/[For Review] Try it',
+  title: 'Prototypes/Portal/Try it',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;
