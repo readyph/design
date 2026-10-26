@@ -42,7 +42,9 @@ function Measured({ width, children }: { width: number; children: React.ReactNod
       const label = root.querySelector<HTMLElement>('ol a span.truncate, ol button span.truncate');
       const bar = root.firstElementChild as HTMLElement | null;
       const lab = label ? `back label ${Math.round(label.scrollWidth)}px text in ${Math.round(label.clientWidth)}px (${label.scrollWidth <= label.clientWidth ? 'full' : 'cut'})` : 'no back label';
-      setInfo(`${lab}; bar ${Math.round(bar?.getBoundingClientRect().height ?? 0)}px`);
+      const tl = root.querySelector<HTMLElement>('[role="tablist"]');
+      const tabs = tl ? `; tabs ${Math.round(tl.clientWidth)}/${Math.round(tl.scrollWidth)}px (${tl.scrollWidth <= tl.clientWidth + 1 ? 'all visible' : 'CLIPPED'})` : '';
+      setInfo(`${lab}${tabs}; bar ${Math.round(bar?.getBoundingClientRect().height ?? 0)}px`);
     };
     run();
     const ro = new ResizeObserver(run);
@@ -71,13 +73,16 @@ const bar = (w: number, tabs: boolean) => (
 );
 
 const widths = [320, 640, 920, 1280];
+/** Back control + tabs cannot occur at 320: at 640px and below (the phone range) the back link sits in the phone top bar and Memory's tabs become chips (C42, C5 e). */
+const tabWidths = [920, 1280];
 
 export const BackControl: Story = {
   render: () => <div className="flex flex-col gap-6">{widths.map((w) => <div key={w}>{bar(w, false)}</div>)}</div>,
 };
 
+/** Regression (RDY-265 round 3): at 920 and 1280 the readout must say tabs N/N, all visible, and the back label full. */
 export const BackControlAndTabs: Story = {
-  render: () => <div className="flex flex-col gap-6">{widths.map((w) => <div key={w}>{bar(w, true)}</div>)}</div>,
+  render: () => <div className="flex flex-col gap-6">{tabWidths.map((w) => <div key={w}>{bar(w, true)}</div>)}</div>,
 };
 
 export const FixedTabsLongName: Story = {
