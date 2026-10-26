@@ -105,6 +105,17 @@ describe('PlatformShell', () => {
       expect(screen.getAllByRole('heading', { level: 1, hidden: true })).toHaveLength(1);
     });
   });
+  it('heading={null} opts out of every shell h1, including the phone placeLabel fallback', () => {
+    phone(true);
+    const { rerender } = render(<PlatformShell {...slots} heading={null}>Body</PlatformShell>);
+    expect(screen.queryAllByRole('heading', { level: 1, hidden: true })).toHaveLength(0);
+    expect(screen.getByRole('main')).toBeTruthy();
+    rerender(<PlatformShell {...slots} heading={null} detail>Body</PlatformShell>);
+    expect(screen.queryAllByRole('heading', { level: 1, hidden: true })).toHaveLength(0);
+    phone(false);
+    rerender(<PlatformShell {...slots} heading={null}>Body</PlatformShell>);
+    expect(screen.queryAllByRole('heading', { level: 1, hidden: true })).toHaveLength(0);
+  });
   it('desktop: the sheet stays the main, the place stays a region, no h1 unless a heading is given', () => {
     phone(false);
     const { rerender } = render(<PlatformShell {...slots}>Body</PlatformShell>);

@@ -34,8 +34,9 @@ export interface PlatformShellProps extends Omit<HTMLAttributes<HTMLDivElement>,
    * Page heading (the platform name). Rendered as a visually hidden 'h1' inside whichever region is visible, so the page
    * always has one visible 'main' and one 'h1'. Omit it if your sheet content already renders its own 'h1' (a second would
    * break "one h1"). On phone, with the place column showing and no 'heading', 'placeLabel' is used.
+   * Pass 'null' to opt out: no 'h1' is rendered at all (no 'placeLabel' fallback), for content that has its own 'h1'.
    */
-  heading?: string;
+  heading?: string | null;
   /** Sheet body. */
   children?: ReactNode;
 }
@@ -85,7 +86,7 @@ export function PlatformShell({
   const underSheet = slide && !slideIn;
   // Phone, place column showing (the sheet is display:none): the place section is the page's visible main region.
   const placeIsMain = phoneNow && hasPlace && !detail && !slide;
-  const h1Text = heading ?? (placeIsMain ? placeLabel : undefined);
+  const h1Text = heading === null ? undefined : heading ?? (placeIsMain ? placeLabel : undefined);
   const h1 = h1Text ? <h1 className="sr-only">{h1Text}</h1> : null;
   const inertAttr = { inert: '' } as Record<string, string>;
   const hasStatus = status != null;
