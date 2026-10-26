@@ -17,6 +17,9 @@ const twMerge = extendTailwindMerge({
     },
     classGroups: {
       'font-size': [{ text: Object.keys(type) }],
+      // Preset width keys (leda-w, leda-w-overview) are widths and max-widths, not colours or spacing.
+      w: [{ w: ['leda-w', 'leda-w-overview', 'rail', 'place', 'leda-w-overview'] }],
+      'max-w': [{ 'max-w': ['leda-w-overview'] }],
     },
   },
 });
