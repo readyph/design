@@ -33,4 +33,62 @@ describe('focusIfLost', () => {
     const { card } = setup();
     expect(focusIfLost(card, null)).toBe(false);
   });
+
+  it('treats a focused disabled button as lost', () => {
+    const { r, other } = setup();
+    const d = document.createElement('button');
+    document.body.appendChild(d);
+    d.focus();
+    d.disabled = true;
+    // Chrome keeps focus on it; whatever the engine does, a dead control must not block the move
+    expect(focusIfLost(null, r)).toBe(true);
+    expect(document.activeElement).toBe(r);
+    other.focus();
+    expect(focusIfLost(null, r)).toBe(false);
+  });
+
+  it('treats focus inside an inert subtree as lost', () => {
+    const { r } = setup();
+    const w = document.createElement('div');
+    w.innerHTML = '<input id="i" />';
+    document.body.appendChild(w);
+    const i = w.querySelector('input')!;
+    i.focus();
+    w.setAttribute('inert', '');
+    expect(focusIfLost(null, r)).toBe(true);
+    expect(document.activeElement).toBe(r);
+  });
+
+  it('works for a container inside a shadow root', () => {
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    const sr = host.attachShadow({ mode: 'open' });
+    sr.innerHTML = '<div id="card"><button id="b">Confirm</button><p id="r" tabindex="-1">Result</p></div><input id="o" />';
+    const card = sr.getElementById('card')!;
+    const b = sr.getElementById('b')!;
+    const r = sr.getElementById('r') as HTMLElement;
+    b.focus();
+    expect(sr.activeElement).toBe(b);
+    expect(focusIfLost(card, r)).toBe(true);
+    expect(sr.activeElement).toBe(r);
+    (sr.getElementById('o') as HTMLElement).focus();
+    expect(focusIfLost(card, r)).toBe(false);
+    expect(sr.activeElement).toBe(sr.getElementById('o'));
+  });
+
+  it('passes options to focus()', () => {
+    const { card, r } = setup();
+    let seen: FocusOptions | undefined;
+    const orig = r.focus.bind(r);
+    r.focus = (o?: FocusOptions) => { seen = o; orig(o); };
+    focusIfLost(card, r, { preventScroll: true });
+    expect(seen).toEqual({ preventScroll: true });
+  });
+
+  it('treats a removed (disconnected) active element as lost', () => {
+    const { card, b, r } = setup();
+    b.focus();
+    b.remove();
+    expect(focusIfLost(card, r)).toBe(true);
+  });
 });
