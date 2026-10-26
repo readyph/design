@@ -1,6 +1,5 @@
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, ArrowSquareOut, BookOpen, CalendarBlank, Clock, FileText, Graph, House, Plus, SquaresFour, Users } from '@phosphor-icons/react';
-import { AccountMenu } from '../components/AccountMenu';
+import { ArrowLeft, ArrowRight, ArrowSquareOut, CalendarBlank, Clock, House, SquaresFour } from '@phosphor-icons/react';
 import { AskLedaBar } from '../components/AskLedaBar';
 import { Badge } from '../components/Badge';
 import { Breadcrumbs } from '../components/Breadcrumbs';
@@ -12,14 +11,12 @@ import { DataList } from '../components/DataList';
 import { DayBar } from '../components/DayBar';
 import { Fact, FactsLine } from '../components/FactsLine';
 import { IconButton } from '../components/IconButton';
-import { IconRailContent, IconRailFoot, IconRailItem, IconRailMark, IconRailSpacer } from '../components/IconRail';
 import { LedaMark } from '../components/Leda';
 import { LedaNote } from '../components/LedaNote';
 import { LedaProposal, type LedaProposalState } from '../components/LedaProposal';
 import { Menu } from '../components/Menu';
 import { OverviewCharts } from '../components/OverviewCharts';
 import { PlatformLogo } from '../components/PlatformLogo';
-import { PlatformShell } from '../components/PlatformShell';
 import { PlatformToday } from '../components/PlatformToday';
 import { Queue } from '../components/Queue';
 import { SegmentedControl } from '../components/SegmentedControl';
@@ -29,6 +26,7 @@ import { Tabs, type TabItem } from '../components/Tabs';
 import { TownMap, type TownMapHandle } from '../components/TownMap';
 import { Toaster } from '../components/toast/Toaster';
 import { toast } from '../components/toast/toastStore';
+import { PortalFrame } from './PortalFrame';
 import { focusIfLost } from '../utils/focusIfLost';
 import { useMatchMedia } from '../utils/useMatchMedia';
 import { ledaMode, mapSlots, queuePlatforms, sets, suggestions, type HomeCase, type HomePlatform, type HomeSetKey, type HomeState } from './Home.data';
@@ -623,7 +621,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
   );
 
   const caseId = tab && tab !== 'today' ? tab : null;
-  const topBar = phone && phoneDetail ? (
+  const detailBar = phone && phoneDetail ? (
     <>
       <IconButton
         icon={ArrowLeft}
@@ -641,43 +639,21 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
       {caseId && openIds.includes(caseId) ? <Menu trigger={<IconButton icon={Clock} label="Snooze" />} items={snoozeItems(caseId)} align="end" /> : null}
       {askBar('bar', false)}
     </>
-  ) : (
-    <>
-      <span className="font-semibold">ReadyPH</span>
-      <span className="min-w-0 flex-1 truncate text-muted">Home</span>
-      {askBar('bar', false)}
-    </>
-  );
-
-  const phoneTabs = [[House, 'Home', 0], [Graph, 'Platforms', 0], [FileText, 'Reports', 0], [Users, 'Team', 1]] as const;
+  ) : undefined;
 
   return (
     <>
-      <PlatformShell
-        rail={
-          <IconRailContent>
-            <IconRailMark href="#home" />
-            <IconRailItem icon={House} label="Home" href="#home" current />
-            <IconRailItem icon={Graph} label="Platforms" href="#platforms" />
-            <IconRailItem icon={FileText} label="Reports" href="#reports" />
-            <IconRailItem icon={Users} label="Team" href="#team" count={1} />
-            <IconRailItem icon={BookOpen} label="Memory" href="#memory" />
-            <IconRailItem icon={Plus} label="Add a platform" onClick={() => toast('Add a platform…')} className="mt-2" />
-            <IconRailSpacer />
-            <IconRailFoot><AccountMenu name={owner.name} email={owner.email} role="Owner" applyToDocument={false} /></IconRailFoot>
-          </IconRailContent>
-        }
+      <PortalFrame
+        current="home"
+        teamCount={1}
+        onAddPlatform={() => toast('Add a platform…')}
+        leda={askBar('bar', false)}
         place={place}
         placeLabel="Your platforms"
         sheetBar={sheetBar}
         sheetLabel={overview ? 'Overview' : tab === 'today' ? 'Today' : 'Case'}
         detail={phone && phoneDetail}
-        topBar={topBar}
-        phoneNav={
-          <div className="flex h-[60px] w-full items-center justify-around px-2">
-            {phoneTabs.map(([Ic, l, n], i) => <IconRailItem key={String(l)} icon={Ic} label={l} href={`#${l.toLowerCase()}`} count={n} current={i === 0} tooltip={false} className="h-11 w-14" />)}
-          </div>
-        }
+        topBar={detailBar}
         status={
           <StatusBar
             platforms={data.platforms.map((p) => ({ id: p.id, name: p.shortName ?? p.name, color: p.index, health: p.id === failed ? 'bad' : healthOf(p), healthText: p.id === failed ? 'no data' : undefined, selected: filter === p.id, onSelect: () => setFilterTo(filter === p.id ? null : p.id) }))}
@@ -692,7 +668,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
         <div ref={(el) => { (bodyRef as { current: HTMLDivElement | null }).current = el; (sheetRef as { current: HTMLDivElement | null }).current = el; }} data-home-body>
           {sheetBody}
         </div>
-      </PlatformShell>
+      </PortalFrame>
       <CommandPalette
         open={palette}
         onOpenChange={setPalette}

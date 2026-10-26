@@ -6,6 +6,8 @@ import { Home } from './Home';
  * Portal Home in the real PlatformShell: the map and Needs you in the place column, Today / a case / the overview in the sheet,
  * and Leda's entry points (L1 to L10: Ask bar, centred bar and chips, phone bar, palette, conversation panel, headline,
  * proposals and watching, case note and proposal, Today blocks, status bar usage).
+ * The chrome (rail, phone top bar with account and Leda, phone nav with labelled tabs and More) is the shared `PortalFrame`
+ * (`./PortalFrame.tsx`, not exported from the package): Memory, Platforms and Platform detail adopt it instead of local chrome.
  */
 const meta: Meta<typeof Home> = {
   title: 'Prototypes/Portal/[For Review] Home',
