@@ -144,7 +144,7 @@ export function useListCursor(
     return () => document.removeEventListener('keydown', onKey);
   }, [shortcuts, moveCursor]);
 
-  return { current, moveCursor, announce };
+  return { current, moveCursor, announce, say: setAnnounce };
 }
 
 export interface ListProps extends Omit<HTMLAttributes<HTMLElement>, 'onChange'> {
