@@ -243,6 +243,105 @@ describe('BlockedQuestions', () => {
     await act(async () => {});
   });
 
+  it('blocking the question that reaches the limit keeps the input mounted and focused', async () => {
+    const u = userEvent.setup();
+    render(<Harness maxItems={4} />);
+    await u.click(input());
+    await u.keyboard('One more{Enter}');
+    await screen.findByRole('button', { name: /Remove blocked question: One more/ });
+    expect(document.activeElement).toBe(input());
+    expect(screen.getByText(/You can block up to 4 questions/)).toBeTruthy();
+    expect(input().getAttribute('aria-describedby')).toBeTruthy();
+    await u.keyboard('Another{Enter}');
+    expect(screen.getByRole('alert').textContent).toMatch(/up to 4 questions/);
+    expect(document.activeElement).toBe(input());
+  });
+
+  it('refuses blocking for every business what a platform already blocks, naming where', async () => {
+    const u = userEvent.setup();
+    const onBlock = vi.fn();
+    render(<Harness onBlock={onBlock} />);
+    await u.click(input());
+    await u.keyboard('who is your PARTS supplier{Enter}');
+    expect(screen.getByRole('alert').textContent).toBe('That question is already blocked at Auto Works Quezon City. Remove it there first to block it for every business.');
+    expect(onBlock).not.toHaveBeenCalled();
+  });
+
+  it('a remove that fails later does not wipe the pending move of a newer Undo', async () => {
+    const u = userEvent.setup();
+    let rejectFirst: (e: Error) => void = () => {};
+    function H() {
+      const [items, setItems] = useState(seed);
+      return (
+        <>
+          <BlockedQuestions
+            items={items}
+            scopes={scopes}
+            replies={replies}
+            onRemove={(item, { undo }) => {
+              if (undo) {
+                setItems((x) => [item, ...x]);
+                return;
+              }
+              if (item.id === 'a') {
+                setItems((x) => x.filter((y) => y.id !== 'a'));
+                return;
+              }
+              return new Promise<void>((_, rej) => (rejectFirst = rej));
+            }}
+          />
+          <Toaster />
+        </>
+      );
+    }
+    render(<H />);
+    // remove b (slow, will fail), then remove a (fast) and Undo it, then let b fail
+    await u.click(screen.getByRole('button', { name: /Remove blocked question: Can I get a discount/ }));
+    await u.click(screen.getByRole('button', { name: 'Remove' }));
+    await u.click(screen.getByRole('button', { name: /Remove blocked question: Who is your parts/ }));
+    await u.click(screen.getByRole('button', { name: 'Remove' }));
+    await u.click(await screen.findByRole('button', { name: 'Undo' }));
+    const back = await screen.findByRole('button', { name: /Remove blocked question: Who is your parts/ });
+    await waitFor(() => expect(document.activeElement).toBe(back));
+    await u.click(screen.getByRole('button', { name: /Remove blocked question: What is the owner/ }));
+    const here = document.activeElement;
+    await act(async () => rejectFirst(new Error('no')));
+    expect(document.activeElement).toBe(here); // the old failure moves nothing
+  });
+
+  it('a pending remove disarms when the parent keeps the item', async () => {
+    const u = userEvent.setup();
+    function H() {
+      const [items, setItems] = useState(seed);
+      return (
+        <>
+          <button onClick={() => setItems((x) => x.filter((y) => y.id !== 'a'))}>Parent removes a</button>
+          <BlockedQuestions items={items} scopes={scopes} replies={replies} onRemove={() => {}} />
+        </>
+      );
+    }
+    render(<H />);
+    await u.click(screen.getByRole('button', { name: /Remove blocked question: Who is your parts/ }));
+    await u.click(screen.getByRole('button', { name: 'Remove' }));
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull());
+    await act(async () => {});
+    const other = screen.getByRole('button', { name: 'Parent removes a' });
+    other.focus();
+    await u.click(other); // later, unrelated removal of the same row must not pull focus
+    expect(document.activeElement).toBe(other);
+  });
+
+  it('Esc during a reply save that later fails still tells the person', async () => {
+    const u = userEvent.setup();
+    render(<Harness onEditReply={() => delay(40).then(() => Promise.reject(new Error('Saving failed.')))} />);
+    await u.click(screen.getByRole('button', { name: 'Edit reply, for the company and every business' }));
+    await u.keyboard('x');
+    await u.click(screen.getByRole('button', { name: 'Save reply' }));
+    await u.keyboard('{Escape}');
+    expect(screen.queryByLabelText('Leda replies, for the company and every business')).toBeNull();
+    expect(await screen.findByText(/Reply not saved\. Saving failed\./)).toBeTruthy();
+  });
+
   it('caps the question length and keeps long strings inside the row', () => {
     const long = 'x'.repeat(160);
     render(<BlockedQuestions items={[{ id: 'l', question: long, scope: 'company' }]} scopes={scopes} replies={{}} onRemove={() => {}} />);

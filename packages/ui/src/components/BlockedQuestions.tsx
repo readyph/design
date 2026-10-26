@@ -10,6 +10,7 @@ import { Skeleton } from './Skeleton';
 import { Select } from './Select';
 import { List, ListCell, ListRow } from './List';
 import { toast } from './toast/toastStore';
+import { focusIfLost } from '../utils/focusIfLost';
 
 /** Where a blocked question applies: the company (every business) or one platform. */
 export interface BlockedScope {
@@ -85,20 +86,11 @@ export interface BlockedQuestionsProps {
   className?: string;
 }
 
-/* ---- the one place that decides whether focus may move (swap for the shared helper when RDY-269 lands) ---- */
 /**
- * Move focus to `target` only when the person's focus was actually lost: nothing focused, `body`, an element that
- * has since been removed, or `origin` (the control that started the action, which may be gone or disabled now).
- * If they have moved on to something else, even inside this component, leave it alone and return false so the
- * caller can announce instead. No timers.
+ * Focus moves only when it was lost (shared `focusIfLost`: body/null, removed, disabled, inert, or inside `container`,
+ * the control that started the action). Otherwise the caller announces the result instead.
  */
-function focusIfLost(target: HTMLElement | null | undefined, origin?: Element | null): boolean {
-  if (!target) return false;
-  const a = document.activeElement;
-  const lost = !a || a === document.body || a === document.documentElement || !a.isConnected || a === origin;
-  if (lost) target.focus();
-  return lost;
-}
+const moveFocus = (target: HTMLElement | null | undefined, container: Element | null = null) => focusIfLost(container, target ?? null);
 
 const WS = /\s+/g;
 /** Case-insensitive, whitespace-trimmed, quote- and ending-punctuation-insensitive form used for the duplicate check. */
@@ -131,9 +123,8 @@ function controlOf(root: HTMLElement | null, id: string): HTMLElement | null {
   return row?.querySelector<HTMLElement>('[data-bq-focus]') ?? null;
 }
 
-type Pending =
-  | { kind: 'removed'; item: BlockedQuestionItem; order: string[]; origin: Element | null }
-  | { kind: 'restored'; item: BlockedQuestionItem; origin: Element | null };
+/** One focus intent. `id` keys it: a newer action replaces it, and a failure may only cancel its own. */
+type Pending = { id: number; kind: 'removed' | 'restored'; item: BlockedQuestionItem; order: string[]; container: Element | null; settled: boolean };
 
 /**
  * Blocked questions list (C29, new). The reply Leda gives (the company's and one per platform, each with an inline
@@ -194,69 +185,110 @@ export function BlockedQuestions({
 
   /* ---------- focus after the list changes (remove, undo) ---------- */
   const pending = useRef<Pending | null>(null);
+  const seq = useRef(0);
+  const [tick, setTick] = useState(0);
   const [confirm, setConfirm] = useState<BlockedQuestionItem | null>(null);
+  const opener = useRef<Element | null>(null);
 
   useEffect(() => {
     const p = pending.current;
     if (!p || confirm) return;
     const gone = !items.some((i) => i.id === p.item.id);
     if (p.kind === 'removed') {
-      if (!gone) return; // the save has not landed yet
+      if (!gone) {
+        // The handler finished but the parent kept the item: nothing will happen, so disarm.
+        if (p.settled) pending.current = null;
+        return; // otherwise the save has not landed yet
+      }
       pending.current = null;
       const ids = new Set(visible.map((i) => i.id));
       const at = p.order.indexOf(p.item.id);
       const next = p.order.slice(at + 1).find((id) => ids.has(id));
       const prev = [...p.order.slice(0, at)].reverse().find((id) => ids.has(id));
       const target = (next ?? prev) != null ? controlOf(root.current, (next ?? prev) as string) : inputRef.current ?? blockBtn.current;
-      if (!focusIfLost(target, p.origin)) announce(`Removed: “${p.item.question}”.`);
+      // The confirm dialog is still unmounting in this commit with focus on its button: that button is lost too.
+      const closing = document.activeElement?.closest('[role="alertdialog"]') ?? null;
+      if (!moveFocus(target, closing ?? p.container)) announce(`Removed: “${p.item.question}”.`);
     } else {
-      if (gone) return;
+      if (gone) {
+        if (p.settled) pending.current = null;
+        return;
+      }
       pending.current = null;
-      if (!focusIfLost(controlOf(root.current, p.item.id), p.origin)) announce(`Restored: “${p.item.question}”.`);
-      else announce(`Restored: “${p.item.question}”.`);
+      moveFocus(controlOf(root.current, p.item.id), p.container);
+      announce(`Restored: “${p.item.question}”.`);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, confirm]);
+  }, [items, confirm, tick]);
 
-  const requestRemove = (item: BlockedQuestionItem) => setConfirm(item);
+  const requestRemove = (item: BlockedQuestionItem) => {
+    opener.current = document.activeElement;
+    setConfirm(item);
+  };
   const doRemove = () => {
     const item = confirm;
     if (!item || !onRemove) return;
-    const origin = document.activeElement;
-    pending.current = { kind: 'removed', item, order: visible.map((i) => i.id), origin };
+    const id = ++seq.current;
+    const mine = () => pending.current?.id === id;
+    // The row (and the Remove button the dialog hands focus back to) is the container: focus left inside it is lost.
+    const container = opener.current?.closest('[data-row-id]') ?? null;
+    pending.current = { id, kind: 'removed', item, order: visible.map((i) => i.id), container, settled: false };
     setConfirm(null);
-    const undo = () => {
-      pending.current = { kind: 'restored', item, origin: document.activeElement };
-      Promise.resolve(onRemove(item, { undo: true })).catch(() => {
-        pending.current = null;
-        toast.error(`Couldn’t restore “${item.question}”. Try again.`);
-      });
+    const settle = () => {
+      if (mine()) {
+        pending.current!.settled = true;
+        setTick((t) => t + 1);
+      }
     };
-    const done = () => toast.undo(`Unblocked: “${item.question}”`, undo);
-    // `origin` is the Remove button the dialog gave focus back to, or body: either counts as lost.
-    Promise.resolve(onRemove(item, { undo: false })).then(done, () => {
-      const p = pending.current;
-      pending.current = null;
-      toast.error(`Couldn’t remove “${item.question}”. Try again.`);
-      if (p) focusIfLost(controlOf(root.current, item.id), p.origin);
-    });
+    const undo = () => {
+      const uid = ++seq.current; // supersedes any pending move, including a late remove failure's
+      pending.current = { id: uid, kind: 'restored', item, order: [], container: null, settled: false };
+      const end = (ok: boolean) => {
+        if (pending.current?.id !== uid) return;
+        if (!ok) {
+          pending.current = null;
+          toast.error(`Couldn’t restore “${item.question}”. Try again.`);
+        } else {
+          pending.current.settled = true;
+          setTick((t) => t + 1);
+        }
+      };
+      Promise.resolve(onRemove(item, { undo: true })).then(() => end(true), () => end(false));
+    };
+    Promise.resolve(onRemove(item, { undo: false })).then(
+      () => {
+        settle();
+        toast.undo(`Unblocked: “${item.question}”`, undo);
+      },
+      () => {
+        toast.error(`Couldn’t remove “${item.question}”. Try again.`);
+        if (mine()) {
+          pending.current = null; // only this remove's own intent: a newer Undo's stays
+          moveFocus(controlOf(root.current, item.id), container);
+        }
+      },
+    );
   };
 
   /* ---------- block ---------- */
   const clearError = () => error && setError(null);
   const block = async () => {
     if (busyRef.current) return;
-    const origin = document.activeElement;
     const raw = text;
     const q = cleanQuestion(raw);
+    // The Block button is the container: focus left on it (pressed, or disabled meanwhile) is lost; the input is not.
+    const back = () => moveFocus(inputRef.current, blockBtn.current);
     const fail = (msg: string) => {
       setError(msg);
-      focusIfLost(inputRef.current, origin === blockBtn.current ? origin : null);
+      back();
     };
     if (!q) return fail('Type the question as a customer would ask it.');
     const key = normalizeBlockedQuestion(q);
     const dup = items.find((i) => normalizeBlockedQuestion(i.question) === key && (i.scope === targetScope || isEvery(i.scope)));
     if (dup) return fail(`That question is already blocked${isEvery(dup.scope) ? ' for every business' : ` at ${labelOf(dup.scope)}`}.`);
+    // Blocking for every business what a platform already blocks would list it twice: refuse and say where (nothing is removed silently).
+    const narrower = isEvery(targetScope) ? items.find((i) => normalizeBlockedQuestion(i.question) === key) : undefined;
+    if (narrower) return fail(`That question is already blocked at ${labelOf(narrower.scope)}. Remove it there first to block it for every business.`);
     if (atLimit) return fail(`You can block up to ${maxItems} questions. Remove one first.`);
     if (!onBlock) return;
     setError(null);
@@ -266,11 +298,11 @@ export function BlockedQuestions({
       await onBlock({ question: q, scope: targetScope });
       // Clear only what was sent: if they kept typing during a slow save, keep their new text.
       if (inputRef.current && inputRef.current.value === raw) setText('');
-      focusIfLost(inputRef.current, origin === blockBtn.current ? origin : null);
+      back();
       announce(`Blocked “${q}” ${phrase(targetScope)}.`);
     } catch (e) {
       setError(e instanceof Error && e.message ? e.message : 'Couldn’t block that question. Try again.');
-      focusIfLost(inputRef.current, origin === blockBtn.current ? origin : null);
+      back();
     } finally {
       busyRef.current = false;
       setBusy(false);
@@ -283,6 +315,8 @@ export function BlockedQuestions({
   const [replyError, setReplyError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
+  const editingRef = useRef<string | null>(null);
+  editingRef.current = editing;
   const areaRef = useRef<HTMLTextAreaElement>(null);
   const editBtns = useRef<Record<string, HTMLButtonElement | null>>({});
 
@@ -302,7 +336,7 @@ export function BlockedQuestions({
     const id = afterClose.current;
     if (editing !== null || id === null) return;
     afterClose.current = null;
-    focusIfLost(editBtns.current[id], null);
+    moveFocus(editBtns.current[id]);
   }, [editing]);
   const cancel = () => {
     if (!editing) return;
@@ -325,11 +359,16 @@ export function BlockedQuestions({
     setReplyError(null);
     try {
       await onEditReply(id, v);
-      afterClose.current = id;
-      setEditing(null);
+      if (editingRef.current === id) {
+        afterClose.current = id;
+        setEditing(null);
+      }
       announce(`Reply saved${isEvery(id) ? '' : ` for ${labelOf(id)}`}.`);
     } catch (e) {
-      setReplyError(e instanceof Error && e.message ? e.message : 'Couldn’t save the reply. Try again.');
+      const msg = e instanceof Error && e.message ? e.message : 'Couldn’t save the reply. Try again.';
+      // If they pressed Esc or Cancel while it saved, the editor is gone: say so where they will see it.
+      if (editingRef.current === id) setReplyError(msg);
+      else toast.error(`Reply not saved${isEvery(id) ? '' : ` for ${labelOf(id)}`}. ${msg}`);
     } finally {
       savingRef.current = false;
       setSaving(false);
@@ -345,6 +384,7 @@ export function BlockedQuestions({
   const columns = fixed ? 'minmax(0,1fr) auto' : 'minmax(0,1fr) 9.5rem auto';
   const errId = `${uid}-err`;
   const limitNote = atLimit && editable;
+  const limitId = `${uid}-lim`;
 
   const replyBlock = (id: string) => {
     const label = isEvery(id) ? (fixed ? 'Leda replies' : 'Leda replies, for the company and every business') : `At ${labelOf(id)}, Leda replies`;
@@ -353,7 +393,14 @@ export function BlockedQuestions({
       const hid = `${eid}-h`;
       const xid = `${eid}-x`;
       return (
-        <div key={id} data-bq-editor className="rounded-card bg-raised px-4 py-3.5" onKeyDown={keepJK}>
+        <div key={id} data-bq-editor className="rounded-card bg-raised px-4 py-3.5" onKeyDown={(e) => {
+            keepJK(e);
+            if (e.key === 'Escape') {
+              e.preventDefault();
+              e.stopPropagation();
+              cancel();
+            }
+          }}>
           <label htmlFor={eid} className="block text-small text-muted">
             {label}
           </label>
@@ -372,11 +419,7 @@ export function BlockedQuestions({
               if (replyError) setReplyError(null);
             }}
             onKeyDown={(e) => {
-              if (e.key === 'Escape') {
-                e.preventDefault();
-                e.stopPropagation();
-                cancel();
-              } else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
                 e.preventDefault();
                 void save();
               }
@@ -526,7 +569,7 @@ export function BlockedQuestions({
             </p>
           ) : null}
 
-          {editable && !limitNote ? (
+          {editable ? (
             <form
               className="mt-4 flex flex-wrap items-end gap-2"
               onKeyDown={keepJK}
@@ -549,7 +592,7 @@ export function BlockedQuestions({
                   autoComplete="off"
                   placeholder="A question to block, like “Who is your parts supplier?”"
                   aria-invalid={error ? true : undefined}
-                  aria-describedby={error ? errId : undefined}
+                  aria-describedby={[error ? errId : '', limitNote ? limitId : ''].filter(Boolean).join(' ') || undefined}
                   aria-busy={busy || undefined}
                   onChange={(e) => {
                     setText(e.target.value);
@@ -597,7 +640,7 @@ export function BlockedQuestions({
             </form>
           ) : null}
 
-          {limitNote ? <p className="mt-4 text-ui text-muted">You can block up to {maxItems} questions. Remove one to add another.</p> : null}
+          {limitNote ? <p id={limitId} className="mt-2 text-ui text-muted">You can block up to {maxItems} questions. Remove one to add another.</p> : null}
           {readOnly && readOnlyNote ? (
             <p className="mt-4 flex items-start gap-1.5 text-ui text-muted [overflow-wrap:anywhere]">
               <Lock size={14} aria-hidden className="mt-[3px] shrink-0" />
