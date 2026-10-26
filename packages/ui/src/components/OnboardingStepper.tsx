@@ -1,6 +1,7 @@
-import { forwardRef, useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { forwardRef, useEffect, useLayoutEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { CheckCircle, CircleDashed, Lock } from '@phosphor-icons/react';
 import { cn, focusRing } from '../utils/cn';
+import { focusIfLost } from '../utils/focusIfLost';
 import { Button } from './Button';
 import { ProgressBar } from './ProgressBar';
 
@@ -94,6 +95,7 @@ export const OnboardingStepper = forwardRef<HTMLDivElement, OnboardingStepperPro
   const uid = useId();
   const headingRef = useRef<HTMLHeadingElement>(null);
   const listRef = useRef<HTMLOListElement>(null);
+  const footRef = useRef<HTMLDivElement>(null);
   const prevCurrent = useRef(current);
   const prevDone = useRef<number | null>(null);
   const [say, setSay] = useState('');
@@ -112,12 +114,15 @@ export const OnboardingStepper = forwardRef<HTMLDivElement, OnboardingStepperPro
   const skipped = steps.filter((s) => s.status === 'skipped').length;
   const readout = progressLabel ?? `${done} of ${steps.length} steps done${skipped ? `, ${skipped} skipped` : ''}`;
 
-  // Focus the section heading when the step changes (not on first render).
-  useEffect(() => {
-    if (prevCurrent.current !== current) {
-      prevCurrent.current = current;
-      headingRef.current?.focus({ preventScroll: false });
-    }
+  // Focus the section heading when the step changes (not on first render), but only if focus was lost or the user
+  // triggered the change from the stepper's own list or footer. The form is inside the stepper yet is NOT counted
+  // (the user may be typing there while a save runs), so the containers are the list and the footer, then none
+  // (body, removed or disabled control). A pressed Continue that stays enabled is inside the footer, so it counts.
+  useLayoutEffect(() => {
+    if (prevCurrent.current === current) return;
+    prevCurrent.current = current;
+    const h = headingRef.current;
+    focusIfLost(listRef.current, h) || focusIfLost(footRef.current, h) || focusIfLost(null, h);
   }, [current]);
 
   // Chips scroll sideways: keep the open one in view (horizontal only, so the sheet does not jump).
@@ -203,6 +208,7 @@ export const OnboardingStepper = forwardRef<HTMLDivElement, OnboardingStepperPro
           <div className="mt-4 min-w-0">{children}</div>
 
           <div
+            ref={footRef}
             role="group"
             aria-label="Step actions"
             className="sticky bottom-0 z-10 mt-6 flex flex-wrap items-center gap-2 border-t border-border bg-surface py-3 @max-[719.98px]/stepper:flex-col @max-[719.98px]/stepper:items-stretch @max-[719.98px]/stepper:gap-1 @max-[719.98px]/stepper:py-2"

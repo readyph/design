@@ -55,6 +55,7 @@
     --share-2: #7a7f87;
     --map-top: #1c1e21;
     --map-side: #141517;
+    --map-side-2: #0f1012;
     --map-road: #2a2d33;
     --ld-lit: #DCE4FF;
     --ld-deep: #8C88F2;
@@ -130,6 +131,7 @@
   --share-2: #7a7f87;
   --map-top: #1c1e21;
   --map-side: #141517;
+  --map-side-2: #0f1012;
   --map-road: #2a2d33;
   --ld-lit: #DCE4FF;
   --ld-deep: #8C88F2;
@@ -162,13 +164,13 @@
   html { font-size: 100%; background: var(--frame); -webkit-font-smoothing: antialiased; }
   body { margin: 0; font-family: var(--font); font-size: var(--fs-body); line-height: var(--lh-body); background: var(--frame); color: var(--text); font-variant-numeric: tabular-nums; }
   /* Surface scope. PlatformShell's place column and PlatformToday set data-surface="frame": content drawn straight on --frame gets the frame row rule and
-     the focus-ring offset on --frame. A sheet nested inside sets data-surface="surface" to restore the sheet values (nearest ancestor wins). */
+     the focus-ring offset on --frame. --scope-bg is the scope's resolved background: sticky bars paint it (bg-[var(--scope-bg)]) so they follow the phone reset. A sheet nested inside sets data-surface="surface" to restore the sheet values (nearest ancestor wins). */
   :root { --rule-sheet: var(--rule); }
-  [data-surface="frame"] { --rule: var(--frame-rule); --ring-offset-bg: var(--frame); }
-  [data-surface="surface"] { --rule: var(--rule-sheet); --ring-offset-bg: var(--surface); }
+  [data-surface="frame"] { --rule: var(--frame-rule); --scope-bg: var(--frame); --ring-offset-bg: var(--scope-bg); }
+  [data-surface="surface"] { --rule: var(--rule-sheet); --scope-bg: var(--surface); --ring-offset-bg: var(--scope-bg); }
   /* Phone (the shell's max-[640px]): the whole shell is --surface, so the place column's frame scope resets, including PlatformToday blocks inside it. */
   @media (max-width: 640px) {
-    [data-shell-place][data-surface="frame"], [data-shell-place] [data-surface="frame"] { --rule: var(--rule-sheet); --ring-offset-bg: var(--surface); }
+    [data-shell-place][data-surface="frame"], [data-shell-place] [data-surface="frame"] { --rule: var(--rule-sheet); --scope-bg: var(--surface); --ring-offset-bg: var(--scope-bg); }
   }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   code, kbd, samp { font-family: var(--mono); font-size: 13px; }

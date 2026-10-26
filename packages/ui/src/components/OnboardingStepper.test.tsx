@@ -134,4 +134,70 @@ describe('OnboardingStepper', () => {
     expect(outer.className).not.toContain('w-40');
     expect((outer.firstElementChild as HTMLElement).className).not.toContain('grid-cols-3');
   });
+
+  describe('focus after a step change (focusIfLost)', () => {
+    const Harness = ({ delay = 0 }: { delay?: number }) => {
+      const [cur, setCur] = useState('b');
+      const [busy, setBusy] = useState(false);
+      return (
+        <div>
+          <button type="button">Cancel</button>
+          <OnboardingStepper
+            steps={steps}
+            current={cur}
+            onStepChange={setCur}
+            busy={busy}
+            continueLoading={busy}
+            onContinue={() => { setBusy(true); setTimeout(() => { setBusy(false); setCur('c'); }, delay); }}
+          >
+            <input aria-label="Name" />
+          </OnboardingStepper>
+        </div>
+      );
+    };
+    const heading = (n: string) => screen.getByRole('heading', { name: n });
+
+    it('Continue pressed and nothing else changed: focus goes to the new heading', async () => {
+      render(<Harness delay={30} />);
+      const btn = screen.getByRole('button', { name: 'Save and continue' });
+      btn.focus();
+      fireEvent.click(btn);
+      await waitFor(() => expect(document.activeElement).toBe(heading('Team')));
+    });
+
+    it('does not steal focus from the form input the user is typing in during the save', async () => {
+      render(<Harness delay={30} />);
+      fireEvent.click(screen.getByRole('button', { name: 'Save and continue' }));
+      const input = screen.getByLabelText('Name');
+      input.focus();
+      await waitFor(() => expect(screen.getByRole('heading', { name: 'Team' })).toBeTruthy());
+      expect(document.activeElement).toBe(input);
+    });
+
+    it('does not steal focus from a control outside the stepper (sheet bar Cancel)', async () => {
+      render(<Harness delay={30} />);
+      fireEvent.click(screen.getByRole('button', { name: 'Save and continue' }));
+      const cancel = screen.getByRole('button', { name: 'Cancel' });
+      cancel.focus();
+      await waitFor(() => expect(screen.getByRole('heading', { name: 'Team' })).toBeTruthy());
+      expect(document.activeElement).toBe(cancel);
+    });
+
+    it('moves focus when the user chose the step from the list', () => {
+      render(<Harness />);
+      const t = screen.getByRole('button', { name: /^Team/ });
+      t.focus();
+      fireEvent.click(t);
+      expect(document.activeElement).toBe(heading('Team'));
+    });
+
+    it('a locked step press changes nothing and leaves focus on it', () => {
+      render(<Harness />);
+      const l = screen.getByRole('button', { name: /^Connections/ });
+      l.focus();
+      fireEvent.click(l);
+      expect(document.activeElement).toBe(l);
+      expect(heading('System')).toBeTruthy();
+    });
+  });
 });

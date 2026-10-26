@@ -49,9 +49,10 @@
   --chart-axis: var(--faint);
   --identity-hq: #4f6074;
   --identity-text: #ffffff;
-  --map-top: #eceff4;
-  --map-side: #dbe1ea;
-  --map-road: #c6ccd6;
+  --map-top: #fffffd;
+  --map-side: #c9dcf7;
+  --map-side-2: #a9c6f0;
+  --map-road: #dbeafe;
   --map-window: #FFD66B;
   --map-window-soft: #FFE7A3;
   --ld-lit: #8E9BEE;
@@ -164,6 +165,8 @@
   --ease-subpage: cubic-bezier(0.22, 1, 0.36, 1);
   --dur-subpage-in: 240ms;
   --dur-subpage-out: 220ms;
+  --subpage-drift: 6%;
+  --subpage-dim: 0.55;
   --dur-leda-open: 240ms;
   --dur-leda-close: 220ms;
   --dur-tab: 120ms;
