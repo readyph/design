@@ -200,7 +200,7 @@ export const OnboardingStepper = forwardRef<HTMLDivElement, OnboardingStepperPro
 
         <section aria-labelledby={`${uid}-h`} className="flex min-w-0 flex-col">
           <p className="m-0 text-small text-muted">Step {index + 1} of {steps.length}</p>
-          <h2 id={`${uid}-h`} ref={headingRef} tabIndex={-1} className="m-0 text-title font-semibold text-text outline-none [overflow-wrap:anywhere]">
+          <h2 id={`${uid}-h`} ref={headingRef} tabIndex={-1} className="m-0 text-title font-semibold text-text outline-0 [overflow-wrap:anywhere]">
             {title ?? step?.label}
           </h2>
           {description && <p className="m-0 mt-1 text-ui text-muted">{description}</p>}
