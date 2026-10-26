@@ -188,7 +188,7 @@ function PlatformBlock({ p, layout, locale }: BlockProps) {
     : undefined;
 
   const name = (
-    <h3 ref={headRef} tabIndex={-1} id={nameId} title={p.name} className="m-0 min-w-0 truncate text-ui font-semibold text-text outline-none">
+    <h3 ref={headRef} tabIndex={-1} id={nameId} title={p.name} className="m-0 min-w-0 truncate text-ui font-semibold text-text outline-0">
       {p.onOpen ? <button type="button" title={p.name} onClick={p.onOpen} className={cn('max-w-full truncate rounded-chip hover:underline', focusRing)}>{p.name}</button> : p.name}
     </h3>
   );

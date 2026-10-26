@@ -56,11 +56,13 @@ export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(function Switch
         'group relative inline-flex h-5 w-[34px] shrink-0 cursor-pointer items-center rounded-full border transition-colors duration-hover',
         'border-faint bg-raised hover:bg-raised-2 data-[state=checked]:border-accent data-[state=checked]:bg-accent data-[state=checked]:hover:border-accent-hover data-[state=checked]:hover:bg-accent-hover',
         'disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-raised disabled:data-[state=checked]:hover:bg-accent',
+        // Forced-colors repaints fills, so the states need system colours: off = Canvas track, CanvasText border and thumb; on = Highlight track, HighlightText thumb.
+        'forced-colors:border-[CanvasText] forced-colors:bg-[Canvas] forced-colors:data-[state=checked]:border-[Highlight] forced-colors:data-[state=checked]:bg-[Highlight] forced-colors:disabled:border-[GrayText]',
         focusRing,
         !label && className,
       )}
     >
-      <RadixSwitch.Thumb className="block h-3.5 w-3.5 translate-x-0.5 rounded-full bg-faint transition-transform duration-hover motion-reduce:transition-none data-[state=checked]:translate-x-4 data-[state=checked]:bg-accent-ink" />
+      <RadixSwitch.Thumb className="block h-3.5 w-3.5 translate-x-0.5 rounded-full bg-faint transition-transform duration-hover motion-reduce:transition-none data-[state=checked]:translate-x-4 data-[state=checked]:bg-accent-ink forced-colors:bg-[CanvasText] forced-colors:data-[state=checked]:bg-[HighlightText]" />
     </RadixSwitch.Root>
   );
 
