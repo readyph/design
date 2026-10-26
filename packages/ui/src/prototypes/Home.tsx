@@ -650,6 +650,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
         leda={askBar('bar', false)}
         place={place}
         placeLabel="Your platforms"
+        heading={phone && phoneDetail ? 'Home' : null}
         sheetBar={sheetBar}
         sheetLabel={overview ? 'Overview' : tab === 'today' ? 'Today' : 'Case'}
         detail={phone && phoneDetail}
