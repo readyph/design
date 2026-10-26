@@ -1,7 +1,8 @@
-import { forwardRef, useEffect, useId, useMemo, useRef, useState, type HTMLAttributes, type ReactNode } from 'react';
+import { forwardRef, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type HTMLAttributes, type ReactNode } from 'react';
 import * as RadioGroup from '@radix-ui/react-radio-group';
 import { Lock, Warning } from '@phosphor-icons/react';
 import { cn } from '../utils/cn';
+import { focusIfLost } from '../utils/focusIfLost';
 import { Button } from './Button';
 import { ConfirmDialog } from './ConfirmDialog';
 import { PlatformLogo, type PlatformLogoProps } from './PlatformLogo';
@@ -118,9 +119,14 @@ export const RolePicker = forwardRef<HTMLDivElement, RolePickerProps>(function R
   const first = useRef(true);
   const heading = useRef<HTMLHeadingElement>(null);
   const saveBtn = useRef<HTMLButtonElement>(null);
-  // Save and Discard disable themselves when they finish, which would drop focus to <body>.
-  // Remember that one of them was used; when the work is over, move focus somewhere real.
+  const actions = useRef<HTMLDivElement>(null);
+  // Save and Discard stay focusable (aria-disabled), so focus is never dropped while they work. When the work is over
+  // (saved, discarded, or failed) focus goes to the heading, or back to Save on a failure, but only if the user has
+  // not already moved on: `focusIfLost` leaves a focused input, dropdown or link alone.
   const used = useRef(false);
+  const complete = useRef(false);
+  const toSave = useRef(false);
+  const viaDialog = useRef(false);
   const copy = { ...ACCESS, ...Object.fromEntries(Object.entries(accessCopy ?? {}).map(([k, v]) => [k, { ...ACCESS[k as CompanyAccess], can: v }])) } as typeof ACCESS;
 
   // Say what changed when Admin swaps the rows; focus stays on the radio.
@@ -138,12 +144,20 @@ export const RolePicker = forwardRef<HTMLDivElement, RolePickerProps>(function R
     ...optionsOf(p).map((r) => ({ value: r.id, label: r.name, textValue: r.name })),
   ];
 
-  useEffect(() => {
-    if (!used.current || saving || (dirty && !error)) return;
+  const place = () => {
     used.current = false;
-    // Save failed: the draft is still there, go back to Save. Otherwise the heading of the form.
-    const id = setTimeout(() => (dirty ? saveBtn.current : heading.current)?.focus(), 60);
-    return () => clearTimeout(id);
+    complete.current = false;
+    focusIfLost(actions.current, toSave.current ? saveBtn.current : heading.current, { preventScroll: true });
+  };
+  useLayoutEffect(() => {
+    if (!used.current || saving || (dirty && !error)) {
+      complete.current = false;
+      return;
+    }
+    complete.current = true;
+    toSave.current = dirty;
+    // Through the confirm dialog its own focus return runs after this; `onCloseAutoFocus` places focus then.
+    if (!viaDialog.current) place();
   }, [dirty, saving, error]);
 
   const removed = platforms.filter((p) => (savedValue.roles[p.id] ?? null) && !(value.roles[p.id] ?? null) && !full);
@@ -153,6 +167,7 @@ export const RolePicker = forwardRef<HTMLDivElement, RolePickerProps>(function R
 
   const setRole = (id: string, role: string) => onChange({ ...value, roles: { ...value.roles, [id]: role === NOT_ASSIGNED ? null : role } });
   const trySave = () => {
+    if (!dirty || saving) return;
     if (removed.length) return setConfirm(true);
     used.current = true;
     onSave(value);
@@ -303,11 +318,30 @@ export const RolePicker = forwardRef<HTMLDivElement, RolePickerProps>(function R
               <span className="min-w-0">{error}</span>
             </p>
           ) : null}
-          <div className="flex flex-wrap items-center gap-2">
-            <Button ref={saveBtn} variant="primary" onClick={trySave} disabled={!dirty || saving} loading={saving} actionBar>
-              {saveLabel}
+          <div ref={actions} className="flex flex-wrap items-center gap-2">
+            <Button
+              ref={saveBtn}
+              variant="primary"
+              onClick={trySave}
+              aria-disabled={!dirty || saving || undefined}
+              aria-busy={saving || undefined}
+              actionBar
+              className="aria-disabled:cursor-not-allowed aria-disabled:opacity-70 aria-disabled:hover:bg-accent"
+            >
+              {saving ? <span aria-hidden className="size-3.5 animate-spin rounded-full border-2 border-current border-t-transparent motion-reduce:animate-none" /> : null}
+              {saving ? 'Saving' : saveLabel}
             </Button>
-            <Button variant="secondary" onClick={() => { used.current = true; onDiscard(); }} disabled={!dirty || saving} actionBar>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                if (!dirty || saving) return;
+                used.current = true;
+                onDiscard();
+              }}
+              aria-disabled={!dirty || saving || undefined}
+              actionBar
+              className="aria-disabled:cursor-not-allowed aria-disabled:opacity-70 aria-disabled:hover:border-control"
+            >
               Discard
             </Button>
             {dirty ? (
@@ -328,9 +362,19 @@ export const RolePicker = forwardRef<HTMLDivElement, RolePickerProps>(function R
         confirmLabel="Save and remove"
         tone="danger"
         onCancel={() => setConfirm(false)}
+        onCloseAutoFocus={(e) => {
+          if (!viaDialog.current) return;
+          viaDialog.current = false;
+          // Save and remove ran: the dialog's own return to Save would fight us. Place focus once, guarded.
+          if (complete.current) {
+            e.preventDefault();
+            place();
+          }
+        }}
         onConfirm={() => {
           setConfirm(false);
           used.current = true;
+          viaDialog.current = true;
           onSave(value);
         }}
       />

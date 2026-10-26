@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { useState } from 'react';
 import { RolePicker, type RolePickerProps, type RolePickerValue } from './RolePicker';
 import { eight, lockedPlatforms, platforms, roleOptions, saved } from './RolePicker.data';
@@ -44,16 +44,18 @@ describe('RolePicker', () => {
   });
   it('keeps Save and Discard disabled until dirty, then Discard restores', () => {
     render(<H />);
-    const save = screen.getByRole('button', { name: 'Save changes' }) as HTMLButtonElement;
-    const discard = screen.getByRole('button', { name: 'Discard' }) as HTMLButtonElement;
-    expect(save.disabled && discard.disabled).toBe(true);
+    const save = screen.getByRole('button', { name: 'Save changes' });
+    const discard = screen.getByRole('button', { name: 'Discard' });
+    const off = (b: HTMLElement) => b.getAttribute('aria-disabled') === 'true';
+    expect(off(save) && off(discard)).toBe(true);
+    expect((save as HTMLButtonElement).disabled).toBe(false);
     expect(screen.queryByText('Unsaved changes')).toBeNull();
     choose('Role for Cubao Cafe', 'Staff');
-    expect(save.disabled || discard.disabled).toBe(false);
+    expect(off(save) || off(discard)).toBe(false);
     expect(screen.getByText('Unsaved changes')).toBeTruthy();
     fireEvent.click(discard);
     expect(screen.getByRole('combobox', { name: 'Role for Cubao Cafe' }).textContent).toContain('Not assigned');
-    expect((screen.getByRole('button', { name: 'Save changes' }) as HTMLButtonElement).disabled).toBe(true);
+    expect(off(screen.getByRole('button', { name: 'Save changes' }))).toBe(true);
   });
   it('saves the draft value in the agreed shape', () => {
     const onSave = vi.fn();
@@ -73,7 +75,41 @@ describe('RolePicker', () => {
     fireEvent.click(within(dlg).getByRole('button', { name: 'Save and remove' }));
     expect(onSave).toHaveBeenCalledOnce();
   });
-  it('moves focus to the heading after Save, so it is not lost to the page', async () => {
+  const heading = () => screen.getByRole('heading', { name: 'Roles on each platform' });
+  /** A page with a slow save: `finish()` ends it (ok or error) when the test says so. */
+  function Slow({ onEnd }: { onEnd: (finish: (ok: boolean) => void) => void }) {
+    const [sv, setSv] = useState(saved);
+    const [v, setV] = useState(saved);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState<string | undefined>();
+    return (
+      <div>
+        <input aria-label="Other field" />
+        <RolePicker
+          platforms={platforms}
+          roleOptions={roleOptions}
+          value={v}
+          savedValue={sv}
+          saving={saving}
+          error={error}
+          onChange={setV}
+          onDiscard={() => setV(sv)}
+          onSave={(x) => {
+            setError(undefined);
+            setSaving(true);
+            onEnd((ok) => {
+              setSaving(false);
+              if (ok) setSv(x);
+              else setError('No.');
+            });
+          }}
+        />
+      </div>
+    );
+  }
+  
+
+  it('moves focus to the heading right after a direct Save (no timer) and leaves Save focusable while saving', () => {
     function S() {
       const [sv, setSv] = useState(saved);
       const [v, setV] = useState(saved);
@@ -84,10 +120,90 @@ describe('RolePicker', () => {
     const save = screen.getByRole('button', { name: 'Save changes' });
     save.focus();
     fireEvent.click(save);
-    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Roles on each platform' })));
-    expect(screen.getByRole('heading', { name: 'Roles on each platform' }).getAttribute('tabindex')).toBe('-1');
+    expect(document.activeElement).toBe(heading());
+    expect(heading().getAttribute('tabindex')).toBe('-1');
   });
-  it('moves focus to the heading after Save and remove in the confirm, and after Discard', async () => {
+  it('keeps focus on Save while a slow save runs, then moves it to the heading when it ends', () => {
+    let finish!: (ok: boolean) => void;
+    render(<Slow onEnd={(f) => (finish = f)} />);
+    choose('Role for Cubao Cafe', 'Staff');
+    screen.getByRole('button', { name: 'Save changes' }).focus();
+    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+    const busy = screen.getByRole('button', { name: 'Saving' });
+    expect(document.activeElement).toBe(busy);
+    expect(document.activeElement).not.toBe(document.body);
+    act(() => finish(true));
+    expect(document.activeElement).toBe(heading());
+  });
+  it('does not take focus from another input the user went to during a slow save', () => {
+    let finish!: (ok: boolean) => void;
+    render(<Slow onEnd={(f) => (finish = f)} />);
+    choose('Role for Cubao Cafe', 'Staff');
+    screen.getByRole('button', { name: 'Save changes' }).focus();
+    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+    const other = screen.getByLabelText('Other field') as HTMLInputElement;
+    other.focus();
+    fireEvent.change(other, { target: { value: 'typing' } });
+    act(() => finish(true));
+    expect(document.activeElement).toBe(other);
+    expect(other.value).toBe('typing');
+  });
+  it('does not pull focus back from the dropdown or the radio used right after Save (no timer)', async () => {
+    function S() {
+      const [sv, setSv] = useState(saved);
+      const [v, setV] = useState(saved);
+      return <RolePicker platforms={platforms} roleOptions={roleOptions} value={v} savedValue={sv} onChange={setV} onSave={setSv} onDiscard={() => setV(sv)} />;
+    }
+    render(<S />);
+    choose('Role for Cubao Cafe', 'Staff');
+    screen.getByRole('button', { name: 'Save changes' }).focus();
+    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+    const dd = screen.getByRole('combobox', { name: 'Role for Cebu Parts Stockroom' });
+    dd.focus();
+    fireEvent.click(dd);
+    await new Promise((r) => setTimeout(r, 120));
+    expect(document.activeElement).toBe(dd);
+    expect(dd.getAttribute('aria-expanded')).toBe('true');
+  });
+  it('places focus on the heading when focus was lost to the page (body) or the pressed control is the only holder', () => {
+    let finish!: (ok: boolean) => void;
+    render(<Slow onEnd={(f) => (finish = f)} />);
+    choose('Role for Cubao Cafe', 'Staff');
+    screen.getByRole('button', { name: 'Save changes' }).focus();
+    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+    (document.activeElement as HTMLElement).blur();
+    expect(document.activeElement).toBe(document.body);
+    act(() => finish(true));
+    expect(document.activeElement).toBe(heading());
+  });
+  it('returns focus to Save when saving fails, unless the user moved on', () => {
+    let finish!: (ok: boolean) => void;
+    const { unmount } = render(<Slow onEnd={(f) => (finish = f)} />);
+    choose('Role for Cubao Cafe', 'Staff');
+    screen.getByRole('button', { name: 'Save changes' }).focus();
+    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+    act(() => finish(false));
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Save changes' }));
+    unmount();
+    cleanup();
+    render(<Slow onEnd={(f) => (finish = f)} />);
+    choose('Role for Cubao Cafe', 'Staff');
+    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+    const other = screen.getByLabelText('Other field') as HTMLInputElement;
+    other.focus();
+    act(() => finish(false));
+    expect(document.activeElement).toBe(other);
+  });
+  it('ignores clicks on Save and Discard while they are aria-disabled', () => {
+    const onSave = vi.fn();
+    const onDiscard = vi.fn();
+    render(<H spy={{ onSave, onDiscard }} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Discard' }));
+    expect(onSave).not.toHaveBeenCalled();
+    expect(onDiscard).not.toHaveBeenCalled();
+  });
+  it('moves focus to the heading after Save and remove, and after Discard; Cancel returns it to Save', async () => {
     function S() {
       const [sv, setSv] = useState(saved);
       const [v, setV] = useState(saved);
@@ -95,30 +211,39 @@ describe('RolePicker', () => {
     }
     render(<S />);
     choose('Role for Quezon City Auto Works', 'Not assigned');
-    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+    const save = screen.getByRole('button', { name: 'Save changes' });
+    save.focus();
+    fireEvent.click(save);
+    fireEvent.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Cancel' }));
+    await waitFor(() => expect(document.activeElement).toBe(save));
+    fireEvent.click(save);
     fireEvent.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Save and remove' }));
-    const h = () => screen.getByRole('heading', { name: 'Roles on each platform' });
-    await waitFor(() => expect(document.activeElement).toBe(h()));
+    await waitFor(() => expect(document.activeElement).toBe(heading()));
     choose('Role for Cubao Cafe', 'Staff');
     const d = screen.getByRole('button', { name: 'Discard' });
     d.focus();
     fireEvent.click(d);
-    await waitFor(() => expect(document.activeElement).toBe(h()));
+    expect(document.activeElement).toBe(heading());
   });
-  it('returns focus to Save when saving fails and keeps it there while saving is pending', async () => {
-    const { rerender } = render(<RolePicker platforms={platforms} roleOptions={roleOptions} value={{ ...saved, roles: { ...saved.roles, cf: 'staff' } }} savedValue={saved} onChange={() => {}} onSave={() => {}} onDiscard={() => {}} />);
-    const save = screen.getByRole('button', { name: 'Save changes' });
-    save.focus();
-    fireEvent.click(save);
-    await new Promise((r) => setTimeout(r, 30));
-    expect(document.activeElement).toBe(save);
-    rerender(<RolePicker platforms={platforms} roleOptions={roleOptions} value={{ ...saved, roles: { ...saved.roles, cf: 'staff' } }} savedValue={saved} onChange={() => {}} onSave={() => {}} onDiscard={() => {}} error="No." />);
-    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Save changes' })));
+  it('after Save and remove, leaves focus alone if the user went to another input', async () => {
+    let finish!: (ok: boolean) => void;
+    render(<Slow onEnd={(f) => (finish = f)} />);
+    choose('Role for Quezon City Auto Works', 'Not assigned');
+    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+    fireEvent.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Save and remove' }));
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull());
+    const other = screen.getByLabelText('Other field') as HTMLInputElement;
+    other.focus();
+    act(() => finish(true));
+    expect(document.activeElement).toBe(other);
   });
   it('shows busy and error states', () => {
     render(<H saving error="Could not save." />);
     expect(screen.getByRole('alert').textContent).toContain('Could not save.');
-    expect(screen.getByRole('button', { name: 'Save changes' }).getAttribute('aria-busy')).toBe('true');
+    const busy = screen.getByRole('button', { name: 'Saving' });
+    expect(busy.getAttribute('aria-busy')).toBe('true');
+    expect(busy.getAttribute('aria-disabled')).toBe('true');
+    expect((busy as HTMLButtonElement).disabled).toBe(false);
     expect((screen.getAllByRole('combobox')[0] as HTMLButtonElement).disabled).toBe(true);
   });
   it('company access is a radiogroup with arrow keys', async () => {

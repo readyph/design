@@ -58,9 +58,11 @@ export const dataviz: Record<string, Pair> = {
   'chart-axis': ['var(--faint)', 'var(--faint)'],
   'identity-hq': ['#4f6074', '#4f6074'],
   'identity-text': ['#ffffff', '#ffffff'],
-  'map-top': ['#eceff4', '#1c1e21'],
-  'map-side': ['#dbe1ea', '#141517'],
-  'map-road': ['#c6ccd6', '#2a2d33'],
+  /** Platform map (C16, RDY-276). Light values are the prototype's island colours (the RDY-246 placeholders were frame greys). */
+  'map-top': ['#fffffd', '#1c1e21'],
+  'map-side': ['#c9dcf7', '#141517'],
+  'map-side-2': ['#a9c6f0', '#0f1012'],
+  'map-road': ['#dbeafe', '#2a2d33'],
   'map-window': ['#FFD66B', '#FFD66B'],
   'map-window-soft': ['#FFE7A3', '#FFE7A3'],
 };

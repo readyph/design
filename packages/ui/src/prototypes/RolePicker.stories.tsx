@@ -11,14 +11,16 @@ const meta: Meta = {
 };
 export default meta;
 
-function Sheet({ many }: { many?: boolean }) {
+function Sheet({ many, slow }: { many?: boolean; slow?: boolean }) {
   const [savedValue, setSaved] = useState(saved);
   const [value, setValue] = useState(saved);
+  const [saving, setSaving] = useState(false);
   return (
     <PlatformShell>
       <div className="mx-auto flex max-w-[640px] flex-col gap-4 p-6">
         <h2 className="text-title text-text">Maria Santos</h2>
         <p className="text-ui text-muted">What Maria does in each platform. Scroll the sheet: the dropdowns open upward near the bottom.</p>
+        {slow ? <input aria-label="Note for Maria" placeholder="Note (type here while saving)" className="h-10 rounded-control border border-control bg-surface px-3 text-body text-text" /> : null}
         <RolePicker
           value={value}
           savedValue={savedValue}
@@ -27,7 +29,15 @@ function Sheet({ many }: { many?: boolean }) {
           subject="Maria"
           onChange={setValue}
           onDiscard={() => setValue(savedValue)}
-          onSave={setSaved}
+          saving={saving}
+          onSave={(v) => {
+            if (!slow) return setSaved(v);
+            setSaving(true);
+            setTimeout(() => {
+              setSaving(false);
+              setSaved(v);
+            }, 1500);
+          }}
         />
       </div>
     </PlatformShell>
@@ -35,5 +45,6 @@ function Sheet({ many }: { many?: boolean }) {
 }
 export const Desktop: StoryObj = { render: () => <Sheet /> };
 export const EightPlatforms: StoryObj = { render: () => <Sheet many /> };
+export const SlowSave: StoryObj = { render: () => <Sheet slow /> };
 export const Phone: StoryObj = { render: () => <Sheet />, parameters: { viewport: { defaultViewport: 'mobile1' } } };
 void platforms;
