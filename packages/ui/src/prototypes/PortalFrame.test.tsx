@@ -1,0 +1,82 @@
+// @vitest-environment jsdom
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { PortalFrame } from './PortalFrame';
+
+afterEach(cleanup);
+
+const frame = (props: Partial<React.ComponentProps<typeof PortalFrame>> = {}) =>
+  render(<PortalFrame current="platforms" teamCount={2} onAddPlatform={() => {}} leda={<button type="button">Ask Leda</button>} {...props}><h1>Content</h1></PortalFrame>);
+
+describe('PortalFrame', () => {
+  it('rail has Home, Platforms, Reports, Team, Memory and the account; the current page is marked', () => {
+    frame();
+    const rail = within(screen.getAllByRole('navigation', { hidden: true })[0]!);
+    expect(rail.getAllByRole('link', { hidden: true }).map((a) => a.getAttribute('aria-label')).slice(1)).toEqual(['Home', 'Platforms', 'Reports', 'Memory', 'Team, 2']);
+    for (const n of ['Home', 'Platforms', 'Reports', 'Memory']) expect(rail.getByRole('link', { name: n, hidden: true })).toBeTruthy();
+    expect(rail.getByRole('link', { name: 'Team, 2', hidden: true })).toBeTruthy();
+    expect(rail.getByRole('link', { name: 'Platforms', hidden: true }).getAttribute('aria-current')).toBe('page');
+    expect(rail.getByRole('button', { name: /Account menu/, hidden: true })).toBeTruthy();
+  });
+
+  it('phone nav: labelled tabs Home, Platforms, Reports, Team and More; one nav per frame region, children render once', () => {
+    frame();
+    const navs = screen.getAllByRole('navigation', { hidden: true });
+    expect(navs).toHaveLength(2); // rail + phone nav; CSS shows exactly one per viewport
+    const phone = within(navs[1]!);
+    expect(phone.getAllByRole('link', { hidden: true }).map((a) => a.textContent)).toEqual(['Home', 'Platforms', 'Reports', 'Team2']);
+    expect(phone.getByText('More')).toBeTruthy();
+    expect(phone.getByRole('link', { name: 'Platforms', hidden: true }).getAttribute('aria-current')).toBe('page');
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+  });
+
+  it('top bar carries the page name, the Leda slot and the account avatar; topBar replaces it', () => {
+    const { unmount } = frame({ pageName: 'Platforms' });
+    const header = within(screen.getByRole('banner', { hidden: true }));
+    expect(header.getByText('ReadyPH')).toBeTruthy();
+    expect(header.getByText('Platforms')).toBeTruthy();
+    expect(header.getByRole('button', { name: 'Ask Leda', hidden: true })).toBeTruthy();
+    expect(header.getByRole('button', { name: /Account menu/, hidden: true })).toBeTruthy();
+    unmount();
+    frame({ topBar: <button type="button">Back</button> });
+    const h2 = within(screen.getByRole('banner', { hidden: true }));
+    expect(h2.getByRole('button', { name: 'Back', hidden: true })).toBeTruthy();
+    expect(h2.queryByRole('button', { name: /Account menu/, hidden: true })).toBeNull();
+  });
+
+  it('More opens a menu with Memory and Add a platform, focus moves into it and returns to More on Escape', async () => {
+    const add = vi.fn();
+    const user = userEvent.setup();
+    frame({ onAddPlatform: add });
+    const more = screen.getByRole('button', { name: 'More', hidden: true });
+    more.focus();
+    expect(document.activeElement).toBe(more);
+    await user.keyboard('{Enter}');
+    const menu = await screen.findByRole('menu');
+    expect(menu.contains(document.activeElement)).toBe(true);
+    expect(within(menu).getByRole('menuitem', { name: 'Memory' }).getAttribute('href')).toBe('#memory');
+    await user.keyboard('{ArrowDown}{ArrowDown}{Enter}');
+    expect(add).toHaveBeenCalled();
+    expect(screen.queryByRole('menu')).toBeNull();
+    expect(document.activeElement).toBe(more);
+  });
+
+  it('real focus moves across the tabs with Tab', async () => {
+    const user = userEvent.setup();
+    frame({ current: 'home' });
+    const tabs = within(screen.getAllByRole('navigation', { hidden: true })[1]!);
+    tabs.getByRole('link', { name: 'Home', hidden: true }).focus();
+    await user.tab();
+    expect(document.activeElement).toBe(tabs.getByRole('link', { name: 'Platforms', hidden: true }));
+    await user.tab(); await user.tab(); await user.tab();
+    expect(document.activeElement).toBe(tabs.getByRole('button', { name: 'More', hidden: true }));
+  });
+
+  it('a page under More (Memory) marks More as current', () => {
+    frame({ current: 'memory' });
+    const tabs = within(screen.getAllByRole('navigation', { hidden: true })[1]!);
+    expect(tabs.queryByRole('link', { current: 'page', hidden: true })).toBeNull();
+    expect(tabs.getByRole('button', { name: 'More', hidden: true }).getAttribute('aria-current')).toBe('page');
+  });
+});
