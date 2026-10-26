@@ -1,5 +1,7 @@
 import type { HTMLAttributes, ReactNode } from 'react';
 import { cn } from '../utils/cn';
+import { useMatchMedia } from '../utils/useMatchMedia';
+import { SUBPAGE_PHONE, SubpageScreensContext, useSubpageShell } from './SubpageTransition';
 
 export interface PlatformShellProps extends Omit<HTMLAttributes<HTMLDivElement>, 'children'> {
   /** Icon rail (C2). Rendered inside the shell's 'nav' landmark, so pass the items, not another 'nav'. Hidden on phone. */
@@ -65,6 +67,16 @@ export function PlatformShell({
   ...rest
 }: PlatformShellProps) {
   const hasPlace = place != null;
+  // Phone + a running subpage transition: both regions show for the slide (the sheet slides over the place column, or back).
+  const sub = useSubpageShell();
+  const phoneNow = useMatchMedia(SUBPAGE_PHONE);
+  const slide = !!sub && sub.running && !sub.reduced && hasPlace && phoneNow;
+  const slideIn = sub?.direction === 'in';
+  // The region under the slide is inert. It is an attribute in the render (not an effect) so it is already right in the same commit
+  // in which a lane moves focus; a later effect would still see the previous state and focus would be lost.
+  const underPlace = slide && slideIn;
+  const underSheet = slide && !slideIn;
+  const inertAttr = { inert: '' } as Record<string, string>;
   const hasStatus = status != null;
   const hasRail = rail != null;
   const hasTop = topBar != null;
@@ -84,6 +96,7 @@ export function PlatformShell({
   const phoneNavRow = hasTop ? 'max-[640px]:row-start-3' : 'max-[640px]:row-start-2';
 
   return (
+    <SubpageScreensContext.Provider value={hasPlace}>
     <div
       {...rest}
       className={cn(
@@ -118,6 +131,8 @@ export function PlatformShell({
 
       {hasPlace && (
         <section
+          {...(underPlace ? inertAttr : {})}
+          aria-hidden={underPlace ? true : undefined}
           aria-label={placeLabel}
           data-surface="frame"
           data-shell-place=""
@@ -126,7 +141,8 @@ export function PlatformShell({
             placeCol,
             'max-[640px]:col-start-1 max-[640px]:pl-0 max-[640px]:pr-0 max-[640px]:pt-0',
             phoneRegionRow,
-            detail && 'max-[640px]:hidden',
+            detail && !slide && 'max-[640px]:hidden',
+            slide && cn('max-[640px]:bg-surface', slideIn ? 'max-[640px]:animate-sub-drift-l' : 'max-[640px]:animate-sub-back-l'),
             hiddenWins,
           )}
         >
@@ -137,6 +153,9 @@ export function PlatformShell({
       )}
 
       <main
+        {...(underSheet ? inertAttr : {})}
+        aria-hidden={underSheet ? true : undefined}
+        onAnimationEnd={slide ? (e) => { if (e.target === e.currentTarget) sub?.screenEnded(sub.seq); } : undefined}
         data-shell="sheet"
         aria-label={sheetLabel}
         className={cn(
@@ -145,7 +164,8 @@ export function PlatformShell({
           sheetCol,
           'max-[640px]:col-start-1 max-[640px]:m-0 max-[640px]:rounded-none max-[640px]:border-0',
           phoneRegionRow,
-          !detail && hasPlace && 'max-[640px]:hidden',
+          !detail && hasPlace && !slide && 'max-[640px]:hidden',
+          slide && (slideIn ? 'max-[640px]:z-10 max-[640px]:animate-sub-in-r' : 'max-[640px]:z-10 max-[640px]:animate-sub-out-r'),
           hiddenWins,
         )}
       >
@@ -188,5 +208,6 @@ export function PlatformShell({
         </nav>
       )}
     </div>
+    </SubpageScreensContext.Provider>
   );
 }

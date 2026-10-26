@@ -130,6 +130,16 @@ const preset = {
       keyframes: {
         'row-flash': { '0%, 40%': { backgroundColor: v('accent-tint') }, '100%': { backgroundColor: 'transparent' } },
         'tab-fade': { from: { opacity: '0' }, to: { opacity: '1' } },
+        // C15 subpage lanes (spec 4.7). in = new pane enters from its side; the old one drifts 6% the other way and dims. out = reverse.
+        'sub-in-r': { from: { transform: 'translateX(100%)' }, to: { transform: 'translateX(0)' } },
+        'sub-in-l': { from: { transform: 'translateX(-100%)' }, to: { transform: 'translateX(0)' } },
+        'sub-out-r': { from: { transform: 'translateX(0)' }, to: { transform: 'translateX(100%)' } },
+        'sub-out-l': { from: { transform: 'translateX(0)' }, to: { transform: 'translateX(-100%)' } },
+        'sub-drift-l': { from: { transform: 'translateX(0)', opacity: '1' }, to: { transform: 'translateX(calc(-1 * var(--subpage-drift)))', opacity: v('subpage-dim') } },
+        'sub-drift-r': { from: { transform: 'translateX(0)', opacity: '1' }, to: { transform: 'translateX(var(--subpage-drift))', opacity: v('subpage-dim') } },
+        'sub-back-l': { from: { transform: 'translateX(calc(-1 * var(--subpage-drift)))', opacity: v('subpage-dim') }, to: { transform: 'translateX(0)', opacity: '1' } },
+        'sub-back-r': { from: { transform: 'translateX(var(--subpage-drift))', opacity: v('subpage-dim') }, to: { transform: 'translateX(0)', opacity: '1' } },
+        'sub-fade': { from: { opacity: '0' }, to: { opacity: '1' } },
         'town-flow-a': { to: { strokeDashoffset: '-27' } },
         'town-flow-b': { from: { strokeDashoffset: '13' }, to: { strokeDashoffset: '40' } },
         // Ask Leda halo (RDY-266, handover 4.7): one revolution + an opacity envelope; the reduced-motion fade has no rotation.
@@ -140,6 +150,15 @@ const preset = {
       animation: {
         'row-flash': 'row-flash var(--dur-row-flash) ease-out 1',
         'tab-fade': 'tab-fade var(--dur-tab) linear',
+        'sub-in-r': 'sub-in-r var(--dur-subpage-in) var(--ease-subpage) backwards',
+        'sub-in-l': 'sub-in-l var(--dur-subpage-in) var(--ease-subpage) backwards',
+        'sub-out-r': 'sub-out-r var(--dur-subpage-out) var(--ease-subpage) forwards',
+        'sub-out-l': 'sub-out-l var(--dur-subpage-out) var(--ease-subpage) forwards',
+        'sub-drift-l': 'sub-drift-l var(--dur-subpage-in) var(--ease-subpage) forwards',
+        'sub-drift-r': 'sub-drift-r var(--dur-subpage-in) var(--ease-subpage) forwards',
+        'sub-back-l': 'sub-back-l var(--dur-subpage-out) var(--ease-subpage) backwards',
+        'sub-back-r': 'sub-back-r var(--dur-subpage-out) var(--ease-subpage) backwards',
+        'sub-fade': 'sub-fade var(--dur-reduced-fade) linear backwards',
         'town-flow-a': 'town-flow-a 1.6s linear infinite',
         'town-flow-b': 'town-flow-b 1.6s linear infinite',
         'town-flow-a-slow': 'town-flow-a 5s linear infinite',
