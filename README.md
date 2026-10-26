@@ -4,7 +4,7 @@ A standalone, installable design system: **design tokens on top of Tailwind**, a
 white-with-tangerine theme, and flexible **React components**. Built from
 [`kbase/concept/06-Design-system.md`](../kbase/concept/06-Design-system.md).
 
-**📖 Live component catalog (Storybook):** https://readyph.github.io/ui-kit/
+**📖 Live component catalog (Storybook):** https://readyph.github.io/design/
 
 > **Status:** packaging configured (publish, versioning, CI) and the Storybook
 > catalog is deployed to GitHub Pages — see [`PACKAGING.md`](PACKAGING.md).
