@@ -49,3 +49,4 @@ export * from './components/TopicLibrary';
 export * from './components/TopicDocument';
 export { focusIfLost } from './utils/focusIfLost';
 export * from './components/OpeningHours';
+export * from './components/Chat';

@@ -68,6 +68,16 @@ function place(el: HTMLElement, anchor: ToasterProps['anchor']) {
       w = Math.max(240, Math.min(620, r.right - x - GAP));
     }
   }
+  // The Leda conversation panel (C8, `data-leda-panel`) is an overlay on the right of the sheet: keep clear of it.
+  // Desktop: the toast ends 16px before the panel. Phone: the panel is full screen, so the toast pins under its 48px header.
+  const panel = Array.from(document.querySelectorAll('[data-leda-panel]')).find(shown);
+  if (panel && phone) {
+    el.dataset.top = '';
+    el.style.setProperty('--toast-t', `${Math.round(panel.getBoundingClientRect().top + 48 + PHONE_GAP)}px`);
+  } else {
+    delete el.dataset.top;
+    if (panel) w = Math.max(240, Math.min(w, panel.getBoundingClientRect().left - GAP - x));
+  }
   el.style.setProperty('--toast-x', `${Math.round(x)}px`);
   el.style.setProperty('--toast-b', `${Math.round(b)}px`);
   el.style.setProperty('--toast-w', `${Math.round(w)}px`);
@@ -119,7 +129,7 @@ export function Toaster({ anchor, className }: ToasterProps) {
       aria-atomic="true"
       className={cn(
         className,
-        'pointer-events-none fixed z-[60] left-[var(--toast-x,16px)] bottom-[var(--toast-b,16px)] w-[var(--toast-w,620px)] max-w-[calc(100vw-16px)]',
+        'pointer-events-none fixed z-[60] left-[var(--toast-x,16px)] bottom-[var(--toast-b,16px)] data-[top]:bottom-auto data-[top]:top-[var(--toast-t,56px)] w-[var(--toast-w,620px)] max-w-[calc(100vw-16px)]',
       )}
     >
       {current && <ToastItem key={current.id} toast={current} />}
