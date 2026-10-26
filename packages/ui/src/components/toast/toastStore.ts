@@ -83,6 +83,19 @@ export function dismissToast(id: string) {
   emit();
 }
 
+/**
+ * Run the showing toast's action (e.g. Undo) and close it. Returns false when there is no toast or it has no action.
+ * Bind it to a shortcut in the page, e.g. Mod+Z: `if (toast.runAction()) e.preventDefault()`.
+ */
+export function runToastAction(): boolean {
+  const t = toasts[0];
+  if (!t?.action) return false;
+  const { onClick } = t.action;
+  dismissToast(t.id);
+  onClick();
+  return true;
+}
+
 export function clearToasts() {
   if (toasts.length === 0) return;
   toasts = [];
@@ -107,6 +120,8 @@ export const toast = Object.assign(
     /** A saved write with Undo: `toast.undo('System settings saved.', revert)`. */
     undo: (description: string, onUndo: () => void, opts?: Omit<Rest, 'action'> & { tone?: ToastTone }) =>
       addToast({ tone: 'success', ...opts, description, action: { label: 'Undo', onClick: onUndo } }),
+    /** Runs the current toast's action (Undo) and closes it; false if none. For page-level Mod+Z. */
+    runAction: runToastAction,
     dismiss: dismissToast,
     clear: clearToasts,
   },

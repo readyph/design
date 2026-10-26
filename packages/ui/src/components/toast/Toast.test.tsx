@@ -225,4 +225,54 @@ describe('Toast', () => {
     show(() => { toast.success('a'); toast.success('b'); toast.success('c'); });
     expect(n).toBe(1);
   });
+
+  it('phone: targets the shell phone nav, ignoring a breadcrumb <nav> earlier in the page', () => {
+    const rect = (top: number, h: number) => () => ({ left: 0, right: 375, top, bottom: top + h, width: 375, height: h, x: 0, y: top, toJSON() {} });
+    document.body.insertAdjacentHTML('beforeend', '<nav id="crumb">Home / Settings</nav><nav id="pn" data-shell="phone-nav"></nav>');
+    document.getElementById('crumb')!.getBoundingClientRect = rect(0, 40);
+    document.getElementById('pn')!.getBoundingClientRect = rect(680, 60);
+    Object.defineProperty(window, 'innerHeight', { value: 740, configurable: true });
+    Object.defineProperty(window, 'innerWidth', { value: 375, configurable: true });
+    const mm = window.matchMedia;
+    window.matchMedia = ((q: string) => ({ matches: true, media: q, addEventListener() {}, removeEventListener() {} })) as unknown as typeof window.matchMedia;
+    render(<Toaster />);
+    show(() => toast.success('Saved.'));
+    expect(region().style.getPropertyValue('--toast-b')).toBe('68px');
+    expect(region().style.getPropertyValue('--toast-x')).toBe('8px');
+    window.matchMedia = mm;
+    document.getElementById('crumb')!.remove();
+    document.getElementById('pn')!.remove();
+  });
+
+  it('desktop: default anchor is the shell sheet, not another main or landmark', () => {
+    document.body.insertAdjacentHTML('beforeend', '<section id="s"></section><footer id="f"></footer><main id="m" data-shell="sheet"></main>');
+    const r = (l: number, b: number) => () => ({ left: l, right: 1200, top: 8, bottom: b, width: 1200 - l, height: b - 8, x: l, y: 8, toJSON() {} });
+    document.getElementById('s')!.getBoundingClientRect = r(0, 700);
+    document.getElementById('f')!.getBoundingClientRect = r(0, 734);
+    document.getElementById('m')!.getBoundingClientRect = r(512, 700);
+    Object.defineProperty(window, 'innerHeight', { value: 734, configurable: true });
+    Object.defineProperty(window, 'innerWidth', { value: 1280, configurable: true });
+    render(<Toaster />);
+    show(() => toast.success('Saved.'));
+    expect(region().style.getPropertyValue('--toast-x')).toBe('536px');
+    expect(region().style.getPropertyValue('--toast-b')).toBe('50px');
+    ['s', 'f', 'm'].forEach((i) => document.getElementById(i)!.remove());
+  });
+
+  it('runAction runs the Undo once, closes the toast and returns true; false with nothing to run', () => {
+    render(<Toaster />);
+    const undo = vi.fn();
+    expect(toast.runAction()).toBe(false);
+    show(() => toast.success('Plain.'));
+    expect(toast.runAction()).toBe(false);
+    expect(region().textContent).toBe('Plain.');
+    show(() => toast.undo('Saved.', undo));
+    let ok = false;
+    show(() => { ok = toast.runAction(); });
+    expect(ok).toBe(true);
+    expect(undo).toHaveBeenCalledTimes(1);
+    expect(region().textContent).toBe('');
+    expect(toast.runAction()).toBe(false);
+    expect(undo).toHaveBeenCalledTimes(1);
+  });
 });

@@ -7,9 +7,9 @@ import { dismissToast, useToasts, type ToastMessage, type ToastTone } from './to
 
 export interface ToasterProps {
   /**
-   * What the toast anchors to: a CSS selector, an element, or a ref. Default `main`, the sheet of `PlatformShell`.
+   * What the toast anchors to: a CSS selector, an element, or a ref. Default: the sheet of `PlatformShell` (`[data-shell="sheet"]`, else `main`).
    * Desktop: bottom-left of that element (24px in, 16px up). Phone (640px and below): a full-width bar above the
-   * visible bottom nav. With no anchor on the page it sits 16px from the viewport corner.
+   * shell's bottom nav (`[data-shell="phone-nav"]`; other `<nav>` elements are ignored). With no anchor on the page it sits 16px from the viewport corner.
    */
   anchor?: string | HTMLElement | RefObject<HTMLElement | null>;
   /** Merged under the component classes: add a margin or colour, it cannot move the toast. */
@@ -30,7 +30,7 @@ const toneIcon: Partial<Record<ToastTone, PhosphorIcon>> = {
 
 function resolve(anchor: ToasterProps['anchor']): HTMLElement | null {
   if (typeof document === 'undefined') return null;
-  if (anchor == null) return document.querySelector('main');
+  if (anchor == null) return document.querySelector<HTMLElement>('[data-shell="sheet"]') ?? document.querySelector('main');
   if (typeof anchor === 'string') return document.querySelector<HTMLElement>(anchor);
   if ('current' in anchor) return anchor.current;
   return anchor;
@@ -54,7 +54,8 @@ function place(el: HTMLElement, anchor: ToasterProps['anchor']) {
   let b = GAP;
   let w = Math.min(620, vw - 2 * GAP);
   if (phone) {
-    const nav = Array.from(document.querySelectorAll('nav')).find(shown);
+    // Only the shell's own bottom nav: breadcrumbs and other <nav> landmarks must not capture the toast.
+    const nav = Array.from(document.querySelectorAll('[data-shell="phone-nav"]')).find(shown);
     x = PHONE_GAP;
     w = vw - 2 * PHONE_GAP;
     b = nav ? vh - nav.getBoundingClientRect().top + PHONE_GAP : GAP;
