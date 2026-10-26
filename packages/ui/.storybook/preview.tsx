@@ -70,7 +70,8 @@ const viewports = {
 
 const preview: Preview = {
   decorators: [withTheme],
-  initialGlobals: { theme: 'system' },
+  // a11y.manual global: the panel reads the global before the story parameter, so the global is what shows "Run test" (RDY-355).
+  initialGlobals: { theme: 'system', a11y: { manual: true } },
   globalTypes: {
     theme: {
       description: 'Colour theme (light, dark, or follow the system)',
