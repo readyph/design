@@ -2,14 +2,14 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { PlatformsPage } from './Platforms.page';
 
 /**
- * [For Review] RDY-256. Prototype only: not exported from the package. Portal Platforms (handover 2.2) in the real PlatformShell:
+ * RDY-256. Prototype only: not exported from the package. Portal Platforms (handover 2.2) in the real PlatformShell:
  * the map and Leda's finding with the data links and "Not shared yet" in the place column, "All platforms" (C18 rows, problem-first) in the sheet.
  * Composed only from @readyph/ui parts. Marketplace entry points: Add (place column), Add a platform, Add another platform, rail "+",
  * "Not shared yet" Add (preselects the reader), the empty state, `?add=1` and Leda's "Add a POS for the parts counter" (Ask Leda bar).
  * Opening a platform shows a toast; the real page is C15.
  */
 const meta: Meta<typeof PlatformsPage> = {
-  title: 'Prototypes/Portal/[For Review] Platforms',
+  title: 'Prototypes/Portal/Platforms',
   component: PlatformsPage,
   parameters: { layout: 'fullscreen' },
 };

@@ -492,7 +492,7 @@ export function PlatformsPage({ set: setKey = 'duo', state: initial = 'live', ad
     <>
       <PortalFrame
         current="platforms"
-        pageName="Platforms"
+        pageName={live && !empty ? `${set.platforms.length} platform${set.platforms.length === 1 ? '' : 's'}` : 'Platforms'}
         leda={<AskLedaBar variant="bar" scope="your platforms" shortcuts={false} paused={palette} onOpen={() => setPalette(true)} />}
         teamCount={0}
         onAddPlatform={() => addPlatform()}
@@ -531,7 +531,7 @@ export function PlatformsPage({ set: setKey = 'duo', state: initial = 'live', ad
           <div ref={sheetBody} className="p-pad">
             <div className="mb-3 flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <h2 ref={heading} tabIndex={-1} className="m-0 text-header font-semibold text-text outline-none">
+                <h2 ref={heading} tabIndex={-1} className="m-0 text-header font-semibold text-text [outline-style:none]">
                   {empty ? 'No platforms yet' : 'All platforms'}
                 </h2>
                 {state === 'loading' ? <Skeleton className="mt-1.5 h-3.5 w-56" /> : live && !empty ? <p className="m-0 mt-1 text-ui text-muted">{healthLine(set)}</p> : null}
