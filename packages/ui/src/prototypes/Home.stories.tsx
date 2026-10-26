@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Home } from './Home';
 
 /**
- * [For Review] RDY-255. Prototype only: stories are not exported from the package.
+ * RDY-255. Prototype only: stories are not exported from the package.
  * Portal Home in the real PlatformShell: the map and Needs you in the place column, Today / a case / the overview in the sheet,
  * and Leda's entry points (L1 to L10: Ask bar, centred bar and chips, phone bar, palette, conversation panel, headline,
  * proposals and watching, case note and proposal, Today blocks, status bar usage).
@@ -10,7 +10,7 @@ import { Home } from './Home';
  * (`./PortalFrame.tsx`, not exported from the package): Memory, Platforms and Platform detail adopt it instead of local chrome.
  */
 const meta: Meta<typeof Home> = {
-  title: 'Prototypes/Portal/[For Review] Home',
+  title: 'Prototypes/Portal/Home',
   component: Home,
   parameters: { layout: 'fullscreen' },
   argTypes: {

@@ -30,6 +30,13 @@ export interface PlatformShellProps extends Omit<HTMLAttributes<HTMLDivElement>,
   detail?: boolean;
   /** Accessible name of the 'main' (the sheet). Optional. */
   sheetLabel?: string;
+  /**
+   * Page heading (the platform name). Rendered as a visually hidden 'h1' inside whichever region is visible, so the page
+   * always has one visible 'main' and one 'h1'. Omit it if your sheet content already renders its own 'h1' (a second would
+   * break "one h1"). On phone, with the place column showing and no 'heading', 'placeLabel' is used.
+   * Pass 'null' to opt out: no 'h1' is rendered at all (no 'placeLabel' fallback), for content that has its own 'h1'.
+   */
+  heading?: string | null;
   /** Sheet body. */
   children?: ReactNode;
 }
@@ -62,6 +69,7 @@ export function PlatformShell({
   phoneNavLabel = 'Main',
   detail = false,
   sheetLabel,
+  heading,
   className,
   children,
   ...rest
@@ -76,6 +84,10 @@ export function PlatformShell({
   // in which a lane moves focus; a later effect would still see the previous state and focus would be lost.
   const underPlace = slide && slideIn;
   const underSheet = slide && !slideIn;
+  // Phone, place column showing (the sheet is display:none): the place section is the page's visible main region.
+  const placeIsMain = phoneNow && hasPlace && !detail && !slide;
+  const h1Text = heading === null ? undefined : heading ?? (placeIsMain ? placeLabel : undefined);
+  const h1 = h1Text ? <h1 className="sr-only">{h1Text}</h1> : null;
   const inertAttr = { inert: '' } as Record<string, string>;
   const hasStatus = status != null;
   const hasRail = rail != null;
@@ -133,6 +145,7 @@ export function PlatformShell({
         <section
           {...(underPlace ? inertAttr : {})}
           aria-hidden={underPlace ? true : undefined}
+          role={placeIsMain ? 'main' : undefined}
           aria-label={placeLabel}
           data-surface="frame"
           data-shell-place=""
@@ -147,6 +160,7 @@ export function PlatformShell({
           )}
         >
           <div tabIndex={0} className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-card focus-visible:outline focus-visible:-outline-offset-2">
+            {placeIsMain && h1}
             {place}
           </div>
         </section>
@@ -157,6 +171,7 @@ export function PlatformShell({
         aria-hidden={underSheet ? true : undefined}
         onAnimationEnd={slide ? (e) => { if (e.target === e.currentTarget) sub?.screenEnded(sub.seq); } : undefined}
         data-shell="sheet"
+        hidden={placeIsMain || undefined}
         aria-label={sheetLabel}
         className={cn(
           '@container/sheet row-start-1 flex min-h-0 min-w-0 flex-col overflow-hidden border border-border bg-surface rounded-sheet',
@@ -171,6 +186,7 @@ export function PlatformShell({
       >
         {sheetBar != null && <div className="shrink-0 border-b border-border">{sheetBar}</div>}
         <div tabIndex={0} className="min-h-0 flex-1 overflow-y-auto overscroll-contain focus-visible:outline focus-visible:-outline-offset-2">
+          {!placeIsMain && h1}
           {children}
         </div>
         {actionBar != null && (
