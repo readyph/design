@@ -2,7 +2,7 @@ import { Meta } from '@storybook/blocks';
 
 <Meta title="Introduction" />
 
-# ReadyPH UI
+# Ready UI
 
 The design system has been reset (RDY-244). The previous components, tokens and styles are preserved on the `legacy` branch.
 New components and tokens are added through the Portal redesign (RDY-243). 
@@ -15,7 +15,7 @@ New components and tokens are added through the Portal redesign (RDY-243).
 
 ## Walking the prototype pages
 
-The five pages are one connected prototype (RDY-357): the rail, the phone nav and its More menu, the ReadyPH mark, platform rows and Open buttons, breadcrumbs and Back links, "Add a platform" and the "Team" / "Memory" links inside pages take you to the matching page's story, so you never have to use the sidebar. Each link lands on the page's default state (Home: Live, Platforms: Two platforms, Platform: General info for the platform you picked, Team: Everyone or the person, Memory: Topics). "Add a platform" opens the Platforms page with the marketplace open.
+The five pages are one connected prototype (RDY-357): the rail, the phone nav and its More menu, the Ready mark, platform rows and Open buttons, breadcrumbs and Back links, "Add a platform" and the "Team" / "Memory" links inside pages take you to the matching page's story, so you never have to use the sidebar. Each link lands on the page's default state (Home: Live, Platforms: Two platforms, Platform: General info for the platform you picked, Team: Everyone or the person, Memory: Topics). "Add a platform" opens the Platforms page with the marketplace open.
 
 - **Theme and viewport stay.** Navigation goes through Storybook, which keeps the toolbar globals (theme, viewport): pick Laptop, Desktop or Large desktop once and every page opens at that size. A page opened with no size chosen (Responsive) starts at Desktop 1440. On a phone-wide canvas the links open the page's Phone story, so the phone view survives too. In "Open canvas in new tab" (`iframe.html`) the link changes the canvas URL and carries `globals` along.
 - **Destinations without a page** (Reports, Plan, Account settings, Log out, a platform with no Platform page) show a short toast saying so. They are not dead links and they do not error.

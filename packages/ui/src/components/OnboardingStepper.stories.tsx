@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { House, Graph, FileText, Users } from '@phosphor-icons/react';
 import { OnboardingStepper, type StepperStep } from './OnboardingStepper';
 import { PlatformShell } from './PlatformShell';
+import { ReadyLogo } from './ReadyMark';
 import { LedaNote } from './LedaNote';
 import { Switch } from './Switch';
 import { Button } from './Button';
@@ -174,7 +175,7 @@ export const InSheet: Story = {
   parameters: { layout: 'fullscreen' },
   render: () => (
     <div className="h-dvh">
-      <PlatformShell rail={rail} place={<div className="p-1 text-muted">Platforms</div>} placeLabel="Platforms" sheetBar={bar} topBar={<span className="font-semibold">ReadyPH</span>} phoneNav={nav} detail status={<span>All running</span>}>
+      <PlatformShell rail={rail} place={<div className="p-1 text-muted">Platforms</div>} placeLabel="Platforms" sheetBar={bar} topBar={<ReadyLogo size={28} />} phoneNav={nav} detail status={<span>All running</span>}>
         <div className="p-pad"><Demo initial="system" /></div>
       </PlatformShell>
     </div>

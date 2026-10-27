@@ -3,6 +3,7 @@ import { expect, userEvent, within } from '@storybook/test';
 import type { Meta, StoryObj } from '@storybook/react';
 import { House, Graph, FileText, Users, DotsThree, MagnifyingGlass } from '@phosphor-icons/react';
 import { PlatformShell } from './PlatformShell';
+import { ReadyLogo } from './ReadyMark';
 import { Button } from './Button';
 import { IconButton } from './IconButton';
 import { PlatformLogo } from './PlatformLogo';
@@ -99,7 +100,7 @@ const Body = () => (
 
 const PhoneTop = () => (
   <>
-    <span className="font-semibold">ReadyPH</span>
+    <ReadyLogo size={28} />
     <span className="min-w-0 flex-1 truncate text-muted">Home</span>
     <IconButton icon={MagnifyingGlass} label="Ask Leda" />
   </>

@@ -8,6 +8,8 @@ const config: StorybookConfig = {
     '../src/**/*.mdx',
     '../src/**/*.stories.@(ts|tsx)',
   ],
+  // Brand assets for the manager: favicon.svg (Storybook picks it up by name) and the lockup used as the sidebar brand image (RDY-363).
+  staticDirs: ['./static'],
   addons: [
     '@storybook/addon-essentials',
     '@storybook/addon-a11y',
