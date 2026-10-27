@@ -1,23 +1,29 @@
 import { forwardRef, useCallback, useEffect, useId, useRef, useState, type ComponentPropsWithoutRef, type KeyboardEvent } from 'react';
 import * as RadixMenu from '@radix-ui/react-dropdown-menu';
-import { Gear, SignOut } from '@phosphor-icons/react';
-import { Badge } from './Badge';
+import { CircleHalf, Desktop, Moon, SignOut, Sun, UserGear } from '@phosphor-icons/react';
 import { SegmentedControl } from './SegmentedControl';
-import { menuItemBase, menuItemDanger, menuItemTone } from './Menu';
+import { menuItemBase } from './Menu';
 import { cn, focusRing } from '../utils/cn';
 
 export type ThemeChoice = 'light' | 'dark' | 'system';
 
 const THEMES = [
-  { value: 'light', label: 'Light' },
-  { value: 'dark', label: 'Dark' },
-  { value: 'system', label: 'System' },
+  { value: 'light', label: 'Light', icon: Sun },
+  { value: 'dark', label: 'Dark', icon: Moon },
+  { value: 'system', label: 'System', icon: Desktop },
 ];
 
 /** Apply a theme to `<html>`: `data-theme="light|dark"`, or no attribute for System. */
 export function applyTheme(theme: ThemeChoice, root: HTMLElement = document.documentElement) {
   if (theme === 'system') root.removeAttribute('data-theme');
   else root.setAttribute('data-theme', theme);
+}
+
+/** The theme the page already shows (`data-theme` on `<html>`), else System. */
+function docTheme(): ThemeChoice {
+  if (typeof document === 'undefined') return 'system';
+  const t = document.documentElement.getAttribute('data-theme');
+  return t === 'light' || t === 'dark' ? t : 'system';
 }
 
 export function initialsOf(name: string): string {
@@ -83,7 +89,7 @@ export function AccountMenu({
   role,
   initials,
   theme,
-  defaultTheme = 'system',
+  defaultTheme = docTheme(),
   onThemeChange,
   applyToDocument = true,
   settingsHref,
@@ -169,10 +175,11 @@ export function AccountMenu({
     target?.focus();
   };
 
-  const row = cn(menuItemBase, menuItemTone, 'max-sm:min-h-11');
+  // The prototype's account menu rows (.ai): 32px, 10px gap, text colour, a muted 16px icon, tinted on hover or keyboard focus.
+  const row = cn(menuItemBase, 'h-8 gap-2.5 px-2.5 py-0 text-text hover:bg-frame-hover focus-visible:bg-frame-hover max-sm:h-11');
   const settingsContent = (
     <>
-      <Gear size={16} aria-hidden className="text-muted" />
+      <UserGear size={16} aria-hidden className="text-muted" />
       <span>Account settings</span>
     </>
   );
@@ -187,7 +194,7 @@ export function AccountMenu({
           ref={contentRef}
           side={phone ? 'bottom' : 'right'}
           align="end"
-          sideOffset={phone ? 14 : 10}
+          sideOffset={phone ? 4 : 8}
           collisionPadding={8}
           loop
           onKeyDownCapture={onKeyDownCapture}
@@ -196,20 +203,20 @@ export function AccountMenu({
             className,
           )}
         >
-          <div className="flex items-center gap-3 px-2.5 pb-3 pt-2.5">
+          <div className="flex items-center gap-2.5 px-2.5 pb-2.5 pt-2">
             <span
               aria-hidden
-              className="grid size-8 shrink-0 place-items-center rounded-full bg-accent-tint text-ui font-semibold text-accent"
+              className="grid size-8 shrink-0 place-items-center rounded-full bg-avatar-bg text-small font-semibold text-avatar-text"
             >
               {initials ?? initialsOf(name)}
             </span>
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-ui font-medium text-text">{name}</div>
+            <div className="flex min-w-0 flex-col">
+              <div className="truncate text-ui font-semibold">{name}</div>
               <div className="truncate text-small text-muted">{email}</div>
             </div>
-            <Badge tone="accent">{role}</Badge>
+            <span className="ml-auto h-[18px] shrink-0 self-start rounded-chip border border-border px-1.5 text-tiny font-medium leading-4 text-muted">{role}</span>
           </div>
-          <RadixMenu.Separator className="-mx-1 mb-1 h-px bg-rule" />
+          <RadixMenu.Separator className="-mx-1 my-1 h-px bg-border" />
           {settingsHref !== undefined ? (
             <RadixMenu.Item asChild onSelect={onSettings}>
               <a href={settingsHref} className={row}>
@@ -221,8 +228,9 @@ export function AccountMenu({
               {settingsContent}
             </RadixMenu.Item>
           )}
-          <div className="flex items-center justify-between gap-3 px-2.5 py-1.5">
-            <span id={labelId} className="text-ui text-text">
+          <div className="flex items-center gap-2.5 py-1 pl-2.5 pr-1">
+            <CircleHalf size={16} aria-hidden className="shrink-0 text-muted" />
+            <span id={labelId} className="flex-1">
               Theme
             </span>
             <SegmentedControl
@@ -231,11 +239,12 @@ export function AccountMenu({
               options={THEMES}
               value={current}
               onChange={chooseTheme}
+              className="[&_button]:h-[26px] [&_button]:gap-1 [&_button]:px-2 [&_button]:text-small [&_button_svg]:size-[13px] max-sm:[&_button]:h-9 max-sm:[&_button]:px-2.5"
             />
           </div>
-          <RadixMenu.Separator className="-mx-1 my-1 h-px bg-rule" />
-          <RadixMenu.Item onSelect={onLogout} className={cn(menuItemBase, menuItemDanger, 'max-sm:min-h-11')}>
-            <SignOut size={16} aria-hidden />
+          <RadixMenu.Separator className="-mx-1 my-1 h-px bg-border" />
+          <RadixMenu.Item onSelect={onLogout} className={row}>
+            <SignOut size={16} aria-hidden className="text-muted" />
             <span>Log out</span>
           </RadixMenu.Item>
         </RadixMenu.Content>

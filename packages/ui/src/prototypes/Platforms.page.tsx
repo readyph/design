@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { ArrowCounterClockwise, ArrowRight, ArrowSquareOut, CircleNotch, DotsThree, Graph, House, LinkBreak, PencilSimple, Plant, Plugs, Plus, PlusSquare, Prohibit, SquaresFour, Table, Warning, WarningCircle } from '@phosphor-icons/react';
 import { AskLedaBar } from '../components/AskLedaBar';
 import { Breadcrumbs } from '../components/Breadcrumbs';
@@ -71,6 +71,8 @@ export interface PlatformsPageProps {
   state?: PlatformsState;
   /** Marketplace open on first render (`?add=1`, or Leda's "Add a POS for the parts counter"). */
   add?: { pick?: string; fromLeda?: boolean } | null;
+  /** Open on a state that normally takes a click (stories): the palette, Leda's panel after asking, or the Disconnect dialog for one platform. */
+  start?: { palette?: boolean; ask?: string; disconnect?: string } | null;
 }
 
 const PHONE = '(max-width: 640px)';
@@ -523,7 +525,7 @@ function Place({ set, state, phone, focusIds, onFocusPlatform, onAdd, onAsk }: P
             <div className={GHEAD}>
               <b className={GHEAD_B}>Data links</b>
             </div>
-            <p className="mx-3 rounded-card border border-dashed border-control px-3 py-2.5 text-ui text-muted max-[640px]:mx-pad">No data. {phone ? 'Try again above.' : 'Try again in the main panel.'}</p>
+            <p className="mx-3 rounded-card border border-dashed border-control px-3 py-2.5 text-ui text-muted max-[640px]:mx-pad">No data. Try again in the main panel.</p>
           </>
         )}
         {live && (
@@ -708,21 +710,31 @@ function ledaReply(set: PlatformSet, q: string): { blocks: ChatBlock[]; after?: 
 let seq = 100;
 
 /** The Portal Platforms page (RDY-256, exact copy RDY-360) in the real PlatformShell. */
-export function PlatformsPage({ set: setKey = 'duo', state: initial = 'live', add = null }: PlatformsPageProps) {
+export function PlatformsPage({ set: setKey = 'duo', state: initial = 'live', add = null, start = null }: PlatformsPageProps) {
   const [work, setWork] = useState<PlatformSet>(() => structuredClone(sets[setKey]));
   const set = work;
   const [state, setState] = useState<PlatformsState>(initial);
   const [focusIds, setFocusIds] = useState<string[] | null>(null);
   const [market, setMarket] = useState<{ pick: string | null; fromLeda: boolean } | null>(add ? { pick: add.pick ?? null, fromLeda: !!add.fromLeda } : null);
-  const [palette, setPalette] = useState(false);
-  const [disconnecting, setDisconnectingState] = useState<PlatformData | null>(null);
-  const [blocked, setBlocked] = useState<PlatformData | null>(null);
-  const [chat, setChat] = useState(false);
+  const [palette, setPalette] = useState(!!start?.palette);
+  const [disconnecting, setDisconnectingState] = useState<PlatformData | null>(() => {
+    const p = start?.disconnect ? sets[setKey].platforms.find((x) => x.id === start.disconnect) : undefined;
+    return p && !sharesOf(sets[setKey], p.id).length ? p : null;
+  });
+  const [blocked, setBlocked] = useState<PlatformData | null>(() => {
+    const p = start?.disconnect ? sets[setKey].platforms.find((x) => x.id === start.disconnect) : undefined;
+    return p && sharesOf(sets[setKey], p.id).length ? p : null;
+  });
+  const [chat, setChat] = useState(!!start?.ask);
   const [messages, setMessages] = usePersistedChat<ChatMessageData[]>([]);
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const [query, setQuery] = useState('');
   const opener = useRef<HTMLElement | null>(null);
+  const chatOpen = useRef(false);
+  chatOpen.current = chat;
+  /** Where focus goes when the palette closes: the composer once Leda's panel is open, else where it was. */
+  const returnRef = useRef({ get current() { return chatOpen.current ? document.querySelector<HTMLElement>('[data-chat-composer]') : opener.current; } }).current as { current: HTMLElement | null };
   const lastDisconnect = useRef('');
   const setDisconnecting = (p: PlatformData | null) => {
     if (p) lastDisconnect.current = p.name;
@@ -775,6 +787,13 @@ export function PlatformsPage({ set: setKey = 'duo', state: initial = 'live', ad
     openChat();
     send(q);
   };
+  // a story that opens on Leda's answer: start from an empty thread, then ask
+  useEffect(() => {
+    if (!start?.ask) return;
+    setMessages(() => []);
+    send(start.ask);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const live = state === 'live';
   const empty = live && set.platforms.length === 0;
   const retry = () => {
@@ -898,7 +917,7 @@ export function PlatformsPage({ set: setKey = 'duo', state: initial = 'live', ad
         placeLabel="Your platforms"
         sheetLabel="All platforms"
         heading={null}
-        account={{ name: OWNER.name, email: 'mon@delacruz.ph', role: OWNER.role, initials: OWNER.initials }}
+        account={{ name: OWNER.name, email: 'mon@delacruzauto.ph', role: OWNER.role, initials: OWNER.initials }}
         place={<Place set={set} state={state} phone={phone} focusIds={focusIds} onFocusPlatform={setFocusIds} onAdd={addPlatform} onRetry={retry} onAsk={() => setPalette(true)} />}
         sheetBar={
           <SheetBar actions={askBar} wrapChildren={false}>
@@ -942,7 +961,7 @@ export function PlatformsPage({ set: setKey = 'duo', state: initial = 'live', ad
         onQueryChange={setQuery}
         conversationMessages={messages.length}
         onOpenConversation={openChat}
-        returnFocusRef={opener}
+        returnFocusRef={returnRef}
         onSelect={(item) => {
           if (item.id.startsWith('q:')) ask(item.id.slice(2));
           else if (item.id.startsWith('s:')) goToStory(item.id.slice(2));

@@ -20,11 +20,11 @@ describe('StatusBar', () => {
     expect(screen.getByLabelText('12 people')).toBeTruthy();
     expect(screen.getByLabelText('2 invites waiting')).toBeTruthy();
   });
-  it('hides invites at 0 and drops text at narrow widths via container classes', () => {
+  it('hides invites at 0 and drops plan and updated at 1180px like the prototype', () => {
     const { container } = render(<StatusBar invites={{ count: 0 }} plan="Pro" updatedAt="1:00 PM" />);
     expect(screen.queryByLabelText(/invite/)).toBeNull();
-    expect(screen.getByText('Updated 1:00 PM').closest('li')!.className).toContain('@max-[960px]/status:hidden');
-    expect(screen.getByText('Pro plan').closest('li')!.className).toContain('@max-[780px]/status:hidden');
+    expect(screen.getByText('Updated 1:00 PM').closest('li')!.className).toContain('max-[1180px]:hidden');
+    expect(screen.getByText('Pro plan').closest('li')!.className).toContain('max-[1180px]:hidden');
     expect(container.querySelectorAll('footer')).toHaveLength(0);
   });
   it('non-running platform shows a plain word, is named and announced', () => {
