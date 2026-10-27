@@ -614,7 +614,7 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
     const fold = ev.length > 3 || acts.length > 0;
     const sep = <span aria-hidden className="text-control">/</span>;
     const crumbs: ReactNode[] = [
-      <span key="p" className="inline-flex items-center gap-1.5"><PlatformLogo name={p.name} src={p.logo} index={p.index} hq={p.hq} size={16} decorative /><b className="font-semibold text-text">{src ?? p.name}</b></span>,
+      <Fragment key="p"><PlatformLogo name={p.name} src={p.logo} index={p.index} hq={p.hq} size={16} decorative /><b className="font-semibold text-text">{src ?? p.name}</b></Fragment>,
       ...(!src && p.kind ? [<span key="k" className="inline-flex items-center gap-1.5">{p.kind}</span>] : []),
       ...(p.status !== 'ACTIVE' ? [<Badge key="s" tone={p.status === 'DEGRADED' ? 'warn' : 'bad'}>{p.status}</Badge>] : []),
       ...(watch ? [<Badge key="w" tone="neutral">Watching</Badge>] : []),

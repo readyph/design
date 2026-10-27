@@ -139,29 +139,29 @@ export const LedaDraft = forwardRef<HTMLDivElement, LedaDraftProps>(function Led
         <table className="mt-3 w-full border-collapse text-ui leading-[18px]">
           <thead>
             <tr>
-              <th className="pb-1.5 pl-0 pr-0 text-left text-small font-normal leading-[18px] text-muted">Item</th>
-              <th className="whitespace-nowrap pb-1.5 pl-2.5 text-right text-small font-normal leading-[18px] tabular-nums text-muted">Qty</th>
-              <th className="whitespace-nowrap pb-1.5 pl-2.5 text-right text-small font-normal leading-[18px] tabular-nums text-muted">Unit cost</th>
-              <th className="whitespace-nowrap pb-1.5 pl-2.5 text-right text-small font-normal leading-[18px] tabular-nums text-muted">Total</th>
+              <th className="pb-1.5 pl-0 pr-0 pt-0 text-left text-small font-normal leading-[18px] text-muted">Item</th>
+              <th className="whitespace-nowrap pb-1.5 pl-2.5 pr-0 pt-0 text-right text-small font-normal leading-[18px] tabular-nums text-muted">Qty</th>
+              <th className="whitespace-nowrap pb-1.5 pl-2.5 pr-0 pt-0 text-right text-small font-normal leading-[18px] tabular-nums text-muted">Unit cost</th>
+              <th className="whitespace-nowrap pb-1.5 pl-2.5 pr-0 pt-0 text-right text-small font-normal leading-[18px] tabular-nums text-muted">Total</th>
             </tr>
           </thead>
           <tbody>
             {p.lines.map((l, i) => (
               <tr key={i} className={l.added ? 'text-accent' : undefined}>
-                <td className="border-t border-raised-2 py-[7px] align-top">
+                <td className="border-t border-raised-2 py-[7px] pl-0 pr-0 align-top">
                   {l.name}
                   <span className="block text-small leading-[18px] text-muted">{l.ref ? <span className="font-mono text-small">{l.ref}</span> : null}{l.supplier ? ` · ${l.supplier}` : ''}</span>
                 </td>
-                <td className="whitespace-nowrap border-t border-raised-2 py-[7px] pl-2.5 text-right align-top tabular-nums">{l.qty.toLocaleString('en-PH')} {l.unit}</td>
-                <td className="whitespace-nowrap border-t border-raised-2 py-[7px] pl-2.5 text-right align-top tabular-nums">{peso(l.unitCost)}</td>
-                <td className="whitespace-nowrap border-t border-raised-2 py-[7px] pl-2.5 text-right align-top tabular-nums">{peso(l.qty * l.unitCost)}</td>
+                <td className="whitespace-nowrap border-t border-raised-2 py-[7px] pl-2.5 pr-0 text-right align-top tabular-nums">{l.qty.toLocaleString('en-PH')} {l.unit}</td>
+                <td className="whitespace-nowrap border-t border-raised-2 py-[7px] pl-2.5 pr-0 text-right align-top tabular-nums">{peso(l.unitCost)}</td>
+                <td className="whitespace-nowrap border-t border-raised-2 py-[7px] pl-2.5 pr-0 text-right align-top tabular-nums">{peso(l.qty * l.unitCost)}</td>
               </tr>
             ))}
           </tbody>
           <tfoot>
             <tr className="font-semibold">
-              <td colSpan={3} className="border-t border-control py-[7px] align-top">Total</td>
-              <td className="whitespace-nowrap border-t border-control py-[7px] pl-2.5 text-right align-top tabular-nums">{peso(total)}</td>
+              <td colSpan={3} className="border-t border-control py-[7px] pl-0 pr-0 align-top">Total</td>
+              <td className="whitespace-nowrap border-t border-control py-[7px] pl-2.5 pr-0 text-right align-top tabular-nums">{peso(total)}</td>
             </tr>
           </tfoot>
         </table>
@@ -173,7 +173,7 @@ export const LedaDraft = forwardRef<HTMLDivElement, LedaDraftProps>(function Led
             <li key={i} className="relative py-[3px] pl-4 before:absolute before:left-0.5 before:top-3 before:h-[1.5px] before:w-1.5 before:bg-accent before:content-['']">{w}</li>
           ))}
           {p.cannot ? <li className="relative py-[3px] pl-4 text-muted before:absolute before:left-0.5 before:top-[9px] before:h-[7px] before:w-[7px] before:rounded-full before:border-[1.5px] before:border-muted before:content-['']">{p.cannot}</li> : null}
-          {p.notifies ? <li className="relative py-[3px] pl-4 text-muted before:absolute before:left-0.5 before:top-3 before:h-[1.5px] before:w-1.5 before:bg-control before:content-['']">Notifies {p.notifies}</li> : null}
+          {p.notifies ? <li className="relative py-[3px] pl-4 text-muted before:absolute before:left-0.5 before:top-3 before:h-[1.5px] before:w-1.5 before:bg-accent before:content-['']">Notifies {p.notifies}</li> : null}
         </ul>
       </div>
       {p.addOn ? (
