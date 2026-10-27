@@ -37,7 +37,15 @@ export interface DataLink {
   road: 'ok' | 'slow';
 }
 
+export interface Owner {
+  name: string;
+  email: string;
+  initials: string;
+  role: string;
+}
+
 export interface PlatformSet {
+  owner: Owner;
   people: number;
   plan: string;
   usedRequests: number;
@@ -58,7 +66,10 @@ export const kname = (k: DataKind) => dataKinds[k].name;
 export const kshares = (k: DataKind) => dataKinds[k].shares ?? 'Nothing to share yet';
 export const lower = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
 
+const RAMON: Owner = { name: 'Ramon Dela Cruz', email: 'mon@delacruzauto.ph', initials: 'RD', role: 'Owner' };
+const BEA: Owner = { name: 'Bea Santos', email: 'bea@brewandbutter.ph', initials: 'BS', role: 'Owner' };
 const duo: PlatformSet = {
+  owner: RAMON,
   people: 9, plan: "Starter", usedRequests: 1742,
   slots: ["stockroom","autoworks",null,null],
   platforms: [
@@ -70,6 +81,7 @@ const duo: PlatformSet = {
   ],
 };
 const few: PlatformSet = {
+  owner: BEA,
   people: 9, plan: "Starter", usedRequests: 610,
   slots: ["inventory","cafepos","books",null],
   platforms: [
@@ -82,6 +94,7 @@ const few: PlatformSet = {
   ],
 };
 const many: PlatformSet = {
+  owner: RAMON,
   people: 23, plan: "Business", usedRequests: 1742,
   slots: ["marikina","cubao","inventory","kapitolyo","stockroom","cafepos","counter",null,"books"],
   platforms: [
@@ -102,11 +115,10 @@ const many: PlatformSet = {
   ],
 };
 
-export const sets = { duo, few, many, empty: { people: 9, plan: 'Starter', usedRequests: 1742, slots: [null, null, null, null], platforms: [], links: [] } as PlatformSet };
+export const sets = { duo, few, many, empty: { owner: RAMON, people: 9, plan: 'Starter', usedRequests: 1742, slots: [null, null, null, null], platforms: [], links: [] } as PlatformSet };
 export type PlatformSetKey = keyof typeof sets;
 export const LAST_LOADED = '9:10 AM';
 export const NOW = '9:12 AM';
-export const OWNER = { name: 'Ramon Dela Cruz', short: 'Mon', initials: 'RD', role: 'Owner' };
 export const USAGE = { limit: 2000, daysLeft: 7 };
 
 /* ---------- reads (platforms-core.js) ---------- */

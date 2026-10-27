@@ -92,7 +92,7 @@ describe('Platforms page', () => {
   it('error: Try again moves focus to the list heading once the button is gone, and not when the user went elsewhere', async () => {
     const user = userEvent.setup();
     renderPage({ state: 'error' });
-    expect(within(sheet()).getByRole('alert').textContent).toContain('Couldn’t load your platforms.');
+    expect(within(sheet()).getByRole('alert').textContent).toContain("Couldn't load your platforms.");
     await user.click(screen.getByRole('button', { name: 'Try again' }));
     await waitFor(() => expect(within(sheet()).queryByRole('alert')).toBeNull());
     expect(document.activeElement).toBe(within(sheet()).getByRole('heading', { name: 'All platforms' }));

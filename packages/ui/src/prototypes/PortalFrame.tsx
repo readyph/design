@@ -27,8 +27,8 @@ const PAGES: { id: PortalPage; label: string; icon: Icon; href: string }[] = [
 ];
 const DEST: Record<PortalPage, Dest> = { home: { to: 'home' }, platforms: { to: 'platforms' }, reports: { to: 'reports' }, team: { to: 'team' }, memory: { to: 'memory' } };
 const byId = (id: PortalPage) => PAGES.find((p) => p.id === id)!;
-/** Rail order: Memory before Team. */
-const RAIL = ['home', 'platforms', 'reports', 'memory', 'team'].map((id) => byId(id as PortalPage));
+/** Rail order (the workshop shell): Home, Platforms, Reports, Team, Memory. */
+const RAIL = ['home', 'platforms', 'reports', 'team', 'memory'].map((id) => byId(id as PortalPage));
 /** Phone nav shows these four; Memory lives under More. */
 const PHONE_TABS = PAGES.filter((p) => p.id !== 'memory');
 

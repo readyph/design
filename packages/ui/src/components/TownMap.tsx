@@ -97,6 +97,8 @@ export interface TownMapProps {
   onRetry?: () => void;
   /** Plain text above the map, e.g. "2 platforms + HQ". */
   caption?: ReactNode;
+  /** Show the "The map did not load" notice when `error` is set (default true). The workshop Platforms page dims the map and says "No data" in its caption instead. */
+  errorNotice?: boolean;
   /** Draw the caption inside the map's height (the prototype's `.tcap`): the whole block is `--map-h` tall. */
   captionInside?: boolean;
   /** Extra control after rotate and zoom, behind a separator (Platforms: Add platform). */
@@ -177,6 +179,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
     onRetry,
     caption,
     captionInside = false,
+    errorNotice = true,
     controlsEnd,
     legend,
     label = 'Platform map',
@@ -492,7 +495,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
             })}
           </ul>
         </div>
-        {error ? (
+        {error && errorNotice ? (
           <div
             role="alert"
             className="absolute inset-x-2 top-2 flex items-center justify-between gap-3 rounded-control border border-border bg-surface px-2 py-1 text-small text-muted"

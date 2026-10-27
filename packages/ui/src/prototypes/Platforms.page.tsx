@@ -46,7 +46,6 @@ import {
   missing,
   NOW,
   noFigures,
-  OWNER,
   ordered,
   plural,
   setupNeeded,
@@ -250,7 +249,9 @@ function PlatformList({ set, onFocusPlatform, onAdd, onDisconnect }: ListProps) 
       cursorId={cursor}
       onCursorChange={(id) => {
         setCursor(id);
-        onFocusPlatform(id === 'add' ? null : [id]);
+        onFocusPlatform([id]);
+        // j and k land on the platform's name link (so Enter opens it), as in the workshop page
+        document.querySelector<HTMLElement>(`[data-row-id="${id}"] a`)?.focus({ preventScroll: true });
       }}
       className="mt-5"
     >
@@ -316,7 +317,7 @@ function PlatformList({ set, onFocusPlatform, onAdd, onDisconnect }: ListProps) 
           </ListRow>
         );
       })}
-      <ListRow rowId="add" label="Add another platform" onActivate={onAdd} className="items-center py-0">
+      <ListRow onActivate={onAdd} className="items-center py-0">
         <ListCell kind="lead" className="col-span-full">
           <button type="button" onClick={onAdd} className="flex min-h-[52px] w-full items-center gap-2 text-left text-[13px] leading-5 text-muted hover:[&>svg:last-child]:text-accent">
             <PlusSquare aria-hidden size={16} className="shrink-0 text-accent" />
@@ -460,6 +461,11 @@ function Place({ set, state, phone, focusIds, onFocusPlatform, onAdd, onAsk }: P
         error={state === 'error'}
         caption={cap}
         captionInside
+        errorNotice={false}
+        platformLabel={(p) => {
+          const q = byId(set, p.id);
+          return `${q.name}, ${kindName(q.kind)}, ${health(set, q).text}`;
+        }}
         label={`Map of ${plural(set.platforms.length, 'platform')} and their data links`}
         dimOthers={false}
         focus={live && ids?.length === 1 ? ids[0] : null}
@@ -491,7 +497,7 @@ function Place({ set, state, phone, focusIds, onFocusPlatform, onAdd, onAsk }: P
           {state === 'loading' ? (
             <span className="flex-1">{sk('mt-[3px] h-[13px] w-[88%]')}</span>
           ) : state === 'error' ? (
-            <span>Couldn&rsquo;t load your platforms.</span>
+            <span>Couldn't load your platforms.</span>
           ) : (
             <span>{headline(set)}</span>
           )}
@@ -770,7 +776,7 @@ export function PlatformsPage({ set: setKey = 'duo', state: initial = 'live', ad
       setBusy(true);
       setMessages((m) => [
         ...m,
-        { id, from: 'owner', name: OWNER.name, time: NOW, scope: 'About your platforms', blocks: [{ type: 'text', text: q }] },
+        { id, from: 'owner', name: set.owner.name, time: NOW, scope: 'About your platforms', blocks: [{ type: 'text', text: q }] },
         { id: `${id}l`, from: 'leda', name: 'Leda', time: NOW, thinking: true, blocks: [] },
       ]);
       window.setTimeout(() => {
@@ -835,7 +841,7 @@ export function PlatformsPage({ set: setKey = 'duo', state: initial = 'live', ad
         {sheetHead('All platforms', '', false)}
         <div role="alert" className="mt-5 flex items-center gap-2.5 rounded-card border border-dashed border-control px-3.5 py-3 text-body">
           <WarningCircle aria-hidden size={18} className="text-bad" />
-          <span>Couldn&rsquo;t load your platforms. Last loaded {LAST_LOADED}.</span>
+          <span>Couldn't load your platforms. Last loaded {LAST_LOADED}.</span>
           <Button variant="secondary" className="ml-auto" onClick={retry}>
             Try again
           </Button>
@@ -917,7 +923,7 @@ export function PlatformsPage({ set: setKey = 'duo', state: initial = 'live', ad
         placeLabel="Your platforms"
         sheetLabel="All platforms"
         heading={null}
-        account={{ name: OWNER.name, email: 'mon@delacruzauto.ph', role: OWNER.role, initials: OWNER.initials }}
+        account={{ name: set.owner.name, email: set.owner.email, role: set.owner.role, initials: set.owner.initials }}
         place={<Place set={set} state={state} phone={phone} focusIds={focusIds} onFocusPlatform={setFocusIds} onAdd={addPlatform} onRetry={retry} onAsk={() => setPalette(true)} />}
         sheetBar={
           <SheetBar actions={askBar} wrapChildren={false}>
