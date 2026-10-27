@@ -40,6 +40,8 @@ export interface StatusBarCount {
 export interface StatusBarLeda {
   /** Requests used this period. */
   used: number;
+  /** Text after the count, e.g. "7 days left" (shown with `ledaFirst`). */
+  daysLeft?: string;
   /** Plan limit. */
   max: number;
   /** Warn from this value. Defaults to 80% of `max`. */
@@ -61,6 +63,8 @@ export interface StatusBarProps {
   leda?: StatusBarLeda;
   /** Plan name, e.g. "Starter". Shown as "Starter plan". */
   plan?: string;
+  /** Workshop shell order (RDY-358): Leda first, then "N platforms · all running" and a named logo per platform, people, plan. Default false keeps the earlier order. */
+  ledaFirst?: boolean;
   /** Last refresh, already formatted, e.g. "9:12 AM". Shown as "Updated 9:12 AM". */
   updatedAt?: string;
   /** Names the list. The `PlatformShell` `status` footer already carries `aria-label="Status"`; set this only outside the shell. */
@@ -146,15 +150,16 @@ const plural = (n: number, one: string, many: string) => `${n.toLocaleString('en
  * Items are plain text unless given `href` (link) or `onSelect` (button). A hidden live region announces health changes only.
  */
 export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function StatusBar(
-  { platforms = [], maxPlatforms = 8, moreHref, onMore, people, invites, leda, plan, updatedAt, 'aria-label': ariaLabel, className },
+  { platforms = [], maxPlatforms = 8, moreHref, onMore, people, invites, leda, plan, ledaFirst = false, updatedAt, 'aria-label': ariaLabel, className },
   ref,
 ) {
   const shown = platforms.slice(0, maxPlatforms);
   const rest = platforms.length - shown.length;
-  const namesAlways = platforms.length <= 3;
+  const namesAlways = platforms.length <= 3 || ledaFirst;
   const problems = platforms.filter((p) => p.health && p.health !== 'ok');
   const allRunning = platforms.length > 0 && problems.length === 0;
   const showSummary = allRunning && !namesAlways;
+  const portalSummary = ledaFirst && allRunning;
   const words = (p: StatusBarPlatform) => p.healthText ?? healthWord[p.health ?? 'ok'];
 
   const announce = platforms.length === 0 ? '' : problems.length ? problems.map((p) => `${p.name} ${words(p)}`).join(', ') : 'All platforms running';
@@ -174,6 +179,14 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
   if (platforms.length > 0) {
     sections.push({ key: 'platforms', cls: 'flex min-w-0 shrink', node: (
         <ul role="list" aria-label="Platforms" className="flex min-w-0 items-center gap-0.5 overflow-hidden">
+          {portalSummary && (
+            <li className="flex shrink-0">
+              <Item>
+                <span className="tabular-nums">{plural(platforms.length, 'platform', 'platforms')}</span>
+                <span>· all running</span>
+              </Item>
+            </li>
+          )}
           {shown.map((p, i) => {
             const bad = !!p.health && p.health !== 'ok';
             return (
@@ -249,6 +262,7 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
           <span className="tabular-nums">
             {leda.used.toLocaleString('en-US')} / {leda.max.toLocaleString('en-US')}
           </span>
+          {ledaFirst && leda.daysLeft ? <span className="tabular-nums">{leda.daysLeft}</span> : null}
         </Item>
       ) });
   }
@@ -263,6 +277,11 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
     sections.push({ key: 'updated', cls: cn('ml-auto flex shrink-0', dropUpdated), node: (
         <Item className="tabular-nums">Updated {updatedAt}</Item>
       ) });
+  }
+
+  if (ledaFirst) {
+    const i = sections.findIndex((x) => x.key === 'leda');
+    if (i > 0) sections.unshift(...sections.splice(i, 1));
   }
 
   return (

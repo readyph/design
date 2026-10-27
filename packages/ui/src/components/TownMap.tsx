@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useEffect, useId, useImperativeHandle, useLayoutEffect, useMemo, useRef } from 'react';
+import { forwardRef, type ReactNode, useCallback, useEffect, useId, useImperativeHandle, useLayoutEffect, useMemo, useRef } from 'react';
 import { ArrowClockwise, ArrowCounterClockwise, MagnifyingGlassMinus, MagnifyingGlassPlus } from '@phosphor-icons/react';
 import { identity } from '../tokens/colors';
 import { cn, focusRing } from '../utils/cn';
@@ -92,7 +92,7 @@ export interface TownMapProps {
   error?: boolean;
   onRetry?: () => void;
   /** Plain text above the map, e.g. "2 platforms + HQ". */
-  caption?: string;
+  caption?: ReactNode;
   /** Accessible name of the whole map (a group of buttons, one per platform). */
   label?: string;
   /** Overrides the accessible name of a platform button. */
