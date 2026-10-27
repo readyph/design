@@ -589,9 +589,9 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
     if (f.type === 'select')
       return (
         <div key={f.key} className="min-w-0">
-          <span id={`${id}-l`} className="mb-1 block text-ui font-medium text-text">{f.label}</span>
-          <Select aria-labelledby={`${id}-l`} value={String(v)} onValueChange={set} options={f.options!.map((o) => ({ value: o, label: o }))} />
-          {f.hint ? <p className="mt-1 text-small text-muted">{f.hint}</p> : null}
+          <span id={`${id}-l`} className="block text-body font-medium text-text">{f.label}</span>
+          <div className="mt-2"><Select aria-labelledby={`${id}-l`} value={String(v)} onValueChange={set} options={f.options!.map((o) => ({ value: o, label: o }))} /></div>
+          {f.hint ? <p className="m-0 mt-1.5 text-small text-muted">{f.hint}</p> : null}
         </div>
       );
     return <TextField key={f.key} id={id} label={f.label} unit={f.unit} hint={f.hint} type={f.type === 'number' ? 'number' : 'text'} value={String(v ?? '')} onChange={(nv) => set(f.type === 'number' ? (nv === '' ? '' : Number(nv)) : nv)} />;
@@ -953,7 +953,7 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
           <p className="m-0 min-w-0 flex-1 truncate text-title font-semibold tracking-[-0.01em] text-text">{p ? nameOf(p.id) : general.label || kind.name}</p>
         </div>
         <p className="m-0 mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px] leading-5 text-muted">
-          <span>{kind.name}{p?.place ? ` · ${p.place}` : ''}</span>
+          <span className="inline-flex items-center gap-[3px]">{p ? <KindIcon kind={p.kind} /> : null}{kind.name}{p?.place ? ` · ${p.place}` : ''}</span>
           {p ? <Health tone={healthOf(p).tone} word={healthOf(p).word} /> : <span>Not added yet</span>}
         </p>
       </div>

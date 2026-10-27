@@ -18,7 +18,7 @@ const tabOf = (name: RegExp) => screen.getByRole('tab', { name });
 describe('Platform map', () => {
   it('shows platforms and data links only, with no HQ building', () => {
     setup({ platformId: 'autoworks' });
-    expect(screen.getAllByText(/\d platforms? · (\d+ data links?|no data links)/).length).toBeGreaterThan(0);
+    expect(document.body.textContent).toMatch(/\d platforms? ·\s*(\d+ data links?|no data links)/);
     expect(screen.queryByText(/\+ HQ/)).toBeNull();
     expect(screen.queryByText('HQ')).toBeNull();
   });

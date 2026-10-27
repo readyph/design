@@ -43,7 +43,7 @@ export function TextField({ id, label, value, onChange, hint, error, unit, type 
       aria-invalid={error ? true : undefined}
       aria-describedby={d}
       onChange={(e: ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
-      className={cn(box, error ? 'border-bad' : 'border-control', unit && 'rounded-r-none')}
+      className={cn(box, error ? 'border-bad' : 'border-control', unit && 'pr-[84px]')}
     />
   );
   return (
@@ -51,9 +51,9 @@ export function TextField({ id, label, value, onChange, hint, error, unit, type 
       <label htmlFor={id} className="block text-body font-medium text-text">{label}</label>
       <div className="mt-2">
         {unit ? (
-          <div className="flex">
+          <div className="relative">
             {input}
-            <span className="grid shrink-0 place-items-center rounded-r-control border border-l-0 border-control bg-raised px-3 text-ui text-muted">{unit}</span>
+            <span className="pointer-events-none absolute right-3 top-1/2 mt-1 -translate-y-1/2 text-ui text-muted">{unit}</span>
           </div>
         ) : input}
       </div>
