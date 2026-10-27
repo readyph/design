@@ -46,7 +46,7 @@ export interface HomeProps {
 const NOW = 9 * 60 + 12;
 const PHONE = '(max-width: 640px)';
 const CHAT_KEY = 'rph-home-prototype-chat';
-const owner = { name: 'Maria Santos', short: 'Mon', email: 'mon@delacruz.ph' };
+const owner = { name: 'Ramon Dela Cruz', short: 'Mon', email: 'mon@delacruzauto.ph' };
 const healthOf = (p: HomePlatform): StatusBarHealth => (p.status === 'ACTIVE' ? 'ok' : p.status === 'DEGRADED' ? 'warn' : 'bad');
 const dayPart = NOW < 12 * 60 ? 'morning' : NOW < 18 * 60 ? 'afternoon' : 'evening';
 const clock = () => new Date(2026, 9, 26, 9, 12).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });

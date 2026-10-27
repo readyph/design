@@ -54,7 +54,7 @@ export interface PortalFrameProps extends Omit<PlatformShellProps, 'rail' | 'rai
   account?: { name: string; email: string; role: string };
 }
 
-const defaultAccount = { name: 'Maria Santos', email: 'mon@delacruz.ph', role: 'Owner' };
+const defaultAccount = { name: 'Ramon Dela Cruz', email: 'mon@delacruzauto.ph', role: 'Owner' };
 const tabClass = cn(
   'relative flex min-h-11 flex-col items-center justify-center gap-[3px] rounded-control text-small text-muted',
   focusRing,

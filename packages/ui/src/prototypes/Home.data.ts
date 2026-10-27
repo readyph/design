@@ -83,8 +83,8 @@ const stockroom: HomePlatform = {
   facts: [{ value: 612, label: 'products' }, { value: 9, label: 'low stock' }, { value: 2, label: 'POs open' }],
   lists: [
     today('moves', 'Stock in and out since yesterday', 9, [
-      { id: 'm1', ref: 'JO-0414', title: 'Toyota oil filter', detail: 'for JO-0414', state: 'Out', tone: 'neutral', qty: '-1 pc', at: '9:05' },
-      { id: 'm2', ref: 'PH-H4-12V', title: 'Headlight bulb H4', detail: 'dropped', state: 'Damaged', tone: 'bad', qty: '-1 pc', at: 'Wed 16:10' },
+      { id: 'm1', ref: 'JO-0414', title: 'Toyota oil filter', detail: 'for JO-0414', state: 'Out', tone: 'neutral', qty: '−1 pc', at: '9:05' },
+      { id: 'm2', ref: 'PH-H4-12V', title: 'Headlight bulb H4', detail: 'dropped', state: 'Damaged', tone: 'bad', qty: '−1 pc', at: 'Wed 16:10' },
       { id: 'm3', ref: 'PO-0214', title: 'Petron Blaze Racing 10W-40, 1L', detail: 'PO-0214 · 42 of 48', state: 'In', tone: 'ok', qty: '+42 bottle', at: 'Wed 14:30' },
     ]),
     today('low', 'Low stock', 9, [
@@ -157,17 +157,17 @@ export const cases: Record<string, HomeCase> = {
       { label: 'Job', value: 'JO-0412 · Vios alternator', note: 'Dennis' },
       { label: 'Customer', value: 'Ana Villanueva' },
       { label: 'Part', value: 'ALT-NCP150', note: '0 on hand', tone: 'bad' },
-      { label: 'Supplier', value: 'Parts Depot', note: 'rush' },
+      { label: 'Supplier', value: 'Banawe Autoparts Supply', note: 'rush' },
       { label: 'Rush PO arrives', value: '10:30' },
     ],
     note: 'None in stock at Parts Stockroom. A rush order now lands at 10:30, before the 11:00 pickup.',
     proposal: {
       id: 'PO-0221',
       title: 'Order 1 alternator (ALT-NCP150)',
-      writes: ['Parts Stockroom: PO-0221 gets 1 line for ALT-NCP150', 'PO-0221 goes to Parts Depot as a rush order'],
-      notes: ['Notifies Dennis when the part arrives.', 'Nothing is charged until Parts Depot confirms.'],
+      writes: ['Parts Stockroom: PO-0221 gets 1 line for ALT-NCP150', 'PO-0221 goes to Banawe Autoparts Supply as a rush order'],
+      notes: ['Notifies Dennis when the part arrives.', 'Nothing is charged until Banawe Autoparts Supply confirms.'],
       confirmLabel: 'Order alternator',
-      toast: 'Alternator ordered from Parts Depot.',
+      toast: 'Alternator ordered from Banawe Autoparts Supply.',
       van: ['stockroom', 'autoworks'],
     },
   },
@@ -186,16 +186,16 @@ export const cases: Record<string, HomeCase> = {
       { label: 'Product', value: 'Toyota oil filter', note: '4 left' },
       { label: 'Reorder level', value: '20' },
       { label: 'Draft', value: 'PO-0219', note: '₱18,450' },
-      { label: 'Supplier', value: 'Parts Depot' },
+      { label: 'Supplier', value: 'Banawe Autoparts Supply' },
     ],
     note: 'Six maintenance jobs today use this filter. The draft covers two weeks.',
     proposal: {
       id: 'PO-0219',
       title: 'Confirm PO-0219',
-      writes: ['PO-0219 status: Draft to Ordered', 'Sent to Parts Depot'],
-      notes: ['Notifies Maria Santos by email.'],
+      writes: ['PO-0219: draft → ordered', 'Sent to Banawe Autoparts Supply'],
+      notes: ['Notifies Arnel'],
       confirmLabel: 'Confirm PO',
-      toast: 'PO-0219 sent to Parts Depot.',
+      toast: 'PO-0219 sent to Banawe Autoparts Supply.',
       van: ['stockroom', 'stockroom'],
     },
   },
@@ -254,9 +254,9 @@ const watching: QueueWatchItem[] = [
   { id: 'w2', platform: { id: 'autoworks', name: 'Dela Cruz Auto Works', index: 8 }, title: 'Fortuner PMS ready for pickup', detail: 'Leda tells Dr. Uy at 10:00' },
 ];
 const snoozed: QueueSnoozedItem[] = [{ id: 's1', platform: { id: 'stockroom', name: 'Parts Stockroom', index: 1 }, title: 'Cycle count off by 3', until: 'Later today · 13:00' }];
-const done: QueueDoneItem[] = [{ id: 'd1', platform: { id: 'autoworks', name: 'Dela Cruz Auto Works', index: 8 }, title: 'Oil filter order sent to Parts Depot', at: '8:12' }];
+const done: QueueDoneItem[] = [{ id: 'd1', platform: { id: 'autoworks', name: 'Dela Cruz Auto Works', index: 8 }, title: 'Oil filter order sent to Banawe Autoparts Supply', at: '8:12' }];
 
-const common = { cases, next: 'Next: PO-0221 from Parts Depot arrives at 10:30 · 12 lines.', yesterdayDate: 'Sun 25 Oct', plan: { used: 1742, max: 2000 } };
+const common = { cases, next: 'Next: PO-0221 from Banawe Autoparts Supply arrives at 10:30 · 12 lines.', yesterdayDate: 'Sun 25 Oct', plan: { used: 1742, max: 2000 } };
 
 export const live: HomeSet = {
   key: 'live',
