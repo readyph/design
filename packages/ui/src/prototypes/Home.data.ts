@@ -33,6 +33,7 @@ export interface HomePlatform extends TownMapPlatform {
   week: Omit<OverviewPlatform, 'onOpen' | 'onRetry' | 'state'>;
   activity?: { id: string; at: string; text: string }[];
   statusNote?: string;
+  statusSince?: string;
   ledaCanRead?: boolean;
   initials?: string;
   /** The yesterday line: `value label` pairs in the platform's own words. */

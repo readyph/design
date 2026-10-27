@@ -432,8 +432,8 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
       <div className="mb-5 flex flex-wrap items-baseline gap-x-3.5">
         <h2 ref={headingEl} tabIndex={-1} className="m-0 text-case tracking-normal text-text outline-none focus-visible:ring-2 focus-visible:ring-accent">Today</h2>
         <p className="m-0 text-ui leading-5 text-muted tabular-nums">
-          {filter === 'hq' ? 'HQ only' : `${shown.length} ${shown.length === 1 ? 'platform' : 'platforms'}`}
-          {set === 'live' && !filter ? <span> · Stockroom → Auto Works, parts for jobs</span> : null} · <span className="whitespace-nowrap">{clock()}</span>
+          {filter === 'hq' ? 'HQ only' : filter && shown.length === 1 ? `${shown[0]!.name} only` : `${data.platforms.length} ${data.platforms.length === 1 ? 'platform' : 'platforms'}`}
+          {!filter && data.links.length === 1 ? <span> · Stockroom → Auto Works, parts for jobs</span> : !filter && data.links.length > 1 ? <span> · {data.links.length} links</span> : null} · <span className="whitespace-nowrap">{clock()}</span>
         </p>
       </div>
       <div className={cn('grid gap-y-12 gap-x-14 @max-[720px]/sheet:gap-x-10', phone || shown.length <= 1 ? 'grid-cols-[minmax(0,1fr)]' : 'grid-cols-[repeat(auto-fit,minmax(236px,1fr))]')}>
@@ -452,9 +452,12 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
               platform={{ name: p.name, src: p.logo, index: p.index, hq: p.hq }}
               kind={p.kind}
               facts={p.facts}
+              status={p.status !== 'ACTIVE' && !p.hq ? { label: p.status, tone: p.status === 'DEGRADED' ? 'warn' : 'bad', since: p.statusSince } : undefined}
+              note={p.statusNote}
               leda={p.hq ? undefined : ledaMode(p)}
               headerNote={p.hq && open.some((o) => o.platform.id === 'hq') ? `${open.filter((o) => o.platform.id === 'hq').length} in Needs you` : undefined}
-              maxRows={maxRows}
+              maxRows={filter && !p.hq ? 4 : maxRows}
+              activity={p.activity ? p.activity.slice(-(filter && !p.hq ? 4 : maxRows)).reverse() : undefined}
               rowLayout={inlineToday ? 'phone' : phone || bodyW <= 720 ? 'narrow' : 'wide'}
               flashRow={flashRow?.pid === p.id ? flashRow : null}
               loading={loading}

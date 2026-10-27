@@ -86,6 +86,8 @@ export interface PlatformTodayProps extends Omit<HTMLAttributes<HTMLElement>, 't
   kind?: string;
   /** Short facts: up to 3 are shown, as `value label`. */
   facts?: TodayFact[];
+  /** A platform that is not running: its state pill first in the facts line ("DEGRADED since 7:40"). */
+  status?: { label: string; tone: BadgeTone; since?: string };
   /** Quiet words in place of facts when there are none ("Paused since 8:10 AM"). */
   note?: ReactNode;
   /** "Leda acts here" / "Leda reads only" / "Leda can't read while offline". Omit to say nothing. */
@@ -267,6 +269,7 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
     platform,
     kind,
     facts = [],
+    status,
     note,
     leda,
     lists = [],
@@ -295,7 +298,7 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
   const nameId = `${uid}-n`;
   const Heading = `h${level}` as 'h3';
   const shown = facts.slice(0, SHOWN_FACTS);
-  const hasFacts = shown.length > 0 || note != null || leda != null;
+  const hasFacts = shown.length > 0 || note != null || leda != null || status != null;
   const sub = (level + 1) as 3 | 4 | 5;
   const listLevel = Math.min(sub, 4) as 3 | 4;
 
@@ -336,20 +339,23 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
         );
       })}
     </ListGroups>
-  ) : activity.length > 0 ? (
-    <div className="mt-4">
-      <Heading className="m-0 text-ui font-semibold text-text">Today</Heading>
-      <ol className="m-0 mt-1 list-none p-0">
-        {activity.slice(0, maxRows).map((a) => (
-          <li key={a.id} className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 border-t border-rule py-2 text-ui">
-            <span className="min-w-[4.5ch] text-small tabular-nums leading-5 text-muted">{a.at}</span>
+  ) : (
+    <div className="mt-3.5">
+      <Heading className="m-0 text-ui font-semibold leading-5 text-text">Today</Heading>
+      <ol className="m-0 list-none p-0">
+        {activity.length > 0 ? activity.slice(0, maxRows).map((a) => (
+          <li key={a.id} className="grid grid-cols-[76px_minmax(0,1fr)] gap-x-3 border-t border-rule py-[7px] text-ui leading-[19px]">
+            <span className="whitespace-nowrap tabular-nums text-muted">{a.at}</span>
             <span className="min-w-0 [overflow-wrap:anywhere]">{a.text}</span>
           </li>
-        ))}
+        )) : (
+          <li className="grid grid-cols-[76px_minmax(0,1fr)] gap-x-3 border-t border-rule py-[7px] text-ui leading-[19px]">
+            <span className="text-muted">·</span>
+            <span className="text-muted">No activity yet</span>
+          </li>
+        )}
       </ol>
     </div>
-  ) : (
-    <p className="m-0 mt-4 border-t border-rule py-2 text-ui text-muted">Nothing yet today.</p>
   );
 
   return (
@@ -368,24 +374,25 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
           <Heading id={nameId} className="m-0 min-w-0 text-left text-dialog text-text [overflow-wrap:anywhere]">
             {platform.name}
           </Heading>
-          {kind ? <span className="text-small text-muted">{kind}</span> : null}
+          {kind ? <span className="text-small leading-5 text-muted">{kind}</span> : null}
         </div>
         {headerNote ? <span className="ml-auto shrink-0 whitespace-nowrap text-small text-muted">{headerNote}</span> : null}
         {onOpen ? (
           <Button
             variant="text"
             onClick={onOpen}
-            rightIcon={ArrowSquareOut}
             aria-label={`Open ${platform.name}`}
             className="!h-7 shrink-0 !gap-2 !px-2 !font-medium text-text"
           >
-            <span className="@max-[330px]/today:sr-only">Open</span>
+            Open
+            <ArrowSquareOut size={14} aria-hidden="true" className="@max-[330px]/today:hidden" />
           </Button>
         ) : null}
       </header>
       )}
       {hasFacts && !loading && !bare ? (
         <FactsLine aria-label={`${platform.name} facts`} className="mt-1.5">
+          {status ? <Fact valueFirst value={<Badge tone={status.tone}>{status.label}</Badge>}>{status.since ? `since ${status.since}` : null}</Fact> : null}
           {shown.map((f, i) => (
             <Fact key={i} value={f.value} tone={f.tone} valueFirst>
               {f.label}

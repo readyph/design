@@ -78,7 +78,7 @@ describe('PlatformToday', () => {
     const { rerender } = render(<PlatformToday platform={autoWorks} activity={[{ id: 'a', at: '9:00 AM', text: 'Opened' }]} />);
     expect(screen.getByText('Opened')).toBeTruthy();
     rerender(<PlatformToday platform={autoWorks} />);
-    expect(screen.getByText('Nothing yet today.')).toBeTruthy();
+    expect(screen.getByText('No activity yet')).toBeTruthy();
   });
 
   it('loading is busy with no lists; error shows retry', () => {
