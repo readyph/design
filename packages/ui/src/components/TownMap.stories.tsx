@@ -58,6 +58,7 @@ function Interactive(args: TownMapProps) {
 export const Default: Story = { render: (a) => <Interactive {...a} /> };
 export const TwoPlatforms: Story = { render: (a) => <Interactive {...a} />, args: { platforms: two, links: twoLinks, caption: '2 platforms + HQ' } };
 export const EightPlatforms: Story = { render: (a) => <Interactive {...a} />, args: { platforms: eight, links: eightLinks, caption: '8 platforms + HQ' } };
+export const WithAddControl: Story = { render: (a) => <Interactive {...a} />, args: { onAdd: () => {} } };
 export const Selected: Story = { args: { selected: 'autoworks' } };
 export const SelectedNoDim: Story = { args: { selected: 'autoworks', dimOthers: false } };
 export const Focus: Story = { args: { focus: 'stockroom' } };

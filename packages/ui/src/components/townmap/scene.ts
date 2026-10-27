@@ -39,6 +39,8 @@ export interface TownScene {
   runVan(from: string, to: string): boolean;
   rotate(dir: number): void;
   zoom(dir: number): number;
+  /** Back to the start: no rotation, no zoom. */
+  reset(): void;
   anchors(host: DOMRect): { id: string; ax: number; ay: number }[];
   setPaused(p: boolean): void;
   destroy(): void;
@@ -704,6 +706,7 @@ function rotate(d){
   dirty();
 }
 function zoom(d){ const z = Math.max(1, Math.min(2.4, Math.round((ZOOM + d*0.35)*100)/100)); if(z!==ZOOM){ ZOOM = z; applyView(); } return ZOOM; }
+function reset(){ target = 0; if(cfg.reduced()) setTheta(0); if(ZOOM!==1){ ZOOM = 1; applyView(); } dirty(); }
 const known = id => (id && PLOTINFO[id]) ? id : null;
 function applyState(st){
   SEL = known(st.sel); FOCUS = known(st.focus);
@@ -766,5 +769,5 @@ function frame(ms){
   if(!reduce || DIRTY || drag || Math.abs(target-THETA) > 1e-4) kick();
 }
 
-return { attach, render, setView, state, morph, runVan, rotate, zoom, anchors, setPaused, destroy };
+return { attach, render, setView, state, morph, runVan, rotate, zoom, reset, anchors, setPaused, destroy };
 }
