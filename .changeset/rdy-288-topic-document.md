@@ -1,5 +1,0 @@
----
-'@readyph/ui': minor
----
-
-TopicDocument (RDY-288, C28, new): one topic as a page. Source line, title (24/32), Switch, paragraph (16/27, 680px measure), "Questions this helps answer" (opens Try it), last changed. Custom topics are in-place document fields (title, body min 190px growing, not resizable, no JS sizing) with a bar: "Unsaved changes", characters left in memory, Delete (ConfirmDialog), Discard, Save (`aria-disabled` + `aria-busy`, never `disabled`; Cmd/Ctrl+S while dirty). Data topics are read only with "Comes from {origin} data · edit it in {where}". Props: `topic{id,title,body,source,sourceKind,on,locked,lockNote,questions,lastChanged}`, `isNew`, `folders/folder/onFolderChange`, `readOnly`, `readOnlyNote`, `origin`, `edit{href,label,how}`, `room{max,others}`, `onSave(draft)` (may be async, may return `{error, field}`), `onDiscard`, `onDelete`, `onToggle`, `onTry`, `onDirtyChange`, `loading`, `error/onRetry`, `missing/onBack`, `headingLevel`. Also exports `useUnsavedGuard(dirty)` (beforeunload) and `UnsavedLeaveDialog`. Focus after async work moves only through `focusIfLost`.

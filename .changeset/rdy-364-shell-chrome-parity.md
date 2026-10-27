@@ -1,7 +1,0 @@
----
-"@readyph/ui": minor
----
-
-Portal shell chrome matches the workshop shell (RDY-364). Rail mark link is 36px (rail items were 4px low), sheet bar is 48px including its border, Tabs `fixed` and `editor` use the workshop tab (13px, 8px padding, 7px gap, 4px between tabs, inset underline, in-flow close X) and `vertical` uses the workshop `.snav` (grid 20px/1fr/auto, surface plus border when selected, `statusTone="ok"`), status bar uses the workshop order, spacing and breakpoints, TownMap frame is exactly `--map-h` with the workshop label (22px, 16px lines), controls, legend (only the link states present, with counts) and caption, Ask Leda bar uses the workshop padding and key chip, account menu is the workshop menu (13px, outlined role chip, UserGear/CircleHalf icons, 26px theme segments, 8px offset), phone top bar caption and nav match (no count badge on the phone nav).
-
-Behaviour changes to note: `StatusBar` `ledaFirst` now defaults to true (pass `ledaFirst={false}` for the earlier order), and with it people and invites fold into one item ("9 people · 1 invite pending") and the narrow rules follow the viewport (960 and 1180) instead of the bar's width; the `overlay` token is rgba(255,255,255,.82) light and rgba(43,44,45,.86) dark (workshop `--overlay`); `AccountMenu`/`AccountButton` use the `avatar-bg`/`avatar-text` tokens and take `initials`. Additive: `TownMap` `onAddPlatform` and `caption` as ReactNode, `SegmentedControl` `size="menu"`, `PortalFrame` `account.initials`.
