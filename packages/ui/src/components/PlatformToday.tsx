@@ -32,6 +32,8 @@ export interface TodayItem {
   id: string;
   /** Short reference ("JO-0412"). Muted, before the title. */
   ref?: string;
+  /** Draw the reference in the text font, not monospace (a date such as "Wed 21 Oct"). */
+  refPlain?: boolean;
   title: ReactNode;
   /** One quiet line under the title. Wraps. */
   detail?: ReactNode;
@@ -93,6 +95,8 @@ export interface PlatformTodayProps extends Omit<HTMLAttributes<HTMLElement>, 't
   activity?: TodayActivity[];
   /** Rows per list. Default 3; give 2 on a narrow sheet or with 4+ platforms. */
   maxRows?: number;
+  /** Small muted text at the right end of the header, before the Open button (the HQ block's "1 in Needs you"). */
+  headerNote?: ReactNode;
   /** Opens the platform. Draws an "Open" button in the header (its label folds away in a narrow block). */
   onOpen?: () => void;
   /** Extra content after the lists, e.g. the plan bar in the HQ block. */
@@ -190,7 +194,7 @@ function Row({ item, platform, label, layout, flash }: { item: TodayItem; platfo
   const hasMeta = Boolean(item.state || item.qty || item.at);
   return (
     <ListRow rowId={`${platform}:${item.id}`} label={label} onActivate={item.onActivate} flash={flash} className="-mx-1.5 border-x-[6px] pb-[7px] pt-2 gap-x-2.5 gap-y-0.5 text-ui leading-[18px] after:hidden before:pointer-events-none before:absolute before:-inset-x-1.5 before:top-0 before:h-px before:bg-rule before:content-['']" data-ref={item.ref}>
-      {wide ? <span className="overflow-hidden text-ellipsis whitespace-nowrap pt-px font-mono text-small text-muted">{item.ref}</span> : null}
+      {wide ? <span className={cn('overflow-hidden text-ellipsis whitespace-nowrap pt-px text-small text-muted', !item.refPlain && 'font-mono')}>{item.ref}</span> : null}
       <div className="flex min-w-0 flex-col">
         <div>
           {!wide && layout !== 'phone' && item.ref ? <span className="mr-1.5 whitespace-nowrap font-mono text-small text-muted">{item.ref}</span> : null}
@@ -257,6 +261,7 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
     activity = [],
     maxRows = 3,
     onOpen,
+    headerNote,
     children,
     surface = 'frame',
     loading = false,
@@ -351,6 +356,7 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
           </Heading>
           {kind ? <span className="text-small text-muted">{kind}</span> : null}
         </div>
+        {headerNote ? <span className="ml-auto shrink-0 whitespace-nowrap text-small text-muted">{headerNote}</span> : null}
         {onOpen ? (
           <Button
             variant="text"

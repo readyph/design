@@ -82,6 +82,8 @@ export interface TownMapProps {
   focus?: string | null;
   /** Dim the other buildings while one is selected (default true). Platforms passes false: the ring only. */
   dimOthers?: boolean;
+  /** Plot ring and tint take the platform's identity colour. Default true; false keeps the accent (the Home prototype). */
+  identityPlots?: boolean;
   /** Building or label picked, or `null` for empty ground / Escape. */
   onSelect?: (id: string | null) => void;
   /** Pointer over a building or label, or focus on a label; `null` when it leaves. */
@@ -158,6 +160,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
     highlight = null,
     focus = null,
     dimOthers = true,
+    identityPlots = true,
     onSelect,
     onHover,
     loading = false,
@@ -185,8 +188,8 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
   const reducedRef = useRef(false);
 
   // latest props for the scene's callbacks (the scene is created once)
-  const live = useRef({ onSelect, onHover, loading, dimOthers, platforms });
-  live.current = { onSelect, onHover, loading, dimOthers, platforms };
+  const live = useRef({ onSelect, onHover, loading, dimOthers, platforms, identityPlots });
+  live.current = { onSelect, onHover, loading, dimOthers, platforms, identityPlots };
 
   const real = useMemo(() => platforms.filter((p): p is TownMapPlatform => !!p), [platforms]);
   const many = real.length >= 6;
@@ -241,7 +244,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
       dim: () => live.current.dimOthers,
       colorOf: (id) => {
         const p = live.current.platforms.find((x) => x && x.id === id);
-        return p ? slotHex(p) : undefined;
+        return p && live.current.identityPlots ? slotHex(p) : undefined;
       },
       onPick: (id) => {
         if (!live.current.loading) live.current.onSelect?.(id);

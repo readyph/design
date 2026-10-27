@@ -153,6 +153,9 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
   { platforms = [], maxPlatforms = 8, moreHref, onMore, people, invites, leda, plan, ledaFirst = false, updatedAt, 'aria-label': ariaLabel, className },
   ref,
 ) {
+  // Workshop shell: below 1180px of viewport the invite words, plan and Updated drop, below 960px the days left and the platform summary (the bar is 20px narrower than the viewport).
+  const dropMid = ledaFirst ? '@max-[1160px]/status:hidden' : null;
+  const dropTab = ledaFirst ? '@max-[940px]/status:hidden' : null;
   const shown = platforms.slice(0, maxPlatforms);
   const rest = platforms.length - shown.length;
   const namesAlways = platforms.length <= 3 || ledaFirst;
@@ -180,7 +183,7 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
     sections.push({ key: 'platforms', cls: 'flex min-w-0 shrink', node: (
         <ul role="list" aria-label="Platforms" className="flex min-w-0 items-center gap-0.5 overflow-hidden">
           {portalSummary && (
-            <li className="flex shrink-0">
+            <li className={cn('flex shrink-0', dropTab)}>
               <Item>
                 <span className="tabular-nums">{plural(platforms.length, 'platform', 'platforms')}</span>
                 <span>· all running</span>
@@ -242,7 +245,7 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
         >
           <Users size={14} aria-hidden="true" />
           <span className="tabular-nums">{plural(people.count, 'person', 'people')}</span>
-          {mergeInvites && <span className={cn('tabular-nums', dropInviteWord)}>· {invites!.count} {invites!.count === 1 ? 'invite' : 'invites'} pending</span>}
+          {mergeInvites && <span className={cn('tabular-nums', dropMid ?? dropInviteWord)}>· {invites!.count} {invites!.count === 1 ? 'invite' : 'invites'} pending</span>}
         </Item>
       ) });
   }
@@ -268,19 +271,19 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
           <span className="tabular-nums">
             {leda.used.toLocaleString('en-US')} / {leda.max.toLocaleString('en-US')}
           </span>
-          {ledaFirst && leda.daysLeft ? <span className="tabular-nums">{leda.daysLeft}</span> : null}
+          {ledaFirst && leda.daysLeft ? <span className={cn('tabular-nums', dropTab)}>{leda.daysLeft}</span> : null}
         </Item>
       ) });
   }
 
   if (plan) {
-    sections.push({ key: 'plan', cls: cn('flex shrink-0', dropPlan), node: (
+    sections.push({ key: 'plan', cls: cn('flex shrink-0', dropMid ?? dropPlan), node: (
         <Item>{plan} plan</Item>
       ) });
   }
 
   if (updatedAt) {
-    sections.push({ key: 'updated', cls: cn('ml-auto flex shrink-0', dropUpdated), node: (
+    sections.push({ key: 'updated', cls: cn('ml-auto flex shrink-0', dropMid ?? dropUpdated), node: (
         <Item className="tabular-nums">Updated {updatedAt}</Item>
       ) });
   }

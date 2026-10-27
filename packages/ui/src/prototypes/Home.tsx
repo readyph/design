@@ -1,5 +1,5 @@
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, ArrowSquareOut, CalendarBlank, Clock, House, SquaresFour } from '@phosphor-icons/react';
+import { ArrowLeft, ArrowRight, ArrowSquareOut, CalendarBlank, Clock, Gauge, House, SquaresFour, Users } from '@phosphor-icons/react';
 import { AskLedaBar } from '../components/AskLedaBar';
 import { Badge } from '../components/Badge';
 import { Breadcrumbs } from '../components/Breadcrumbs';
@@ -21,6 +21,7 @@ import { PlatformToday } from '../components/PlatformToday';
 import { Queue } from '../components/Queue';
 import { SegmentedControl } from '../components/SegmentedControl';
 import { SheetBar } from '../components/SheetBar';
+import { cn } from '../utils/cn';
 import { StatusBar, type StatusBarHealth } from '../components/StatusBar';
 import { Tabs, type TabItem } from '../components/Tabs';
 import { TownMap, type TownMapHandle } from '../components/TownMap';
@@ -323,17 +324,24 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
 
   // Phone (workshop `.plive`): the Today blocks sit under the Needs-you list in the same scroll, so the sheet keeps no copy of them.
   const inlineToday = phone && !phoneDetail;
+  const pct = Math.round((data.plan.used / data.plan.max) * 100);
 
+  const hqGo = filter === 'hq' ? (
+    <p className="m-0 mt-4 flex flex-wrap gap-2">
+      <Button variant="secondary" leftIcon={Users} onClick={() => go({ to: 'team' })}>Open Team</Button>
+      <Button variant="secondary" leftIcon={Gauge} onClick={() => go({ to: 'plan' })}>Open Plan</Button>
+    </p>
+  ) : null;
   const todayContent = (
     <>
       <div className="mb-5 flex flex-wrap items-baseline gap-x-3.5">
         <h2 ref={headingRef} tabIndex={-1} className="m-0 text-case tracking-normal text-text outline-none focus-visible:ring-2 focus-visible:ring-accent">Today</h2>
         <p className="m-0 text-ui leading-5 text-muted tabular-nums">
-          {shown.length} {filter === 'hq' ? 'block' : shown.length === 1 ? 'platform' : 'platforms'}
+          {filter === 'hq' ? 'HQ only' : `${shown.length} ${shown.length === 1 ? 'platform' : 'platforms'}`}
           {set === 'live' && !filter ? <span> · Stockroom → Auto Works, parts for jobs</span> : null} · <span className="whitespace-nowrap">{clock()}</span>
         </p>
       </div>
-      <div className="grid grid-cols-1 gap-x-10 gap-y-12 @min-[720px]/sheet:grid-cols-2 @min-[720px]/sheet:gap-x-14">
+      <div className={cn('grid grid-cols-1 gap-x-10 gap-y-12', shown.length > 1 && '@min-[720px]/sheet:grid-cols-2 @min-[720px]/sheet:gap-x-14')}>
         {shown.map((p) => (
           <div
             key={idKey(p)}
@@ -349,7 +357,8 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
               platform={{ name: p.name, src: p.logo, index: p.index, hq: p.hq }}
               kind={p.kind}
               facts={p.facts}
-              leda={ledaMode(p)}
+              leda={p.hq ? undefined : ledaMode(p)}
+              headerNote={p.hq && open.some((o) => o.platform.id === 'hq') ? `${open.filter((o) => o.platform.id === 'hq').length} in Needs you` : undefined}
               maxRows={maxRows}
               rowLayout={inlineToday ? 'phone' : phone || bodyW <= 720 ? 'narrow' : 'wide'}
               flashRow={flashRow?.pid === p.id ? flashRow : null}
@@ -360,7 +369,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
               onRetry={() => {
                 window.setTimeout(() => setFixed(true), 600);
               }}
-              onOpen={() => go(p.hq ? { to: 'team' } : { to: 'platform', id: p.id })}
+              onOpen={p.hq ? undefined : () => go({ to: 'platform', id: p.id })}
               lists={p.lists.map((l) => ({
                 ...l,
                 onViewAll: () => toast(`All ${l.total} in ${p.shortName ?? p.name}…`),
@@ -387,15 +396,25 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
               }))}
             >
               {p.hq ? (
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <Button variant="secondary" onClick={() => go({ to: 'team' })}>Open Team</Button>
-                  <Button variant="secondary" onClick={() => go({ to: 'plan' })}>Open Plan</Button>
+                <div>
+                  <h4 className="m-0 pt-3.5 text-ui font-semibold leading-5 text-text">{`Starter plan`}</h4>
+                  <div className="mt-3">
+                    <div role="img" aria-label={`${pct}% of Leda requests used`} className="relative h-2 overflow-hidden rounded bg-raised-2">
+                      <span className={cn('absolute inset-y-0 left-0 rounded', pct >= 80 ? 'bg-warn-dot' : 'bg-accent')} style={{ width: `${pct}%` }} />
+                    </div>
+                    <div className="mt-1.5 flex justify-between text-small text-muted">
+                      <span className="tabular-nums">{data.plan.cycleStart}</span>
+                      <span><b className="font-medium tabular-nums text-text">{pct}%</b> used · {data.plan.daysLeft} days left</span>
+                      <span className="tabular-nums">{data.plan.cycleEnd}</span>
+                    </div>
+                  </div>
                 </div>
               ) : null}
             </PlatformToday>
           </div>
         ))}
       </div>
+      {hqGo}
     </>
   );
   const todayView = <div className="px-pad pb-8 pt-5">{todayContent}</div>;
@@ -596,6 +615,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
         links={data.links}
         caption={<span><b className="font-semibold text-text">{data.platforms.length} platforms</b> + HQ</span>}
         captionInside
+        identityPlots={false}
         label="Your platforms"
         selected={filter}
         highlight={hover ? [hover] : null}
@@ -670,7 +690,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
         topBar={detailBar}
         status={
           <StatusBar
-            platforms={data.platforms.map((p) => ({ id: p.id, name: p.shortName ?? p.name, logoSrc: p.logo, color: p.index, health: p.id === failed ? 'bad' : healthOf(p), healthText: p.id === failed ? 'no data' : undefined, selected: filter === p.id, onSelect: () => setFilterTo(filter === p.id ? null : p.id) }))}
+            platforms={data.platforms.map((p) => ({ id: p.id, name: p.shortName ?? p.name, logoSrc: p.logo, color: p.index, initials: p.name.split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase(), health: p.id === failed ? 'bad' : healthOf(p), healthText: p.id === failed ? 'no data' : undefined, selected: filter === p.id, onSelect: () => setFilterTo(filter === p.id ? null : p.id) }))}
             people={{ count: 9 }}
             invites={{ count: 1 }}
             leda={{ used: data.plan.used, max: data.plan.max, daysLeft: '7 days left' }}

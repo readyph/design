@@ -64,7 +64,7 @@ export interface HomeSet {
   /** Quiet day's "Next: ..." line. */
   next: string;
   yesterdayDate: string;
-  plan: { used: number; max: number };
+  plan: { used: number; max: number; cycleStart: string; cycleEnd: string; daysLeft: number };
   /** Place of each building on the map grid (workshop `mapOrder`): platform ids, `'hq'`, or `null` for an empty lot. Default: HQ then the platforms. */
   mapOrder?: (string | null)[];
 }
@@ -76,8 +76,8 @@ const today = (id: string, title: string, total: number, items: HomeListItem[]):
 const hqPlatform: HomePlatform = {
   id: 'hq', name: 'HQ', shortName: 'HQ', kind: 'Team and plan', status: 'ACTIVE', hq: true, count: 1,
   ledaCanAct: true,
-  facts: [{ value: 9, label: 'people' }, { value: 1, label: 'invite pending' }],
-  lists: [today('invites', 'Invites', 1, [{ id: 'inv1', title: 'Rico Lim', detail: 'Invited by Jun, write access to Auto Works', state: 'Accepted', tone: 'ok', at: '8:50 AM' }])],
+  facts: [{ value: 9, label: 'people' }, { value: 1, label: 'invite pending' }, { value: '1,742 / 2,000', label: 'Leda requests' }],
+  lists: [today('invites', 'Invites', 1, [{ id: 'inv1', ref: 'Wed 21 Oct', refPlain: true, title: 'Rico Lim · Mechanic', detail: 'Write · Dela Cruz Auto Works · by Jun', state: 'Waiting for you', tone: 'warn' }])],
   week: { id: 'hq', name: 'HQ', kind: 'Team and plan', logo: { hq: true }, status: { tone: 'ok', label: 'Running' } },
   yesterday: [],
 };
@@ -261,7 +261,7 @@ const watching: QueueWatchItem[] = [
 const snoozed: QueueSnoozedItem[] = [];
 const done: QueueDoneItem[] = [];
 
-const common = { cases, next: 'Next: PO-0221 from Banawe Autoparts Supply arrives at 10:30 · 12 lines.', yesterdayDate: 'Sun 25 Oct', plan: { used: 1742, max: 2000 } };
+const common = { cases, next: 'Next: PO-0221 from Banawe Autoparts Supply arrives at 10:30 · 12 lines.', yesterdayDate: 'Sun 25 Oct', plan: { used: 1742, max: 2000, cycleStart: '30 Sep', cycleEnd: '29 Oct', daysLeft: 7 } };
 
 export const live: HomeSet = {
   key: 'live',

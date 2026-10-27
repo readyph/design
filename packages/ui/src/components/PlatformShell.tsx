@@ -215,7 +215,7 @@ export function PlatformShell({
           aria-label={phoneNavLabel}
           className={cn(
             'hidden',
-            'max-[640px]:col-start-1 max-[640px]:flex max-[640px]:min-w-0 max-[640px]:items-stretch max-[640px]:border-t max-[640px]:border-border max-[640px]:bg-surface',
+            'max-[640px]:col-start-1 max-[640px]:flex max-[640px]:min-w-0 max-[640px]:items-stretch max-[640px]:bg-frame',
             phoneNavRow,
             hiddenWins,
           )}
