@@ -14,6 +14,8 @@ export interface PlatformShellProps extends Omit<HTMLAttributes<HTMLDivElement>,
   placeLabel?: string;
   /** Sheet bar (C5): tabs or breadcrumb plus the Ask Leda bar. Stays put while the sheet body scrolls. */
   sheetBar?: ReactNode;
+  /** Phone only: hide the sheet bar (and its border), for a page whose own top bar already carries the back link and Ask Leda. Default false. */
+  hideSheetBarOnPhone?: boolean;
   /** Sticky action bar at the foot of the sheet. Shown on phone in detail mode only. */
   actionBar?: ReactNode;
   /** Status bar content (C4), rendered inside the shell's 'footer'. Hidden on phone. */
@@ -61,6 +63,7 @@ export function PlatformShell({
   place,
   placeLabel = 'Places',
   sheetBar,
+  hideSheetBarOnPhone = false,
   actionBar,
   status,
   statusLabel = 'Status',
@@ -186,7 +189,7 @@ export function PlatformShell({
           hiddenWins,
         )}
       >
-        {sheetBar != null && <div className="shrink-0 border-b border-border">{sheetBar}</div>}
+        {sheetBar != null && <div className={cn('shrink-0 border-b border-border', hideSheetBarOnPhone && 'max-[640px]:hidden')}>{sheetBar}</div>}
         <div tabIndex={0} className="min-h-0 flex-1 overflow-y-auto overscroll-contain focus-visible:outline focus-visible:-outline-offset-2">
           {!placeIsMain && h1}
           {children}

@@ -105,7 +105,7 @@ describe('StatusBar', () => {
   });
   it('invite word drops with the plan at 780', () => {
     render(<StatusBar invites={{ count: 2 }} />);
-    expect(screen.getByText('invites waiting').className).toContain('@max-[780px]/status:hidden');
+    expect(screen.getByText('invites pending').className).toContain('@max-[780px]/status:hidden');
   });
   it('items are plain text, links or buttons; selected buttons are pressed', () => {
     const onSelect = vi.fn();
@@ -129,6 +129,49 @@ describe('StatusBar', () => {
   it('className cannot break layout', () => {
     const { container } = render(<StatusBar className="hidden w-4" />);
     expect((container.firstElementChild as HTMLElement).className).toContain('w-full');
+  });
+});
+
+describe('StatusBar text (RDY-315)', () => {
+  const four = (bad?: number) => p(4).map((x, i) => (i === bad ? { ...x, health: 'bad' as const } : x));
+  it('every platform running shows one "all running" item; one offline keeps its name and word and the rest collapse', () => {
+    const { rerender } = render(<StatusBar platforms={p(2)} />);
+    expect(screen.getAllByText('· all running')).toHaveLength(1);
+    rerender(<StatusBar platforms={p(3).map((x, i) => (i === 1 ? { ...x, health: 'bad' as const } : x))} />);
+    expect(screen.queryByText('· all running')).toBeNull();
+    expect(screen.getByText('Plat 1')).toBeTruthy();
+    expect(screen.getByText('offline')).toBeTruthy();
+    expect(screen.queryByText('Plat 0')).toBeNull();
+    expect(screen.queryByText('Plat 2')).toBeNull();
+    expect(screen.getByLabelText('Plat 0').getAttribute('title')).toBe('Plat 0: running');
+    rerender(<StatusBar platforms={four(2)} />);
+    expect(screen.getAllByText('offline')).toHaveLength(1);
+  });
+  it('plan detail text renders from props, bad tone is a class, plain plan unchanged', () => {
+    const { rerender } = render(<StatusBar plan="Starter" planDetail="10 of 15 seats" />);
+    expect(screen.getByText('Starter · 10 of 15 seats')).toBeTruthy();
+    expect(screen.queryByText('Starter plan')).toBeNull();
+    rerender(<StatusBar plan="Free" planDetail="4 of 3 seats" planTone="bad" />);
+    expect(screen.getByText('Free · 4 of 3 seats').closest('span[class*="text-bad"]')).toBeTruthy();
+    rerender(<StatusBar plan="Starter" />);
+    expect(screen.getByText('Starter plan')).toBeTruthy();
+  });
+  it('invite text is singular or plural from the count', () => {
+    const { rerender } = render(<StatusBar people={{ count: 9 }} invites={{ count: 1 }} />);
+    expect(screen.getByText('· 1 invite pending')).toBeTruthy();
+    rerender(<StatusBar people={{ count: 9 }} invites={{ count: 3 }} />);
+    expect(screen.getByText('· 3 invites pending')).toBeTruthy();
+    rerender(<StatusBar invites={{ count: 1 }} />);
+    expect(screen.getByText('invite pending')).toBeTruthy();
+  });
+  it('hiding the people item leaves Leda, plan, platforms and Updated (and the invites folded into people)', () => {
+    render(<StatusBar platforms={p(2)} people={{ count: 9 }} invites={{ count: 2 }} leda={{ used: 10, max: 100 }} plan="Starter" updatedAt="9:12 AM" hide={['people']} />);
+    expect(screen.queryByLabelText(/people|person/)).toBeNull();
+    expect(screen.queryByText(/invite/)).toBeNull();
+    expect(screen.getByText('Leda')).toBeTruthy();
+    expect(screen.getByText('Starter plan')).toBeTruthy();
+    expect(screen.getByText('2 platforms')).toBeTruthy();
+    expect(screen.getByText('Updated 9:12 AM')).toBeTruthy();
   });
 });
 

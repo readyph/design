@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ArrowLeft, ArrowRight, ArrowUpRight, CheckCircle, DotsThree, IdentificationBadge, Key, Lock, PaperPlaneTilt, Prohibit, ArrowCounterClockwise, UserMinus, UserPlus, Users, Warning, XCircle, X, Chair } from '@phosphor-icons/react';
 import { AccountMenu, initialsOf } from '../components/AccountMenu';
+import { Avatar } from '../components/Avatar';
 import { AskLedaBar } from '../components/AskLedaBar';
 import { Breadcrumbs } from '../components/Breadcrumbs';
 import { Button } from '../components/Button';
@@ -68,19 +69,8 @@ const fmt = (m: number) => `${((Math.floor(m / 60) + 11) % 12) + 1}:${String(m %
 const rolePl = (name: string, n: number) => (n === 1 || /staff$/i.test(name) ? lower(name) : `${lower(name)}s`);
 let seq = 100;
 
-function Initials({ text, invite, size = 32 }: { text: string; invite?: boolean; size?: 20 | 32 | 40 }) {
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        'grid shrink-0 place-items-center rounded-full font-medium',
-        size === 20 ? 'size-5 text-[10px]' : size === 40 ? 'size-10 text-ui' : 'size-8 text-small',
-        invite ? 'border border-dashed border-control bg-surface text-muted' : 'bg-accent-tint text-accent',
-      )}
-    >
-      {text}
-    </span>
-  );
+function Initials({ text, invite, size = 32 }: { text: string; invite?: boolean; size?: 24 | 32 | 40 }) {
+  return <Avatar name={text} initials={text} size={size} tone={invite ? 'pending' : 'default'} decorative />;
 }
 const invInitials = (v: Invite) => (v.name || v.email).split(/[\s.@_]+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
 
@@ -782,7 +772,7 @@ export function Team({ set = 'live', state = 'live', person, startInvite = false
             <PlaceHeading>Company admins</PlaceHeading>
             {admins.map((m) => (
               <div key={m.id} className="flex flex-col gap-0.5 px-3 py-2 text-ui">
-                <span className="flex items-center gap-2 font-medium"><Initials text={m.initials} size={20} />{m.name}</span>
+                <span className="flex items-center gap-2 font-medium"><Initials text={m.initials} size={24} />{m.name}</span>
                 <span className="text-small text-muted">{m.email}</span>
               </div>
             ))}
