@@ -2,7 +2,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { PortalFrame } from './PortalFrame';
+import { PortalFrame, DetailTopBar } from './PortalFrame';
+import * as pkg from '../index';
 
 afterEach(cleanup);
 
@@ -124,5 +125,51 @@ describe('PortalFrame workshop chrome (RDY-364)', () => {
     frame();
     const phone = within(screen.getAllByRole('navigation', { hidden: true })[1]!);
     expect(phone.getByRole('link', { name: 'Team, 2', hidden: true }).textContent).toBe('Team');
+  });
+});
+
+describe('DetailTopBar and hideSheetBarOnPhone (RDY-316)', () => {
+  const detail = (onAsk = () => {}) => render(
+    <PortalFrame
+      current="platforms"
+      detail
+      topBar={<DetailTopBar back={<a href="#platforms">Back</a>} title="Autoworks" onAskLeda={onAsk} account={{ name: 'Maria Santos', email: 'm@x.ph', role: 'Owner' }} />}
+      sheetBar={<div>Sheet bar</div>}
+      hideSheetBarOnPhone
+    ><h1>Content</h1></PortalFrame>,
+  );
+
+  it('renders back, title, Ask Leda and the account avatar in the phone top bar', async () => {
+    const ask = vi.fn();
+    const user = userEvent.setup();
+    detail(ask);
+    const header = within(screen.getByRole('banner', { hidden: true }));
+    expect(header.getByRole('link', { name: 'Back', hidden: true })).toBeTruthy();
+    expect(header.getByText('Autoworks')).toBeTruthy();
+    expect(header.getByRole('button', { name: /Ask Leda/, hidden: true })).toBeTruthy();
+    expect(header.getAllByRole('button', { name: /Account menu/, hidden: true })).toHaveLength(1);
+    expect(header.getByRole('button', { name: /Account menu/, hidden: true }).textContent).toBe('MS');
+    await user.click(header.getByRole('button', { name: /Ask Leda/, hidden: true }));
+    expect(ask).toHaveBeenCalledTimes(1);
+  });
+
+  it('hides the sheet bar on phone when the option is set, and keeps it otherwise', () => {
+    const { unmount } = detail();
+    expect(screen.getByText('Sheet bar').parentElement!.className).toContain('max-[640px]:hidden');
+    unmount();
+    render(<PortalFrame current="platforms" sheetBar={<div>Sheet bar</div>}><h1>Content</h1></PortalFrame>);
+    expect(screen.getByText('Sheet bar').parentElement!.className).not.toContain('max-[640px]:hidden');
+  });
+
+  it('the detail frame has one main and one h1 and no phone nav', () => {
+    detail();
+    expect(screen.getAllByRole('main', { hidden: true })).toHaveLength(1);
+    expect(screen.getAllByRole('heading', { level: 1, hidden: true })).toHaveLength(1);
+    expect(screen.getAllByRole('navigation', { hidden: true })).toHaveLength(1);
+  });
+
+  it('is exported from the package', () => {
+    expect(pkg.PortalFrame).toBe(PortalFrame);
+    expect(pkg.DetailTopBar).toBe(DetailTopBar);
   });
 });

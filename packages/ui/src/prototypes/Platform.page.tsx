@@ -3,7 +3,6 @@ import {
   ArrowRight, ArrowSquareOut, Brain, Buildings, ChatCircle, IdentificationCard, LinkBreak, Plugs, SlidersHorizontal, ListChecks, LockSimple, Plus,
   ShieldCheck, UploadSimple, UserPlus, Users, X,
 } from '@phosphor-icons/react';
-import { AccountMenu } from '../components/AccountMenu';
 import { AskLedaBar } from '../components/AskLedaBar';
 import { Badge } from '../components/Badge';
 import { BlockedQuestions, type BlockedQuestionItem } from '../components/BlockedQuestions';
@@ -34,6 +33,7 @@ import { Toaster } from '../components/toast/Toaster';
 import { toast } from '../components/toast/toastStore';
 import { cn } from '../utils/cn';
 import { PortalFrame } from './PortalFrame';
+import { DetailTopBar } from '../components/PortalFrame';
 import { go, useHandoff } from './protoNav';
 import { focusIfLost } from '../utils/focusIfLost';
 import { useMatchMedia } from '../utils/useMatchMedia';
@@ -1053,12 +1053,12 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
         detail
         place={place}
         topBar={
-          <>
-            <Breadcrumbs variant="phone" aria-label="Back" items={crumbs} />
-            <span className="min-w-0 flex-1 truncate font-semibold">{p ? nameOf(p.id) : 'Add a platform'}</span>
-            <AskLedaBar variant="bar" scope="your platforms" shortcuts={false} onOpen={() => toast({ description: 'Leda is ready.', leda: true })} />
-            <AccountMenu name="Maria Santos" email="maria@santosauto.ph" role="Owner" applyToDocument={false} />
-          </>
+          <DetailTopBar
+            back={<Breadcrumbs variant="phone" aria-label="Back" items={crumbs} />}
+            title={p ? nameOf(p.id) : 'Add a platform'}
+            onAskLeda={() => toast({ description: 'Leda is ready.', leda: true })}
+            account={{ name: 'Maria Santos', email: 'maria@santosauto.ph', role: 'Owner' }}
+          />
         }
         sheetBar={phone ? undefined : <SheetBar actions={ask}><Breadcrumbs variant="sheet" aria-label="You are here" items={crumbs} /></SheetBar>}
         status={<StatusBar platforms={platforms.map((x) => ({ id: x.id, name: shortName({ label: nameOf(x.id) }), health: healthTone[x.isNew ? (needsLink(x) ? 'setup' : 'setting-up') : x.health] === 'ok' ? 'ok' : (healthTone[x.isNew ? (needsLink(x) ? 'setup' : 'setting-up') : x.health] as 'warn'), healthText: x.isNew || x.health !== 'ok' ? statusLabel(x).split(' since')[0].toLowerCase() : undefined, selected: x.id === p?.id, href: `#${x.id}` }))} people={{ count: 14 }} leda={{ used: 412, max: 1000 }} plan="Business" updatedAt="9:12 AM" />}
