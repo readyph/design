@@ -596,10 +596,10 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
     return (
       <div className="px-pad pb-10 pt-5">
         <p className="m-0 text-small text-muted">{[p.kind, p.place ?? '', n ? `${n} in Needs you` : ''].filter(Boolean).map((t, i) => <span key={t}>{i ? <span aria-hidden className="mx-2 text-faint">/</span> : null}{t}</span>)}</p>
-        <div className="mt-2 flex flex-wrap items-center gap-3">
+        <div className="mt-2 flex items-center gap-3">
           <PlatformLogo name={p.name} src={p.logo} index={p.index} size={24} decorative />
           <h2 ref={headingEl} tabIndex={-1} className={cn('m-0 min-w-0 text-title text-text', focusRing)}>{p.name}</h2>
-          <Button variant="primary" leftIcon={ArrowSquareOut} className="ml-auto" onClick={() => go({ to: 'platform', id: p.id })}>Open {p.name}</Button>
+          <Button variant="primary" leftIcon={ArrowSquareOut} className="ml-auto shrink-0" onClick={() => go({ to: 'platform', id: p.id })}>Open {p.name}</Button>
         </div>
         <FactsLine aria-label={`${p.name} facts`} className="mt-2">
           <Fact valueFirst value={<Badge tone={p.status === 'ACTIVE' ? 'ok' : p.status === 'DEGRADED' ? 'warn' : 'bad'}>{p.status === 'ACTIVE' ? 'ACTIVE' : p.status}</Badge>}>{p.statusSince ? `since ${p.statusSince}` : null}</Fact>
@@ -934,6 +934,18 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
     </div>
   ) : null;
 
+  const stripPlat = phone && filter ? shown[0] : undefined;
+  const platStrip = stripPlat ? (
+    <p className="m-0 mt-2.5 flex items-center gap-2 text-small leading-[19px] text-muted">
+      <PlatformLogo name={stripPlat.name} src={stripPlat.logo} index={stripPlat.index} hq={stripPlat.hq} size={20} decorative />
+      <span className="min-w-0 flex-1">
+        <b className="font-semibold text-text">{stripPlat.name}</b> · <span className={stripPlat.status === 'DEGRADED' ? 'text-warn' : stripPlat.status === 'OFFLINE' ? 'text-bad' : undefined}>{statusText(stripPlat)}</span>
+        {!stripPlat.hq && stripPlat.facts[0] ? <> · <span className="tabular-nums">{stripPlat.facts[0].value}</span> {stripPlat.facts[0].label}</> : null}
+      </span>
+      {stripPlat.hq ? null : <Button variant="text" className="max-[640px]:h-11 shrink-0" onClick={() => go({ to: 'platform', id: stripPlat.id })}>Open</Button>}
+    </p>
+  ) : null;
+
   const queueHeadline =
     filter || loading
       ? undefined
@@ -956,6 +968,7 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
         label="Your platforms"
         onAddPlatform={() => go({ to: 'platforms', add: true })}
         selected={filter}
+        fadeOthers
         highlight={mapHighlight}
         loading={loading}
         onSelect={setFilterTo}
@@ -977,7 +990,7 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
         flushGroups={!!phoneOverview}
         tightGroups={phone && !phoneOverview}
         footer={phoneOverview ? data.next : undefined}
-        belowHeadline={phone ? <>{askBar('field', false)}{phoneOverview}</> : undefined}
+        belowHeadline={phone ? <>{askBar('field', false)}{platStrip}{phoneOverview}</> : undefined}
         defaultOpenGroups={quiet ? ['watching'] : []}
         retryLabel="Retry"
         errors={failed ? [{ platform: { id: failed, name: platformById(failed)!.name, index: platformById(failed)!.index }, lastLoaded: '9:10 AM' }] : []}

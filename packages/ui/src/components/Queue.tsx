@@ -495,12 +495,12 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
                 <span className="sr-only"> open</span>
               </span>
             ) : null}
-            <div className="ml-auto flex min-w-0 items-center gap-1">
+            <div className="ml-auto flex shrink-0 items-center gap-1">
               {filterPlatform ? (
                 <span className="inline-flex h-7 w-max max-w-full items-center gap-1.5 rounded-chip bg-frame-active py-[3px] pl-2 pr-1 text-ui text-text">
                   <span className="inline-flex min-w-0 items-center gap-1.5">
                     {logo(filterPlatform)}
-                    <span className="min-w-0 [overflow-wrap:anywhere]">{`${filterPlatform.hq ? `${filterPlatform.name} · team and plan` : filterPlatform.name} only`}</span>
+                    <span className="min-w-0 whitespace-nowrap">{`${filterPlatform.hq ? `${filterPlatform.name} · team and plan` : filterPlatform.name} only`}</span>
                   </span>
                   <button
                     type="button"

@@ -401,7 +401,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
             {real.map((p) => {
               const sel = selected === p.id;
               const hl = focus ? focus === p.id : !!highlight?.includes(p.id);
-              const dimFocus = fadeOthers && !sel && !hl && !!focus && focus !== p.id;
+              const dimFocus = fadeOthers && !sel && !hl && ((!!focus && focus !== p.id) || (selected !== null && dimOthers));
               const dim = dimFocus || (!sel && !hl && ((!!focus && focus !== p.id) || (selected !== null && dimOthers)));
               const alert = !loading && (p.status !== 'ACTIVE' || !!p.error);
               const short = p.shortName ?? p.name;
@@ -478,7 +478,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
                           <span aria-hidden="true" className="my-0.5 block h-2.5 w-[76px] rounded-chip bg-skeleton" />
                         ) : (
                           <>
-                            {alert ? <StatusMark status={p.status} error={p.error} filled={!!p.sub} /> : p.sub ? <StatusMark status={p.status} /> : null}
+                            {alert ? <StatusMark status={p.status} error={p.error} filled={!!p.sub} /> : p.sub || sel ? <StatusMark status={p.status} /> : null}
                             {sub}
                           </>
                         )}
