@@ -40,6 +40,7 @@ const headerHidden: Record<ListStackBelow, string> = {
   760: '@max-[760px]/list:hidden',
   880: '@max-[880px]/list:hidden',
   sheet760: '@max-[760px]/sheet:hidden',
+  sheet700: '@max-[700px]/sheet:hidden',
 };
 
 export interface ListGroupsProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onChange'> {
@@ -146,6 +147,8 @@ export interface ListGroupProps extends Omit<HTMLAttributes<HTMLDivElement>, 'ti
   emptyVariant?: 'ruled' | 'box' | 'box-warn';
   /** Label for the list itself when the heading is not enough. Defaults to the title text via the group. */
   listLabel?: string;
+  /** Heading flush with the group's top (the parent owns the spacing above), a 20px heading line, the rows 8px below. For tab sheets whose groups are spaced by the parent. */
+  compact?: boolean;
   /** `ListRow`s. */
   children?: ReactNode;
 }
@@ -156,7 +159,7 @@ export interface ListGroupProps extends Omit<HTMLAttributes<HTMLDivElement>, 'ti
  * Use inside `ListGroups` (shared columns, shared cursor). Because the column header is its own grid, give shared columns fixed or fr widths, not `auto`, or header and rows drift apart. On its own it is a titled `List` with the same props.
  */
 export const ListGroup = forwardRef<HTMLDivElement, ListGroupProps>(function ListGroup(
-  { title, count, note, actions, level = 3, collapsible = false, collapsed, defaultCollapsed = false, onCollapsedChange, empty, description, emptyVariant = 'ruled', listLabel, className, children, ...rest },
+  { title, count, note, actions, level = 3, collapsible = false, collapsed, defaultCollapsed = false, onCollapsedChange, empty, description, emptyVariant = 'ruled', compact = false, listLabel, className, children, ...rest },
   ref,
 ) {
   const g = useContext(GroupsContext);
@@ -174,8 +177,8 @@ export const ListGroup = forwardRef<HTMLDivElement, ListGroupProps>(function Lis
   const empty0 = Children.count(children) === 0;
   return (
     <div ref={ref} role="group" aria-labelledby={titleId} className={cn('min-w-0', className)} {...rest}>
-      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 pb-1.5 pt-5 text-small text-muted">
-        <Heading id={titleId} className="m-0 min-w-0 text-ui font-semibold text-text [overflow-wrap:anywhere]">
+      <div className={cn('flex flex-wrap items-baseline gap-x-2 text-small text-muted', compact ? 'gap-y-px' : 'gap-y-1 pb-1.5 pt-5')}>
+        <Heading id={titleId} className={cn('m-0 min-w-0 text-ui font-semibold text-text [overflow-wrap:anywhere]', compact && 'leading-5')}>
           {collapsible ? (
             <button
               type="button"
@@ -224,7 +227,7 @@ export const ListGroup = forwardRef<HTMLDivElement, ListGroupProps>(function Lis
             shortcuts={g ? false : undefined}
             aria-label={listLabel}
             aria-labelledby={listLabel ? undefined : titleId}
-            className="border-t border-rule"
+            className={cn('border-t border-rule', compact && 'mt-2 border-t-0 shadow-[inset_0_1px_0_var(--rule)]')}
           >
             {g?.mode === 'table' && g.header ? (
               <ListHeader className="sr-only">{g.header}</ListHeader>

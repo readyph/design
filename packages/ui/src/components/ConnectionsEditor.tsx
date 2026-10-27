@@ -340,10 +340,10 @@ export const ConnectionsEditor = forwardRef<HTMLDivElement, ConnectionsEditorPro
           if (!e.currentTarget.contains(e.relatedTarget as Node | null)) onHover?.(null, null);
         }}
       >
-        <ListCell kind="lead" className="contents @max-[640px]/list:flex @max-[640px]/list:items-start @max-[640px]/list:gap-3">
-          <PlatformLogo name={c.platform.name} src={c.platform.src} index={c.platform.index} color={c.platform.color} initials={c.platform.initials} size={32} decorative className="shrink-0 @max-[640px]/list:mt-0.5" />
+        <ListCell kind="lead" className="contents @max-[700px]/sheet:flex @max-[700px]/sheet:items-start @max-[700px]/sheet:gap-3">
+          <PlatformLogo name={c.platform.name} src={c.platform.src} index={c.platform.index} color={c.platform.color} initials={c.platform.initials} size={32} decorative className="shrink-0" />
           <div className="min-w-0">
-            <p className="m-0 truncate text-ui font-medium text-text">{c.platform.name}</p>
+            <p className="m-0 truncate text-ui font-medium leading-5 text-text">{c.platform.name}</p>
             {c.platform.kind ? <p className="m-0 text-small text-muted">{c.platform.kind}</p> : null}
           </div>
         </ListCell>
@@ -351,7 +351,7 @@ export const ConnectionsEditor = forwardRef<HTMLDivElement, ConnectionsEditorPro
           <p className="m-0 text-ui font-medium text-text">{c.kind}</p>
           <p className="m-0 text-small text-muted">{c.shares}</p>
         </ListCell>
-        <ListCell>
+        <ListCell className="flex h-4 items-center">
           <StatusDot status={STATUS_TONE[c.status]} label={words} className={cn('items-center text-small', c.status === 'linked' ? 'text-ok' : c.status === 'pending' ? 'text-muted' : 'text-warn')} />
         </ListCell>
         <ListCell kind="actions">
@@ -403,8 +403,8 @@ export const ConnectionsEditor = forwardRef<HTMLDivElement, ConnectionsEditorPro
         </div>
       ) : (
         <>
-          <ListGroups columns={COLUMNS} stackBelow={640} shortcuts={shortcuts}>
-            <ListGroup title="Reads from" level={3} count={reads.length || undefined} description={groupDescriptions?.reads} empty={readsNone} emptyVariant={emptyStyle === 'box' ? (readsEmptyWarn ? 'box-warn' : 'box') : 'ruled'}>
+          <ListGroups columns={COLUMNS} stackBelow="sheet700" shortcuts={shortcuts}>
+            <ListGroup compact title="Reads from" level={3} count={reads.length || undefined} description={groupDescriptions?.reads} empty={readsNone} emptyVariant={emptyStyle === 'box' ? (readsEmptyWarn ? 'box-warn' : 'box') : 'ruled'}>
               {reads.map((c) => row(c, 'reads'))}
             </ListGroup>
             {multi ? (
@@ -413,11 +413,11 @@ export const ConnectionsEditor = forwardRef<HTMLDivElement, ConnectionsEditorPro
                 <span className="min-w-0">{multi}</span>
               </p>
             ) : null}
-            <ListGroup title="Shares with" level={3} count={shares.length || undefined} description={groupDescriptions?.shares} empty={sharesEmpty} emptyVariant={emptyStyle === 'box' ? 'box' : 'ruled'}>
+            <ListGroup compact className="mt-[var(--group-y)]" title="Shares with" level={3} count={shares.length || undefined} description={groupDescriptions?.shares} empty={sharesEmpty} emptyVariant={emptyStyle === 'box' ? 'box' : 'ruled'}>
               {shares.map((c) => row(c, 'shares'))}
             </ListGroup>
           </ListGroups>
-          <div className="mt-[var(--group-y)]">
+          <div className={options.length ? "mt-[var(--group-y)]" : undefined}>
             {options.length ? (
               <div className="flex flex-wrap items-center gap-2">
                 <Select

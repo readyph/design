@@ -15,7 +15,7 @@ import {
 import { cn } from '../utils/cn';
 
 /** Container width under which rows stack. `'sheet760'` measures the PlatformShell sheet (the prototype's `@container sheet (max-width: 760px)`) instead of the list. */
-export type ListStackBelow = 0 | 600 | 640 | 760 | 880 | 'sheet760';
+export type ListStackBelow = 0 | 600 | 640 | 760 | 880 | 'sheet760' | 'sheet700';
 
 type Mode = 'list' | 'table';
 
@@ -73,6 +73,16 @@ const stackClasses: Record<ListStackBelow, { header: string; row: string; lead: 
     flush: '@max-[760px]/sheet:col-span-full',
     hide: '@max-[760px]/sheet:hidden',
     only: 'hidden @max-[760px]/sheet:block',
+  },
+  sheet700: {
+    header: '@max-[700px]/sheet:hidden',
+    row: '@max-[700px]/sheet:grid-cols-[minmax(0,1fr)_auto] @max-[700px]/sheet:gap-y-3',
+    lead: '@max-[700px]/sheet:col-start-1 @max-[700px]/sheet:row-start-1',
+    actions: '@max-[700px]/sheet:col-start-2 @max-[700px]/sheet:row-start-1',
+    body: '@max-[700px]/sheet:col-span-full @max-[700px]/sheet:pl-11',
+    flush: '@max-[700px]/sheet:col-span-full',
+    hide: '@max-[700px]/sheet:hidden',
+    only: 'hidden @max-[700px]/sheet:block',
   },
   880: {
     header: '@max-[880px]/list:hidden',

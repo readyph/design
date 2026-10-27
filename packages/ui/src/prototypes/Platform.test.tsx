@@ -177,13 +177,20 @@ describe('Onboarding', () => {
 
 describe('Platform page tabs: axe and real focus (RDY-361 stage 5)', () => {
   const violations = async () => (await axe.run(document.body, { rules: { 'color-contrast': { enabled: false }, region: { enabled: false } } })).violations;
-  it.each([['general'], ['system'], ['team']] as const)('%s tab has no axe violations', async (tab) => {
+  it.each([['general'], ['system'], ['team'], ['connections']] as const)('%s tab has no axe violations', async (tab) => {
     setup({ platformId: 'autoworks', tab });
     expect(await violations()).toEqual([]);
   });
   it('the stockroom own-hours editor has no axe violations', async () => {
     setup({ platformId: 'stockroom', tab: 'system' });
     expect(await violations()).toEqual([]);
+  });
+  it('the stockroom connections tab has no axe violations and its Remove button takes real focus', async () => {
+    setup({ platformId: 'stockroom', tab: 'connections' });
+    expect(await violations()).toEqual([]);
+    const btn = screen.getAllByRole('button', { name: /^Remove connection/ })[0];
+    btn.focus();
+    expect(document.activeElement).toBe(btn);
   });
   it('a holiday checkbox takes real keyboard focus and toggles with Space', async () => {
     const u = userEvent.setup();
