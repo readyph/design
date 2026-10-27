@@ -1,5 +1,5 @@
 import { forwardRef, type ReactNode, useCallback, useEffect, useId, useImperativeHandle, useLayoutEffect, useMemo, useRef } from 'react';
-import { ArrowClockwise, ArrowCounterClockwise, Minus, Plus, PlusSquare } from '@phosphor-icons/react';
+import { ArrowClockwise, ArrowCounterClockwise, ArrowsCounterClockwise, Minus, Plus, PlusSquare } from '@phosphor-icons/react';
 import { identity } from '../tokens/colors';
 import { cn, focusRing } from '../utils/cn';
 import { PlatformLogo } from './PlatformLogo';
@@ -52,6 +52,21 @@ export interface TownMapLink {
 }
 
 /** What the map shows beyond its data. `state()` returns it; `morph(from)` eases from it to the current one. */
+/** Keys the focused map answers to: arrows rotate, plus and minus zoom. */
+const MAP_KEYS: Record<string, readonly ['rotate' | 'zoom', -1 | 1]> = {
+  ArrowLeft: ['rotate', -1],
+  ArrowRight: ['rotate', 1],
+  '+': ['zoom', 1],
+  '=': ['zoom', 1],
+  '-': ['zoom', -1],
+  _: ['zoom', -1],
+};
+
+/** A text field or another widget that owns the keys itself. */
+function isTypingTarget(t: EventTarget): boolean {
+  return t instanceof HTMLElement && (t.isContentEditable || !!t.closest('input,textarea,select,[role="textbox"],[role="combobox"],[role="slider"],[role="listbox"]'));
+}
+
 export interface TownMapView {
   selected: string | null;
   focus: string | null;
@@ -63,6 +78,8 @@ export interface TownMapHandle {
   rotate(dir: -1 | 1): void;
   /** One zoom step; -1 out, 1 in. Returns the new zoom (1 to 2.4). */
   zoom(dir: -1 | 1): number;
+  /** Back to the start view: no rotation, no zoom. */
+  reset(): void;
   /** One van drives from one platform to another, once (a confirmed transfer). No-op under reduced motion. */
   runVan(from: string, to: string): boolean;
   /** Current selected / focus / highlight. */
@@ -103,6 +120,8 @@ export interface TownMapProps {
   errorNotice?: boolean;
   /** Adds the workshop's "Add platform" button to the map controls (label hidden at 960px and below, and on a narrow map). */
   onAddPlatform?: () => void;
+  /** Shows the add "+" control in the map controls (opens the marketplace); absent when not passed. Same as `onAddPlatform`; this one wins when both are given. */
+  onAdd?: () => void;
   /** Accessible name of the whole map (a group of buttons, one per platform). */
   label?: string;
   /** Overrides the accessible name of a platform button. */
@@ -181,6 +200,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
     onRetry,
     caption,
     onAddPlatform,
+    onAdd,
     errorNotice = true,
     fadeOthers = false,
     label = 'Platform map',
@@ -336,6 +356,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
     () => ({
       rotate: (d) => sceneRef.current?.rotate(d),
       zoom: (d) => sceneRef.current?.zoom(d) ?? 1,
+      reset: () => sceneRef.current?.reset(),
       runVan: (a, b) => sceneRef.current?.runVan(a, b) ?? false,
       state: () => {
         const s = sceneRef.current?.state();
@@ -348,8 +369,10 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
     [],
   );
 
+  const addHandler = onAdd ?? onAddPlatform;
+
   const ctl =
-    'inline-flex h-7 min-w-7 items-center justify-center gap-1.5 rounded-chip px-1.5 text-small text-muted transition-colors duration-hover hover:bg-raised hover:text-text';
+    'inline-flex h-7 min-w-7 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:min-w-11 items-center justify-center gap-1.5 rounded-chip px-1.5 text-small text-muted transition-colors duration-hover hover:bg-raised hover:text-text';
 
   return (
     <div
@@ -358,6 +381,14 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
       aria-busy={loading || undefined}
       className={cn(className, 'group/town mt-1 flex h-map-h min-w-0 flex-col max-[640px]:mt-0')}
       onKeyDown={(e) => {
+        if (!loading && !e.defaultPrevented && !e.altKey && !e.ctrlKey && !e.metaKey && !isTypingTarget(e.target)) {
+          const move = MAP_KEYS[e.key];
+          if (move) {
+            e.preventDefault();
+            if (move[0] === 'rotate') sceneRef.current?.rotate(move[1]);
+            else sceneRef.current?.zoom(move[1]);
+          }
+        }
         if (e.key === 'Escape' && selected !== null && !loading) {
           e.stopPropagation();
           onSelect?.(null);
@@ -529,10 +560,13 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
             <button type="button" aria-label="Zoom in" title="Zoom in" onClick={() => sceneRef.current?.zoom(1)} className={cn(ctl, focusRing)}>
               <Plus size={16} aria-hidden />
             </button>
-            {onAddPlatform ? (
+            <button type="button" aria-label="Reset view" title="Reset view" onClick={() => sceneRef.current?.reset()} className={cn(ctl, focusRing)}>
+              <ArrowsCounterClockwise size={16} aria-hidden />
+            </button>
+            {addHandler ? (
               <>
                 <span aria-hidden="true" className="mx-0.5 h-4 w-px bg-border" />
-                <button type="button" aria-label="Add a platform" title="Add a platform" onClick={onAddPlatform} className={cn(ctl, focusRing)}>
+                <button type="button" aria-label="Add a platform" title="Add a platform" onClick={addHandler} className={cn(ctl, focusRing)}>
                   <PlusSquare size={16} aria-hidden />
                   <span className="leading-5 max-[960px]:hidden @max-[400px]/town:hidden">Add platform</span>
                 </button>

@@ -7,6 +7,9 @@ import { eight, eightLinks, three, threeLinks, longName, cafe, hq, stockroom } f
 
 afterEach(cleanup);
 
+/** Current zoom: a zero step changes nothing and returns it. */
+const zoomOf = (h: TownMapHandle) => (h.zoom as (d: number) => number)(0);
+
 describe('TownMap', () => {
   it('is a named group with a list of platform buttons and a hidden drawing', () => {
     const { container } = render(<TownMap platforms={three} links={threeLinks} label="Map of 3 platforms and HQ" />);
@@ -169,3 +172,76 @@ describe('TownMap workshop chrome (RDY-364)', () => {
     expect(label.className).toContain('pr-1.5');
   });
 });
+
+describe('TownMap controls and keyboard (RDY-317)', () => {
+  it('rotate, zoom and reset change the view; reset restores it', () => {
+    const ref = createRef<TownMapHandle>();
+    render(<TownMap ref={ref} platforms={three} links={threeLinks} />);
+    const svg = document.querySelector('svg')!;
+    const start = svg.getAttribute('viewBox');
+    fireEvent.click(screen.getByRole('button', { name: 'Zoom in' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Zoom in' }));
+    expect(svg.getAttribute('viewBox')).not.toBe(start);
+    expect(zoomOf(ref.current!)).toBeCloseTo(1.7);
+    fireEvent.click(screen.getByRole('button', { name: 'Zoom out' }));
+    expect(zoomOf(ref.current!)).toBeCloseTo(1.35);
+    fireEvent.click(screen.getByRole('button', { name: 'Rotate right' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Reset view' }));
+    expect(zoomOf(ref.current!)).toBe(1);
+    expect(svg.getAttribute('viewBox')).toBe(start);
+  });
+
+  it('onAdd shows the add control and fires on click and Enter; absent when not passed', () => {
+    const add = vi.fn();
+    const { rerender } = render(<TownMap platforms={three} />);
+    expect(screen.queryByRole('button', { name: 'Add a platform', hidden: true })).toBeNull();
+    rerender(<TownMap platforms={three} onAdd={add} />);
+    const btn = screen.getByRole('button', { name: 'Add a platform', hidden: true });
+    fireEvent.click(btn);
+    expect(add).toHaveBeenCalledTimes(1);
+    // Enter on a native button is a click in the browser; jsdom does not synthesise it
+    expect(btn.tagName).toBe('BUTTON');
+    expect(btn.getAttribute('type')).toBe('button');
+  });
+
+  it('keyboard: arrows rotate, plus and minus zoom while the map has focus', () => {
+    const ref = createRef<TownMapHandle>();
+    render(<TownMap ref={ref} platforms={three} links={threeLinks} />);
+    const btn = screen.getAllByRole('button', { name: /Stockroom/ })[0]!;
+    btn.focus();
+    expect(fireEvent.keyDown(btn, { key: '+' })).toBe(false);
+    expect(zoomOf(ref.current!)).toBeCloseTo(1.35);
+    fireEvent.keyDown(btn, { key: '-' });
+    expect(zoomOf(ref.current!)).toBe(1);
+    expect(fireEvent.keyDown(btn, { key: 'ArrowLeft' })).toBe(false);
+    expect(fireEvent.keyDown(btn, { key: 'ArrowRight' })).toBe(false);
+    // a modifier is not ours
+    expect(fireEvent.keyDown(btn, { key: '+', ctrlKey: true })).toBe(true);
+  });
+
+  it('keyboard does nothing while focus is in another widget inside the map, or the map is loading', () => {
+    const ref = createRef<TownMapHandle>();
+    const { container, rerender } = render(<TownMap ref={ref} platforms={three} links={threeLinks} />);
+    const input = document.createElement('input');
+    container.firstElementChild!.appendChild(input);
+    input.focus();
+    expect(fireEvent.keyDown(input, { key: '+' })).toBe(true);
+    expect(zoomOf(ref.current!)).toBe(1);
+    // outside the map nothing is handled
+    const outside = document.createElement('button');
+    document.body.appendChild(outside);
+    expect(fireEvent.keyDown(outside, { key: '+' })).toBe(true);
+    rerender(<TownMap ref={ref} platforms={three} loading />);
+    expect(fireEvent.keyDown(container.firstElementChild!, { key: '+' })).toBe(true);
+    outside.remove();
+  });
+
+  it('controls are hidden on the phone strip and 44px on touch', () => {
+    render(<TownMap platforms={three} />);
+    const group = screen.getByRole('group', { name: 'Map controls', hidden: true });
+    expect(group.className).toContain('max-[640px]:hidden');
+    expect(group.className).toContain('focus-within:opacity-100');
+    expect(screen.getByRole('button', { name: 'Zoom in', hidden: true }).className).toContain('[@media(pointer:coarse)]:h-11');
+  });
+});
+
