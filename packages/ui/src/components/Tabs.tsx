@@ -52,6 +52,8 @@ export interface TabsProps {
   /** Tab panels, usually `<TabPanel>` children. Leave empty when the tabs only navigate. */
   children?: ReactNode;
   className?: string;
+  /** Scroll the chosen tab into view when it changes (default true). The Memory prototype's fixed tabs never scroll, so it passes `false` there. */
+  keepInView?: boolean;
 }
 
 const CONTROLS_KEY = 'tabControls';
@@ -108,6 +110,7 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
     'aria-label': ariaLabel = 'Tabs',
     children,
     className,
+    keepInView = true,
   },
   ref,
 ) {
@@ -132,11 +135,11 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
 
   // Keep the chosen tab in view when the strip scrolls.
   useEffect(() => {
-    if (v === 'vertical') return;
+    if (v === 'vertical' || !keepInView) return;
     rootRef.current
       ?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')
       ?.scrollIntoView?.({ inline: 'nearest', block: 'nearest' });
-  }, [value, v, items.length]);
+  }, [value, v, items.length, keepInView]);
 
   const onKeyDown = (e: KeyboardEvent<HTMLButtonElement>, item: TabItem) => {
     if (e.key !== 'Delete' || !item.closable || !onClose || item.disabled) return;

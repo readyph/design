@@ -63,6 +63,10 @@ export interface StatusBarProps {
   leda?: StatusBarLeda;
   /** Plan name, e.g. "Starter". Shown as "Starter plan". */
   plan?: string;
+  /** Makes the plan item a link (Plan and billing). */
+  planHref?: string;
+  /** Makes the plan item a button, or runs on a link click. */
+  onPlanSelect?: () => void;
   /** Workshop shell order (shell.js renderStatus, RDY-364): Leda first, then "N platforms · all running" and a named logo per platform, people with invites pending, plan. Default true; `false` keeps the earlier order. */
   ledaFirst?: boolean;
   /** Last refresh, already formatted, e.g. "9:12 AM". Shown as "Updated 9:12 AM". */
@@ -157,7 +161,7 @@ const plural = (n: number, one: string, many: string) => `${n.toLocaleString('en
  * Items are plain text unless given `href` (link) or `onSelect` (button). A hidden live region announces health changes only.
  */
 export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function StatusBar(
-  { platforms = [], maxPlatforms = 8, moreHref, onMore, people, invites, leda, plan, ledaFirst = true, updatedAt, summary, note, 'aria-label': ariaLabel, className },
+  { platforms = [], maxPlatforms = 8, moreHref, onMore, people, invites, leda, plan, planHref, onPlanSelect, ledaFirst = true, updatedAt, summary, note, 'aria-label': ariaLabel, className },
   ref,
 ) {
   const shown = platforms.slice(0, maxPlatforms);
@@ -166,7 +170,7 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
   const problems = platforms.filter((p) => p.health && p.health !== 'ok');
   const allRunning = platforms.length > 0 && problems.length === 0;
   const showSummary = allRunning && !namesAlways;
-  const portalSummary = ledaFirst && allRunning;
+  const portalSummary = ledaFirst && problems.length === 0;
   const words = (p: StatusBarPlatform) => p.healthText ?? healthWord[p.health ?? 'ok'];
 
   const announce = platforms.length === 0 ? '' : problems.length ? problems.map((p) => `${p.name} ${words(p)}`).join(', ') : 'All platforms running';
@@ -185,7 +189,7 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
 
   if (note) {
     sections.push({ key: 'note', cls: 'flex min-w-0 shrink', node: <Item>{note}</Item> });
-  } else if (platforms.length > 0) {
+  } else if (platforms.length > 0 || portalSummary) {
     sections.push({ key: 'platforms', cls: 'flex min-w-0 shrink', node: (
         <ul role="list" aria-label="Platforms" className="flex min-w-0 items-center gap-0.5 overflow-hidden">
           {(summary !== undefined ? summary : portalSummary) && (
@@ -288,7 +292,7 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
 
   if (plan) {
     sections.push({ key: 'plan', cls: cn('flex shrink-0', ledaFirst ? wsMid : dropPlan), node: (
-        <Item>{plan} plan</Item>
+        <Item href={planHref} onSelect={onPlanSelect}>{plan} plan</Item>
       ) });
   }
 
