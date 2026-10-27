@@ -1,5 +1,5 @@
 import { logoAutoworks } from './Home.logos';
-import { fewLive, fewQuiet, liveMeta, liveWeeks, manyLive, manyQuiet } from './Home.sets.data';
+import { duoLive, duoQuiet, fewLive, fewQuiet, liveMeta, liveWeeks, manyLive, manyQuiet } from './Home.sets.data';
 import type { DataListItem } from '../components/DataList';
 import type { DayBarMark } from '../components/DayBar';
 import type { OverviewPlatform } from '../components/OverviewCharts';
@@ -97,6 +97,8 @@ const hqPlatform: HomePlatform = {
   yesterday: [],
 };
 
+const sharesOf = (id: string) => duoLive.platforms.find((p) => p.id === id)?.week.shares;
+
 const stockroom: HomePlatform = {
   id: 'stockroom', name: 'Parts Stockroom', shortName: 'Stockroom', kind: 'Inventory', mapType: 'warehouse', status: 'ACTIVE', index: 1, count: 2,
   ledaCanAct: true,
@@ -113,7 +115,7 @@ const stockroom: HomePlatform = {
       { id: 'l3', ref: 'BX-DB1863', title: 'Bendix brake pads, Vios front', detail: 'reorder level 6 · PO-0219', state: 'Low', tone: 'warn', qty: '2 set' },
     ]),
   ],
-  week: liveWeeks.stockroom!,
+  week: { ...liveWeeks.stockroom!, shares: sharesOf('stockroom') },
   yesterday: [{ value: 14, label: 'received' }, { value: 31, label: 'shipped' }],
 };
 
@@ -133,7 +135,7 @@ const autoworks: HomePlatform = {
       { id: 'i3', ref: 'QT-0092', title: 'Ranger · Noise check, front', detail: 'Gerry Ong', state: 'Quotation', at: '9:02' },
     ]),
   ],
-  week: liveWeeks.autoworks!,
+  week: { ...liveWeeks.autoworks!, shares: sharesOf('autoworks') },
   yesterday: [{ value: '₱24,300', label: 'revenue' }, { value: 6, label: 'jobs closed' }],
 };
 
@@ -261,7 +263,10 @@ const done: QueueDoneItem[] = [];
 
 const common = { cases, next: 'Next: PO-0221 from Banawe Autoparts Supply arrives at 10:30 · 12 lines.', yesterdayDate: 'Sun 25 Oct', plan: { used: 1742, max: 2000, cycleStart: '30 Sep', cycleEnd: '29 Oct', daysLeft: 7 } };
 
+const liveQuiet: HomeSet = { ...duoQuiet, owner: liveMeta.owner, suggestions: [...liveMeta.suggestions], weekRange: liveMeta.weekRange };
+
 export const live: HomeSet = {
+  quietSet: liveQuiet,
   key: 'live',
   owner: liveMeta.owner,
   suggestions: [...liveMeta.suggestions],

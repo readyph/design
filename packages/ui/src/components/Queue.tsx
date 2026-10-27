@@ -92,6 +92,8 @@ export interface QueueProps {
   onFilterChange?: (platformId: string | null) => void;
   /** Heading text. Default "Needs you". */
   title?: string;
+  /** Leaves out the "Nothing open" empty state (a quiet day that still lists what Leda is watching). */
+  hideEmpty?: boolean;
   /** Heading level of the title (pinned groups sit one level below). Default 1. */
   headingLevel?: 1 | 2;
   /** Leda's one-line summary. Defaults to "4 decisions. First: …". */
@@ -320,6 +322,7 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
     defaultFilter = null,
     onFilterChange,
     title = 'Needs you',
+    hideEmpty = false,
     headingLevel = 1,
     headline,
     loading = false,
@@ -581,7 +584,7 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
               ))}
             </div>
           ) : isEmpty ? (
-            vErrors.length ? null : (
+            vErrors.length || hideEmpty ? null : (
               <EmptyState
                 align="start"
                 icon={CheckCircle}

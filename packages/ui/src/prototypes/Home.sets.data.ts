@@ -97,7 +97,8 @@ export const fewLive = {
      "unit": "movements",
      "aboveLabel": "In",
      "belowLabel": "Out"
-    }
+    },
+    "shares": []
    },
    "yesterday": [
     {
@@ -182,7 +183,8 @@ export const fewLive = {
      "unit": "sales",
      "format": PESO,
      "tickFormat": PESOK
-    }
+    },
+    "shares": []
    },
    "yesterday": [
     {
@@ -255,7 +257,8 @@ export const fewLive = {
       315
      ],
      "unit": "orders"
-    }
+    },
+    "shares": []
    },
    "yesterday": [
     {
@@ -369,6 +372,7 @@ export const fewLive = {
     "name": "HQ",
     "hq": true
    },
+   "source": "HQ · Plan",
    "title": "Leda usage at 31%",
    "detail": "610 / 2,000 · 7 days left"
   }
@@ -518,18 +522,6 @@ export const fewLive = {
   "cycleEnd": "29 Oct",
   "daysLeft": 7
  },
- "owner": {
-  "name": "Bea Santos",
-  "short": "Bea",
-  "initials": "BS"
- },
- "suggestions": [
-  "Top sellers yesterday",
-  "Ilan ang orders kahapon?",
-  "Set oat milk reorder level to 24",
-  "Mark yesterday synced in Books"
- ],
- "weekRange": "Thu 15 – Wed 21 Oct",
  "headline": "2 decisions. First: 4 items out before 11:00 lunch.",
  "quietHeadline": "All clear. Leda is watching 2 things.",
  "yesterdayLine": "Yesterday: ₱54,380 from 411 orders.",
@@ -632,7 +624,8 @@ export const fewQuiet = {
      "unit": "movements",
      "aboveLabel": "In",
      "belowLabel": "Out"
-    }
+    },
+    "shares": []
    },
    "yesterday": [
     {
@@ -717,7 +710,8 @@ export const fewQuiet = {
      "unit": "sales",
      "format": PESO,
      "tickFormat": PESOK
-    }
+    },
+    "shares": []
    },
    "yesterday": [
     {
@@ -792,7 +786,8 @@ export const fewQuiet = {
       411
      ],
      "unit": "orders"
-    }
+    },
+    "shares": []
    },
    "yesterday": [
     {
@@ -879,6 +874,7 @@ export const fewQuiet = {
     "name": "HQ",
     "hq": true
    },
+   "source": "HQ · Plan",
    "title": "Leda usage at 31%",
    "detail": "610 / 2,000 · 7 days left"
   }
@@ -943,18 +939,6 @@ export const fewQuiet = {
   "cycleEnd": "29 Oct",
   "daysLeft": 7
  },
- "owner": {
-  "name": "Bea Santos",
-  "short": "Bea",
-  "initials": "BS"
- },
- "suggestions": [
-  "Top sellers yesterday",
-  "Ilan ang orders kahapon?",
-  "Set oat milk reorder level to 24",
-  "Mark yesterday synced in Books"
- ],
- "weekRange": "Thu 15 – Wed 21 Oct",
  "headline": "2 decisions. First: 4 items out before 11:00 lunch.",
  "quietHeadline": "All clear. Leda is watching 2 things.",
  "yesterdayLine": "Yesterday: ₱54,380 from 411 orders.",
@@ -1063,7 +1047,8 @@ export const manyLive = {
      "unit": "movements",
      "aboveLabel": "In",
      "belowLabel": "Out"
-    }
+    },
+    "shares": []
    },
    "yesterday": [
     {
@@ -1147,7 +1132,8 @@ export const manyLive = {
       11
      ],
      "unit": "jobs"
-    }
+    },
+    "shares": []
    },
    "yesterday": [
     {
@@ -1229,7 +1215,8 @@ export const manyLive = {
       7
      ],
      "unit": "jobs"
-    }
+    },
+    "shares": []
    },
    "yesterday": [
     {
@@ -1315,7 +1302,8 @@ export const manyLive = {
       9
      ],
      "unit": "jobs"
-    }
+    },
+    "shares": []
    },
    "yesterday": [
     {
@@ -1399,7 +1387,8 @@ export const manyLive = {
      "unit": "sales",
      "format": PESO,
      "tickFormat": PESOK
-    }
+    },
+    "shares": []
    },
    "yesterday": [
     {
@@ -1500,7 +1489,8 @@ export const manyLive = {
      "unit": "movements",
      "aboveLabel": "In",
      "belowLabel": "Out"
-    }
+    },
+    "shares": []
    },
    "yesterday": [
     {
@@ -1585,7 +1575,8 @@ export const manyLive = {
      "unit": "sales",
      "format": PESO,
      "tickFormat": PESOK
-    }
+    },
+    "shares": []
    },
    "yesterday": [
     {
@@ -1658,7 +1649,8 @@ export const manyLive = {
       315
      ],
      "unit": "orders"
-    }
+    },
+    "shares": []
    },
    "yesterday": [
     {
@@ -1863,6 +1855,7 @@ export const manyLive = {
     "name": "HQ",
     "hq": true
    },
+   "source": "HQ · Plan",
    "title": "Leda usage at 87%",
    "detail": "1,742 / 2,000 · 7 days left"
   }
@@ -2255,22 +2248,6 @@ export const manyLive = {
   "cycleEnd": "29 Oct",
   "daysLeft": 7
  },
- "owner": {
-  "name": "Ramon Dela Cruz",
-  "short": "Mon",
-  "initials": "RD"
- },
- "suggestions": [
-  "How did each branch do this week?",
-  "Top sellers yesterday",
-  "Magkano benta ng counter kahapon?",
-  "Ilan ang orders kahapon?",
-  "Raise oil filter reorder level to 30",
-  "Set oat milk reorder level to 24",
-  "Move KAP-0412 to In progress",
-  "Mark yesterday synced in Books"
- ],
- "weekRange": "Thu 15 – Wed 21 Oct",
  "headline": "6 decisions. First: Kapitolyo alternator, transfer by 10:15.",
  "quietHeadline": "All clear. Leda is watching 3 things.",
  "yesterdayLine": "Yesterday: 27 jobs completed, ₱61,250 at the parts counter, ₱54,380 at the café.",
@@ -2385,7 +2362,8 @@ export const manyQuiet = {
      "unit": "movements",
      "aboveLabel": "In",
      "belowLabel": "Out"
-    }
+    },
+    "shares": []
    },
    "yesterday": [
     {
@@ -2469,7 +2447,8 @@ export const manyQuiet = {
       11
      ],
      "unit": "jobs"
-    }
+    },
+    "shares": []
    },
    "yesterday": [
     {
@@ -2551,7 +2530,8 @@ export const manyQuiet = {
       7
      ],
      "unit": "jobs"
-    }
+    },
+    "shares": []
    },
    "yesterday": [
     {
@@ -2634,7 +2614,8 @@ export const manyQuiet = {
       9
      ],
      "unit": "jobs"
-    }
+    },
+    "shares": []
    },
    "yesterday": [
     {
@@ -2718,7 +2699,8 @@ export const manyQuiet = {
      "unit": "sales",
      "format": PESO,
      "tickFormat": PESOK
-    }
+    },
+    "shares": []
    },
    "yesterday": [
     {
@@ -2819,7 +2801,8 @@ export const manyQuiet = {
      "unit": "movements",
      "aboveLabel": "In",
      "belowLabel": "Out"
-    }
+    },
+    "shares": []
    },
    "yesterday": [
     {
@@ -2904,7 +2887,8 @@ export const manyQuiet = {
      "unit": "sales",
      "format": PESO,
      "tickFormat": PESOK
-    }
+    },
+    "shares": []
    },
    "yesterday": [
     {
@@ -2979,7 +2963,8 @@ export const manyQuiet = {
       411
      ],
      "unit": "orders"
-    }
+    },
+    "shares": []
    },
    "yesterday": [
     {
@@ -3076,6 +3061,7 @@ export const manyQuiet = {
     "name": "HQ",
     "hq": true
    },
+   "source": "HQ · Plan",
    "title": "Leda usage at 87%",
    "detail": "1,742 / 2,000 · 7 days left"
   },
@@ -3181,22 +3167,6 @@ export const manyQuiet = {
   "cycleEnd": "29 Oct",
   "daysLeft": 7
  },
- "owner": {
-  "name": "Ramon Dela Cruz",
-  "short": "Mon",
-  "initials": "RD"
- },
- "suggestions": [
-  "How did each branch do this week?",
-  "Top sellers yesterday",
-  "Magkano benta ng counter kahapon?",
-  "Ilan ang orders kahapon?",
-  "Raise oil filter reorder level to 30",
-  "Set oat milk reorder level to 24",
-  "Move KAP-0412 to In progress",
-  "Mark yesterday synced in Books"
- ],
- "weekRange": "Thu 15 – Wed 21 Oct",
  "headline": "6 decisions. First: Kapitolyo alternator, transfer by 10:15.",
  "quietHeadline": "All clear. Leda is watching 3 things.",
  "yesterdayLine": "Yesterday: 27 jobs completed, ₱61,250 at the parts counter, ₱54,380 at the café.",
@@ -3211,6 +3181,1172 @@ export const manyQuiet = {
   "counter",
   "hq",
   "books"
+ ]
+} as unknown as HomeSet;
+
+export const duoLive = {
+ "key": "live",
+ "platforms": [
+  {
+   "id": "autoworks",
+   "name": "Dela Cruz Auto Works",
+   "shortName": "Auto Works",
+   "kind": "Repair shop",
+   "mapType": "service",
+   "status": "ACTIVE",
+   "index": 0,
+   "initials": "DC",
+   "logo": logoAutoworks,
+   "count": 1,
+   "ledaCanAct": false,
+   "ledaCanRead": true,
+   "facts": [
+    {
+     "value": "12",
+     "label": "open jobs"
+    },
+    {
+     "value": "4",
+     "label": "inquiries"
+    },
+    {
+     "value": "3",
+     "label": "for pickup"
+    }
+   ],
+   "lists": [],
+   "activity": [
+    {
+     "id": "autoworks-a0",
+     "at": "8:02",
+     "text": "Opened · 12 open job orders"
+    },
+    {
+     "id": "autoworks-a1",
+     "at": "8:40",
+     "text": "JO-0409 ready for pickup"
+    },
+    {
+     "id": "autoworks-a2",
+     "at": "8:47",
+     "text": "JO-0412 waiting for parts"
+    },
+    {
+     "id": "autoworks-a3",
+     "at": "9:02",
+     "text": "New inquiry QT-0092"
+    }
+   ],
+   "week": {
+    "id": "autoworks",
+    "name": "Dela Cruz Auto Works",
+    "kind": "Repair shop",
+    "logo": {
+     "index": 0,
+     "src": logoAutoworks
+    },
+    "status": {
+     "tone": "ok",
+     "label": "Running"
+    },
+    "figure": {
+     "value": "₱208,880",
+     "label": "revenue, last 7 days"
+    },
+    "sub": "59 jobs · best day Tue 20",
+    "chart": {
+     "title": "Jobs completed a day",
+     "note": "Closed Sundays",
+     "labels": [
+      "Thu 15",
+      "Fri 16",
+      "Sat 17",
+      "Sun 18",
+      "Mon 19",
+      "Tue 20",
+      "Wed 21"
+     ],
+     "values": [
+      11,
+      9,
+      8,
+      0,
+      10,
+      12,
+      9
+     ],
+     "unit": "jobs"
+    },
+    "shares": [
+     {
+      "title": "Open job orders",
+      "total": 12,
+      "parts": [
+       {
+        "label": "To do",
+        "value": 3
+       },
+       {
+        "label": "In progress",
+        "value": 4,
+        "tone": "accent"
+       },
+       {
+        "label": "Pending",
+        "value": 2,
+        "tone": "warn"
+       },
+       {
+        "label": "For pickup",
+        "value": 3,
+        "tone": "ok"
+       }
+      ]
+     },
+     {
+      "title": "Inquiries",
+      "total": 4,
+      "parts": [
+       {
+        "label": "Quotation",
+        "value": 2
+       },
+       {
+        "label": "For approval",
+        "value": 2
+       }
+      ]
+     }
+    ]
+   },
+   "yesterday": [
+    {
+     "value": "9",
+     "label": "jobs completed"
+    },
+    {
+     "value": "3",
+     "label": "new inquiries"
+    }
+   ]
+  },
+  {
+   "id": "stockroom",
+   "name": "Parts Stockroom",
+   "shortName": "Stockroom",
+   "kind": "Inventory",
+   "mapType": "warehouse",
+   "status": "ACTIVE",
+   "index": 1,
+   "initials": "PS",
+   "count": 2,
+   "ledaCanAct": true,
+   "ledaCanRead": true,
+   "facts": [
+    {
+     "value": "612",
+     "label": "products"
+    },
+    {
+     "value": "9",
+     "label": "low stock"
+    },
+    {
+     "value": "2",
+     "label": "POs open"
+    }
+   ],
+   "lists": [],
+   "activity": [
+    {
+     "id": "stockroom-a0",
+     "at": "9:05",
+     "text": "Out · Toyota oil filter −1 for JO-0414"
+    },
+    {
+     "id": "stockroom-a1",
+     "at": "8:47",
+     "text": "Out · Engine oil 10W-40, 1L −4 for JO-0414"
+    },
+    {
+     "id": "stockroom-a2",
+     "at": "8:30",
+     "text": "Out · Brake pads, Montero front −1 for JO-0415"
+    },
+    {
+     "id": "stockroom-a3",
+     "at": "8:20",
+     "text": "Out · Aircon cleaner can −2 for JO-0413"
+    }
+   ],
+   "week": {
+    "id": "stockroom",
+    "name": "Parts Stockroom",
+    "kind": "Inventory",
+    "logo": {
+     "index": 1
+    },
+    "status": {
+     "tone": "ok",
+     "label": "Running"
+    },
+    "figure": {
+     "value": "₱1,284,650",
+     "label": "stock value on hand"
+    },
+    "sub": "21 in · 199 out",
+    "chart": {
+     "kind": "diverging",
+     "title": "Stock movements a day",
+     "note": "Closed Sundays",
+     "labels": [
+      "Thu 15",
+      "Fri 16",
+      "Sat 17",
+      "Sun 18",
+      "Mon 19",
+      "Tue 20",
+      "Wed 21"
+     ],
+     "up": [
+      0,
+      14,
+      0,
+      0,
+      6,
+      0,
+      1
+     ],
+     "down": [
+      34,
+      30,
+      26,
+      0,
+      31,
+      38,
+      40
+     ],
+     "unit": "movements",
+     "aboveLabel": "In",
+     "belowLabel": "Out"
+    },
+    "shares": [
+     {
+      "title": "Stock in and out since yesterday",
+      "total": 9,
+      "parts": [
+       {
+        "label": "In",
+        "value": 1,
+        "tone": "ok"
+       },
+       {
+        "label": "Out to jobs",
+        "value": 6
+       },
+       {
+        "label": "Damaged",
+        "value": 1,
+        "tone": "bad"
+       },
+       {
+        "label": "Count",
+        "value": 1
+       }
+      ]
+     },
+     {
+      "title": "Low stock",
+      "total": 9,
+      "parts": [
+       {
+        "label": "Out",
+        "value": 1,
+        "tone": "bad"
+       },
+       {
+        "label": "Low",
+        "value": 8,
+        "tone": "warn"
+       }
+      ]
+     }
+    ]
+   },
+   "yesterday": [
+    {
+     "value": "41",
+     "label": "movements"
+    },
+    {
+     "value": "1",
+     "label": "POs received"
+    }
+   ]
+  }
+ ],
+ "hasHq": true,
+ "hq": {
+  "id": "hq",
+  "name": "HQ",
+  "shortName": "HQ",
+  "kind": "Team and plan",
+  "status": "ACTIVE",
+  "hq": true,
+  "count": 1,
+  "ledaCanAct": true,
+  "facts": [
+   {
+    "value": 9,
+    "label": "people"
+   },
+   {
+    "value": 1,
+    "label": "invite pending"
+   },
+   {
+    "value": "1,742 / 2,000",
+    "label": "Leda requests"
+   }
+  ],
+  "lists": [
+   {
+    "id": "invites",
+    "title": "Invites",
+    "total": 1,
+    "items": [
+     {
+      "id": "inv-rico",
+      "ref": "Wed 21 Oct",
+      "refPlain": true,
+      "title": "Rico Lim · Mechanic",
+      "detail": "Write · Dela Cruz Auto Works · by Jun",
+      "state": "Waiting for you",
+      "tone": "warn"
+     }
+    ]
+   }
+  ],
+  "week": {
+   "id": "hq",
+   "name": "HQ",
+   "kind": "Team and plan",
+   "logo": {
+    "hq": true
+   },
+   "status": {
+    "tone": "ok",
+    "label": "Running"
+   }
+  },
+  "yesterday": []
+ },
+ "links": [
+  {
+   "from": "stockroom",
+   "to": "autoworks",
+   "status": "ok"
+  }
+ ],
+ "items": [
+  {
+   "id": "d-alt",
+   "platform": {
+    "id": "autoworks",
+    "name": "Dela Cruz Auto Works",
+    "index": 0,
+    "src": logoAutoworks
+   },
+   "due": "Order by 9:45",
+   "urgent": true,
+   "severity": "urgent",
+   "title": "Alternator needed for 11:00 Vios pickup",
+   "detail": "None in stock · rush PO arrives 10:30",
+   "action": "Order alternator"
+  },
+  {
+   "id": "d-po",
+   "platform": {
+    "id": "stockroom",
+    "name": "Parts Stockroom",
+    "index": 1
+   },
+   "due": "Order by 12:00",
+   "severity": "soon",
+   "title": "Oil filters at 4, reorder level 20",
+   "detail": "6 maintenance jobs today · draft PO ₱18,450",
+   "action": "Confirm PO"
+  },
+  {
+   "id": "d-var",
+   "platform": {
+    "id": "stockroom",
+    "name": "Parts Stockroom",
+    "index": 1
+   },
+   "due": "Dispute by Fri 23 Oct",
+   "title": "Petron delivery 6 bottles short",
+   "detail": "PO-0214 · 6 × ₱465 not received",
+   "action": "Dispute or accept"
+  },
+  {
+   "id": "d-inv",
+   "platform": {
+    "id": "hq",
+    "name": "HQ",
+    "hq": true
+   },
+   "source": "HQ · Team",
+   "title": "Approve Rico Lim as mechanic",
+   "detail": "Invited by Jun · write access to Auto Works",
+   "action": "Approve invite"
+  }
+ ],
+ "watching": [
+  {
+   "id": "d-qt",
+   "platform": {
+    "id": "autoworks",
+    "name": "Dela Cruz Auto Works",
+    "index": 0,
+    "src": logoAutoworks
+   },
+   "title": "Estimate ₱14,800 waiting since Tuesday",
+   "detail": "QT-0088 · Fortuner suspension · Victor Ramos"
+  },
+  {
+   "id": "d-ai",
+   "platform": {
+    "id": "hq",
+    "name": "HQ",
+    "hq": true
+   },
+   "source": "HQ · Plan",
+   "title": "Leda usage at 87%",
+   "detail": "1,742 / 2,000 · 7 days left"
+  }
+ ],
+ "snoozed": [],
+ "done": [],
+ "cases": {
+  "d-alt": {
+   "id": "d-alt",
+   "due": "Order by 9:45",
+   "left": {
+    "text": "33 min left",
+    "tone": "warn"
+   },
+   "deadline": "Promised 11:00",
+   "impact": "₱12,550 JO-0412",
+   "day": {
+    "hours": {
+     "open": 480,
+     "close": 1080
+    },
+    "now": 552,
+    "marks": [
+     {
+      "kind": "due",
+      "at": 585,
+      "label": "Order by 9:45",
+      "shortLabel": "9:45",
+      "tone": "bad"
+     },
+     {
+      "kind": "deadline",
+      "at": 660,
+      "label": "Promised 11:00",
+      "shortLabel": "11:00"
+     }
+    ]
+   },
+   "evidence": [
+    {
+     "label": "Job",
+     "value": "JO-0412",
+     "note": "PENDING · WAITING_FOR_PARTS"
+    },
+    {
+     "label": "Customer",
+     "value": "Ana Villanueva",
+     "note": "2019 Toyota Vios 1.3 E"
+    },
+    {
+     "label": "Stock",
+     "value": "0 alternators",
+     "note": "ALT-NCP150 · last issued Wed",
+     "tone": "bad"
+    },
+    {
+     "label": "Rush delivery",
+     "value": "10:30",
+     "note": "Banawe, if ordered by 9:45"
+    },
+    {
+     "label": "Amount",
+     "value": "₱12,550",
+     "note": "₱5,000 paid"
+    }
+   ],
+   "note": "A 10:30 delivery still makes the 11:00 pickup.",
+   "proposal": {
+    "id": "PO-0221",
+    "title": "Rush 1 alternator from Banawe Autoparts",
+    "writes": [
+     "PO-0221: draft → ordered, rush delivery 10:30",
+     "Reserve ALT-NCP150 for JO-0412 on arrival"
+    ],
+    "notes": [
+     "Notifies Arnel, Jun."
+    ],
+    "cannot": "Leda can't move JO-0412 in Repair shop; Jun moves it.",
+    "confirmLabel": "Confirm rush PO",
+    "toast": "PO-0221 sent. Alternator arrives 10:30, reserved for JO-0412."
+   }
+  },
+  "d-po": {
+   "id": "d-po",
+   "due": "Order by 12:00",
+   "left": {
+    "text": "2h 48m left",
+    "tone": "warn"
+   },
+   "impact": "2 jobs short today",
+   "day": {
+    "hours": {
+     "open": 480,
+     "close": 1080
+    },
+    "now": 552,
+    "marks": [
+     {
+      "kind": "due",
+      "at": 720,
+      "label": "Order by 12:00",
+      "shortLabel": "12:00"
+     }
+    ]
+   },
+   "evidence": [
+    {
+     "label": "On hand",
+     "value": "4 pc",
+     "note": "reorder level 20"
+    },
+    {
+     "label": "Needed today",
+     "value": "6 pc",
+     "note": "1 per maintenance job",
+     "tone": "bad"
+    },
+    {
+     "label": "Brake pads, Vios",
+     "value": "2 sets",
+     "note": "reorder level 6"
+    },
+    {
+     "label": "Delivery",
+     "value": "Fri 23 Oct",
+     "note": "if ordered by 12:00"
+    }
+   ],
+   "note": "The PO restocks by Friday, not today. 2 of today's jobs need filters from a walk-in supplier.",
+   "proposal": {
+    "id": "PO-0219",
+    "title": "Reorder from Banawe Autoparts Supply",
+    "writes": [
+     "PO-0219: draft → ordered",
+     "Sent to Banawe Autoparts Supply"
+    ],
+    "notes": [
+     "Notifies Arnel."
+    ],
+    "confirmLabel": "Confirm PO",
+    "toast": "PO-0219 sent to Banawe (₱18,450). Arrives Fri 23 Oct before 10:00."
+   }
+  },
+  "d-var": {
+   "id": "d-var",
+   "due": "Dispute by Fri 23 Oct",
+   "impact": "₱2,790 paid for stock not received",
+   "evidence": [
+    {
+     "label": "Ordered",
+     "value": "48 bottles"
+    },
+    {
+     "label": "Received",
+     "value": "42 bottles",
+     "note": "Wed 21 Oct, 2:30 PM · Arnel"
+    },
+    {
+     "label": "Short",
+     "value": "6 bottles",
+     "note": "× ₱465",
+     "tone": "bad"
+    },
+    {
+     "label": "Last short",
+     "value": "PO-0207",
+     "note": "2 bottles, credited ₱930"
+    }
+   ],
+   "note": "Petron credited the last short delivery within 3 days.",
+   "proposal": {
+    "id": "VAR-0214",
+    "title": "Settle PO-0214",
+    "writes": [
+     "Dispute on PO-0214: 6 bottles, ₱2,790",
+     "PO-0214 stays partially_received"
+    ],
+    "notes": [
+     "Notifies Arnel."
+    ],
+    "confirmLabel": "Send dispute",
+    "toast": "Dispute sent to Petron for 6 bottles (₱2,790)."
+   },
+   "variance": true
+  },
+  "d-inv": {
+   "id": "d-inv",
+   "evidence": [
+    {
+     "label": "Invited by",
+     "value": "Jun Reyes",
+     "note": "Shop manager"
+    },
+    {
+     "label": "Role",
+     "value": "Mechanic",
+     "note": "write · Dela Cruz Auto Works"
+    },
+    {
+     "label": "Mechanics now",
+     "value": "4",
+     "note": "Benjie, Tonyo, Dennis, Mark"
+    },
+    {
+     "label": "Sent",
+     "value": "Wed 21 Oct, 5:48 PM"
+    }
+   ],
+   "note": "Matches the shop's other mechanics.",
+   "proposal": {
+    "id": "INV-RICO",
+    "title": "Settle INV-RICO",
+    "writes": [
+     "Invite email to rico.lim.mech@gmail.com",
+     "Rico Lim: Mechanic, write access to Dela Cruz Auto Works"
+    ],
+    "notes": [
+     "Notifies Jun."
+    ],
+    "confirmLabel": "Approve invite",
+    "toast": "Invite sent to Rico Lim. Jun is notified."
+   },
+   "variance": true
+  },
+  "d-qt": {
+   "id": "d-qt",
+   "evidence": [
+    {
+     "label": "Estimate",
+     "value": "₱14,800",
+     "note": "QT-0088"
+    },
+    {
+     "label": "Sent",
+     "value": "Tue 20 Oct, 3:40 PM",
+     "note": "Grace"
+    },
+    {
+     "label": "Customer",
+     "value": "Victor Ramos",
+     "note": "2016 Toyota Fortuner"
+    }
+   ],
+   "note": "Grace usually follows up after 2 days.",
+   "noDraft": true
+  },
+  "d-ai": {
+   "id": "d-ai",
+   "evidence": [
+    {
+     "label": "Used",
+     "value": "1,742 / 2,000"
+    },
+    {
+     "label": "Pace",
+     "value": "76 a day"
+    },
+    {
+     "label": "Runs out",
+     "value": "Sun 25 Oct",
+     "note": "cycle ends 29 Oct",
+     "tone": "warn"
+    }
+   ],
+   "note": "At this pace it runs out Sunday.",
+   "noDraft": true
+  }
+ },
+ "next": "Next: Banawe delivery Fri 23 Oct before 10:00.",
+ "yesterdayDate": "Wed 21 Oct",
+ "plan": {
+  "used": 1742,
+  "max": 2000,
+  "cycleStart": "30 Sep",
+  "cycleEnd": "29 Oct",
+  "daysLeft": 7
+ },
+ "headline": "4 decisions. First: alternator for the 11:00 Vios, order by 9:45.",
+ "quietHeadline": "All clear. Leda is watching 2 things.",
+ "yesterdayLine": "Yesterday: 9 jobs completed, 41 stock movements.",
+ "decisions": 4,
+ "mapOrder": [
+  "stockroom",
+  "autoworks",
+  null,
+  "hq"
+ ]
+} as unknown as HomeSet;
+
+export const duoQuiet = {
+ "key": "live",
+ "platforms": [
+  {
+   "id": "autoworks",
+   "name": "Dela Cruz Auto Works",
+   "shortName": "Auto Works",
+   "kind": "Repair shop",
+   "mapType": "service",
+   "status": "ACTIVE",
+   "index": 0,
+   "initials": "DC",
+   "logo": logoAutoworks,
+   "count": 0,
+   "ledaCanAct": false,
+   "ledaCanRead": true,
+   "facts": [
+    {
+     "value": "12",
+     "label": "open jobs"
+    },
+    {
+     "value": "4",
+     "label": "inquiries"
+    },
+    {
+     "value": "3",
+     "label": "for pickup"
+    }
+   ],
+   "lists": [],
+   "activity": [
+    {
+     "id": "autoworks-a0",
+     "at": "8:02",
+     "text": "Opened · 12 open job orders"
+    },
+    {
+     "id": "autoworks-a1",
+     "at": "8:40",
+     "text": "JO-0409 ready for pickup"
+    },
+    {
+     "id": "autoworks-a2",
+     "at": "8:47",
+     "text": "JO-0412 waiting for parts"
+    },
+    {
+     "id": "autoworks-a3",
+     "at": "9:02",
+     "text": "New inquiry QT-0092"
+    }
+   ],
+   "week": {
+    "id": "autoworks",
+    "name": "Dela Cruz Auto Works",
+    "kind": "Repair shop",
+    "logo": {
+     "index": 0,
+     "src": logoAutoworks
+    },
+    "status": {
+     "tone": "ok",
+     "label": "Running"
+    },
+    "figure": {
+     "value": "₱208,880",
+     "label": "revenue, last 7 days"
+    },
+    "sub": "59 jobs · best day Tue 20",
+    "chart": {
+     "title": "Jobs completed a day",
+     "note": "Closed Sundays",
+     "labels": [
+      "Thu 15",
+      "Fri 16",
+      "Sat 17",
+      "Sun 18",
+      "Mon 19",
+      "Tue 20",
+      "Wed 21"
+     ],
+     "values": [
+      11,
+      9,
+      8,
+      0,
+      10,
+      12,
+      9
+     ],
+     "unit": "jobs"
+    },
+    "shares": [
+     {
+      "title": "Open job orders",
+      "total": 12,
+      "parts": [
+       {
+        "label": "To do",
+        "value": 3
+       },
+       {
+        "label": "In progress",
+        "value": 5,
+        "tone": "accent"
+       },
+       {
+        "label": "Pending",
+        "value": 1,
+        "tone": "warn"
+       },
+       {
+        "label": "For pickup",
+        "value": 3,
+        "tone": "ok"
+       }
+      ]
+     },
+     {
+      "title": "Inquiries",
+      "total": 4,
+      "parts": [
+       {
+        "label": "Quotation",
+        "value": 2
+       },
+       {
+        "label": "For approval",
+        "value": 2
+       }
+      ]
+     }
+    ]
+   },
+   "yesterday": [
+    {
+     "value": "9",
+     "label": "jobs completed"
+    },
+    {
+     "value": "3",
+     "label": "new inquiries"
+    }
+   ]
+  },
+  {
+   "id": "stockroom",
+   "name": "Parts Stockroom",
+   "shortName": "Stockroom",
+   "kind": "Inventory",
+   "mapType": "warehouse",
+   "status": "ACTIVE",
+   "index": 1,
+   "initials": "PS",
+   "count": 0,
+   "ledaCanAct": true,
+   "ledaCanRead": true,
+   "facts": [
+    {
+     "value": "612",
+     "label": "products"
+    },
+    {
+     "value": "7",
+     "label": "low stock"
+    },
+    {
+     "value": "2",
+     "label": "POs open"
+    }
+   ],
+   "lists": [],
+   "activity": [
+    {
+     "id": "stockroom-a0",
+     "at": "9:05",
+     "text": "Out · Toyota oil filter −1 for JO-0414"
+    },
+    {
+     "id": "stockroom-a1",
+     "at": "8:47",
+     "text": "Out · Engine oil 10W-40, 1L −4 for JO-0414"
+    },
+    {
+     "id": "stockroom-a2",
+     "at": "8:30",
+     "text": "Out · Brake pads, Montero front −1 for JO-0415"
+    },
+    {
+     "id": "stockroom-a3",
+     "at": "8:20",
+     "text": "Out · Aircon cleaner can −2 for JO-0413"
+    }
+   ],
+   "week": {
+    "id": "stockroom",
+    "name": "Parts Stockroom",
+    "kind": "Inventory",
+    "logo": {
+     "index": 1
+    },
+    "status": {
+     "tone": "ok",
+     "label": "Running"
+    },
+    "figure": {
+     "value": "₱1,284,650",
+     "label": "stock value on hand"
+    },
+    "sub": "21 in · 199 out",
+    "chart": {
+     "kind": "diverging",
+     "title": "Stock movements a day",
+     "note": "Closed Sundays",
+     "labels": [
+      "Thu 15",
+      "Fri 16",
+      "Sat 17",
+      "Sun 18",
+      "Mon 19",
+      "Tue 20",
+      "Wed 21"
+     ],
+     "up": [
+      0,
+      14,
+      0,
+      0,
+      6,
+      0,
+      1
+     ],
+     "down": [
+      34,
+      30,
+      26,
+      0,
+      31,
+      38,
+      40
+     ],
+     "unit": "movements",
+     "aboveLabel": "In",
+     "belowLabel": "Out"
+    },
+    "shares": [
+     {
+      "title": "Stock in and out since yesterday",
+      "total": 9,
+      "parts": [
+       {
+        "label": "In",
+        "value": 1,
+        "tone": "ok"
+       },
+       {
+        "label": "Out to jobs",
+        "value": 6
+       },
+       {
+        "label": "Damaged",
+        "value": 1,
+        "tone": "bad"
+       },
+       {
+        "label": "Count",
+        "value": 1
+       }
+      ]
+     },
+     {
+      "title": "Low stock",
+      "total": 7,
+      "parts": [
+       {
+        "label": "Out",
+        "value": 0,
+        "tone": "bad"
+       },
+       {
+        "label": "Low",
+        "value": 7,
+        "tone": "warn"
+       }
+      ]
+     }
+    ]
+   },
+   "yesterday": [
+    {
+     "value": "41",
+     "label": "movements"
+    },
+    {
+     "value": "1",
+     "label": "POs received"
+    }
+   ]
+  }
+ ],
+ "hasHq": true,
+ "hq": {
+  "id": "hq",
+  "name": "HQ",
+  "shortName": "HQ",
+  "kind": "Team and plan",
+  "status": "ACTIVE",
+  "hq": true,
+  "count": 0,
+  "ledaCanAct": true,
+  "facts": [
+   {
+    "value": 9,
+    "label": "people"
+   },
+   {
+    "value": 0,
+    "label": "invites pending"
+   },
+   {
+    "value": "1,742 / 2,000",
+    "label": "Leda requests"
+   }
+  ],
+  "lists": [
+   {
+    "id": "invites",
+    "title": "Invites",
+    "total": 0,
+    "items": []
+   }
+  ],
+  "week": {
+   "id": "hq",
+   "name": "HQ",
+   "kind": "Team and plan",
+   "logo": {
+    "hq": true
+   },
+   "status": {
+    "tone": "ok",
+    "label": "Running"
+   }
+  },
+  "yesterday": []
+ },
+ "links": [
+  {
+   "from": "stockroom",
+   "to": "autoworks",
+   "status": "ok"
+  }
+ ],
+ "items": [],
+ "watching": [
+  {
+   "id": "d-ai",
+   "platform": {
+    "id": "hq",
+    "name": "HQ",
+    "hq": true
+   },
+   "source": "HQ · Plan",
+   "title": "Leda usage at 87%",
+   "detail": "1,742 / 2,000 · 7 days left"
+  },
+  {
+   "id": "d-q-low",
+   "platform": {
+    "id": "stockroom",
+    "name": "Parts Stockroom",
+    "index": 1
+   },
+   "title": "7 items below reorder level",
+   "detail": "2 POs open cover 5 of them"
+  }
+ ],
+ "snoozed": [],
+ "done": [],
+ "cases": {
+  "d-ai": {
+   "id": "d-ai",
+   "evidence": [
+    {
+     "label": "Used",
+     "value": "1,742 / 2,000"
+    },
+    {
+     "label": "Pace",
+     "value": "76 a day"
+    },
+    {
+     "label": "Runs out",
+     "value": "Sun 25 Oct",
+     "note": "cycle ends 29 Oct",
+     "tone": "warn"
+    }
+   ],
+   "note": "At this pace it runs out Sunday.",
+   "noDraft": true
+  },
+  "d-q-low": {
+   "id": "d-q-low",
+   "evidence": [
+    {
+     "label": "Below reorder",
+     "value": "7"
+    },
+    {
+     "label": "Covered by open POs",
+     "value": "5"
+    }
+   ],
+   "note": "The other 2 sell slowly.",
+   "noDraft": true
+  }
+ },
+ "next": "Next: Banawe delivery Fri 23 Oct before 10:00.",
+ "yesterdayDate": "Wed 21 Oct",
+ "plan": {
+  "used": 1742,
+  "max": 2000,
+  "cycleStart": "30 Sep",
+  "cycleEnd": "29 Oct",
+  "daysLeft": 7
+ },
+ "headline": "4 decisions. First: alternator for the 11:00 Vios, order by 9:45.",
+ "quietHeadline": "All clear. Leda is watching 2 things.",
+ "yesterdayLine": "Yesterday: 9 jobs completed, 41 stock movements.",
+ "decisions": 0,
+ "mapOrder": [
+  "stockroom",
+  "autoworks",
+  null,
+  "hq"
  ]
 } as unknown as HomeSet;
 
@@ -3320,8 +4456,7 @@ export const liveMeta = {
  "suggestions": [
   "How did the shop do this week?",
   "Anong parts ang pinakamaraming nagamit kahapon?",
-  "Raise oil filter reorder level to 30",
-  "Move JO-0412 to In progress"
+  "Raise oil filter reorder level to 30"
  ],
  "weekRange": "Thu 15 – Wed 21 Oct"
 } as const;

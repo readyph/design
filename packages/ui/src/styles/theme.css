@@ -135,6 +135,15 @@
   --fw-figure-sm: 500;
   --fs-overview-figure: 22px;
   --lh-overview-figure: 28px;
+  --fw-overview-figure: 500;
+  --ls-overview-figure: -0.01em;
+  --fs-overview-figure-sm: 17px;
+  --lh-overview-figure-sm: 24px;
+  --fw-overview-figure-sm: 500;
+  --ls-overview-figure-sm: -0.01em;
+  --fs-section: 15px;
+  --lh-section: 22px;
+  --fw-section: 600;
   --fs-reading: 16px;
   --lh-reading: 27px;
   --r-sheet: 8px;

@@ -17,7 +17,7 @@ import { LedaProposal, type LedaProposalState } from '../components/LedaProposal
 import { Menu } from '../components/Menu';
 import { OverviewCharts } from '../components/OverviewCharts';
 import { PlatformLogo } from '../components/PlatformLogo';
-import { PlatformToday } from '../components/PlatformToday';
+import { LedaFact, PlatformToday } from '../components/PlatformToday';
 import { Queue } from '../components/Queue';
 import { SegmentedControl } from '../components/SegmentedControl';
 import { SheetBar } from '../components/SheetBar';
@@ -519,13 +519,13 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
   };
 
   const hero = (
-    <div className="mx-auto flex max-w-[640px] flex-col items-center px-pad pb-8 pt-12 text-center max-[640px]:pt-6">
+    <div className="mx-auto flex flex-col items-center px-pad pt-9 text-center max-[640px]:pt-6">
       <LedaMark size={88} effect={loading ? 'aurora' : 'glint'} active={loading} once={!loading} decorative />
-      <h2 ref={headingRef} tabIndex={-1} className="m-0 mt-4 text-title text-text outline-none focus-visible:ring-2 focus-visible:ring-accent">Good {dayPart}, {owner.short}</h2>
+      <h2 ref={headingRef} tabIndex={-1} className="m-0 mt-3.5 text-case text-text outline-none focus-visible:ring-2 focus-visible:ring-accent">Good {dayPart}, {owner.short}</h2>
       <p className="m-0 mt-1 text-body text-muted">{run}</p>
-      <div className="mt-5 w-full max-[640px]:hidden">{askBar('overview', true)}</div>
+      <div className="mt-7 w-full max-w-[560px] max-[640px]:hidden">{askBar('overview', true)}</div>
       <ChatChips
-        className="mt-3 justify-center"
+        className="mt-3 max-w-[780px] justify-center"
         label="Ask Leda"
         chips={[...suggestions].sort((a, b) => a.length - b.length).map((q) => ({ id: q, label: q }))}
         onPick={(c: ChatChip) => ask(c.label)}
@@ -536,17 +536,24 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
     <div className="pb-12">
       {hero}
       {visible.length ? (
-        <div className="px-pad">
+        <div className="mt-12 px-pad">
           <div className="mb-4 flex flex-wrap items-baseline gap-x-4 gap-y-1">
-            <h3 id="ov7" className="m-0 text-header text-text">Last 7 days</h3>
+            <h3 id="ov7" className="m-0 text-section text-text">Last 7 days</h3>
             <span className="text-ui text-muted">{data.weekRange ?? 'Thu 15 – Wed 21 Oct'}</span>
             <Button variant="text" leftIcon={SquaresFour} rightIcon={ArrowRight} className="ml-auto" onClick={showToday}>Today at your platforms</Button>
           </div>
           <OverviewCharts
+            variant="home"
             locale="en-PH"
             platforms={visible.map((p) => ({
               ...p.week,
               name: p.name,
+              facts: (
+                <FactsLine aria-label={`${p.name} facts`} className="!mt-0">
+                  {p.facts.slice(0, 3).map((f, i) => <Fact key={i} value={f.value} valueFirst>{f.label}</Fact>)}
+                  <LedaFact mode={ledaMode(p)} />
+                </FactsLine>
+              ),
               state: loading ? 'loading' : failed === p.id ? 'error' : 'ready',
               onRetry: () => { window.setTimeout(() => setFixed(true), 600); },
               onOpen: () => setFilterTo(p.id),
@@ -639,6 +646,8 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
         onFilterChange={setFilterTo}
         loading={queueLoading}
         headline={queueHeadline}
+        title={quiet && !filter ? 'All clear' : undefined}
+        hideEmpty={quiet && data.watching.length > 0}
         belowHeadline={phone ? askBar('overview', false) : undefined}
         defaultOpenGroups={quiet ? ['watching'] : []}
         retryLabel="Retry"
@@ -697,7 +706,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
           <StatusBar
             platforms={data.platforms.map((p) => ({ id: p.id, name: p.shortName ?? p.name, logoSrc: p.logo, color: p.index, initials: p.name.split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase(), health: p.id === failed ? 'bad' : healthOf(p), healthText: p.id === failed ? 'no data' : undefined, selected: filter === p.id, onSelect: () => setFilterTo(filter === p.id ? null : p.id) }))}
             people={{ count: 9 }}
-            invites={{ count: 1 }}
+            invites={{ count: data.hq.lists.find((l) => l.id === 'invites')?.total ?? 0 }}
             leda={{ used: data.plan.used, max: data.plan.max, daysLeft: '7 days left' }}
             ledaFirst
             plan="Starter"

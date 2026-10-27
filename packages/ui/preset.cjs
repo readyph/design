@@ -211,7 +211,24 @@ const preset = {
         "overview-figure": [
           "var(--fs-overview-figure)",
           {
-            "lineHeight": "var(--lh-overview-figure)"
+            "lineHeight": "var(--lh-overview-figure)",
+            "fontWeight": "var(--fw-overview-figure)",
+            "letterSpacing": "var(--ls-overview-figure)"
+          }
+        ],
+        "overview-figure-sm": [
+          "var(--fs-overview-figure-sm)",
+          {
+            "lineHeight": "var(--lh-overview-figure-sm)",
+            "fontWeight": "var(--fw-overview-figure-sm)",
+            "letterSpacing": "var(--ls-overview-figure-sm)"
+          }
+        ],
+        "section": [
+          "var(--fs-section)",
+          {
+            "lineHeight": "var(--lh-section)",
+            "fontWeight": "var(--fw-section)"
           }
         ],
         "reading": [
