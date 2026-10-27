@@ -145,8 +145,8 @@ function SegBtn({ pressed, onClick, label, children, className }: { pressed: boo
       title={label}
       onClick={onClick}
       className={cn(
-        "flex h-7 items-center whitespace-nowrap rounded-[4px] border text-[13px] font-medium leading-5",
-        pressed ? "border-border bg-surface text-text" : "border-transparent text-muted hover:text-text",
+        "flex h-7 items-center whitespace-nowrap rounded-[4px] border text-[13px] leading-5",
+        pressed ? "border-border bg-surface font-medium text-text" : "border-transparent text-muted hover:text-text",
         focusRing,
         className,
       )}
@@ -492,7 +492,7 @@ export function MemoryPage(props: MemoryPageProps) {
       </div>
       <div className="px-3 pb-2 pr-1 pt-3 max-[640px]:px-4">
         <div className="flex items-center gap-2.5">
-          {phone && phoneSheet ? null : <LedaMark size={20} decorative />}
+          {phone && phoneSheet ? null : <LedaMark size={20} decorative className="shrink-0" />}
           {phone && phoneSheet ? (
             <p className="m-0 text-[22px] font-semibold leading-7 tracking-[-0.01em]">Memory</p>
           ) : (
@@ -500,7 +500,7 @@ export function MemoryPage(props: MemoryPageProps) {
           )}
         </div>
         <p className="m-0 mt-1.5 flex gap-2 text-[14px] leading-5">
-          <LedaMark size={16} decorative className="mt-0.5" />
+          <LedaMark size={16} decorative className="mt-0.5 shrink-0" />
           {loading ? <span className="mt-[3px] block h-[13px] w-[88%] rounded-[3px] bg-skeleton" /> : <span>{headline}</span>}
         </p>
         {phone && !loading ? (
@@ -583,7 +583,7 @@ export function MemoryPage(props: MemoryPageProps) {
   // ----- sheet parts -----
   const tryBtn =
     loading || error ? null : (
-      <Button variant="secondary" leftIcon={ChatCircle} aria-haspopup="dialog" onClick={() => openTry(folder || undefined)} className="max-[640px]:h-10">
+      <Button variant="secondary" leftIcon={ChatCircle} aria-haspopup="dialog" onClick={() => openTry(folder || undefined)} className="mr-4 min-[641px]:max-[1100px]:ml-auto min-[641px]:max-[1100px]:mr-0 max-[640px]:mr-0 max-[640px]:h-10">
         Try it
       </Button>
     );
@@ -594,29 +594,29 @@ export function MemoryPage(props: MemoryPageProps) {
     </>
   );
   const sheetBar = inDoc ? (
-    <SheetBar actions={actions}>
+    <SheetBar actions={actions} flatActions>
       <nav aria-label="You are here" className="flex min-w-0 items-center gap-2 text-[13px] leading-5">
         <button type="button" title="Back to Memory (Esc)" onClick={closeDoc} className={cn("inline-flex shrink-0 items-center gap-1.5 rounded-[4px] px-1 py-1 text-muted hover:text-text", focusRing)}>
           <ArrowLeft size={14} aria-hidden />
           Memory
         </button>
-        <span aria-hidden className="text-faint">/</span>
+        <span aria-hidden className="text-control">/</span>
         {curTopic ? (
           <button type="button" onClick={() => pickFolder(curTopic.src)} className={cn("inline-flex min-w-0 items-center gap-1.5 rounded-[4px] px-1 py-1 text-muted hover:text-text", focusRing)}>
             <Logo src={curTopic.src} size={14} />
             <span className="truncate">{srcName(curTopic.src)}</span>
           </button>
         ) : null}
-        <span aria-hidden className="text-faint">/</span>
+        <span aria-hidden className="text-control">/</span>
         <b className="min-w-0 truncate font-medium text-text" aria-current="page">{curTopic?.title ?? "Topic"}</b>
       </nav>
     </SheetBar>
   ) : (
-    <SheetBar actions={actions}>
+    <SheetBar actions={actions} flatActions>
       <button type="button" className="mr-3 inline-flex shrink-0 items-center gap-1 text-[14px] text-muted hover:text-text sm:hidden" onClick={() => setPhoneSheet(false)}>
         <ArrowLeft size={14} aria-hidden /> Memory
       </button>
-      <div className="flex min-w-0 flex-1 items-stretch [&_[role=tab]]:text-[13px] [&_[role=tab]_svg]:size-[14px]">
+      <div className="flex min-w-0 flex-1 items-stretch [&_[role=tab]]:text-[13px] [&_[role=tab]]:font-normal [&_[role=tab]_svg]:size-[14px]">
       <Tabs
         variant={phone ? "chips" : "fixed"}
         aria-label="Memory"
@@ -629,7 +629,7 @@ export function MemoryPage(props: MemoryPageProps) {
   );
 
   const bizFilter = (
-    <div className="w-[216px] min-w-0 shrink-0 max-[640px]:w-auto max-[640px]:flex-1 max-[640px]:basis-full">
+    <div className="w-[216px] min-w-0 shrink-0 max-[640px]:w-auto max-[640px]:flex-1 max-[640px]:basis-full [&_[role=combobox]]:pl-2.5 [&_[role=combobox]]:pr-2 [&_[role=combobox]]:text-[13px]">
       <Select
         size="sm"
         aria-label={`Business: ${folder ? srcName(folder) : "All businesses"}`}
@@ -827,7 +827,7 @@ export function MemoryPage(props: MemoryPageProps) {
       <>
         <nav aria-label="Folder" className="mb-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] leading-[18px] max-[640px]:hidden">
           <a href="#memory" onClick={(e) => { e.preventDefault(); pickFolder(""); }} className={crumbLink}>Memory</a>
-          <span aria-hidden className="text-faint">/</span>
+          <span aria-hidden className="text-control">/</span>
           <b className="inline-flex items-center gap-1.5 font-medium text-text">
             {f ? <Logo src={f} size={14} /> : null}
             <span>{f ? srcName(f) : "All topics"}</span>
@@ -985,11 +985,11 @@ export function MemoryPage(props: MemoryPageProps) {
         <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2.5">{bizFilter}</div>
         <div className="mt-4 max-w-[720px]">
           <p className="m-0 text-[13px] leading-[18px] text-muted">Leda won't answer these, even when a topic could. It gives your reply instead.</p>
-          <div className="mt-3">
-            {srcs.map((src) => {
+          <div>
+            {srcs.map((src, si) => {
               const label = src === "company" ? (f ? "Leda replies" : "Leda replies, for the company and every business") : `At ${srcShort(src)}, Leda replies`;
               return refEdit?.src === src ? (
-                <div key={src} className="mt-2 first:mt-0">
+                <div key={src} className={si ? "mt-2" : "mt-4"}>
                   <label htmlFor="refT" className="mb-1 block text-[13px] font-medium leading-[18px]">{src === "company" ? "Leda's reply for the company and every business" : `Leda's reply at ${srcShort(src)}`}</label>
                   <textarea id="refT" maxLength={400} rows={2} value={refEdit.v} onChange={(e) => setRefEdit({ src, v: e.target.value })} aria-invalid={refEdit.err ? true : undefined} className={cn("block w-full rounded-control border border-control bg-surface px-3 py-2 text-[14px] leading-5", focusRing)} />
                   {refEdit.err ? <p className="m-0 mt-1 text-[13px] leading-[18px] text-bad">{refEdit.err}</p> : <p className="m-0 mt-1 text-[13px] leading-[18px] text-muted">Keep it polite and short. Customers see it as Leda's answer.</p>}
@@ -1004,26 +1004,24 @@ export function MemoryPage(props: MemoryPageProps) {
                   </div>
                 </div>
               ) : (
-                <div key={src} className="mt-2 flex items-center gap-4 rounded-card bg-raised px-4 py-3 first:mt-0">
-                  <div className="min-w-0 flex-1">
-                    <span className="block text-[13px] leading-[18px] text-muted">{label}</span>
-                    <p className="m-0 mt-1 text-[14px] leading-5">“{replies[src]}”</p>
-                  </div>
-                  {canEdit ? <Button variant="text" leftIcon={PencilSimple} onClick={() => setRefEdit({ src, v: replies[src] })}>Edit reply</Button> : null}
+                <div key={src} className={cn("grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 rounded-card bg-raised px-4 py-3", si ? "mt-2" : "mt-4")}>
+                  <span className="col-span-full text-[12px] leading-4 text-muted">{label}</span>
+                  <p className="m-0 text-[13px] leading-5">“{replies[src]}”</p>
+                  {canEdit ? <Button variant="text" className="!h-[30px] !border-0 !px-2 !leading-5 max-[640px]:!h-11" leftIcon={PencilSimple} onClick={() => setRefEdit({ src, v: replies[src] })}>Edit reply</Button> : null}
                 </div>
               );
             })}
           </div>
           {list.length ? (
-            <ul className="m-0 mt-3 list-none p-0">
+            <ul className="m-0 mt-2 list-none p-0">
               {list.map((b) => (
-                <li key={b.id} onMouseEnter={() => setHover(BUILDING[b.src])} onMouseLeave={() => setHover(null)} className="flex flex-wrap items-center gap-2 border-b border-rule py-[18px] max-[640px]:py-3.5">
+                <li key={b.id} onMouseEnter={() => setHover(BUILDING[b.src])} onMouseLeave={() => setHover(null)} className="flex items-center gap-1 border-t border-rule py-4 first:border-t-0 max-[640px]:flex-wrap">
                   <span className="min-w-0 flex-1 text-[14px] leading-5 max-[640px]:basis-full">“{b.q}”</span>
                   {f ? null : (
                     <span className="mr-1 inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap text-[12px] leading-4 text-muted"><Logo src={b.src} size={14} />{b.src === "company" ? "Every business" : srcShort(b.src)}</span>
                   )}
-                  <Button variant="text" aria-label={`Try it: ${b.q}`} onClick={() => openTry(undefined, `any#${b.src}|b:${b.id}`)}>Try</Button>
-                  {canEdit ? <Button variant="text" aria-label={`Remove blocked question: ${b.q}`} onClick={() => setRmAsk(b)}>Remove</Button> : null}
+                  <Button variant="text" className="!h-[30px] !border-0 !px-2 !leading-5 !text-[13px] !text-muted hover:!bg-raised hover:!text-text max-[640px]:!h-11" aria-label={`Try it: ${b.q}`} onClick={() => openTry(undefined, `any#${b.src}|b:${b.id}`)}>Try</Button>
+                  {canEdit ? <Button variant="text" className="!h-[30px] !border-0 !px-2 !leading-5 !text-[13px] !text-muted hover:!bg-raised hover:!text-bad max-[640px]:!h-11" aria-label={`Remove blocked question: ${b.q}`} onClick={() => setRmAsk(b)}>Remove</Button> : null}
                 </li>
               ))}
             </ul>
@@ -1034,7 +1032,7 @@ export function MemoryPage(props: MemoryPageProps) {
             <p className="m-0 mt-3 flex gap-1.5 text-[13px] leading-[18px] text-muted"><Buildings size={14} aria-hidden className="mt-0.5 shrink-0" /><span>Also blocked here, for every business: {andList(inherited.map((b) => `“${b.q}”`))}.</span></p>
           ) : null}
           {canEdit ? (
-            <div className="mt-4 flex flex-wrap items-start gap-3">
+            <div className="mt-4 flex flex-wrap items-start gap-2">
               <div className="min-w-0 flex-[1_1_260px]">
                 <label htmlFor="bqNew" className={sr}>A question to block</label>
                 <input id="bqNew" maxLength={160} value={bqText} onChange={(e) => { setBqText(e.target.value); setBqErr(null); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addBlocked(); } }} placeholder="A question to block, like “Who is your parts supplier?”" autoComplete="off" aria-invalid={bqErr ? true : undefined} aria-describedby={bqErr ? "bqE" : undefined} className={cn("block h-10 w-full rounded-control border bg-surface px-3 text-[14px] placeholder:text-muted", bqErr ? "border-bad" : "border-control", focusRing)} />
@@ -1076,27 +1074,25 @@ export function MemoryPage(props: MemoryPageProps) {
                 const x = requestsAll.filter((r) => r.src === pid);
                 if (!x.length) return null;
                 return (
-                  <section key={pid} aria-label={srcName(pid)} className={gi ? "mt-5" : "mt-3"} onMouseEnter={() => setHover(BUILDING[pid])} onMouseLeave={() => setHover(null)}>
+                  <section key={pid} aria-label={srcName(pid)} onMouseEnter={() => setHover(BUILDING[pid])} onMouseLeave={() => setHover(null)}>
                     {f ? null : (
-                      <div className="flex items-center gap-2 pb-1.5">
-                        <h2 className="m-0 inline-flex items-center gap-2 text-[14px] font-semibold leading-5"><Logo src={pid} />{srcName(pid)}</h2>
-                        <span className="ml-auto text-[12px] text-muted">{x.filter((r) => r.on).length} of {x.length} on</span>
+                      <div className={cn("grid grid-cols-[minmax(0,1fr)_auto] items-end gap-x-4 gap-y-0.5", gi ? "mt-5" : "mt-6")}>
+                        <h2 className="m-0 inline-flex items-center gap-2 text-[13px] font-semibold leading-5"><Logo src={pid} size={16} />{srcName(pid)}</h2>
+                        <span className="text-[12px] text-muted">{x.filter((r) => r.on).length} of {x.length} on</span>
                       </div>
                     )}
-                    <ul className="m-0 list-none p-0">
+                    <ul className="m-0 mt-2 list-none p-0">
                       {x.map((r) => (
-                        <li key={r.key} className={cn("flex items-start gap-4 border-b border-rule py-3", !r.on && "opacity-100")}>
-                          <div className="min-w-0 flex-1">
-                            <b className="block text-[14px] font-medium leading-5">{r.name}</b>
-                            <p className="m-0 text-[13px] leading-[19px] text-muted">{r.about}</p>
-                            <button type="button" aria-label={`Try it: ${r.ask}`} onClick={() => openTry(undefined, `any#${r.src}|r:${r.key}`)} className={cn("mt-1.5 inline-flex items-center gap-1.5 rounded-[4px] text-[13px] leading-[18px] text-accent hover:underline", focusRing)}>
-                              <ChatCircle size={14} aria-hidden />
-                              <span>Try “{r.ask}”</span>
-                            </button>
-                          </div>
-                          <span className="flex shrink-0 items-center gap-2 pt-0.5">
+                        <li key={r.key} className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-6 border-t border-rule py-4 first:border-t-0 max-[520px]:grid-cols-1">
+                          <b className={cn("col-start-1 row-start-1 self-center text-[14px] font-medium leading-5", !r.on && "text-muted")}>{r.name}</b>
+                          <p className={cn("m-0 col-span-full mt-1 max-w-[640px] justify-self-start text-[13px] leading-5", r.on ? "text-text" : "text-muted")}>{r.about}</p>
+                          <button type="button" aria-label={`Try it: ${r.ask}`} onClick={() => openTry(undefined, `any#${r.src}|r:${r.key}`)} className={cn("col-span-full mt-2 -ml-2 inline-flex min-h-[26px] max-w-full items-center gap-1.5 justify-self-start rounded-chip px-2 py-0.5 text-left text-[12px] leading-[18px] text-muted hover:bg-raised hover:text-text max-[640px]:min-h-9", focusRing)}>
+                            <ChatCircle size={14} aria-hidden className="shrink-0" />
+                            <span className="[overflow-wrap:anywhere]">Try “{r.ask}”</span>
+                          </button>
+                          <span className="col-start-2 row-start-1 flex items-start gap-3 max-[520px]:col-start-1 max-[520px]:row-start-2 max-[520px]:mb-1 max-[520px]:mt-2">
                             <Switch aria-label={`Can request: ${r.name}, ${srcName(r.src)}`} checked={r.on} disabled={readOnly} onCheckedChange={(v) => setRequest(r, v)} />
-                            <span aria-hidden className="text-[13px] leading-[18px] text-muted">Can request</span>
+                            <span aria-hidden className={cn("min-w-[184px] text-[13px] leading-5 max-[520px]:min-w-0", !r.on && "text-muted")}>Can request</span>
                           </span>
                         </li>
                       ))}
@@ -1139,7 +1135,7 @@ export function MemoryPage(props: MemoryPageProps) {
       <article aria-labelledby="docH" className="max-w-[680px]">
         <nav aria-label="Folder" className="-mt-3 mb-1 hidden items-center gap-2 text-[13px] max-[640px]:flex">
           <a href="#memory" onClick={(e) => { e.preventDefault(); closeDoc(); }} className={cn(crumbLink, "min-h-11")}>Memory</a>
-          <span aria-hidden className="text-faint">/</span>
+          <span aria-hidden className="text-control">/</span>
           <a href="#folder" onClick={(e) => { e.preventDefault(); pickFolder(t.src); }} className={cn(crumbLink, "min-h-11")}><Logo src={t.src} size={14} /><span>{srcName(t.src)}</span></a>
         </nav>
         <p className="m-0 flex items-center gap-1.5 text-[13px] leading-[18px] text-muted">{srcLabel(t)}</p>
