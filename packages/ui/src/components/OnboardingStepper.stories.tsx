@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { House, Graph, FileText, Users } from '@phosphor-icons/react';
-import { OnboardingStepper, type StepperStep } from './OnboardingStepper';
+import { OnboardingStepper, StepList, type StepperStep } from './OnboardingStepper';
 import { PlatformShell } from './PlatformShell';
 import { ReadyLogo } from './ReadyMark';
 import { LedaNote } from './LedaNote';
@@ -25,7 +25,9 @@ const meta: Meta<typeof OnboardingStepper> = {
           '',
           '**Controlled and URL-free.** Pass `current` (step id) and `onStepChange`. The component never reads or writes the URL: map `?id=…&setup=N` to `current` yourself (resume on reload) and update the URL in `onStepChange`, `onContinue`, `onSkip` and `onBack`. A locked step never calls `onStepChange`.',
           '',
-          '**Keyboard and assistive tech.** Every step is a button in the normal Tab order (locked ones stay focusable, `aria-disabled`, with the reason as description; pressing one announces the reason). Enter / Space opens an unlocked step. There are no arrow keys: Tab is enough for five steps and avoids a second tab stop model. When `current` changes, focus moves to the section heading (`h2`, `tabIndex=-1`) so the new step is read once. The live region starts empty and speaks only the progress change ("2 of 5 steps done.") and locked presses. `className` goes on the outer box; the grid cannot be overridden.',
+          '**Keyboard and assistive tech.** Every unlocked step is a button in the normal Tab order; locked ones are `aria-disabled` and `tabIndex=-1` (not focusable by Tab; a press still announces the reason, which is also their description). Enter / Space opens an unlocked step. There are no arrow keys: Tab is enough for five steps and avoids a second tab stop model. When `current` changes, focus moves to the section heading (`h2`, `tabIndex=-1`) so the new step is read once. The live region starts empty and speaks only the progress change ("2 of 5 steps done.") and locked presses. `className` goes on the outer box; the grid cannot be overridden.',
+          '',
+          '**Split parts.** `StepList` (the `<ol>` + progress bar; `variant="header"` is the phone one-line "Step 2 of 5 · System" that opens the list) and `StepFooter` are exported. For a page that puts the list in its place column, render `StepList` there and pass `list={false}` (and `stepListRef` so a step chosen there moves focus to the new heading). The single-piece `OnboardingStepper` is unchanged.',
           '',
           '**API for Leonardo.** `steps[] {id, label, status?: todo|done|skipped, locked?, reason?, required?}`, `current`, `onStepChange(id)`, `title?`, `description?`, `intro?` (slot, e.g. `LedaNote`), `children`, `continueLabel`, `continueLoading`, `continueDisabled`, `busy`, `onContinue`, `onSkip`, `onBack`, `onFinishLater`, `progressLabel?`, `listLabel?`. Progress = steps with status `done` / total. Mark "Skipped" on the detail page from the same `status`.',
         ].join('\n'),
@@ -183,3 +185,54 @@ export const InSheet: Story = {
 };
 /** Phone: steps as chips, sticky footer above the bottom nav. */
 export const InSheetPhone: Story = { ...InSheet, parameters: { layout: 'fullscreen', viewport: { defaultViewport: 'mobile1' } } };
+
+/** Split: `StepList` in the place column under the map and identity, the section and footer in the sheet (`list={false}`). */
+export const InPlaceColumn: Story = {
+  parameters: { layout: 'fullscreen' },
+  render: () => {
+    function Split() {
+      const [cur, setCur] = useState('system');
+      const box = useRef<HTMLDivElement>(null);
+      const steps: StepperStep[] = base.map((s) => ({ ...s, status: s.id === 'general' ? 'done' : s.id === 'team' ? 'skipped' : 'todo', locked: s.id === 'leda', reason: s.id === 'leda' ? 'Add the platform first.' : undefined }));
+      return (
+        <div className="h-dvh">
+          <PlatformShell
+            rail={rail}
+            place={<div ref={box} className="px-3"><div className="mb-4 h-32 rounded-card bg-raised" /><StepList steps={steps} current={cur} onStepChange={setCur} /></div>}
+            placeLabel="This platform"
+            sheetBar={bar}
+            topBar={<ReadyLogo size={28} />}
+            phoneNav={nav}
+            detail
+            status={<span>All running</span>}
+          >
+            <div className="p-pad">
+              <OnboardingStepper list={false} stepListRef={box} steps={steps} current={cur} onStepChange={setCur} onContinue={() => {}}>
+                <Form name="System" />
+              </OnboardingStepper>
+            </div>
+          </PlatformShell>
+        </div>
+      );
+    }
+    return <Split />;
+  },
+};
+
+/** Phone: the list collapses to a one-line "Step 2 of 5" header that opens the list. */
+export const HeaderOnPhone: Story = {
+  parameters: { viewport: { defaultViewport: 'mobile1' } },
+  render: () => {
+    function Phone() {
+      const [cur, setCur] = useState('system');
+      const steps: StepperStep[] = base.map((s) => ({ ...s, status: s.id === 'general' ? 'done' : 'todo' }));
+      return (
+        <div className="flex flex-col gap-4">
+          <StepList variant="header" steps={steps} current={cur} onStepChange={setCur} />
+          <OnboardingStepper list={false} steps={steps} current={cur} onStepChange={setCur} onContinue={() => {}}><Form name="System" /></OnboardingStepper>
+        </div>
+      );
+    }
+    return <Phone />;
+  },
+};

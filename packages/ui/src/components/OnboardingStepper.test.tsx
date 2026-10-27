@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { OnboardingStepper, type StepperStep } from './OnboardingStepper';
+import { OnboardingStepper, StepList, type StepperStep } from './OnboardingStepper';
 
 afterEach(cleanup);
 
@@ -218,5 +218,78 @@ describe('OnboardingStepper', () => {
       expect(document.activeElement).toBe(l);
       expect(heading('System')).toBeTruthy();
     });
+  });
+});
+
+describe('StepList', () => {
+  const noop = () => {};
+  it('shows done, skipped, current and locked states; aria-current on the open step; locked not focusable', () => {
+    render(<StepList steps={steps} current="b" onStepChange={noop} />);
+    expect(screen.getByText('Done')).toBeTruthy();
+    expect(screen.getByText('Skipped')).toBeTruthy();
+    expect(screen.getByText('In progress')).toBeTruthy();
+    expect(screen.getByText('Locked')).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^System/ }).getAttribute('aria-current')).toBe('step');
+    const locked = screen.getByRole('button', { name: /^Connections/ });
+    expect(locked.getAttribute('tabindex')).toBe('-1');
+    expect(locked.getAttribute('aria-disabled')).toBe('true');
+    expect(screen.getByRole('button', { name: /^Team/ }).getAttribute('tabindex')).toBeNull();
+    expect(screen.getByRole('button', { name: /^Team/ }).closest('li')?.querySelector('button')?.className).toContain('border-dashed');
+  });
+
+  it('progress bar value is completed steps over the total', () => {
+    const five: StepperStep[] = ['a', 'b', 'c', 'd', 'e'].map((id, i) => ({ id, label: id.toUpperCase(), status: i < 2 ? 'done' : 'todo' }));
+    render(<StepList steps={five} current="c" onStepChange={noop} />);
+    const bar = screen.getByRole('progressbar');
+    expect(bar.getAttribute('aria-valuenow')).toBe('2');
+    expect(bar.getAttribute('aria-valuemax')).toBe('5');
+  });
+
+  it('a locked press does not change the step', () => {
+    const onStepChange = vi.fn();
+    render(<StepList steps={steps} current="b" onStepChange={onStepChange} />);
+    fireEvent.click(screen.getByRole('button', { name: /^Connections/ }));
+    expect(onStepChange).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: /^Team/ }));
+    expect(onStepChange).toHaveBeenCalledWith('c');
+  });
+
+  it('header variant: one line "Step 2 of 5", list closed until pressed, same semantics', () => {
+    render(<StepList variant="header" steps={steps} current="b" onStepChange={noop} />);
+    const head = screen.getByRole('button', { name: /Step 2 of 4/ });
+    expect(head.getAttribute('aria-expanded')).toBe('false');
+    expect(screen.getByRole('list').className).toContain('hidden'); // jsdom has no stylesheet; Tailwind `hidden` is display:none
+    fireEvent.click(head);
+    expect(screen.getByRole('list').className).not.toContain('hidden');
+    expect(head.getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByRole('button', { name: /^System/ }).getAttribute('aria-current')).toBe('step');
+  });
+
+  it('header variant closes after a step is chosen', () => {
+    render(<StepList variant="header" steps={steps} current="b" onStepChange={noop} />);
+    fireEvent.click(screen.getByRole('button', { name: /Step 2 of 4/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^Team/ }));
+    expect(screen.getByRole('button', { name: /Step 2 of 4/ }).getAttribute('aria-expanded')).toBe('false');
+  });
+});
+
+describe('OnboardingStepper list={false}', () => {
+  it('renders no list; a step chosen in an external list still moves focus to the heading', () => {
+    function H() {
+      const [cur, setCur] = useState('b');
+      const box = useRef<HTMLDivElement>(null);
+      return (
+        <div>
+          <div ref={box}><StepList steps={steps} current={cur} onStepChange={setCur} /></div>
+          <OnboardingStepper list={false} stepListRef={box} steps={steps} current={cur} onStepChange={setCur} />
+        </div>
+      );
+    }
+    render(<H />);
+    expect(screen.getAllByRole('list')).toHaveLength(1);
+    const t = screen.getByRole('button', { name: /^Team/ });
+    t.focus();
+    fireEvent.click(t);
+    expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Team' }));
   });
 });
