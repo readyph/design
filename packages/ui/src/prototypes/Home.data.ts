@@ -28,6 +28,8 @@ export interface HomePlatform extends TownMapPlatform {
   ledaCanAct: boolean;
   facts: TodayFact[];
   lists: HomeList[];
+  /** Street or area, from the workshop data (platform tab crumbs). */
+  place?: string;
   week: Omit<OverviewPlatform, 'onOpen' | 'onRetry' | 'state'>;
   activity?: { id: string; at: string; text: string }[];
   statusNote?: string;
@@ -97,24 +99,16 @@ const hqPlatform: HomePlatform = {
   yesterday: [],
 };
 
+const sharesOfP = (id: string) => duoLive.platforms.find((p) => p.id === id)!;
 const sharesOf = (id: string) => duoLive.platforms.find((p) => p.id === id)?.week.shares;
 
 const stockroom: HomePlatform = {
   id: 'stockroom', name: 'Parts Stockroom', shortName: 'Stockroom', kind: 'Inventory', mapType: 'warehouse', status: 'ACTIVE', index: 1, count: 2,
   ledaCanAct: true,
   facts: [{ value: 612, label: 'products' }, { value: 9, label: 'low stock' }, { value: 2, label: 'POs open' }],
-  lists: [
-    today('moves', 'Stock in and out since yesterday', 9, [
-      { id: 'm1', ref: 'JO-0414', title: 'Toyota oil filter', detail: 'for JO-0414', state: 'Out', tone: 'neutral', qty: '−1 pc', at: '9:05' },
-      { id: 'm2', ref: 'PH-H4-12V', title: 'Headlight bulb H4', detail: 'dropped', state: 'Damaged', tone: 'bad', qty: '−1 pc', at: 'Wed 16:10' },
-      { id: 'm3', ref: 'PO-0214', title: 'Petron Blaze Racing 10W-40, 1L', detail: 'PO-0214 · 42 of 48', state: 'In', tone: 'ok', qty: '+42 bottle', at: 'Wed 14:30' },
-    ]),
-    today('low', 'Low stock', 9, [
-      { id: 'l1', ref: 'ALT-NCP150', title: 'Alternator, Vios NCP150 (reman.)', detail: 'reorder level 1 · PO-0221', state: 'Out of stock', tone: 'bad', qty: '0 pc', linkTo: 'autoworks', linkRef: 'JO-0412', linkText: 'waiting for it · promised 11:00' },
-      { id: 'l2', ref: '90915-YZZE1', title: 'Toyota oil filter', detail: 'reorder level 20 · PO-0219', state: 'Low', tone: 'warn', qty: '4 pc' },
-      { id: 'l3', ref: 'BX-DB1863', title: 'Bendix brake pads, Vios front', detail: 'reorder level 6 · PO-0219', state: 'Low', tone: 'warn', qty: '2 set' },
-    ]),
-  ],
+  place: sharesOfP('stockroom').place,
+  lists: sharesOfP('stockroom').lists,
+  activity: sharesOfP('stockroom').activity,
   week: { ...liveWeeks.stockroom!, shares: sharesOf('stockroom') },
   yesterday: [{ value: 14, label: 'received' }, { value: 31, label: 'shipped' }],
 };
@@ -123,18 +117,9 @@ const autoworks: HomePlatform = {
   id: 'autoworks', name: 'Dela Cruz Auto Works', shortName: 'Auto Works', kind: 'Repair shop', mapType: 'service', status: 'ACTIVE', index: 8, logo: logoAutoworks, count: 1,
   ledaCanAct: false,
   facts: [{ value: 12, label: 'open jobs' }, { value: 4, label: 'inquiries' }, { value: 3, label: 'for pickup' }],
-  lists: [
-    today('jobs', 'Open job orders', 12, [
-      { id: 'j1', ref: 'JO-0412', title: 'Vios · Alternator', detail: 'Ana Villanueva · Dennis', state: 'Waiting for parts', tone: 'warn', at: '8:47', linkTo: 'stockroom', linkRef: 'ALT-NCP150', linkText: '0 on hand · PO-0221 draft' },
-      { id: 'j2', ref: 'JO-0411', title: 'Hilux · Clutch, approval of extra', detail: 'Rodel Castro · Mark', state: 'Waiting for customer', tone: 'warn', at: 'Wed 16:20' },
-      { id: 'j3', ref: 'JO-0409', title: 'Fortuner · PMS 50,000 km', detail: 'Dr. Ramil Uy · Tonyo', state: 'For pickup', tone: 'ok', at: '8:40' },
-    ]),
-    today('inq', 'Inquiries', 4, [
-      { id: 'i1', ref: 'QT-0088', title: 'Fortuner · Suspension overhaul', detail: 'Victor Ramos · ₱14,800', state: 'For approval', tone: 'warn', at: 'since Tue' },
-      { id: 'i2', ref: 'QT-0091', title: 'Mirage · Aircon compressor', detail: 'Liezl Cruz · ₱3,950', state: 'For approval', tone: 'warn', at: '8:55' },
-      { id: 'i3', ref: 'QT-0092', title: 'Ranger · Noise check, front', detail: 'Gerry Ong', state: 'Quotation', at: '9:02' },
-    ]),
-  ],
+  place: sharesOfP('autoworks').place,
+  lists: sharesOfP('autoworks').lists,
+  activity: sharesOfP('autoworks').activity,
   week: { ...liveWeeks.autoworks!, shares: sharesOf('autoworks') },
   yesterday: [{ value: '₱24,300', label: 'revenue' }, { value: 6, label: 'jobs closed' }],
 };

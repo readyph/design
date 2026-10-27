@@ -502,7 +502,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
     const statusText = p.status === 'ACTIVE' ? 'Running' : p.status === 'DEGRADED' ? 'Slow' : 'Offline';
     return (
       <div className="px-pad pb-10 pt-5">
-        <p className="m-0 text-small text-muted">{[p.kind, n ? `${n} in Needs you` : ''].filter(Boolean).map((t, i) => <span key={t}>{i ? <span aria-hidden className="mx-2 text-faint">/</span> : null}{t}</span>)}</p>
+        <p className="m-0 text-small text-muted">{[p.kind, p.place ?? '', n ? `${n} in Needs you` : ''].filter(Boolean).map((t, i) => <span key={t}>{i ? <span aria-hidden className="mx-2 text-faint">/</span> : null}{t}</span>)}</p>
         <div className="mt-2 flex flex-wrap items-center gap-3">
           <PlatformLogo name={p.name} src={p.logo} index={p.index} size={24} decorative />
           <h2 ref={headingEl} tabIndex={-1} className="m-0 min-w-0 text-title text-text outline-none focus-visible:ring-2 focus-visible:ring-accent">{p.name}</h2>

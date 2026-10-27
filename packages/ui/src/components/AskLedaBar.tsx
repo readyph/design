@@ -112,13 +112,13 @@ const VARIANT = {
   bar: {
     outer: 'inline-flex w-auto max-w-full shrink-0 basis-auto',
     wrap: 'w-leda-w shrink-0 max-[640px]:w-[var(--ctl-touch)]',
-    bar: 'text-ui h-[var(--ctl-leda-bar)] max-[640px]:h-[var(--ctl-touch)] max-[640px]:justify-center max-[640px]:px-0',
+    bar: 'text-ui leading-5 h-[var(--ctl-leda-bar)] max-[640px]:h-[var(--ctl-touch)] max-[640px]:justify-center max-[640px]:px-0',
     mark: 20,
   },
   overview: {
     outer: 'flex w-full max-w-leda-w-overview shrink basis-auto',
     wrap: 'w-full max-w-leda-w-overview',
-    bar: 'text-body h-[var(--ctl-touch)] gap-3 pl-3.5 pr-2 max-[640px]:pl-3 max-[640px]:pr-3 max-[640px]:text-[15px]',
+    bar: 'text-body leading-5 h-[var(--ctl-touch)] gap-3 pl-3.5 pr-2 max-[640px]:pl-3 max-[640px]:pr-3 max-[640px]:text-[15px]',
     mark: 22,
   },
 } as const;

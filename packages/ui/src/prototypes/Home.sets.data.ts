@@ -46,6 +46,7 @@ export const fewLive = {
      "label": "out of stock"
     }
    ],
+   "place": "Café + kitchen",
    "lists": [],
    "activity": [
     {
@@ -141,6 +142,7 @@ export const fewLive = {
      "label": "orders"
     }
    ],
+   "place": "Maginhawa St",
    "lists": [],
    "activity": [
     {
@@ -584,6 +586,7 @@ export const fewQuiet = {
      "label": "out of stock"
     }
    ],
+   "place": "Café + kitchen",
    "lists": [],
    "activity": [
     {
@@ -679,6 +682,7 @@ export const fewQuiet = {
      "label": "orders"
     }
    ],
+   "place": "Maginhawa St",
    "lists": [],
    "activity": [
     {
@@ -1013,6 +1017,7 @@ export const manyLive = {
      "label": "POs open"
     }
    ],
+   "place": "Cubao, QC",
    "lists": [],
    "activity": [
     {
@@ -1114,6 +1119,7 @@ export const manyLive = {
      "label": "for pickup"
     }
    ],
+   "place": "Aurora Blvd, QC",
    "lists": [],
    "activity": [
     {
@@ -1198,6 +1204,7 @@ export const manyLive = {
      "label": "waiting for parts"
     }
    ],
+   "place": "Brixton St, Pasig",
    "lists": [],
    "activity": [
     {
@@ -1279,6 +1286,7 @@ export const manyLive = {
      "label": "jobs today"
     }
    ],
+   "place": "J.P. Rizal St, Marikina",
    "lists": [],
    "activity": [
     {
@@ -1368,6 +1376,7 @@ export const manyLive = {
      "label": "receipts"
     }
    ],
+   "place": "Aurora Blvd, QC",
    "lists": [],
    "activity": [
     {
@@ -1461,6 +1470,7 @@ export const manyLive = {
      "label": "out of stock"
     }
    ],
+   "place": "Café + kitchen",
    "lists": [],
    "activity": [
     {
@@ -1556,6 +1566,7 @@ export const manyLive = {
      "label": "orders"
     }
    ],
+   "place": "Maginhawa St",
    "lists": [],
    "activity": [
     {
@@ -2340,6 +2351,7 @@ export const manyQuiet = {
      "label": "POs open"
     }
    ],
+   "place": "Cubao, QC",
    "lists": [],
    "activity": [
     {
@@ -2441,6 +2453,7 @@ export const manyQuiet = {
      "label": "for pickup"
     }
    ],
+   "place": "Aurora Blvd, QC",
    "lists": [],
    "activity": [
     {
@@ -2525,6 +2538,7 @@ export const manyQuiet = {
      "label": "waiting for parts"
     }
    ],
+   "place": "Brixton St, Pasig",
    "lists": [],
    "activity": [
     {
@@ -2604,6 +2618,7 @@ export const manyQuiet = {
      "label": "jobs today"
     }
    ],
+   "place": "J.P. Rizal St, Marikina",
    "lists": [],
    "activity": [
     {
@@ -2692,6 +2707,7 @@ export const manyQuiet = {
      "label": "receipts"
     }
    ],
+   "place": "Aurora Blvd, QC",
    "lists": [],
    "activity": [
     {
@@ -2785,6 +2801,7 @@ export const manyQuiet = {
      "label": "out of stock"
     }
    ],
+   "place": "Café + kitchen",
    "lists": [],
    "activity": [
     {
@@ -2880,6 +2897,7 @@ export const manyQuiet = {
      "label": "orders"
     }
    ],
+   "place": "Maginhawa St",
    "lists": [],
    "activity": [
     {
@@ -3271,7 +3289,172 @@ export const duoLive = {
      "label": "for pickup"
     }
    ],
-   "lists": [],
+   "place": "Aurora Blvd, Cubao",
+   "lists": [
+    {
+     "id": "jobs",
+     "title": "Open job orders",
+     "total": 12,
+     "viewAllLabel": "View all job orders",
+     "items": [
+      {
+       "id": "autoworks-jobs-0",
+       "ref": "JO-0412",
+       "title": "Vios · Alternator",
+       "detail": "Ana Villanueva · Dennis",
+       "state": "Waiting for parts",
+       "tone": "warn",
+       "at": "8:47",
+       "linkTo": "stockroom",
+       "linkRef": "ALT-NCP150",
+       "linkText": "0 on hand · PO-0221 draft"
+      },
+      {
+       "id": "autoworks-jobs-1",
+       "ref": "JO-0411",
+       "title": "Hilux · Clutch, approval of extra",
+       "detail": "Rodel Castro · Mark",
+       "state": "Waiting for customer",
+       "tone": "warn",
+       "at": "Wed 16:20"
+      },
+      {
+       "id": "autoworks-jobs-2",
+       "ref": "JO-0409",
+       "title": "Fortuner · PMS 50,000 km",
+       "detail": "Dr. Ramil Uy · Tonyo",
+       "state": "For pickup",
+       "tone": "ok",
+       "at": "8:40"
+      },
+      {
+       "id": "autoworks-jobs-3",
+       "ref": "JO-0408",
+       "title": "Civic · Brake fluid flush",
+       "detail": "Anna Lim · Benjie",
+       "state": "For pickup",
+       "tone": "ok",
+       "at": "Wed 17:30"
+      },
+      {
+       "id": "autoworks-jobs-4",
+       "ref": "JO-0407",
+       "title": "Corolla Altis · Battery and belts",
+       "detail": "Mario Santos · Dennis",
+       "state": "For pickup",
+       "tone": "ok",
+       "at": "Wed 17:05"
+      },
+      {
+       "id": "autoworks-jobs-5",
+       "ref": "JO-0415",
+       "title": "Montero · Front brakes",
+       "detail": "Jerome Tan · Benjie",
+       "state": "In progress",
+       "tone": "accent",
+       "at": "8:30"
+      },
+      {
+       "id": "autoworks-jobs-6",
+       "ref": "JO-0414",
+       "title": "Innova · PMS 40,000 km",
+       "detail": "Carmela Reyes · Tonyo",
+       "state": "In progress",
+       "tone": "accent",
+       "at": "9:05"
+      },
+      {
+       "id": "autoworks-jobs-7",
+       "ref": "JO-0413",
+       "title": "City · Aircon cleaning",
+       "detail": "Paul Ignacio · Mark",
+       "state": "In progress",
+       "tone": "accent",
+       "at": "8:20"
+      },
+      {
+       "id": "autoworks-jobs-8",
+       "ref": "JO-0410",
+       "title": "Ranger · Suspension bushings",
+       "detail": "Nestor Bautista · Dennis",
+       "state": "In progress",
+       "tone": "accent",
+       "at": "Wed 15:20"
+      },
+      {
+       "id": "autoworks-jobs-9",
+       "ref": "JO-0416",
+       "title": "Wigo · PMS 10,000 km",
+       "detail": "Kim Soriano",
+       "state": "To do",
+       "tone": "neutral",
+       "at": "9:00"
+      },
+      {
+       "id": "autoworks-jobs-10",
+       "ref": "JO-0417",
+       "title": "Navara · Check engine light",
+       "detail": "Lito Manalo",
+       "state": "To do",
+       "tone": "neutral",
+       "at": "9:08"
+      },
+      {
+       "id": "autoworks-jobs-11",
+       "ref": "JO-0418",
+       "title": "Ertiga · Wheel alignment",
+       "detail": "Joy Fernandez",
+       "state": "To do",
+       "tone": "neutral",
+       "at": "9:10"
+      }
+     ]
+    },
+    {
+     "id": "inquiries",
+     "title": "Inquiries",
+     "total": 4,
+     "viewAllLabel": "View all inquiries",
+     "items": [
+      {
+       "id": "autoworks-inquiries-0",
+       "ref": "QT-0088",
+       "title": "Fortuner · Suspension overhaul",
+       "detail": "Victor Ramos · ₱14,800",
+       "state": "For approval",
+       "tone": "warn",
+       "at": "since Tue"
+      },
+      {
+       "id": "autoworks-inquiries-1",
+       "ref": "QT-0091",
+       "title": "Mirage · Aircon compressor",
+       "detail": "Liezl Cruz · ₱3,950",
+       "state": "For approval",
+       "tone": "warn",
+       "at": "8:55"
+      },
+      {
+       "id": "autoworks-inquiries-2",
+       "ref": "QT-0092",
+       "title": "Ranger · Noise check, front",
+       "detail": "Gerry Ong",
+       "state": "Quotation",
+       "tone": "neutral",
+       "at": "9:02"
+      },
+      {
+       "id": "autoworks-inquiries-3",
+       "ref": "QT-0090",
+       "title": "Accent · Engine tune-up",
+       "detail": "Bong Pascual",
+       "state": "Quotation",
+       "tone": "neutral",
+       "at": "Wed 16:45"
+      }
+     ]
+    }
+   ],
    "activity": [
     {
      "id": "autoworks-a0",
@@ -3413,7 +3596,211 @@ export const duoLive = {
      "label": "POs open"
     }
    ],
-   "lists": [],
+   "place": "Aurora Blvd, Cubao",
+   "lists": [
+    {
+     "id": "moves",
+     "title": "Stock in and out since yesterday",
+     "total": 9,
+     "viewAllLabel": "View all movements",
+     "items": [
+      {
+       "id": "stockroom-moves-0",
+       "ref": "JO-0414",
+       "title": "Toyota oil filter",
+       "detail": "for JO-0414",
+       "state": "Out",
+       "tone": "neutral",
+       "qty": "−1 pc",
+       "at": "9:05",
+       "linkTo": "autoworks",
+       "linkRef": "JO-0414"
+      },
+      {
+       "id": "stockroom-moves-1",
+       "ref": "JO-0414",
+       "title": "Engine oil 10W-40, 1L",
+       "detail": "for JO-0414",
+       "state": "Out",
+       "tone": "neutral",
+       "qty": "−4 bottle",
+       "at": "8:47",
+       "linkTo": "autoworks",
+       "linkRef": "JO-0414"
+      },
+      {
+       "id": "stockroom-moves-2",
+       "ref": "JO-0415",
+       "title": "Brake pads, Montero front",
+       "detail": "for JO-0415",
+       "state": "Out",
+       "tone": "neutral",
+       "qty": "−1 set",
+       "at": "8:30",
+       "linkTo": "autoworks",
+       "linkRef": "JO-0415"
+      },
+      {
+       "id": "stockroom-moves-3",
+       "ref": "JO-0413",
+       "title": "Aircon cleaner can",
+       "detail": "for JO-0413",
+       "state": "Out",
+       "tone": "neutral",
+       "qty": "−2 can",
+       "at": "8:20",
+       "linkTo": "autoworks",
+       "linkRef": "JO-0413"
+      },
+      {
+       "id": "stockroom-moves-4",
+       "ref": "NGK-BKR6E",
+       "title": "Spark plug NGK BKR6E",
+       "detail": "count 18 → 16",
+       "state": "Count",
+       "tone": "neutral",
+       "qty": "−2 pc",
+       "at": "7:58"
+      },
+      {
+       "id": "stockroom-moves-5",
+       "ref": "JO-0407",
+       "title": "Battery 2SM Motolite",
+       "detail": "for JO-0407",
+       "state": "Out",
+       "tone": "neutral",
+       "qty": "−1 pc",
+       "at": "Wed 17:05",
+       "linkTo": "autoworks",
+       "linkRef": "JO-0407"
+      },
+      {
+       "id": "stockroom-moves-6",
+       "ref": "PH-H4-12V",
+       "title": "Headlight bulb H4",
+       "detail": "dropped",
+       "state": "Damaged",
+       "tone": "bad",
+       "qty": "−1 pc",
+       "at": "Wed 16:10"
+      },
+      {
+       "id": "stockroom-moves-7",
+       "ref": "JO-0410",
+       "title": "Bushing kit, Ranger",
+       "detail": "for JO-0410",
+       "state": "Out",
+       "tone": "neutral",
+       "qty": "−1 kit",
+       "at": "Wed 15:20",
+       "linkTo": "autoworks",
+       "linkRef": "JO-0410"
+      },
+      {
+       "id": "stockroom-moves-8",
+       "ref": "PO-0214",
+       "title": "Petron Blaze Racing 10W-40, 1L",
+       "detail": "PO-0214 · 42 of 48",
+       "state": "In",
+       "tone": "ok",
+       "qty": "+42 bottle",
+       "at": "Wed 14:30"
+      }
+     ]
+    },
+    {
+     "id": "low",
+     "title": "Low stock",
+     "total": 9,
+     "viewAllLabel": "View all low stock",
+     "items": [
+      {
+       "id": "stockroom-low-0",
+       "ref": "ALT-NCP150",
+       "title": "Alternator, Vios NCP150 (reman.)",
+       "detail": "reorder level 1 · PO-0221",
+       "state": "Out of stock",
+       "tone": "bad",
+       "qty": "0 pc",
+       "linkTo": "autoworks",
+       "linkRef": "JO-0412",
+       "linkText": "waiting for it · promised 11:00"
+      },
+      {
+       "id": "stockroom-low-1",
+       "ref": "90915-YZZE1",
+       "title": "Toyota oil filter",
+       "detail": "reorder level 20 · PO-0219",
+       "state": "Low",
+       "tone": "warn",
+       "qty": "4 pc"
+      },
+      {
+       "id": "stockroom-low-2",
+       "ref": "BX-DB1863",
+       "title": "Bendix brake pads, Vios front",
+       "detail": "reorder level 6 · PO-0219",
+       "state": "Low",
+       "tone": "warn",
+       "qty": "2 set"
+      },
+      {
+       "id": "stockroom-low-3",
+       "ref": "PH-H4-12V",
+       "title": "Headlight bulb H4",
+       "detail": "reorder level 8",
+       "state": "Low",
+       "tone": "warn",
+       "qty": "3 pc"
+      },
+      {
+       "id": "stockroom-low-4",
+       "ref": "WB-22",
+       "title": "Wiper blade 22\"",
+       "detail": "reorder level 6",
+       "state": "Low",
+       "tone": "warn",
+       "qty": "2 pc"
+      },
+      {
+       "id": "stockroom-low-5",
+       "ref": "CL-1L",
+       "title": "Coolant 1L",
+       "detail": "reorder level 12",
+       "state": "Low",
+       "tone": "warn",
+       "qty": "5 bottle"
+      },
+      {
+       "id": "stockroom-low-6",
+       "ref": "AF-INV16",
+       "title": "Air filter, Innova",
+       "detail": "reorder level 4",
+       "state": "Low",
+       "tone": "warn",
+       "qty": "1 pc"
+      },
+      {
+       "id": "stockroom-low-7",
+       "ref": "BF-DOT3",
+       "title": "Brake fluid DOT3",
+       "detail": "reorder level 6",
+       "state": "Low",
+       "tone": "warn",
+       "qty": "3 bottle"
+      },
+      {
+       "id": "stockroom-low-8",
+       "ref": "FB-VIOS",
+       "title": "Fan belt, Vios",
+       "detail": "reorder level 3",
+       "state": "Low",
+       "tone": "warn",
+       "qty": "1 pc"
+      }
+     ]
+    }
+   ],
    "activity": [
     {
      "id": "stockroom-a0",
@@ -4009,7 +4396,169 @@ export const duoQuiet = {
      "label": "for pickup"
     }
    ],
-   "lists": [],
+   "place": "Aurora Blvd, Cubao",
+   "lists": [
+    {
+     "id": "jobs",
+     "title": "Open job orders",
+     "total": 12,
+     "viewAllLabel": "View all job orders",
+     "items": [
+      {
+       "id": "autoworks-jobs-0",
+       "ref": "JO-0412",
+       "title": "Vios · Alternator",
+       "detail": "Ana Villanueva · Dennis",
+       "state": "In progress",
+       "tone": "accent",
+       "at": "8:47"
+      },
+      {
+       "id": "autoworks-jobs-1",
+       "ref": "JO-0411",
+       "title": "Hilux · Clutch, approval of extra",
+       "detail": "Rodel Castro · Mark",
+       "state": "Waiting for customer",
+       "tone": "warn",
+       "at": "Wed 16:20"
+      },
+      {
+       "id": "autoworks-jobs-2",
+       "ref": "JO-0409",
+       "title": "Fortuner · PMS 50,000 km",
+       "detail": "Dr. Ramil Uy · Tonyo",
+       "state": "For pickup",
+       "tone": "ok",
+       "at": "8:40"
+      },
+      {
+       "id": "autoworks-jobs-3",
+       "ref": "JO-0408",
+       "title": "Civic · Brake fluid flush",
+       "detail": "Anna Lim · Benjie",
+       "state": "For pickup",
+       "tone": "ok",
+       "at": "Wed 17:30"
+      },
+      {
+       "id": "autoworks-jobs-4",
+       "ref": "JO-0407",
+       "title": "Corolla Altis · Battery and belts",
+       "detail": "Mario Santos · Dennis",
+       "state": "For pickup",
+       "tone": "ok",
+       "at": "Wed 17:05"
+      },
+      {
+       "id": "autoworks-jobs-5",
+       "ref": "JO-0415",
+       "title": "Montero · Front brakes",
+       "detail": "Jerome Tan · Benjie",
+       "state": "In progress",
+       "tone": "accent",
+       "at": "8:30"
+      },
+      {
+       "id": "autoworks-jobs-6",
+       "ref": "JO-0414",
+       "title": "Innova · PMS 40,000 km",
+       "detail": "Carmela Reyes · Tonyo",
+       "state": "In progress",
+       "tone": "accent",
+       "at": "9:05"
+      },
+      {
+       "id": "autoworks-jobs-7",
+       "ref": "JO-0413",
+       "title": "City · Aircon cleaning",
+       "detail": "Paul Ignacio · Mark",
+       "state": "In progress",
+       "tone": "accent",
+       "at": "8:20"
+      },
+      {
+       "id": "autoworks-jobs-8",
+       "ref": "JO-0410",
+       "title": "Ranger · Suspension bushings",
+       "detail": "Nestor Bautista · Dennis",
+       "state": "In progress",
+       "tone": "accent",
+       "at": "Wed 15:20"
+      },
+      {
+       "id": "autoworks-jobs-9",
+       "ref": "JO-0416",
+       "title": "Wigo · PMS 10,000 km",
+       "detail": "Kim Soriano",
+       "state": "To do",
+       "tone": "neutral",
+       "at": "9:00"
+      },
+      {
+       "id": "autoworks-jobs-10",
+       "ref": "JO-0417",
+       "title": "Navara · Check engine light",
+       "detail": "Lito Manalo",
+       "state": "To do",
+       "tone": "neutral",
+       "at": "9:08"
+      },
+      {
+       "id": "autoworks-jobs-11",
+       "ref": "JO-0418",
+       "title": "Ertiga · Wheel alignment",
+       "detail": "Joy Fernandez",
+       "state": "To do",
+       "tone": "neutral",
+       "at": "9:10"
+      }
+     ]
+    },
+    {
+     "id": "inquiries",
+     "title": "Inquiries",
+     "total": 4,
+     "viewAllLabel": "View all inquiries",
+     "items": [
+      {
+       "id": "autoworks-inquiries-0",
+       "ref": "QT-0088",
+       "title": "Fortuner · Suspension overhaul",
+       "detail": "Victor Ramos · ₱14,800",
+       "state": "For approval",
+       "tone": "warn",
+       "at": "since Tue"
+      },
+      {
+       "id": "autoworks-inquiries-1",
+       "ref": "QT-0091",
+       "title": "Mirage · Aircon compressor",
+       "detail": "Liezl Cruz · ₱3,950",
+       "state": "For approval",
+       "tone": "warn",
+       "at": "8:55"
+      },
+      {
+       "id": "autoworks-inquiries-2",
+       "ref": "QT-0092",
+       "title": "Ranger · Noise check, front",
+       "detail": "Gerry Ong",
+       "state": "Quotation",
+       "tone": "neutral",
+       "at": "9:02"
+      },
+      {
+       "id": "autoworks-inquiries-3",
+       "ref": "QT-0090",
+       "title": "Accent · Engine tune-up",
+       "detail": "Bong Pascual",
+       "state": "Quotation",
+       "tone": "neutral",
+       "at": "Wed 16:45"
+      }
+     ]
+    }
+   ],
    "activity": [
     {
      "id": "autoworks-a0",
@@ -4151,7 +4700,190 @@ export const duoQuiet = {
      "label": "POs open"
     }
    ],
-   "lists": [],
+   "place": "Aurora Blvd, Cubao",
+   "lists": [
+    {
+     "id": "moves",
+     "title": "Stock in and out since yesterday",
+     "total": 9,
+     "viewAllLabel": "View all movements",
+     "items": [
+      {
+       "id": "stockroom-moves-0",
+       "ref": "JO-0414",
+       "title": "Toyota oil filter",
+       "detail": "for JO-0414",
+       "state": "Out",
+       "tone": "neutral",
+       "qty": "−1 pc",
+       "at": "9:05",
+       "linkTo": "autoworks",
+       "linkRef": "JO-0414"
+      },
+      {
+       "id": "stockroom-moves-1",
+       "ref": "JO-0414",
+       "title": "Engine oil 10W-40, 1L",
+       "detail": "for JO-0414",
+       "state": "Out",
+       "tone": "neutral",
+       "qty": "−4 bottle",
+       "at": "8:47",
+       "linkTo": "autoworks",
+       "linkRef": "JO-0414"
+      },
+      {
+       "id": "stockroom-moves-2",
+       "ref": "JO-0415",
+       "title": "Brake pads, Montero front",
+       "detail": "for JO-0415",
+       "state": "Out",
+       "tone": "neutral",
+       "qty": "−1 set",
+       "at": "8:30",
+       "linkTo": "autoworks",
+       "linkRef": "JO-0415"
+      },
+      {
+       "id": "stockroom-moves-3",
+       "ref": "JO-0413",
+       "title": "Aircon cleaner can",
+       "detail": "for JO-0413",
+       "state": "Out",
+       "tone": "neutral",
+       "qty": "−2 can",
+       "at": "8:20",
+       "linkTo": "autoworks",
+       "linkRef": "JO-0413"
+      },
+      {
+       "id": "stockroom-moves-4",
+       "ref": "NGK-BKR6E",
+       "title": "Spark plug NGK BKR6E",
+       "detail": "count 18 → 16",
+       "state": "Count",
+       "tone": "neutral",
+       "qty": "−2 pc",
+       "at": "7:58"
+      },
+      {
+       "id": "stockroom-moves-5",
+       "ref": "JO-0407",
+       "title": "Battery 2SM Motolite",
+       "detail": "for JO-0407",
+       "state": "Out",
+       "tone": "neutral",
+       "qty": "−1 pc",
+       "at": "Wed 17:05",
+       "linkTo": "autoworks",
+       "linkRef": "JO-0407"
+      },
+      {
+       "id": "stockroom-moves-6",
+       "ref": "PH-H4-12V",
+       "title": "Headlight bulb H4",
+       "detail": "dropped",
+       "state": "Damaged",
+       "tone": "bad",
+       "qty": "−1 pc",
+       "at": "Wed 16:10"
+      },
+      {
+       "id": "stockroom-moves-7",
+       "ref": "JO-0410",
+       "title": "Bushing kit, Ranger",
+       "detail": "for JO-0410",
+       "state": "Out",
+       "tone": "neutral",
+       "qty": "−1 kit",
+       "at": "Wed 15:20",
+       "linkTo": "autoworks",
+       "linkRef": "JO-0410"
+      },
+      {
+       "id": "stockroom-moves-8",
+       "ref": "PO-0214",
+       "title": "Petron Blaze Racing 10W-40, 1L",
+       "detail": "PO-0214 · 42 of 48",
+       "state": "In",
+       "tone": "ok",
+       "qty": "+42 bottle",
+       "at": "Wed 14:30"
+      }
+     ]
+    },
+    {
+     "id": "low",
+     "title": "Low stock",
+     "total": 7,
+     "viewAllLabel": "View all low stock",
+     "items": [
+      {
+       "id": "stockroom-low-0",
+       "ref": "BX-DB1863",
+       "title": "Bendix brake pads, Vios front",
+       "detail": "reorder level 6 · PO-0219",
+       "state": "Low",
+       "tone": "warn",
+       "qty": "2 set"
+      },
+      {
+       "id": "stockroom-low-1",
+       "ref": "PH-H4-12V",
+       "title": "Headlight bulb H4",
+       "detail": "reorder level 8",
+       "state": "Low",
+       "tone": "warn",
+       "qty": "3 pc"
+      },
+      {
+       "id": "stockroom-low-2",
+       "ref": "WB-22",
+       "title": "Wiper blade 22\"",
+       "detail": "reorder level 6",
+       "state": "Low",
+       "tone": "warn",
+       "qty": "2 pc"
+      },
+      {
+       "id": "stockroom-low-3",
+       "ref": "CL-1L",
+       "title": "Coolant 1L",
+       "detail": "reorder level 12",
+       "state": "Low",
+       "tone": "warn",
+       "qty": "5 bottle"
+      },
+      {
+       "id": "stockroom-low-4",
+       "ref": "AF-INV16",
+       "title": "Air filter, Innova",
+       "detail": "reorder level 4",
+       "state": "Low",
+       "tone": "warn",
+       "qty": "1 pc"
+      },
+      {
+       "id": "stockroom-low-5",
+       "ref": "BF-DOT3",
+       "title": "Brake fluid DOT3",
+       "detail": "reorder level 6",
+       "state": "Low",
+       "tone": "warn",
+       "qty": "3 bottle"
+      },
+      {
+       "id": "stockroom-low-6",
+       "ref": "FB-VIOS",
+       "title": "Fan belt, Vios",
+       "detail": "reorder level 3",
+       "state": "Low",
+       "tone": "warn",
+       "qty": "1 pc"
+      }
+     ]
+    }
+   ],
    "activity": [
     {
      "id": "stockroom-a0",
