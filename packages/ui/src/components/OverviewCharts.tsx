@@ -346,7 +346,7 @@ function HomeBlock({ p, layout, locale }: BlockProps) {
       <section ref={sectionRef} aria-labelledby={nameId} aria-busy={state === 'loading' || undefined} className={cn('grid min-w-0 items-center gap-x-7 gap-y-1 border-t border-rule py-3 first:border-control', layout === 'row' ? 'grid-cols-[minmax(180px,1.1fr)_minmax(150px,0.9fr)_minmax(0,1.6fr)]' : 'grid-cols-[minmax(0,1fr)_auto]')}>
         <div className="flex min-w-0 items-start gap-2.5">
           <PlatformLogo name={p.name} {...p.logo} size={20} decorative className="mt-px" />
-          <div className="min-w-0">
+          <div>
             {name}
             <p className="m-0 mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-small text-muted">{p.kind}{p.kind && p.status && state !== 'error' ? ' \u00b7 ' : ''}{p.status && state !== 'error' && <StatusPart status={p.status} />}</p>
           </div>

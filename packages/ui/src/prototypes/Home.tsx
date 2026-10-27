@@ -45,6 +45,24 @@ export interface HomeProps {
 const NOW = 9 * 60 + 12;
 const PHONE = '(max-width: 640px)';
 const CHAT_KEY = 'rph-home-prototype-chat';
+/** Platform monograms as the workshop's shell.js identity(): first letters of two words, or the first two letters of one, collision-safe. */
+function platformMonos(list: { id: string; name: string; hq?: boolean }[]): Record<string, string> {
+  const used = new Set<string>();
+  const out: Record<string, string> = {};
+  for (const p of list) {
+    if (p.hq) { out[p.id] = 'HQ'; used.add('HQ'); continue; }
+    let w = p.name.split(/\s+/).filter((x) => x && !/^(of|the|and|&|ng|at)$/i.test(x));
+    if (!w.length) w = [p.name.trim() || '?'];
+    const cands = [w.length > 1 ? w[0][0] + w[1][0] : w[0].slice(0, 2), w.length > 2 ? w[0][0] + w[2][0] : null, w[0][0] + (w[0].slice(1).match(/[bcdfghjklmnpqrstvwxz]/i) ?? ['x'])[0]]
+      .filter((c): c is string => !!c)
+      .map((c) => c.toUpperCase());
+    const pick = cands.find((c) => !used.has(c)) ?? cands[0];
+    used.add(pick);
+    out[p.id] = pick;
+  }
+  return out;
+}
+
 const ownerDefault = { name: 'Ramon Dela Cruz', short: 'Mon', initials: 'RD', email: 'mon@delacruzauto.ph' };
 const healthOf = (p: HomePlatform): StatusBarHealth => (p.status === 'ACTIVE' ? 'ok' : p.status === 'DEGRADED' ? 'warn' : 'bad');
 const dayPart = NOW < 12 * 60 ? 'morning' : NOW < 18 * 60 ? 'afternoon' : 'evening';
@@ -72,6 +90,7 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
   const phone = useMatchMedia(PHONE);
   const quiet = state === 'quiet';
   const data = quiet && base.quietSet ? base.quietSet : base;
+  const monos = platformMonos(data.platforms);
   const suggestions = data.suggestions ?? defaultSuggestions;
   const owner = data.owner ? { ...ownerDefault, name: data.owner.name, short: data.owner.short, initials: data.owner.initials, email: data.owner.initials === ownerDefault.initials ? ownerDefault.email : '' } : ownerDefault;
   const loading = state === 'loading';
@@ -777,10 +796,10 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
       {hero}
       {visible.length ? (
         <div className="mt-12 px-pad">
-          <div className="mb-4 flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+          <div className="mb-4 flex flex-wrap items-baseline gap-2.5">
             <h3 id="ov7" className="m-0 text-section text-text">Last 7 days</h3>
             <span className="text-ui leading-5 text-muted">{data.weekRange ?? 'Thu 15 – Wed 21 Oct'}</span>
-            <Button variant="text" leftIcon={SquaresFour} rightIcon={ArrowRight} className="ml-auto self-center !h-8" onClick={showToday}>Today at your platforms</Button>
+            <Button variant="text" leftIcon={SquaresFour} rightIcon={ArrowRight} className="ml-auto self-center [&>span]:gap-1.5 !h-8 text-accent hover:text-accent" onClick={showToday}>Today at your platforms</Button>
           </div>
           <OverviewCharts
             variant="home"
@@ -994,12 +1013,12 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
         topBar={detailBar}
         status={
           <StatusBar
-            platforms={data.platforms.map((p) => ({ id: p.id, name: p.shortName ?? p.name, logoSrc: p.logo, color: p.index, initials: p.name.split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase(), health: p.id === failed ? 'bad' : healthOf(p), healthText: p.id === failed ? 'no data' : undefined, selected: filter === p.id, onSelect: () => setFilterTo(filter === p.id ? null : p.id) }))}
-            people={{ count: 9 }}
+            platforms={data.platforms.map((p) => ({ id: p.id, name: p.shortName ?? p.name, logoSrc: p.logo, color: p.index, initials: monos[p.id], health: p.id === failed ? 'bad' : healthOf(p), healthText: p.id === failed ? 'no data' : undefined, selected: filter === p.id, onSelect: () => setFilterTo(filter === p.id ? null : p.id) }))}
+            people={{ count: Number(data.hq.facts?.find((f) => f.label === 'people')?.value ?? 9) }}
             invites={{ count: data.hq.lists.find((l) => l.id === 'invites')?.total ?? 0 }}
             leda={{ used: data.plan.used, max: data.plan.max, daysLeft: '7 days left' }}
             ledaFirst
-            plan="Starter"
+            plan={data.plan.name ?? 'Starter'}
             updatedAt={clock()}
           />
         }
