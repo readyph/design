@@ -1079,7 +1079,7 @@ export function MemoryPage(props: MemoryPageProps) {
                   <section key={pid} aria-label={srcName(pid)} className={gi ? "mt-5" : "mt-3"} onMouseEnter={() => setHover(BUILDING[pid])} onMouseLeave={() => setHover(null)}>
                     {f ? null : (
                       <div className="flex items-center gap-2 pb-1.5">
-                        <h3 className="m-0 inline-flex items-center gap-2 text-[14px] font-semibold leading-5"><Logo src={pid} />{srcName(pid)}</h3>
+                        <h2 className="m-0 inline-flex items-center gap-2 text-[14px] font-semibold leading-5"><Logo src={pid} />{srcName(pid)}</h2>
                         <span className="ml-auto text-[12px] text-muted">{x.filter((r) => r.on).length} of {x.length} on</span>
                       </div>
                     )}
@@ -1199,7 +1199,7 @@ export function MemoryPage(props: MemoryPageProps) {
         )}
         {qs.length ? (
           <section aria-labelledby="docQ" className="mt-8">
-            <h3 id="docQ" className="m-0 text-[13px] font-semibold leading-[18px]">Questions this helps answer</h3>
+            <h2 id="docQ" className="m-0 text-[13px] font-semibold leading-[18px]">Questions this helps answer</h2>
             <ul className="m-0 mt-1.5 list-none p-0">
               {qs.map((x, i) => (
                 <li key={x} className={cn("flex gap-2.5 py-[9px] text-[14px] leading-5", i && "border-t border-rule")}>
