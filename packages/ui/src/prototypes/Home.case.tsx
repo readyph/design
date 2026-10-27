@@ -205,7 +205,7 @@ export function CaseKv({ items }: { items: CaseKvItem[] }) {
         <Fragment key={i}>
           <dt title={r.label} className="m-0 overflow-hidden text-ellipsis whitespace-nowrap border-t border-rule py-[7px] text-muted">{r.label}</dt>
           <dd className="m-0 flex min-w-0 justify-between gap-3 border-t border-rule py-[7px] @max-[600px]/sheet:flex-col @max-[600px]/sheet:gap-0 max-[640px]:flex-col max-[640px]:gap-0">
-            <b className={cn('flex-none font-medium tabular-nums', r.tone === 'bad' && 'text-bad', r.mono && 'font-mono text-ui')}>{r.value}</b>
+            <b className={cn('flex-none font-medium tabular-nums', r.tone === 'bad' && 'text-bad', r.mono && 'font-mono text-ui leading-5')}>{r.value}</b>
             {r.note ? <span title={r.note} className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-right text-muted @max-[600px]/sheet:whitespace-normal @max-[600px]/sheet:text-left max-[640px]:whitespace-normal max-[640px]:text-left">{r.note}</span> : null}
           </dd>
         </Fragment>
