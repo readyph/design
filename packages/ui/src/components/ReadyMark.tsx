@@ -63,8 +63,6 @@ const CSS = `
 @media (prefers-reduced-motion:reduce){
 .rd-play .rd-facets{display:none}
 .rd-play .rd-static{animation:rd-fade 400ms ease-out}
-.rd-shine .rd-band,.rd-shine .rd-eye{animation:none}
-.rd-shine .rd-step{animation:rd-step 900ms ease-out}
 }
 .rd-mark .rd-gleam{visibility:hidden}
 .rd-mark .rd-band{transform:translateX(-400px)}
@@ -72,6 +70,10 @@ const CSS = `
 .rd-shine .rd-gleam{visibility:visible}
 .rd-shine .rd-band{animation:rd-band 1900ms linear}
 .rd-shine .rd-eye{animation:rd-eye 1900ms linear}
+@media (prefers-reduced-motion:reduce){
+.rd-shine .rd-band,.rd-shine .rd-eye{animation:none}
+.rd-shine .rd-step{animation:rd-step 900ms ease-out}
+}
 @keyframes rd-band{0%{transform:translateX(-110px);animation-timing-function:cubic-bezier(.45,.05,.3,1)}100%{transform:translateX(100px)}}
 @keyframes rd-eye{0%{opacity:0}56.842%{opacity:0}65.263%{opacity:1}84.211%{opacity:0}100%{opacity:0}}
 @keyframes rd-step{0%{opacity:0}30%{opacity:.9}100%{opacity:0}}

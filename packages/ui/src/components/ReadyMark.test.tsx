@@ -148,4 +148,11 @@ describe('ReadyLogo', () => {
     rerender(<ReadyLogo tagline />);
     expect(container.textContent).toBe('Are you ready?');
   });
+
+  it('reduced motion switches the shine bands off after the rule that starts them (cascade order)', () => {
+    const start = READY_MARK_CSS.indexOf('.rd-shine .rd-band{animation:rd-band');
+    const off = READY_MARK_CSS.indexOf('.rd-shine .rd-band,.rd-shine .rd-eye{animation:none}');
+    expect(start).toBeGreaterThan(-1);
+    expect(off).toBeGreaterThan(start);
+  });
 });
