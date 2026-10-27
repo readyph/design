@@ -27,6 +27,7 @@ import { SheetBar } from '../components/SheetBar';
 import { Skeleton } from '../components/Skeleton';
 import { StatusBar, type StatusBarHealth } from '../components/StatusBar';
 import { StatusDot, type StatusTone } from '../components/StatusDot';
+import { TextField } from '../components/TextField';
 import { SubpageLane, SubpageTransition, type SubpageDirection } from '../components/SubpageTransition';
 import { TownMap, type TownMapHandle, type TownMapSlot } from '../components/TownMap';
 import { Toaster } from '../components/toast/Toaster';
@@ -82,9 +83,6 @@ function Initials({ text, invite, size = 32 }: { text: string; invite?: boolean;
   );
 }
 const invInitials = (v: Invite) => (v.name || v.email).split(/[\s.@_]+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
-
-/** A labelled text input in the style of BlockedQuestions (there is no form-field component yet). */
-const fieldClass = 'block h-[var(--ctl-dropdown)] w-full min-w-0 rounded-control border bg-surface px-3 text-body text-text placeholder:text-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent';
 
 /** A pressable row in the place column (filters). Local: the place column has no list part yet. */
 function FilterRow({ title, count, about, on, onClick, onHover, leading }: { title: string; count?: ReactNode; about?: string; on: boolean; onClick: () => void; onHover?: (on: boolean) => void; leading?: ReactNode }) {
@@ -1104,16 +1102,8 @@ export function Team({ set = 'live', state = 'live', person, startInvite = false
             <>
               {iv.byLeda ? <LedaNote>Filled in from Leda's draft. Change anything before you create it.</LedaNote> : null}
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div className="min-w-0">
-                  <label htmlFor="iv-email" className="mb-1 block text-small text-muted">Email</label>
-                  <input ref={emailRef} id="iv-email" type="email" inputMode="email" autoComplete="off" value={iv.email} onChange={(e) => setIv({ ...iv, email: e.target.value, err: null })} aria-invalid={iv.err ? true : undefined} aria-describedby="iv-email-h" className={cn(fieldClass, iv.err ? 'border-bad' : 'border-control')} />
-                  {iv.err ? <p id="iv-email-h" role="alert" className="m-0 mt-1 text-small text-bad-ink">{iv.err}</p> : <p id="iv-email-h" className="m-0 mt-1 text-small text-muted">Where the invite goes. They sign in with it.</p>}
-                </div>
-                <div className="min-w-0">
-                  <label htmlFor="iv-name" className="mb-1 block text-small text-muted">Name (optional)</label>
-                  <input ref={nameRef} id="iv-name" type="text" maxLength={80} autoComplete="off" value={iv.name} onChange={(e) => setIv({ ...iv, name: e.target.value })} aria-describedby="iv-name-h" className={cn(fieldClass, 'border-control')} />
-                  <p id="iv-name-h" className="m-0 mt-1 text-small text-muted">So you know who it is before they join.</p>
-                </div>
+                <TextField ref={emailRef} id="iv-email" label="Email" type="email" inputMode="email" autoComplete="off" value={iv.email} onChange={(e) => setIv({ ...iv, email: e.target.value, err: null })} error={iv.err ?? undefined} hint="Where the invite goes. They sign in with it." />
+                <TextField ref={nameRef} id="iv-name" label="Name (optional)" maxLength={80} autoComplete="off" value={iv.name} onChange={(e) => setIv({ ...iv, name: e.target.value })} hint="So you know who it is before they join." />
               </div>
               <fieldset className="m-0 min-w-0 border-0 p-0">
                 <legend className="mb-1 p-0 text-ui font-medium text-text">Role on each platform</legend>

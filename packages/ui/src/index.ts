@@ -14,6 +14,7 @@ export * from './components/LedaProposal';
 export * from './components/FactsLine';
 export { Menu, type MenuProps, type MenuItem, type MenuActionItem, type MenuRadioItem } from './components/Menu';
 export * from './components/Switch';
+export * from './components/TextField';
 export * from './components/ProgressBar';
 export * from './components/DataList';
 export * from './components/EmptyState';
