@@ -192,7 +192,7 @@ export function PlatformShell({
           {children}
         </div>
         {actionBar != null && (
-          <div className={cn('hidden shrink-0 border-t border-border bg-surface px-pad py-3', 'max-[640px]:flex max-[640px]:items-center max-[640px]:gap-2', hiddenWins)}>
+          <div className={cn('hidden shrink-0 border-t border-border bg-surface px-pad py-3', 'max-[640px]:flex max-[640px]:items-center max-[640px]:gap-2 max-[640px]:pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]', hiddenWins)}>
             {actionBar}
           </div>
         )}

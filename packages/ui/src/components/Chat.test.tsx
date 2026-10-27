@@ -111,6 +111,12 @@ describe('Chat', () => {
     expect(document.activeElement).toBe(send);
   });
 
+  it('disabled New conversation uses aria-disabled variants so the muted/50%/default-cursor look beats the Button and keepFocus classes', () => {
+    render(<ChatHeader empty onNewConversation={vi.fn()} />);
+    const cls = screen.getByRole('button', { name: 'New conversation' }).className;
+    for (const c of ['aria-disabled:text-muted', 'aria-disabled:opacity-50', 'aria-disabled:cursor-default', 'aria-disabled:hover:bg-transparent', 'aria-disabled:hover:text-muted']) expect(cls).toContain(c);
+  });
+
   it('New conversation asks first; Confirm clears and puts focus in the composer; Cancel does nothing', () => {
     const onNew = vi.fn();
     render(<Panel onNew={onNew} />);
