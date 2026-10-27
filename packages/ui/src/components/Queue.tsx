@@ -620,7 +620,7 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
         </div>
 
         {hasPinned ? (
-          <div className={cn('flex max-h-[45%] shrink-0 flex-col gap-2.5 overflow-y-auto overscroll-contain pt-1', tightGroups ? 'pb-0' : 'pb-2.5', !flushGroups && !tightGroups && !(hideEmpty && isEmpty) && 'border-t border-rule')}>
+          <div className={cn('flex max-h-[45%] shrink-0 flex-col gap-2.5 overflow-y-auto overscroll-contain', hideEmpty && isEmpty && !flushGroups && !tightGroups ? 'pt-[5px]' : 'pt-1', tightGroups ? 'pb-0' : 'pb-2.5', !flushGroups && !tightGroups && !(hideEmpty && isEmpty) && 'border-t border-rule')}>
             {vWatching.length ? (
               <PinnedGroup kind="watching" count={vWatching.length} level={pinnedLevel} open={open.has('watching')} onToggle={() => toggle('watching')}>
                 <ul className="m-0 flex list-none flex-col gap-2 p-0 pb-1">
