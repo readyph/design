@@ -313,7 +313,7 @@ export function CommandPalette({
                             item.disabled && 'opacity-50',
                           )}
                         >
-                          <span aria-hidden className={cn('grid h-5 w-5 shrink-0 place-items-center', selected ? 'text-accent' : 'text-muted')}>
+                          <span aria-hidden className={cn('grid h-5 shrink-0 place-items-center', item.leda ? 'w-5 max-sm:w-[22px]' : 'w-4', selected ? 'text-accent' : 'text-muted')}>
                             {item.leda ? (
                               <>
                                 <span className="max-sm:hidden"><LedaMark size={20} decorative /></span>

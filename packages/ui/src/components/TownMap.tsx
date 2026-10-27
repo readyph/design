@@ -97,6 +97,8 @@ export interface TownMapProps {
   onRetry?: () => void;
   /** Plain text above the map, e.g. "2 platforms + HQ". */
   caption?: ReactNode;
+  /** Dim the other labels by fading them (the workshop Platforms page, `.blabel.dim`) instead of the muted text. Fading lowers contrast, so use it where the dimming follows the pointer. */
+  fadeOthers?: boolean;
   /** Show the "The map did not load" notice when `error` is set (default true). The workshop Platforms page dims the map and says "No data" in its caption instead. */
   errorNotice?: boolean;
   /** Adds the workshop's "Add platform" button to the map controls (label hidden at 960px and below, and on a narrow map). */
@@ -176,6 +178,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
     caption,
     onAddPlatform,
     errorNotice = true,
+    fadeOthers = false,
     label = 'Platform map',
     platformLabel = defaultLabel,
     className,
@@ -398,7 +401,8 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
             {real.map((p) => {
               const sel = selected === p.id;
               const hl = focus ? focus === p.id : !!highlight?.includes(p.id);
-              const dim = !sel && !hl && ((!!focus && focus !== p.id) || (selected !== null && dimOthers));
+              const dimFocus = fadeOthers && !sel && !hl && !!focus && focus !== p.id;
+              const dim = dimFocus || (!sel && !hl && ((!!focus && focus !== p.id) || (selected !== null && dimOthers)));
               const alert = !loading && (p.status !== 'ACTIVE' || !!p.error);
               const short = p.shortName ?? p.name;
               const n = loading ? 0 : (p.count ?? 0);
@@ -432,7 +436,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
                       'after:pointer-events-none after:absolute after:left-[var(--stem-x,50%)] after:top-full after:h-[var(--stem,10px)] after:w-px after:bg-control after:content-[""] forced-colors:after:hidden',
                       focusRing,
                       'focus-visible:z-[3] hover:z-[3]',
-                      sel || hl ? 'border-accent after:bg-accent' : dim ? 'border-border data-[placed]:opacity-55 data-[placed]:hover:opacity-100 hover:border-control' : 'border-border hover:border-control',
+                      sel || hl ? 'border-accent after:bg-accent' : dimFocus ? 'border-border data-[placed]:opacity-55 data-[placed]:hover:opacity-100 hover:border-control' : dim ? 'border-rule' : 'border-border hover:border-control',
                       sel && 'z-[3] shadow-[inset_0_0_0_1px_var(--accent)] forced-colors:border-[Highlight] forced-colors:border-2',
                       p.hq && 'border-dashed',
                       loading && 'cursor-default',
@@ -444,13 +448,13 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
                       <span
                         className={cn(
                           'max-w-[190px] truncate text-ui font-medium leading-4',
-                          dim ? 'text-muted' : 'text-text',
+                          dim && !dimFocus ? 'text-muted' : 'text-text',
                           many ? 'hidden' : '@max-[400px]/town:hidden',
                         )}
                       >
                         {p.name}
                       </span>
-                      <span className={cn('max-w-[120px] truncate text-ui font-medium leading-4', dim ? 'text-muted' : 'text-text', many ? 'inline' : 'hidden @max-[400px]/town:inline')}>
+                      <span className={cn('max-w-[120px] truncate text-ui font-medium leading-4', dim && !dimFocus ? 'text-muted' : 'text-text', many ? 'inline' : 'hidden @max-[400px]/town:inline')}>
                         {p.hq ? 'HQ' : short}
                       </span>
                       {alert && !sel ? <StatusMark status={p.status} error={p.error} filled={!!p.sub} className="hidden @max-[400px]/town:inline-block max-[640px]:inline-block" /> : null}

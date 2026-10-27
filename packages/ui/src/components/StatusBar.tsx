@@ -215,12 +215,15 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
                   <PlatformLogo name={p.name} src={p.logoSrc} color={p.color} initials={p.initials} index={i + 1} decorative />
                   {bad ? (
                     <>
+                      {ledaFirst ? (
+                        <span className={cn('max-w-[16ch] truncate text-ui font-medium text-text', platforms.length > 3 && wsMid)}>{p.name}</span>
+                      ) : null}
                       <span className={cn('size-[7px] shrink-0 rounded-full', dot[p.health!])} aria-hidden="true" />
-                      <span className="max-w-[16ch] truncate text-ui font-medium text-text">{p.name}</span>
+                      {ledaFirst ? null : <span className="max-w-[16ch] truncate text-ui font-medium text-text">{p.name}</span>}
                       <span>{words(p)}</span>
                     </>
                   ) : (
-                    namesAlways && <span className={cn('max-w-[16ch] truncate', ledaFirst && 'text-ui font-medium text-text', ledaFirst && platforms.length > 3 && wsMid)}>{p.name}</span>
+                    namesAlways && !(ledaFirst && platforms.length > 3) && <span className={cn('max-w-[16ch] truncate', ledaFirst && 'text-ui font-medium text-text')}>{p.name}</span>
                   )}
                 </Item>
               </li>

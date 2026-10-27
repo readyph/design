@@ -471,6 +471,7 @@ function Place({ set, state, phone, focusIds, onFocusPlatform, onAdd, onAsk }: P
         error={state === 'error'}
         caption={cap}
         errorNotice={false}
+        fadeOthers
         platformLabel={(p) => {
           const q = byId(set, p.id);
           return `${q.name}, ${kindName(q.kind)}, ${health(set, q).text}`;
