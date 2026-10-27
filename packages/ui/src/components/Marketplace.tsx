@@ -153,7 +153,7 @@ function Tile({ item, categoryLabel, checked, tabStop, onPick, onInstall, onKeyD
           {soon && <Badge tone="neutral" id={`${id}-s`}>Coming soon</Badge>}
           {!soon && owned > 0 && (
             <span id={`${id}-h`} className="inline-flex items-center gap-1 text-small text-muted">
-              <Check size={12} weight="bold" aria-hidden className="text-ok-ink" />
+              <Check size={12} aria-hidden className="text-ok" />
               You have {owned}
             </span>
           )}

@@ -107,6 +107,19 @@ function Hl({ h, className }: { h: Health; className?: string }) {
   );
 }
 
+/** Hovering a platform lights only its building and roads; a data link lights both ends and the road. The light stays until another row is hovered or the pointer leaves the list (the workshop page's `mouseover` on the list). */
+const hoverProps = (set: (ids: string[] | null) => void) => ({
+  onMouseOver: (e: { target: EventTarget }) => {
+    const t = e.target as HTMLElement;
+    if (t.closest('[role="menu"]')) return; // an open row menu belongs to its row (the workshop page keeps the menu inside the row)
+    const r = t.closest<HTMLElement>('[data-hl]');
+    set(r ? r.dataset.hl!.split(',') : null);
+  },
+  onMouseLeave: () => {
+    if (!document.querySelector('[role="menu"]')) set(null);
+  },
+});
+
 const nav = (to: Parameters<typeof go>[0]) => (e: { preventDefault: () => void }) => {
   e.preventDefault();
   go(to);
@@ -264,8 +277,7 @@ function PlatformList({ set, onFocusPlatform, onAdd, onDisconnect }: ListProps) 
             rowId={p.id}
             label={p.name}
             onActivate={() => go({ to: 'platform', id: p.id })}
-            onMouseEnter={() => onFocusPlatform([p.id])}
-            onMouseLeave={() => onFocusPlatform(null)}
+            data-hl={p.id}
           >
             <ListCell kind="lead" className="flex items-start gap-3 [overflow-wrap:normal]">
               <Logo p={p} size={32} className="mt-0.5" />
@@ -434,8 +446,7 @@ function Place({ set, state, phone, focusIds, onFocusPlatform, onAdd, onAsk }: P
           key={p.id}
           href={href(p.id)}
           onClick={nav({ to: 'platform', id: p.id })}
-          onMouseEnter={() => onFocusPlatform([p.id])}
-          onMouseLeave={() => onFocusPlatform(null)}
+          data-hl={p.id}
           className={cn('grid w-full grid-cols-[32px_minmax(0,1fr)_auto] items-start gap-x-3 gap-y-0.5 px-pad py-3 text-left hover:bg-raised', i > 0 && 'border-t border-rule')}
         >
           <Logo p={p} size={32} className="row-span-3 mt-0.5" />
@@ -508,7 +519,7 @@ function Place({ set, state, phone, focusIds, onFocusPlatform, onAdd, onAsk }: P
           </div>
         )}
       </div>
-      <div className="pb-3 pt-1 max-[640px]:bg-surface max-[640px]:pb-4 max-[640px]:pt-0">
+      <div className="pb-3 pt-1 max-[640px]:bg-surface max-[640px]:pb-4 max-[640px]:pt-0" {...hoverProps(onFocusPlatform)}>
         {stateBlock}
         {state === 'loading' && (
           <div aria-busy="true">
@@ -545,8 +556,7 @@ function Place({ set, state, phone, focusIds, onFocusPlatform, onAdd, onAsk }: P
             {need.map((p) => (
               <div
                 key={`need-${p.id}`}
-                onMouseEnter={() => onFocusPlatform([p.id])}
-                onMouseLeave={() => onFocusPlatform(null)}
+                data-hl={p.id}
                 className={cn(LROW, mt(rowIndex++ === 0), 'border-dashed border-control pr-[132px] max-[640px]:border-0 max-[640px]:pr-[140px]')}
               >
                 <span className={LR1}>
@@ -563,7 +573,7 @@ function Place({ set, state, phone, focusIds, onFocusPlatform, onAdd, onAsk }: P
               </div>
             ))}
             {set.links.map((l) => (
-              <LinkRow key={`${l.from}|${l.to}|${l.kind}`} set={set} l={l} first={rowIndex++ === 0} onFocusPlatform={onFocusPlatform} />
+              <LinkRow key={`${l.from}|${l.to}|${l.kind}`} set={set} l={l} first={rowIndex++ === 0} />
             ))}
             {!set.links.length && !need.length && (
               <p className="mx-3 rounded-card border border-dashed border-control px-3 py-2.5 text-ui text-muted max-[640px]:mx-pad">{set.platforms.length ? 'No platform reads data from another yet.' : 'Add a platform to start.'}</p>
@@ -579,8 +589,7 @@ function Place({ set, state, phone, focusIds, onFocusPlatform, onAdd, onAsk }: P
                 {idle.map((x, i) => (
                   <div
                     key={`idle-${x.platform.id}|${x.kind}`}
-                    onMouseEnter={() => onFocusPlatform([x.platform.id])}
-                    onMouseLeave={() => onFocusPlatform(null)}
+                    data-hl={x.platform.id}
                     className={cn(LROW, mt(i === 0), 'pr-[76px] max-[640px]:pr-[84px]')}
                   >
                     <span className={LR1}>
@@ -604,15 +613,14 @@ function Place({ set, state, phone, focusIds, onFocusPlatform, onAdd, onAsk }: P
   );
 }
 
-function LinkRow({ set, l, first, onFocusPlatform }: { set: PlatformSet; l: DataLink; first: boolean; onFocusPlatform: (ids: string[] | null) => void }) {
+function LinkRow({ set, l, first }: { set: PlatformSet; l: DataLink; first: boolean }) {
   const from = byId(set, l.from);
   const to = byId(set, l.to);
   return (
     <a
       href={`#${to.id}-connections`}
       onClick={nav({ to: 'platform', id: to.id, tab: 'connections' })}
-      onMouseEnter={() => onFocusPlatform([l.from, l.to])}
-      onMouseLeave={() => onFocusPlatform(null)}
+      data-hl={`${l.from},${l.to}`}
       className={cn(LROW, mt(first), 'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent')}
     >
       <span className={LR1}>
@@ -951,7 +959,7 @@ export function PlatformsPage({ set: setKey = 'duo', state: initial = 'live', ad
         }
       >
         {!phone && (
-          <div ref={sheetBody} className="px-pad pb-8 pt-5">
+          <div ref={sheetBody} className="px-pad pb-8 pt-5" {...hoverProps(setFocusIds)}>
             {sheetContent}
           </div>
         )}

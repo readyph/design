@@ -59,7 +59,7 @@ const content =
 
 /** Phone: every size but `confirm` becomes a full-screen sheet. */
 const sheet =
-  'max-sm:inset-0 max-sm:h-full max-sm:max-h-none max-sm:w-full max-sm:max-w-none max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-none max-sm:border-0';
+  'max-[640px]:inset-0 max-[640px]:h-full max-[640px]:max-h-none max-[640px]:w-full max-[640px]:max-w-none max-[640px]:translate-x-0 max-[640px]:translate-y-0 max-[640px]:rounded-none max-[640px]:border-0';
 
 const ModalContext = createContext({ hideClose: false });
 
@@ -68,7 +68,7 @@ function CloseButton({ className, label }: { className?: string; label?: string 
     <Dialog.Close
       aria-label={label ? `Close ${label}` : 'Close'}
       className={cn(
-        'grid h-8 w-8 shrink-0 place-items-center rounded-control text-muted hover:bg-raised hover:text-text max-sm:h-11 max-sm:w-11',
+        'grid h-8 w-8 shrink-0 place-items-center rounded-control text-muted hover:bg-raised hover:text-text max-[640px]:h-11 max-[640px]:w-11',
         focusRing,
         className,
       )}
@@ -101,7 +101,7 @@ export interface ModalHeaderProps extends Omit<HTMLAttributes<HTMLDivElement>, '
 export function ModalHeader({ icon, iconNode, description, titleClassName, descriptionClassName, className, children, ...rest }: ModalHeaderProps) {
   const { hideClose } = useContext(ModalContext);
   return (
-    <div className={cn('flex shrink-0 items-start gap-3 border-b border-rule px-pad py-4 max-sm:px-4', className)} {...rest}>
+    <div className={cn('flex shrink-0 items-start gap-3 border-b border-rule px-pad py-4 max-[640px]:px-4', className)} {...rest}>
       {(icon || iconNode) && <ModalIconWell icon={icon}>{iconNode}</ModalIconWell>}
       <div className="min-w-0 flex-1">
         <Dialog.Title className={cn(titleClassName ?? 'text-dialog', 'text-text')}>{children}</Dialog.Title>
@@ -117,7 +117,7 @@ export function ModalBody({ className, children, ...rest }: HTMLAttributes<HTMLD
   return (
     <div
       tabIndex={0}
-      className={cn('min-h-0 flex-1 overflow-y-auto px-pad py-5 text-body text-text max-sm:px-4', focusRing, 'focus-visible:ring-inset focus-visible:ring-offset-0', className)}
+      className={cn('min-h-0 flex-1 overflow-y-auto px-pad py-5 text-body text-text max-[640px]:px-4', focusRing, 'focus-visible:ring-inset focus-visible:ring-offset-0', className)}
       {...rest}
     >
       {children}
@@ -129,7 +129,7 @@ export function ModalBody({ className, children, ...rest }: HTMLAttributes<HTMLD
 export function ModalFooter({ className, children, ...rest }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn('flex shrink-0 items-center justify-end gap-3 border-t border-rule px-pad py-3 max-sm:flex-col-reverse max-sm:items-stretch max-sm:px-4', className)}
+      className={cn('flex shrink-0 items-center justify-end gap-3 border-t border-rule px-pad py-3 max-[640px]:flex-col-reverse max-[640px]:items-stretch max-[640px]:px-4', className)}
       {...rest}
     >
       {children}
