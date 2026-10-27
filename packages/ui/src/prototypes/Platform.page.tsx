@@ -1,6 +1,6 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import {
-  ArrowRight, ArrowSquareOut, Brain, Buildings, ChatCircle, IdentificationCard, LinkBreak, Plugs, SlidersHorizontal, ListChecks, LockSimple, Plus,
+  ArrowLeft, ArrowRight, ArrowSquareOut, Brain, Buildings, ChatCircle, IdentificationCard, LinkBreak, Plugs, SlidersHorizontal, ListChecks, LockSimple, Plus,
   ShieldCheck, UploadSimple, UserPlus, Users, X,
 } from '@phosphor-icons/react';
 import { AccountMenu } from '../components/AccountMenu';
@@ -34,13 +34,14 @@ import { Toaster } from '../components/toast/Toaster';
 import { toast } from '../components/toast/toastStore';
 import { cn } from '../utils/cn';
 import { PortalFrame } from './PortalFrame';
+import { catalogItem } from './Platforms.data';
 import { go, useHandoff } from './protoNav';
 import { focusIfLost } from '../utils/focusIfLost';
 import { useMatchMedia } from '../utils/useMatchMedia';
 import {
   SECTIONS, andList, basicLabels, companyWeek, dataKinds, dataTopics, detailsStart, everyBusinessBlocked, invites, kinds, ledaStart, linksStart,
   memoryCap, neverShared, nowSample, people, person, plural, platformsStart, publicHolidays, requestDefs, sectionName, settingsDefaults, shortName,
-  today, tryQuestions, type BasicKey, type CustomTopic, type DataLink, type DataKind, type Detail, type Health, type KindKey, type LedaState, type PlatformRec,
+  sampleSet, today, tryQuestions, usage, type BasicKey, type CustomTopic, type DataLink, type DataKind, type Detail, type KindKey, type LedaState, type PlatformRec,
   type SectionId, type SettingField,
 } from './Platform.data';
 
@@ -85,9 +86,18 @@ const field =
   'block w-full min-w-0 rounded-control border bg-surface px-3 text-body text-text placeholder:text-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent focus-visible:border-accent';
 const link = 'text-accent underline underline-offset-2 hover:text-accent-hover';
 
-const healthTone: Record<Health, StatusTone> = { ok: 'ok', slow: 'warn', offline: 'bad', setup: 'neutral', 'setting-up': 'accent' };
 
 /* ---------- small pieces ---------- */
+const KIND_CATALOG: Record<string, string> = { repair: 'repair_shop' };
+function KindIcon({ kind }: { kind: string }) {
+  const Icon = catalogItem(KIND_CATALOG[kind] ?? kind)?.icon;
+  return Icon ? <Icon size={16} aria-hidden /> : null;
+}
+/** One platform's identity: its uploaded logo or default monogram on its colour (as in the Platforms page). */
+function Logo({ x, size = 32, src }: { x: PlatformRec; size?: 14 | 16 | 20 | 32; src?: string }) {
+  return <PlatformLogo name={x.label} size={size} decorative color={x.color} src={src ?? x.logo} initials={x.mono} />;
+}
+
 function Field({ id, label, value, onChange, hint, error, unit, type = 'text', required, wide, max = 120, className }: {
   id: string; label: string; value: string | number; onChange: (v: string) => void; hint?: string; error?: string; unit?: string; type?: 'text' | 'tel' | 'number'; required?: boolean; wide?: boolean; max?: number; className?: string;
 }) {
@@ -342,15 +352,14 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
   };
   const sameLink = (a: DataLink, b: DataLink) => a.from === b.from && a.to === b.to && a.kind === b.kind;
 
-  const mapPlatforms: TownMapSlot[] = [
-    ...platforms.map((x): TownMapSlot => {
-      const h = healthOf(x);
-      const k = kinds[x.kind];
-      return { id: x.id, name: nameOf(x.id), shortName: shortName({ label: nameOf(x.id) }), kind: k.name, mapType: k.mapType, status: h.tone === 'bad' ? 'OFFLINE' : h.tone === 'warn' ? 'DEGRADED' : 'ACTIVE', index: x.index, logo: details[x.id]?.logo };
-    }),
-  ];
+  const mapPlatforms: TownMapSlot[] = sampleSet.slots.map((id): TownMapSlot => {
+    const x = id ? platforms.find((q) => q.id === id) : undefined;
+    if (!x) return null;
+    const h = healthOf(x);
+    const k = kinds[x.kind];
+    return { id: x.id, name: nameOf(x.id), shortName: shortName(x), kind: k.name, mapType: k.mapType, status: h.tone === 'bad' ? 'OFFLINE' : h.tone === 'warn' ? 'DEGRADED' : 'ACTIVE', sub: `${k.name} · ${h.word}`, color: x.color, logo: details[x.id]?.logo ?? x.logo, initials: x.mono, index: x.index };
+  });
   const mapLinks: TownMapLink[] = links.map((l) => ({ from: l.from, to: l.to, status: l.status === 'slow' ? 'slow' : 'ok' }));
-  const statusLabel = (x: PlatformRec) => healthOf(x).word;
 
   /* ----- section status words (tab list) ----- */
   const secStatus = (sec: SectionId, x: PlatformRec): [string, 'warn' | 'muted'] => {
@@ -555,7 +564,7 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
           <div className="min-w-0">
             <span id={`${uid}-logo`} className="mb-1 block text-ui font-medium text-text">Logo</span>
             <div role="group" aria-labelledby={`${uid}-logo`} className="flex flex-wrap items-center gap-3">
-              <PlatformLogo name={general.label || kind.name} src={general.logo ?? undefined} index={p?.index ?? platforms.length + 1} size={32} decorative />
+              {p ? <Logo x={p} src={general.logo ?? undefined} size={32} /> : <PlatformLogo name={general.label || kind.name} src={general.logo ?? undefined} index={platforms.length + 1} size={32} decorative />}
               <input ref={logoInput} type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" className="sr-only" tabIndex={-1} aria-hidden onChange={(e) => { readLogo(e.target.files?.[0]); e.target.value = ''; }} />
               <Button ref={uploadBtn} type="button" variant="secondary" leftIcon={UploadSimple} onClick={() => logoInput.current?.click()}>Upload</Button>
               {customLogo ? (
@@ -580,10 +589,10 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
         <DataList
           className="mt-8"
           items={[
-            { label: 'Kind', value: kind.name },
+            { label: 'Kind', value: <span className="inline-flex items-center gap-2"><KindIcon kind={p.kind} />{kind.name}</span> },
             { label: 'Status', value: <StatusDot status={h.tone} label={h.word} /> },
             { label: 'Version', value: p.version ?? 'Not reported yet' },
-            { label: 'Last synced', value: p.synced ?? 'Not yet' },
+            { label: 'Last synced', value: p.synced ?? 'Not synced yet' },
             { label: 'Connected', value: p.connected },
             { label: 'App', value: kind.hasApp ? <Button type="button" variant="secondary" leftIcon={ArrowSquareOut} onClick={() => toast({ description: `Opening ${shortName({ label: nameOf(p.id) })}.` })}>Open {shortName({ label: nameOf(p.id) })}</Button> : <span className="text-muted">No app yet. It works through its data links.</span> },
           ]}
@@ -915,8 +924,13 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
   const kindAny = kind;
   const header = p && !ob ? (
     <div className="mb-6">
-      <div className="flex flex-wrap items-center gap-3">
-        <PlatformLogo name={nameOf(p.id)} src={details[p.id].logo} index={p.index} size={32} decorative />
+      <div className="flex items-center gap-2 text-ui text-muted">
+        <a href="#platforms" onClick={(e) => { e.preventDefault(); go({ to: 'platforms' }); }} className="rounded-[2px] font-medium hover:text-text">All platforms</a>
+        <span aria-hidden className="text-control">/</span>
+        <span className="inline-flex items-center gap-1.5"><KindIcon kind={p.kind} />{kind.name}</span>
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-3">
+        <Logo x={p} src={details[p.id].logo} />
         <h1 className="m-0 min-w-0 flex-1 basis-48 text-title font-semibold text-text [overflow-wrap:anywhere]">{nameOf(p.id)}</h1>
         {needsLink(p) ? (
           <Button variant="primary" leftIcon={ArrowRight} onClick={() => { setTab('connections'); setFlashId(null); refocus('panel'); }}>Finish setup</Button>
@@ -928,7 +942,7 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
       </div>
       <FactsLine className="mt-2" aria-label="Facts">
         <Fact><StatusDot status={healthOf(p).tone} label={healthOf(p).word} /></Fact>
-        <Fact>Synced {p.synced ?? 'not yet'}</Fact>
+        <Fact>{p.synced ? `Synced ${p.synced}` : 'Not synced yet'}</Fact>
         {p.version ? <Fact>{p.version}</Fact> : null}
         <Fact>Connected {p.connected}</Fact>
       </FactsLine>
@@ -959,7 +973,7 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
       />
       <div className="px-1">
         <div className="mt-0.5 flex items-center gap-2.5">
-          <PlatformLogo name={p ? nameOf(p.id) : general.label || kind.name} src={p ? details[p.id].logo : general.logo ?? undefined} index={p?.index ?? platforms.length + 1} size={32} decorative />
+          {p ? <Logo x={p} src={details[p.id].logo} /> : <PlatformLogo name={general.label || kind.name} src={general.logo ?? undefined} index={platforms.length + 1} size={32} decorative />}
           <p className="m-0 min-w-0 flex-1 truncate text-title font-semibold tracking-[-0.01em] text-text">{p ? nameOf(p.id) : general.label || kind.name}</p>
         </div>
         <p className="m-0 mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px] leading-5 text-muted">
@@ -977,6 +991,8 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
 
   const ask = <AskLedaBar variant="bar" scope={p ? shortName({ label: nameOf(p.id) }) : 'your platforms'} onOpen={() => toast({ description: 'Leda is ready.', leda: true })} />;
   const crumbs = [{ label: 'All platforms', href: '#platforms', onClick: (e: MouseEvent) => { e.preventDefault(); go({ to: 'platforms' }); } }, ...(ob ? [{ label: 'Add a platform' }] : []), { label: p ? nameOf(p.id) : ob ? general.label || kind.name : 'Platform' }];
+
+  const whereCrumbs = [{ label: 'All platforms', icon: ArrowLeft, plain: true, href: '#platforms', onClick: (e: MouseEvent) => { e.preventDefault(); go({ to: 'platforms' }); } }, ...(ob ? [{ label: 'Add a platform' }] : []), { label: p ? nameOf(p.id) : ob ? general.label || kind.name : 'Platform', ...(p ? { leading: <Logo x={p} src={details[p.id].logo} size={16} /> } : {}) }];
 
   const obTitle = p ? `Set up ${nameOf(p.id)}` : `Add ${/^[AEIOU]/.test(kind.name) ? 'an' : 'a'} ${kind.name}`;
   const lastStep = ob ? ob.step === SECTIONS.length - 1 : false;
@@ -1060,8 +1076,8 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
             <AccountMenu name="Maria Santos" email="maria@santosauto.ph" role="Owner" applyToDocument={false} />
           </>
         }
-        sheetBar={phone ? undefined : <SheetBar actions={ask}><Breadcrumbs variant="sheet" aria-label="You are here" items={crumbs} /></SheetBar>}
-        status={<StatusBar platforms={platforms.map((x) => ({ id: x.id, name: shortName({ label: nameOf(x.id) }), health: healthTone[x.isNew ? (needsLink(x) ? 'setup' : 'setting-up') : x.health] === 'ok' ? 'ok' : (healthTone[x.isNew ? (needsLink(x) ? 'setup' : 'setting-up') : x.health] as 'warn'), healthText: x.isNew || x.health !== 'ok' ? statusLabel(x).split(' since')[0].toLowerCase() : undefined, selected: x.id === p?.id, href: `#${x.id}` }))} people={{ count: 14 }} leda={{ used: 412, max: 1000 }} plan="Business" updatedAt="9:12 AM" />}
+        sheetBar={phone ? undefined : <SheetBar actions={ask} wrapChildren={false}><Breadcrumbs variant="where" aria-label="You are here" items={whereCrumbs} /></SheetBar>}
+        status={<StatusBar ledaFirst platforms={platforms.map((x) => { const h = healthOf(x); return { id: x.id, name: shortName(x), initials: x.mono, color: x.color, logoSrc: x.logo, health: h.tone === 'ok' ? 'ok' as const : h.tone === 'bad' ? 'bad' as const : h.tone === 'accent' ? 'accent' as const : 'warn' as const, healthText: x.isNew || x.health !== 'ok' ? h.word.split(' since')[0].toLowerCase() : undefined, href: `#${x.id}` }; })} summary={<><span className="tabular-nums">{plural(platforms.length, 'platform')}</span>{platforms.every((x) => !x.isNew && x.health === 'ok') ? <span>· all running</span> : null}</>} people={{ count: sampleSet.people }} leda={{ used: sampleSet.usedRequests, max: usage.limit, daysLeft: `${usage.daysLeft} days left` }} plan={sampleSet.plan} updatedAt="9:12 AM" />}
       >
         {content}
       </PortalFrame>

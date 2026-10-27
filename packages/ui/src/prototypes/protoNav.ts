@@ -52,7 +52,7 @@ export const PHONE_STORY_IDS = {
 } as const;
 
 /** Platforms that have a Platform page in this prototype (Platform.data.ts). */
-export const PLATFORM_PAGES = ['autoworks', 'stockroom', 'cafe'] as const;
+export const PLATFORM_PAGES = ['autoworks', 'stockroom'] as const;
 /** People that have a Team person story. */
 export const TEAM_PEOPLE = ['grace', 'liza', 'mon'] as const;
 

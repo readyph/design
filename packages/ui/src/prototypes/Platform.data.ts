@@ -2,6 +2,8 @@ import type { BlockedQuestionItem } from '../components/BlockedQuestions';
 import type { DayHours, DayKey, OpeningHoursValue, PublicHoliday } from '../components/OpeningHours';
 import type { RoleOption } from '../components/RolePicker';
 import type { TryItAbout, TryItQuestion } from '../components/TryIt';
+import { instances, platformDetail } from './Platform.detail.generated';
+import { sets, USAGE } from './Platforms.data';
 
 /** Sample data for the Platform page prototype (RDY-257). Not exported from the package. */
 
@@ -35,12 +37,7 @@ export interface Kind {
 }
 
 export type BasicKey = 'address' | 'phone' | 'email' | 'contact';
-export const basicLabels: Record<BasicKey, [string, string]> = {
-  address: ['Address', 'Where customers find it.'],
-  phone: ['Phone', 'Shown to customers in your mobile app.'],
-  email: ['Email', 'Where customers write to.'],
-  contact: ['Contact person', 'Who staff ask for here.'],
-};
+export const basicLabels = platformDetail.basicLabels as Record<BasicKey, [string, string]>;
 
 export const SECTIONS: { id: SectionId; name: string; optional: boolean; save?: string }[] = [
   { id: 'general', name: 'General info', optional: false, save: 'general info' },
@@ -64,7 +61,7 @@ export const kinds: Record<KindKey, Kind> = {
     lower: 'repair shop',
     mapType: 'service',
     hasApp: true,
-    basics: ['address', 'phone', 'email'],
+    basics: platformDetail.basics.repair_shop,
     settings: [
       { key: 'prefix', label: 'Job number prefix', type: 'text', hint: 'Starts every job number, like JOB-1042.', def: 'JOB' },
       { key: 'warranty', label: 'Default warranty', type: 'number', unit: 'days', hint: 'Used when a job does not set its own.', def: 30 },
@@ -86,7 +83,7 @@ export const kinds: Record<KindKey, Kind> = {
     lower: 'inventory',
     mapType: 'warehouse',
     hasApp: true,
-    basics: ['address', 'contact', 'phone'],
+    basics: platformDetail.basics.inventory,
     settings: [
       { key: 'reorder', label: 'Default reorder level', type: 'number', hint: 'Low-stock alerts start below this.', def: 5 },
       { key: 'unit', label: 'Default unit', type: 'select', options: ['Piece', 'Box', 'Litre', 'Kilogram'], def: 'Piece' },
@@ -106,7 +103,7 @@ export const kinds: Record<KindKey, Kind> = {
     lower: 'point of sale',
     mapType: 'store',
     hasApp: true,
-    basics: ['address', 'phone'],
+    basics: platformDetail.basics.pos,
     settings: [
       { key: 'footer', label: 'Receipt footer', type: 'text', hint: 'Printed at the bottom of every receipt.', def: 'Thank you! Come again.' },
       { key: 'vat', label: 'Prices include VAT', type: 'toggle', def: true },
@@ -121,7 +118,7 @@ export const kinds: Record<KindKey, Kind> = {
     name: 'Loyalty',
     lower: 'loyalty program',
     hasApp: false,
-    basics: ['address', 'phone'],
+    basics: platformDetail.basics._generic,
     settings: [
       { key: 'summary', label: 'Daily summary', type: 'toggle', hint: 'Email the team a summary each evening.', def: false },
       { key: 'note', label: 'Note for the team', type: 'text', hint: 'Shown at the top of this platform for staff.', def: '' },
@@ -168,7 +165,6 @@ export const invites: Invite[] = [{ id: 'eli', name: 'Eli Tan', platformId: 'aut
 export const teamRoles: Record<string, Record<string, string>> = {
   autoworks: { maria: 'manager', jun: 'manager', ana: 'advisor', carla: 'mechanic' },
   stockroom: { maria: 'manager', ben: 'clerk' },
-  cafe: { dan: 'staff' },
 };
 
 /* ---------- platforms ---------- */
@@ -183,16 +179,29 @@ export interface PlatformRec {
   version?: string;
   synced?: string;
   connected: string;
+  short?: string;
+  color?: string;
+  mono?: string;
+  logo?: string;
   /** Created in onboarding and not finished yet. */
   isNew?: boolean;
   index: number;
 }
-export const platformsStart: PlatformRec[] = [
-  { id: 'autoworks', label: 'Dela Cruz Auto Works', kind: 'repair', place: 'Quezon City', health: 'ok', version: '2.4.1', synced: '9:12 AM', connected: '3 Aug 2026', index: 1 },
-  { id: 'stockroom', label: 'Parts Stockroom', kind: 'inventory', place: 'Manila', health: 'ok', version: '2.4.1', synced: '9:12 AM', connected: '3 Aug 2026', index: 2 },
-  { id: 'cafe', label: 'Café POS', kind: 'pos', place: 'Makati', health: 'slow', note: 'Slow since 7:40', version: '2.3.9', synced: '9:10 AM', connected: '17 Aug 2026', index: 3 },
-];
-export const shortName = (p: { label: string }) => p.label.replace(/^Dela Cruz /, '').replace(/^Parts /, '').replace(/ POS$/, '');
+const kindKeyOf = (k: string): KindKey => (k === 'repair_shop' ? 'repair' : (k as KindKey));
+const hm = (s: string) => {
+  const m = /^(\d\d):(\d\d)$/.exec(s);
+  if (!m) return s;
+  const h = Number(m[1]);
+  return `${h % 12 || 12}:${m[2]} ${h < 12 ? 'AM' : 'PM'}`;
+};
+/** The workshop's default set (duo), with each platform's version, last sync and connected date from data-ext.js. */
+export const platformsStart: PlatformRec[] = sets.duo.platforms.map((x, i) => ({
+  id: x.id, label: x.name, short: x.short, kind: kindKeyOf(x.kind), place: x.place, health: 'ok' as const, color: x.color, mono: x.mono, logo: x.logo,
+  version: instances[x.id].version, synced: hm(instances[x.id].synced), connected: instances[x.id].connected, index: i + 1,
+}));
+export const sampleSet = sets.duo;
+export const usage = USAGE;
+export const shortName = (p: { label: string; short?: string }) => p.short ?? p.label.replace(/^Dela Cruz /, '').replace(/^Parts /, '').replace(/ POS$/, '');
 
 /** `to` reads `kind` from `from`. */
 export interface DataLink {
@@ -201,10 +210,7 @@ export interface DataLink {
   kind: DataKind;
   status: 'linked' | 'slow' | 'pending';
 }
-export const linksStart: DataLink[] = [
-  { from: 'stockroom', to: 'autoworks', kind: 'catalog', status: 'linked' },
-  { from: 'stockroom', to: 'cafe', kind: 'stock', status: 'slow' },
-];
+export const linksStart: DataLink[] = sets.duo.links.map((l) => ({ from: l.from, to: l.to, kind: l.kind as DataKind, status: 'linked' as const }));
 
 /* ---------- opening hours ---------- */
 const day = (from: string, to: string, open = true): DayHours => ({ open, from, to });
@@ -343,7 +349,7 @@ export const settingsDefaults = (kind: KindKey): Record<string, string | number 
 export const detailsStart = (): Record<string, Detail> => ({
   autoworks: {
     label: 'Dela Cruz Auto Works',
-    basics: { address: '14 Aurora Blvd, Quezon City', phone: '0917 555 0142', email: 'shop@delacruzauto.ph' },
+    basics: platformDetail.basicValues.autoworks,
     settings: { ...settingsDefaults('repair'), warranty: 30 },
     hours: hoursOwn,
     team: { ...teamRoles.autoworks },
@@ -352,20 +358,11 @@ export const detailsStart = (): Record<string, Detail> => ({
   },
   stockroom: {
     label: 'Parts Stockroom',
-    basics: { address: '88 Recto Ave, Manila', contact: 'Ben Lim', phone: '0917 555 0188' },
+    basics: platformDetail.basicValues.stockroom,
     settings: settingsDefaults('inventory'),
     hours: hoursSame,
     team: { ...teamRoles.stockroom },
     leda: ledaStart('inventory', 'Parts Stockroom'),
-    skipped: [],
-  },
-  cafe: {
-    label: 'Café POS',
-    basics: { address: '5 Jupiter St, Makati', phone: '0917 555 0105' },
-    settings: settingsDefaults('pos'),
-    hours: hoursSame,
-    team: { ...teamRoles.cafe },
-    leda: ledaStart('pos', 'Café POS'),
     skipped: [],
   },
 });
