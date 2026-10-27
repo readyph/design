@@ -516,7 +516,7 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
     return (
       <>
         <div className="grid gap-x-4 gap-y-4 sm:grid-cols-2">
-          <TextField id={`${uid}-name`} label="Name" value={general.label} required maxLength={120} autoComplete="off" hint="Give this a clear name, like a branch name." error={genErr || undefined} onChange={(e) => { setGenErr(''); setDraft('general', { ...general, label: e.target.value }); }} />
+          <TextField size="large" requiredMark={false} id={`${uid}-name`} label="Name" value={general.label} required maxLength={120} autoComplete="off" hint="Give this a clear name, like a branch name." error={genErr || undefined} onChange={(e) => { setGenErr(''); setDraft('general', { ...general, label: e.target.value }); }} />
           <div className="min-w-0">
             <span id={`${uid}-logo`} className="mb-1 block text-ui font-medium text-text">Logo</span>
             <div role="group" aria-labelledby={`${uid}-logo`} className="flex flex-wrap items-center gap-3">
@@ -531,7 +531,7 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
             </div>
           </div>
           {kind.basics.map((b) => (
-            <TextField key={b} id={`${uid}-b-${b}`} label={basicLabels[b][0]} hint={basicLabels[b][1]} type={b === 'phone' ? 'tel' : 'text'} className={b === 'address' ? 'sm:col-span-2' : undefined} maxLength={120} autoComplete="off" value={general.basics[b] ?? ''} onChange={(e) => setDraft('general', { ...general, basics: { ...general.basics, [b]: e.target.value } })} />
+            <TextField size="large" key={b} id={`${uid}-b-${b}`} label={basicLabels[b][0]} hint={basicLabels[b][1]} type={b === 'phone' ? 'tel' : 'text'} className={b === 'address' ? 'sm:col-span-2' : undefined} maxLength={120} autoComplete="off" value={general.basics[b] ?? ''} onChange={(e) => setDraft('general', { ...general, basics: { ...general.basics, [b]: e.target.value } })} />
           ))}
         </div>
       </>
@@ -581,7 +581,7 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
           {f.hint ? <p className="mt-1 text-small text-muted">{f.hint}</p> : null}
         </div>
       );
-    return <TextField key={f.key} id={id} label={f.label} unit={f.unit} hint={f.hint} type={f.type === 'number' ? 'number' : 'text'} min={f.type === 'number' ? 0 : undefined} maxLength={f.type === 'number' ? undefined : 120} autoComplete="off" value={String(v ?? '')} onChange={(e) => { const nv = e.target.value; set(f.type === 'number' ? (nv === '' ? '' : Number(nv)) : nv); }} />;
+    return <TextField size="large" key={f.key} id={id} label={f.label} unit={f.unit} hint={f.hint} type={f.type === 'number' ? 'number' : 'text'} min={f.type === 'number' ? 0 : undefined} maxLength={f.type === 'number' ? undefined : 120} autoComplete="off" value={String(v ?? '')} onChange={(e) => { const nv = e.target.value; set(f.type === 'number' ? (nv === '' ? '' : Number(nv)) : nv); }} />;
   };
   const systemBody = () => (
     <>
@@ -708,8 +708,8 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
         onSubmit={(e) => { e.preventDefault(); saveTopic(); }}
         noValidate
       >
-        <TextField ref={topicTitle} id={`${uid}-tt`} label="Title" value={m.title} maxLength={60} autoComplete="off" error={m.err} onChange={(e) => setMemEdit({ ...m, title: e.target.value, err: undefined })} />
-        <Textarea className="mt-3" id={`${uid}-tc`} label="What Leda should know" rows={3} value={m.content} maxLength={600} onChange={(e) => setMemEdit({ ...m, content: e.target.value, err: undefined })} />
+        <TextField size="large" ref={topicTitle} id={`${uid}-tt`} label="Title" value={m.title} maxLength={60} autoComplete="off" invalid={!!m.err} aria-describedby={m.err ? `${uid}-tc-error` : undefined} onChange={(e) => setMemEdit({ ...m, title: e.target.value, err: undefined })} />
+        <Textarea size="large" className="mt-3" id={`${uid}-tc`} label="What Leda should know" error={m.err} rows={3} value={m.content} maxLength={600} onChange={(e) => setMemEdit({ ...m, content: e.target.value, err: undefined })} />
         <div className="mt-3 flex flex-wrap gap-2">
           <Button type="submit" variant="primary">Save topic</Button>
           <Button type="button" variant="text" onClick={() => { const wasNew = m.id === 'new'; setMemEdit(null); refocus(wasNew ? 'topic-add' : 'panel'); }}>Cancel</Button>

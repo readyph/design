@@ -1102,8 +1102,8 @@ export function Team({ set = 'live', state = 'live', person, startInvite = false
             <>
               {iv.byLeda ? <LedaNote>Filled in from Leda's draft. Change anything before you create it.</LedaNote> : null}
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <TextField ref={emailRef} id="iv-email" label="Email" type="email" inputMode="email" autoComplete="off" value={iv.email} onChange={(e) => setIv({ ...iv, email: e.target.value, err: null })} error={iv.err ?? undefined} hint="Where the invite goes. They sign in with it." />
-                <TextField ref={nameRef} id="iv-name" label="Name (optional)" maxLength={80} autoComplete="off" value={iv.name} onChange={(e) => setIv({ ...iv, name: e.target.value })} hint="So you know who it is before they join." />
+                <TextField size="large" labelTone="quiet" ref={emailRef} id="iv-email" label="Email" type="email" inputMode="email" autoComplete="off" value={iv.email} onChange={(e) => setIv({ ...iv, email: e.target.value, err: null })} error={iv.err ?? undefined} hint="Where the invite goes. They sign in with it." />
+                <TextField size="large" labelTone="quiet" ref={nameRef} id="iv-name" label="Name (optional)" maxLength={80} autoComplete="off" value={iv.name} onChange={(e) => setIv({ ...iv, name: e.target.value })} hint="So you know who it is before they join." />
               </div>
               <fieldset className="m-0 min-w-0 border-0 p-0">
                 <legend className="mb-1 p-0 text-ui font-medium text-text">Role on each platform</legend>

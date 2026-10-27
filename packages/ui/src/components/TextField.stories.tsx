@@ -35,6 +35,8 @@ export const Disabled: Story = { args: { disabled: true, defaultValue: 'Auto Wor
 export const WithUnit: Story = { args: { label: 'Capacity', type: 'number', unit: 'bays', defaultValue: '6' } };
 export const UnitWithLongSuffix: Story = { args: { label: 'Labour rate', type: 'number', unit: '₱ / hour', hint: 'Charged per hour.' } };
 export const Required: Story = { args: { label: 'Email', type: 'email', required: true, placeholder: 'name@company.ph' } };
+export const Large: Story = { args: { size: 'large', hint: '40px (44px on phone), for pages laid out around it.' } };
+export const DisabledDark: Story = { args: { disabled: true, defaultValue: 'Auto Works' }, parameters: { backgrounds: { default: 'dark' } } };
 export const Phone: Story = { args: { label: 'Phone', type: 'tel', placeholder: '0917 000 0000' } };
 
 export const TextareaField: StoryObj<typeof Textarea> = {

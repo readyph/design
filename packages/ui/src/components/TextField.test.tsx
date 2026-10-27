@@ -82,4 +82,18 @@ describe('Textarea', () => {
     expect((screen.getByLabelText('Notes') as HTMLTextAreaElement).rows).toBe(3);
     await check(container);
   });
+
+  it('large size, quiet label and no mark keep the older page look', () => {
+    const { container } = render(<TextField label="Name" required requiredMark={false} size="large" labelTone="quiet" />);
+    expect(container.querySelector('label')?.className).not.toContain('after:content');
+    expect(container.querySelector('label')?.className).toContain('text-muted');
+    expect(container.querySelector('.h-\\[var\\(--ctl-dropdown\\)\\]')).not.toBeNull();
+    expect((screen.getByLabelText('Name') as HTMLInputElement).required).toBe(true);
+  });
+
+  it('invalid marks the field without error text', () => {
+    render(<TextField label="Title" invalid />);
+    expect(screen.getByLabelText('Title').getAttribute('aria-invalid')).toBe('true');
+    expect(document.querySelector('[role=alert]')).toBeNull();
+  });
 });
