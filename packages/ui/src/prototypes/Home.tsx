@@ -42,6 +42,8 @@ export interface HomeProps {
   state?: HomeState;
   /** Open the Leda conversation on mount (story). */
   startChat?: boolean;
+  /** Start with the map filtered to one platform ('hq' or a platform id); story arg so the filtered pages can be shown and measured. */
+  filter?: string;
 }
 
 const NOW = 9 * 60 + 12;
@@ -90,7 +92,7 @@ function reply(q: string, scope: string): ChatMessageData['blocks'] {
   return [{ type: 'text', text: 'Sorry, I can’t answer that in this prototype.', stream: true }, { type: 'chips', chips: chatSample.chips.slice(0, 2) }];
 }
 
-export function Home({ set = 'live', state = 'live', startChat = false }: HomeProps) {
+export function Home({ set = 'live', state = 'live', startChat = false, filter: initialFilter }: HomeProps) {
   const base = sets[set];
   const phone = useMatchMedia(PHONE);
   const quiet = state === 'quiet';
@@ -112,10 +114,11 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
   const done = [...doneExtra.map((d) => itemsAll.find((i) => i.id === d.id)!).map((i, k) => ({ id: i.id, platform: i.platform, source: i.source, title: i.title, at: doneExtra[k]!.at })), ...data.done];
 
   // sheet
-  const [tabs, setTabs] = useState<string[]>(quiet ? [] : ['today']);
-  const [tab, setTab] = useState<string | null>(quiet ? null : 'today');
+  const startPlat = initialFilter && initialFilter !== 'hq' && !(typeof window !== 'undefined' && window.matchMedia(PHONE).matches) ? `plat:${initialFilter}` : null;
+  const [tabs, setTabs] = useState<string[]>(quiet ? [] : startPlat ? ['today', startPlat] : ['today']);
+  const [tab, setTab] = useState<string | null>(quiet ? null : startPlat ?? 'today');
   const [phoneDetail, setPhoneDetail] = useState(false);
-  const [filter, setFilter] = useState<string | null>(null);
+  const [filter, setFilter] = useState<string | null>(initialFilter ?? null);
   const [hover, setHover] = useState<string[] | null>(null);
   const [sub, setSub] = useState<{ n: number; dir: SubpageDirection }>({ n: 0, dir: 'in' });
   const slide = (dir: SubpageDirection) => setSub((x) => ({ n: x.n + 1, dir }));
@@ -502,7 +505,6 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
     const conns = data.links.filter((c) => c.from === pid || c.to === pid);
     const n = open.filter((o) => o.platform.id === pid).length;
     const err = failed === pid;
-    const statusText = p.status === 'ACTIVE' ? 'Running' : p.status === 'DEGRADED' ? 'Slow' : 'Offline';
     return (
       <div className="px-pad pb-10 pt-5">
         <p className="m-0 text-small text-muted">{[p.kind, p.place ?? '', n ? `${n} in Needs you` : ''].filter(Boolean).map((t, i) => <span key={t}>{i ? <span aria-hidden className="mx-2 text-faint">/</span> : null}{t}</span>)}</p>
@@ -512,28 +514,28 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
           <Button variant="primary" leftIcon={ArrowSquareOut} className="ml-auto" onClick={() => go({ to: 'platform', id: p.id })}>Open {p.name}</Button>
         </div>
         <FactsLine aria-label={`${p.name} facts`} className="mt-2">
-          <Fact><Badge tone={p.status === 'ACTIVE' ? 'ok' : p.status === 'DEGRADED' ? 'warn' : 'bad'}>{p.status === 'ACTIVE' ? 'ACTIVE' : statusText}</Badge></Fact>
+          <Fact valueFirst value={<Badge tone={p.status === 'ACTIVE' ? 'ok' : p.status === 'DEGRADED' ? 'warn' : 'bad'}>{p.status === 'ACTIVE' ? 'ACTIVE' : p.status}</Badge>}>{p.statusSince ? `since ${p.statusSince}` : null}</Fact>
           {err ? <Fact tone="muted">no data · last good 9:10 AM</Fact> : p.facts.slice(0, 3).map((f, i) => <Fact key={i} value={f.value} tone={f.tone} valueFirst>{f.label}</Fact>)}
-          {p.ledaCanAct ? <Fact tone="ok">Leda acts here</Fact> : <Fact tone="muted">Leda reads only, can’t act here yet</Fact>}
+          <LedaFact mode={p.ledaCanAct ? 'acts' : p.status === 'OFFLINE' ? 'offline' : 'reads'} wide />
         </FactsLine>
         {err ? <p className="m-0 mt-5 text-ui text-muted">Couldn’t load {p.name}’s overview. Last good 9:10 AM.</p> : null}
         {p.lists.length && !err ? (
-          <div className={cn('mt-2 grid grid-cols-1 gap-x-10', p.lists.length > 1 && '@min-[720px]/sheet:grid-cols-2')}>
+          <div className={cn('mt-5 grid gap-x-14 gap-y-12 @max-[720px]/sheet:gap-x-10', phone ? 'grid-cols-[minmax(0,1fr)]' : 'grid-cols-[repeat(auto-fit,minmax(236px,1fr))]')}>
             {listsOf(p).map((l) => (
               <PlatformToday key={l.id} surface="surface" platform={{ name: p.name, src: p.logo, index: p.index }} aria-label={`${p.name}: ${l.title}`} bare lists={[l]} maxRows={6} rowLayout={phone ? 'phone' : bodyW <= 720 ? 'narrow' : 'wide'} />
             ))}
           </div>
         ) : null}
-        <div className="mt-8 grid grid-cols-1 gap-x-10 gap-y-8 @min-[760px]/sheet:grid-cols-2">
+        <div className="mt-6 grid grid-cols-1 items-start gap-6 @min-[701px]/sheet:grid-cols-2">
           <section>
-            <h3 className="m-0 text-ui font-semibold text-text">Today</h3>
+            <h3 className="m-0 mb-1 text-ui font-semibold leading-5 text-text">Today</h3>
             {err ? (
-              <p className="m-0 mt-2 text-ui text-muted">No data</p>
+              <p className="m-0 text-ui text-muted">No data</p>
             ) : (
-              <ol className="m-0 mt-1 list-none p-0">
+              <ol className="m-0 list-none p-0">
                 {(p.activity ?? []).map((a) => (
-                  <li key={a.id} className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 border-t border-rule py-2 text-ui">
-                    <span className="min-w-[4.5ch] text-small tabular-nums leading-5 text-muted">{a.at}</span>
+                  <li key={a.id} className="grid grid-cols-[76px_minmax(0,1fr)] gap-x-3 border-t border-rule py-[7px] text-ui leading-[19px]">
+                    <span className="whitespace-nowrap tabular-nums text-muted">{a.at}</span>
                     <span className="min-w-0 [overflow-wrap:anywhere]">{a.text}</span>
                   </li>
                 ))}
@@ -542,18 +544,18 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
           </section>
           {conns.length ? (
             <section>
-              <h3 className="m-0 text-ui font-semibold text-text">Linked platforms</h3>
-              <ul className="m-0 mt-1 list-none p-0">
+              <h3 className="m-0 mb-1 text-ui font-semibold leading-5 text-text">Linked platforms</h3>
+              <ul className="m-0 list-none p-0">
                 {conns.map((c) => {
                   const o = platformById(c.from === pid ? c.to : c.from)!;
                   const word = { ok: 'OK', slow: 'Slow', broken: 'Broken' }[c.status];
                   return (
-                    <li key={`${c.from}-${c.to}`} className="flex items-center gap-2 border-t border-rule py-2 text-ui">
-                      <span aria-hidden className={cn('h-0.5 w-3 shrink-0 rounded-full', c.status === 'broken' ? 'bg-bad-dot' : c.status === 'slow' ? 'bg-warn-dot' : 'bg-accent')} />
+                    <li key={`${c.from}-${c.to}`} className="flex items-center gap-2 border-t border-rule py-[7px] text-ui leading-[19px]">
+                      <span aria-hidden className={cn('shrink-0', c.status === 'broken' ? 'h-0 w-3.5 border-t-[3px] border-dashed border-bad-dot' : cn('h-1 w-3.5 rounded-[2px]', c.status === 'slow' ? 'bg-warn-dot' : 'bg-accent'))} />
                       <PlatformLogo name={o.name} src={o.logo} index={o.index} hq={o.hq} size={16} decorative />
                       <span>{o.name}</span>
                       <span className="text-muted">{linkLabel(c.from, c.to)}</span>
-                      <span className={cn('ml-auto', c.status === 'broken' ? 'text-bad' : c.status === 'slow' ? 'text-warn' : 'text-ok')}>{word}</span>
+                      <Badge tone={c.status === 'broken' ? 'bad' : c.status === 'slow' ? 'warn' : 'ok'} className="ml-auto">{word}</Badge>
                     </li>
                   );
                 })}

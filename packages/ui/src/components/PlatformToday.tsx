@@ -146,9 +146,9 @@ export function pickTodayRows<T extends { tone?: string }>(items: readonly T[], 
 const SHOWN_FACTS = 3;
 
 /** The "Leda acts here" fact; also used by Home's overview. */
-export function LedaFact({ mode }: { mode: TodayLedaMode }) {
+export function LedaFact({ mode, wide = false }: { mode: TodayLedaMode; wide?: boolean }) {
   const Icon = mode === 'acts' ? CheckCircle : mode === 'reads' ? Eye : Prohibit;
-  const text = mode === 'acts' ? 'Leda acts here' : mode === 'reads' ? 'Leda reads only' : "Leda can't read while offline";
+  const text = mode === 'acts' ? 'Leda acts here' : mode === 'reads' ? (wide ? 'Leda reads only, can’t act here yet' : 'Leda reads only') : "Leda can't read while offline";
   return (
     <Fact className={cn(mode === 'acts' ? 'text-ok' : 'text-muted')}>
       <span className="inline-flex items-baseline gap-1.5">
