@@ -163,7 +163,7 @@ function Chip({ link, from, layout, flashId }: { link: TodayLink; from: string; 
   const body = (
     <>
       <PlatformLogo {...link.platform} decorative size={14} />
-      {link.ref ? <span className="font-mono text-small">{link.ref}</span> : null}
+      {link.ref ? <span className="whitespace-nowrap font-mono text-small">{link.ref}</span> : null}
       <span>{link.text}</span>
       <span className="sr-only"> in {link.platform.name}</span>
     </>
