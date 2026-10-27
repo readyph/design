@@ -15,7 +15,7 @@ import { Fact, FactsLine } from '../components/FactsLine';
 import { LedaMark } from '../components/Leda';
 import { LedaNote } from '../components/LedaNote';
 import { Modal } from '../components/Modal';
-import { OnboardingStepper, type StepperStep } from '../components/OnboardingStepper';
+import { OnboardingStepper, StepList, type StepperStep } from '../components/OnboardingStepper';
 import { OpeningHours, type OpeningHoursValue } from '../components/OpeningHours';
 import { PlatformLogo } from '../components/PlatformLogo';
 import { RolePicker } from '../components/RolePicker';
@@ -366,6 +366,7 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
   };
 
   /* ----- onboarding ----- */
+  const stepsBoxRef = useRef<HTMLDivElement>(null);
   const steps: StepperStep[] = ob
     ? SECTIONS.map((s, i) => ({
         id: s.id,
@@ -915,6 +916,7 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
           <Tabs variant="vertical" aria-label={nameOf(p.id)} items={tabItems} value={tab} onValueChange={(v) => { setTab(v as SectionId); setFlashId(null); setGenErr(''); }} />
         </div>
       ) : null}
+      {ob && !phone ? <div ref={stepsBoxRef} className="mt-4"><StepList steps={steps} current={SECTIONS[ob.step].id} onStepChange={goStep} /></div> : null}
     </div>
   );
 
@@ -947,7 +949,10 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
       return (
         <div className="p-pad">
           <h1 className="m-0 mb-4 text-title font-semibold text-text">{obTitle}</h1>
+          {phone ? <div ref={stepsBoxRef} className="mb-4"><StepList variant="header" steps={steps} current={SECTIONS[ob.step].id} onStepChange={goStep} /></div> : null}
           <OnboardingStepper
+            list={false}
+            stepListRef={stepsBoxRef}
             steps={steps}
             current={SECTIONS[ob.step].id}
             onStepChange={goStep}
