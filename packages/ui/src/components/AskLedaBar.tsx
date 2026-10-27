@@ -112,13 +112,13 @@ const VARIANT = {
   bar: {
     outer: 'inline-flex w-auto max-w-full shrink-0 basis-auto',
     wrap: 'w-leda-w shrink-0 max-[640px]:w-[var(--ctl-touch)]',
-    bar: 'text-ui leading-5 h-[var(--ctl-leda-bar)] gap-2.5 pl-2.5 pr-1.5 max-[640px]:h-[var(--ctl-touch)] max-[640px]:justify-center max-[640px]:border-0 max-[640px]:bg-transparent max-[640px]:px-0',
+    bar: 'h-[var(--ctl-leda-bar)] gap-2.5 pl-2.5 pr-1.5 leading-5 max-[640px]:h-[var(--ctl-touch)] max-[640px]:justify-center max-[640px]:border-0 max-[640px]:bg-transparent max-[640px]:px-0',
     mark: 20,
   },
   overview: {
     outer: 'flex w-full max-w-leda-w-overview shrink basis-auto',
     wrap: 'w-full max-w-leda-w-overview',
-    bar: 'text-body leading-5 h-[var(--ctl-touch)] gap-3 pl-3.5 pr-2 max-[640px]:gap-2.5 max-[640px]:pl-3 max-[640px]:pr-3 max-[640px]:text-[15px]',
+    bar: 'h-[var(--ctl-touch)] gap-3 pl-3.5 pr-2 text-[14px]', // workshop .ov-cmd: gap 12, padding 0 8 0 14, 14px text
     mark: 22,
   },
   field: {
@@ -168,7 +168,7 @@ export const AskLedaBar = forwardRef<HTMLButtonElement, AskLedaBarProps>(functio
     <span className={cn(className, v.outer)}>
     <span data-ask-leda={variant} className={cn('relative isolate inline-flex rounded-control', v.wrap)}>
       {halo && (
-        <span key={`g${pass}`} aria-hidden="true" data-halo="glow" className={cn('pointer-events-none absolute -inset-[3px] overflow-hidden rounded-control blur-[9px] animate-halo-glow [--halo-peak:.75] dark:[--halo-peak:.8] motion-reduce:hidden', variant === 'bar' && 'max-[640px]:hidden')}>
+        <span key={`g${pass}`} aria-hidden="true" data-halo="glow" className={cn('pointer-events-none absolute -inset-px overflow-hidden rounded-control blur-[9px] animate-halo-fade [--halo-peak:.75] dark:[--halo-peak:.8] motion-reduce:hidden', variant !== 'field' && 'max-[640px]:hidden')}>
           <span className="absolute left-1/2 top-1/2 aspect-square w-[200%] bg-halo animate-halo-spin" />
         </span>
       )}
@@ -179,7 +179,7 @@ export const AskLedaBar = forwardRef<HTMLButtonElement, AskLedaBarProps>(functio
         onClick={() => open.current?.('click')}
         {...rest}
         className={cn(
-          'relative z-[1] flex w-full items-center gap-2.5 rounded-control border border-control bg-surface pl-2.5 pr-1.5 text-left leading-5 text-text transition-colors duration-hover hover:border-accent hover:[&_[data-ph]]:text-text motion-reduce:transition-none',
+          'relative z-[1] flex w-full items-center gap-2.5 rounded-control border border-control bg-surface pl-2.5 pr-1.5 text-left text-ui leading-5 text-text transition-colors duration-hover hover:border-accent hover:[&_[data-ph]]:text-text motion-reduce:transition-none',
           focusRing,
           v.bar,
         )}
@@ -191,8 +191,8 @@ export const AskLedaBar = forwardRef<HTMLButtonElement, AskLedaBarProps>(functio
         <kbd aria-hidden="true" className={cn('inline-block h-4 min-w-[18px] shrink-0 rounded-[3px] bg-raised-2 px-1 text-center font-sans text-tiny leading-4 text-text max-[640px]:hidden')}>{kbd}</kbd>
       </button>
       {halo && (
-        <span key={`r${pass}`} aria-hidden="true" data-halo="ring" className={cn('pointer-events-none absolute -inset-px z-[2] overflow-hidden rounded-control p-[2px] [mask-image:linear-gradient(#000_0_0),linear-gradient(#000_0_0)] [mask-clip:content-box,border-box] [mask-composite:exclude] dark:p-[1.5px] animate-halo-fade motion-reduce:animate-halo-fade-reduced', variant === 'bar' && 'max-[640px]:hidden')}>
-          <span className="absolute left-1/2 top-1/2 aspect-square w-[200%] bg-halo animate-halo-spin motion-reduce:animate-none motion-reduce:[transform:translate(-50%,-50%)_rotate(140deg)]" />
+        <span key={`r${pass}`} aria-hidden="true" data-halo="ring" className={cn('pointer-events-none absolute -inset-px z-[2] overflow-hidden rounded-control p-[2px] [mask-image:linear-gradient(#000_0_0),linear-gradient(#000_0_0)] [mask-clip:content-box,border-box] [mask-composite:exclude] dark:p-[1.5px] animate-halo-fade motion-reduce:animate-halo-fade-reduced ', variant !== 'field' && 'max-[640px]:hidden')}>
+          <span className="absolute left-1/2 top-1/2 aspect-square w-[200%] bg-halo animate-halo-spin motion-reduce:animate-none motion-reduce:[transform:translate(-50%,-50%)]" />
         </span>
       )}
     </span>
