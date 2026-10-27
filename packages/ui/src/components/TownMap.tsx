@@ -366,7 +366,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
     >
       {caption ? <p className="m-0 flex h-5 flex-none items-center px-3 text-small text-muted max-[640px]:hidden"><span>{caption}</span></p> : null}
       <div className="@container/town relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-card max-[640px]:rounded-none">
-        <div ref={mountRef} className={cn('relative min-h-0 flex-1 overflow-hidden', error && 'opacity-[.35]')}>
+        <div ref={mountRef} className={'relative min-h-0 flex-1 overflow-hidden'}>
           <svg
             ref={svgRef}
             aria-hidden="true"
@@ -375,6 +375,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
             preserveAspectRatio="xMidYMid meet"
             className={cn(
               'size-full cursor-grab touch-pan-y select-none [forced-color-adjust:none] data-[over]:cursor-pointer data-[dragging]:cursor-grabbing',
+              error && 'opacity-[.35]', // dims the map only; the building labels stay at full contrast
             )}
           >
             <defs>

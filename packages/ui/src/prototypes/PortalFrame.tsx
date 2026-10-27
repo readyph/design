@@ -33,7 +33,7 @@ const RAIL = ['home', 'platforms', 'reports', 'team', 'memory'].map((id) => byId
 const PHONE_TABS = PAGES.filter((p) => p.id !== 'memory');
 
 export interface PortalFrameProps extends Omit<PlatformShellProps, 'rail' | 'railLabel' | 'phoneNav' | 'phoneNavLabel' | 'topBar'> {
-  /** The page this is: marks its rail item and phone tab as current (a page under More marks More). */
+  /** The page this is: marks its rail item and phone tab as current (Memory, under More, marks no tab, as in the workshop). */
   current: PortalPage;
   /** Phone top bar page name. Default: the current page's label. */
   pageName?: string;
@@ -93,7 +93,6 @@ export function PortalFrame({ current, pageName, leda, topBar, hidePhoneNav = fa
       <span className="contents [&>button]:size-11"><AccountMenu name={account.name} email={account.email} role={account.role} initials={acctInitials} applyToDocument={false} {...acct} /></span>
     </>
   );
-  const moreCurrent = current === 'memory';
   const phoneNav = (
     <div className="grid h-[60px] w-full grid-cols-5 items-stretch">
       {PHONE_TABS.map((p) => {
@@ -110,7 +109,7 @@ export function PortalFrame({ current, pageName, leda, topBar, hidePhoneNav = fa
         side="top"
         align="end"
         trigger={
-          <button type="button" aria-current={moreCurrent ? "page" : undefined} className={cn(tabClass, moreCurrent && 'font-medium text-text')}>
+          <button type="button" className={tabClass}>
             <List size={20} aria-hidden />
             <span>More</span>
           </button>

@@ -100,7 +100,7 @@ describe('Memory page', () => {
     await waitFor(() => expect(document.activeElement).toBe(filter));
   });
 
-  it('uses the shared Portal frame: Memory is current in the rail and More is current on the phone nav', async () => {
+  it('uses the shared Portal frame: Memory is current in the rail and the phone nav marks no tab', async () => {
     const user = userEvent.setup();
     render(<MemoryPage />);
     const rail = screen.getAllByRole('navigation', { name: 'Portal' });
@@ -108,7 +108,7 @@ describe('Memory page', () => {
     expect(rail.length).toBeGreaterThan(0);
     expect(memoryLinks.length).toBeGreaterThan(0);
     const more = screen.getByRole('button', { name: 'More' });
-    expect(more.getAttribute('aria-current')).toBe('page');
+    expect(more.getAttribute('aria-current')).toBeNull();
     await user.click(more);
     expect(screen.getByRole('menuitem', { name: 'Memory' })).toBeTruthy();
   });
