@@ -3,6 +3,7 @@ import type { DayHours, DayKey, OpeningHoursValue, PublicHoliday } from '../comp
 import type { RoleOption } from '../components/RolePicker';
 import type { TryItAbout, TryItQuestion } from '../components/TryIt';
 import { instances, platformDetail, teamData } from './Platform.detail.generated';
+import { initialDb, people as teamPeople } from './Team.data';
 import { sets, USAGE } from './Platforms.data';
 
 /** Sample data for the Platform page prototype (RDY-257). Not exported from the package. */
@@ -127,14 +128,9 @@ export interface Person {
   title: string;
   access: 'owner' | 'admin' | 'member';
 }
-export const people: Person[] = [
-  { id: 'maria', name: 'Maria Santos', initials: 'MS', title: 'Owner', access: 'owner' },
-  { id: 'jun', name: 'Jun Reyes', initials: 'JR', title: 'Admin', access: 'admin' },
-  { id: 'ana', name: 'Ana Cruz', initials: 'AC', title: 'Service advisor', access: 'member' },
-  { id: 'ben', name: 'Ben Lim', initials: 'BL', title: 'Stock clerk', access: 'member' },
-  { id: 'carla', name: 'Carla Diaz', initials: 'CD', title: 'Mechanic', access: 'member' },
-  { id: 'dan', name: 'Dan Ocampo', initials: 'DO', title: 'Cashier', access: 'member' },
-];
+const teamDb = initialDb('live', 'live');
+/** The people of the Team page (same sample), with their Portal access. */
+export const people: Person[] = teamPeople.map((x) => ({ id: x.id, name: x.name, initials: x.initials, title: x.title, access: teamDb.members[x.id]?.company ?? 'member' }));
 export const person = (id: string) => people.find((p) => p.id === id)!;
 export interface Invite {
   id: string;
@@ -142,14 +138,14 @@ export interface Invite {
   platformId: string;
   roleId: string;
   sent: boolean;
+  expired: boolean;
 }
-export const invites: Invite[] = [{ id: 'eli', name: 'Eli Tan', platformId: 'autoworks', roleId: 'mechanic', sent: true }];
+export const invites: Invite[] = teamDb.invites
+  .filter((v) => v.status === 'PENDING' || v.status === 'EXPIRED')
+  .flatMap((v) => Object.entries(v.roles).map(([platformId, roleId]) => ({ id: v.id, name: v.name, platformId, roleId, sent: !!v.sent, expired: v.status === 'EXPIRED' })));
 
 /** Role of each person on each platform, as the Team page holds it. */
-export const teamRoles: Record<string, Record<string, string>> = {
-  autoworks: { maria: 'manager', jun: 'manager', ana: 'advisor', carla: 'mechanic' },
-  stockroom: { maria: 'manager', ben: 'clerk' },
-};
+export const teamRoles: Record<string, Record<string, string>> = { autoworks: { ...teamDb.roles.autoworks }, stockroom: { ...teamDb.roles.stockroom } };
 
 /* ---------- platforms ---------- */
 export type Health = 'ok' | 'slow' | 'offline' | 'setup' | 'setting-up';
@@ -207,20 +203,19 @@ export const companyWeek: Record<DayKey, DayHours> = {
   sat: day('08:00', '18:00'),
   sun: day('08:00', '18:00', false),
 };
+/** Workshop wording of the company hours, shown in the "Company hours: ..." hint. */
+export const companyHoursLabel: string = (platformDetail as any).companyHours.label;
 export const hoursSame: OpeningHoursValue = { sameAsCompany: true, week: { ...companyWeek }, holidays: { closed: true, openOn: [] }, closures: [] };
+const pd = platformDetail as any;
+const hv = pd.hoursValues.stockroom as { days: Record<string, [string, string] | null>; holidays: boolean; closed: { date: string; why: string }[]; open: string[] };
+/** The stockroom keeps its own week (workshop data): earlier mornings, half a day on Saturday. */
 export const hoursOwn: OpeningHoursValue = {
   sameAsCompany: false,
-  week: { ...companyWeek, sat: day('09:00', '14:00') },
-  holidays: { closed: true, openOn: [] },
-  closures: [{ id: 'c1', date: '2026-11-02', reason: 'Stock count' }],
+  week: Object.fromEntries(Object.entries(hv.days).map(([k, v]) => [k, v ? day(v[0], v[1]) : day('08:00', '18:00', false)])) as Record<DayKey, DayHours>,
+  holidays: { closed: hv.holidays, openOn: [...hv.open] },
+  closures: hv.closed.map((c, i) => ({ id: `c${i + 1}`, date: c.date, reason: c.why })),
 };
-export const publicHolidays: PublicHoliday[] = [
-  { date: '2026-11-01', name: 'All Saints’ Day' },
-  { date: '2026-11-02', name: 'All Souls’ Day' },
-  { date: '2026-11-30', name: 'Bonifacio Day' },
-  { date: '2026-12-08', name: 'Feast of the Immaculate Conception' },
-  { date: '2026-12-25', name: 'Christmas Day' },
-];
+export const publicHolidays: PublicHoliday[] = (pd.holidays as [string, string, string][]).map(([date, , name]) => ({ date, name }));
 export const today = '2026-10-22';
 export const nowSample = { day: 'thu' as DayKey, minutes: 552, date: today };
 
@@ -335,7 +330,7 @@ export const detailsStart = (): Record<string, Detail> => ({
     label: 'Dela Cruz Auto Works',
     basics: platformDetail.basicValues.autoworks,
     settings: { ...settingsDefaults('repair'), warranty: 30 },
-    hours: hoursOwn,
+    hours: hoursSame,
     team: { ...teamRoles.autoworks },
     leda: ledaAutoworks(),
     skipped: [],
@@ -344,7 +339,7 @@ export const detailsStart = (): Record<string, Detail> => ({
     label: 'Parts Stockroom',
     basics: platformDetail.basicValues.stockroom,
     settings: settingsDefaults('inventory'),
-    hours: hoursSame,
+    hours: hoursOwn,
     team: { ...teamRoles.stockroom },
     leda: ledaStart('inventory', 'Parts Stockroom'),
     skipped: [],

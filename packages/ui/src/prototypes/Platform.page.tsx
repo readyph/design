@@ -4,7 +4,6 @@ import {
   ShieldCheck, UploadSimple, UserPlus, Users, X,
 } from '@phosphor-icons/react';
 import { AskLedaBar } from '../components/AskLedaBar';
-import { Badge } from '../components/Badge';
 import { BlockedQuestions, type BlockedQuestionItem } from '../components/BlockedQuestions';
 import { Breadcrumbs } from '../components/Breadcrumbs';
 import { Button } from '../components/Button';
@@ -39,7 +38,7 @@ import { go, useHandoff } from './protoNav';
 import { focusIfLost } from '../utils/focusIfLost';
 import { useMatchMedia } from '../utils/useMatchMedia';
 import {
-  SECTIONS, tabFacts, andList, basicLabels, companyWeek, dataKinds, dataTopics, detailsStart, everyBusinessBlocked, invites, kinds, ledaStart, linksStart,
+  SECTIONS, tabFacts, andList, basicLabels, companyWeek, dataKinds, dataTopics, companyHoursLabel, detailsStart, everyBusinessBlocked, invites, kinds, ledaStart, linksStart,
   memoryCap, neverShared, nowSample, people, person, plural, platformsStart, publicHolidays, requestDefs, sectionName, settingsDefaults, shortName,
   sampleSet, today, tryQuestions, usage, type BasicKey, type CustomTopic, type DataLink, type DataKind, type Detail, type KindKey, type LedaState, type PlatformRec,
   type SectionId, type SettingField,
@@ -104,8 +103,9 @@ function Logo({ x, size = 32, src }: { x: PlatformRec; size?: 14 | 16 | 20 | 24 
 
 function SwitchField({ label, hint, checked, onChange }: { label: string; hint?: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
-    <div className="min-w-0 self-end pb-2">
-      <Switch label={label} description={hint} checked={checked} onCheckedChange={onChange} />
+    <div className="min-w-0">
+      <span aria-hidden className="block text-[14px] font-medium leading-5">&nbsp;</span>
+      <div className="mt-2"><Switch label={label} description={hint} checked={checked} onCheckedChange={onChange} /></div>
     </div>
   );
 }
@@ -599,11 +599,12 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
   const systemBody = () => (
     <>
       <div className="grid max-w-[720px] gap-x-6 gap-y-6 @min-[641px]/sheet:grid-cols-2">{kind.settings.map(settingField)}</div>
-      <div className="mt-8">
+      <div className="mt-8 max-w-[720px] border-t border-rule pt-8">
         <OpeningHours
           value={system.hours}
           onChange={(hours) => setDraft('system', { ...system, hours })}
           companyWeek={companyWeek}
+          companyLabel={companyHoursLabel}
           publicHolidays={publicHolidays}
           today={today}
           now={nowSample}
@@ -618,65 +619,70 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
     if (!p) return null;
     const rs = kind.roles;
     const rank = (id: string) => rs.findIndex((r) => r.id === team[id]);
-    const ids = Object.keys(team).sort((a, b) => rank(a) - rank(b));
+    const ids = Object.keys(team).filter((id) => person(id)).sort((a, b) => rank(a) - rank(b) || people.findIndex((x) => x.id === a) - people.findIndex((x) => x.id === b));
     const others = people.filter((x) => !team[x.id]);
     const elsewhere = (id: string) => {
       const o = platforms.filter((q) => q.id !== p.id && details[q.id]?.team[id]).map((q) => `${kinds[q.kind].roles.find((r) => r.id === details[q.id].team[id])?.name} at ${shortName({ label: nameOf(q.id) })}`);
       return o.length ? ` · also ${andList(o)}` : '';
     };
+    const coTag = (x: (typeof people)[number]) => { const n = x.access === 'owner' ? 'Owner' : x.access === 'admin' ? 'Admin' : ''; return n && n !== x.title ? ` · ${n}` : ''; };
     const pending = invites.filter((v) => v.platformId === p.id);
+    const row = 'grid grid-cols-[32px_minmax(0,1fr)_180px_36px] items-center gap-3 border-t border-rule py-4 text-ui last:border-b @max-[600px]/sheet:grid-cols-[32px_minmax(0,1fr)_36px]';
+    const avatar = 'grid size-8 shrink-0 place-items-center rounded-full bg-[var(--avatar-bg)] text-[12px] font-semibold text-[var(--avatar-text)]';
+    const avatarInv = 'grid size-8 shrink-0 place-items-center rounded-full border-[1.5px] border-dashed border-control text-[12px] font-semibold text-muted';
     return (
       <>
-        {ids.length ? (
-          <ul className="m-0 list-none divide-y divide-rule p-0">
+        {ids.length || pending.length ? (
+          <div className="max-w-[720px]">
             {ids.map((id) => {
               const x = person(id);
               return (
-                <li key={id} data-person={id} className="flex flex-wrap items-center gap-x-3 gap-y-2 py-3">
-                  <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-full bg-raised text-small font-semibold text-muted">{x.initials}</span>
-                  <span className="min-w-0 flex-1 basis-40">
-                    <a href="#team" onClick={(e) => { e.preventDefault(); go({ to: 'team' }); }} className={cn(link, 'text-body font-medium no-underline hover:underline')}>{x.name}</a>
-                    <span className="block text-small text-muted">
-                      {x.access === 'member' ? x.title : <Badge tone="neutral">{x.access === 'owner' ? 'Admin · Owner' : 'Admin'}</Badge>}{elsewhere(id)}
-                    </span>
+                <div key={id} data-person={id} className={row}>
+                  <span aria-hidden className={avatar}>{x.initials}</span>
+                  <span className="flex min-w-0 flex-col">
+                    <a href="#team" onClick={(e) => { e.preventDefault(); go({ to: 'team' }); }} className={cn(link, 'w-fit text-[14px] leading-5 font-medium text-text no-underline hover:underline hover:underline-offset-[3px]')}>{x.name}</a>
+                    <span className="text-[13px] leading-[18px] text-muted">{x.title}{coTag(x)}{elsewhere(id)}</span>
                   </span>
-                  <Select
-                    size="sm"
-                    className="w-44"
-                    aria-label={`${x.name}’s role at ${nameOf(p.id)}`}
-                    value={team[id]}
-                    onValueChange={(v) => setDraft('team', { ...team, [id]: v })}
-                    options={rs.map((r) => ({ value: r.id, label: r.name }))}
-                  />
-                  <IconButton icon={X} label={`Take ${x.name} off ${nameOf(p.id)}`} onClick={() => setUnteam(id)} />
-                </li>
+                  <span className="@max-[600px]/sheet:col-start-2 @max-[600px]/sheet:row-start-2">
+                    <Select
+                      size="sm"
+                      className="w-full"
+                      aria-label={`${x.name}’s role at ${nameOf(p.id)}`}
+                      value={team[id]}
+                      onValueChange={(v) => setDraft('team', { ...team, [id]: v })}
+                      options={rs.map((r) => ({ value: r.id, label: r.name }))}
+                    />
+                  </span>
+                  <IconButton icon={X} label={`Take ${x.name} off ${nameOf(p.id)}`} onClick={() => setUnteam(id)} actionBar className="size-8 @max-[600px]/sheet:col-start-3 @max-[600px]/sheet:row-start-1" />
+                </div>
               );
             })}
             {pending.map((v) => (
-              <li key={v.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-3">
-                <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-full border border-dashed border-control bg-surface text-small font-semibold text-muted">{v.name.split(' ').map((w) => w[0]).join('')}</span>
-                <span className="min-w-0 flex-1 basis-40">
-                  <a href="#team" onClick={(e) => { e.preventDefault(); go({ to: 'team' }); }} className={cn(link, 'text-body font-medium no-underline hover:underline')}>{v.name}</a>
-                  <span className="block text-small text-muted">{v.sent ? 'Invited, not joined yet' : 'Invite not sent yet'}</span>
+              <div key={v.id} className={row}>
+                <span aria-hidden className={avatarInv}>{v.name.split(' ').map((w) => w[0]).join('')}</span>
+                <span className="flex min-w-0 flex-col">
+                  <a href="#team" onClick={(e) => { e.preventDefault(); go({ to: 'team' }); }} className={cn(link, 'w-fit text-[14px] leading-5 font-medium text-text no-underline hover:underline hover:underline-offset-[3px]')}>{v.name}</a>
+                  <span className="text-[13px] leading-[18px] text-muted">{v.expired ? 'Invite expired' : v.sent ? 'Invited, not joined yet' : 'Invite not sent yet'}</span>
                 </span>
-                <span className="text-ui text-muted">{rs.find((r) => r.id === v.roleId)?.name} when they join</span>
-              </li>
+                <span className="text-[13px] leading-[18px] text-muted @max-[600px]/sheet:col-start-2 @max-[600px]/sheet:row-start-2">{rs.find((r) => r.id === v.roleId)?.name} when they join</span>
+                <span />
+              </div>
             ))}
-          </ul>
+          </div>
         ) : (
-          <p className="m-0 text-ui text-muted">Nobody works here yet. Add the people who run {nameOf(p.id)}.</p>
+          <p className="m-0 mt-3 text-ui text-muted">Nobody works here yet. Add the people who run {nameOf(p.id)}.</p>
         )}
         {others.length ? (
-          <div ref={teamAddRef} className="mt-4 flex flex-wrap items-center gap-2">
-            <Select size="sm" className="w-64" aria-label={`Add a person to ${nameOf(p.id)}`} placeholder="Choose a person…" value={teamPick} onValueChange={setTeamPick} options={others.map((x) => ({ value: x.id, label: x.name, meta: x.title }))} />
+          <div ref={teamAddRef} className="mt-6 flex max-w-[720px] flex-wrap items-center gap-2 min-[641px]:flex-nowrap">
+            <Select size="sm" className="w-full min-[641px]:w-[260px]" aria-label={`Add a person to ${nameOf(p.id)}`} placeholder="Choose a person…" value={teamPick} onValueChange={setTeamPick} options={others.map((x) => ({ value: x.id, label: x.name, meta: x.title }))} />
             <Button type="button" variant="secondary" leftIcon={UserPlus} disabled={!teamPick} keepFocus onClick={() => { setDraft('team', { ...team, [teamPick]: (rs[1] ?? rs[0]).id }); setTeamPick(''); refocus('team-add'); }}>Add to {shortName({ label: nameOf(p.id) })}</Button>
           </div>
         ) : null}
-        <dl className="m-0 mt-6 grid gap-1 text-small text-muted">
-          {rs.map((r) => <div key={r.id}><dt className="inline font-semibold text-text">{r.name}</dt> <dd className="m-0 inline">{(r.about ?? '').replace(/\.$/, '').replace(/^./, (c) => c.toLowerCase())}</dd></div>)}
-        </dl>
-        <p className="m-0 mt-2 text-small text-muted">The roles of {kind.lower}. Someone can hold a different role on each platform.</p>
-        <p className="m-0 mt-3 text-ui"><a href="#team" onClick={(e) => { e.preventDefault(); go({ to: 'team' }); }} className={cn(link, 'inline-flex items-center gap-1.5')}><Users aria-hidden size={16} />Roles, invites and everyone on Team</a></p>
+        <p className="m-0 mt-4 flex max-w-[720px] flex-wrap gap-x-[18px] gap-y-1 text-small text-muted">
+          {rs.map((r) => <span key={r.id}><b className="font-medium text-text">{r.name}</b> {(r.about ?? '').replace(/\.$/, '').replace(/^./, (c) => c.toLowerCase())}</span>)}
+        </p>
+        <p className="m-0 mt-4 max-w-[720px] text-small text-muted">The roles of {kind.lower}. Someone can hold a different role on each platform.</p>
+        <p className="m-0 mt-4 max-w-[720px] text-small"><a href="#team" onClick={(e) => { e.preventDefault(); go({ to: 'team' }); }} className={cn(link, 'inline-flex items-center gap-1.5 hover:underline hover:underline-offset-[3px]')}><Users aria-hidden size={16} />Portal access, invites and everyone on Team</a></p>
       </>
     );
   };
