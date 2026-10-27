@@ -97,7 +97,7 @@ function FilterRow({ title, count, about, on, onClick, onHover, leading }: { tit
       onMouseLeave={() => onHover?.(false)}
       onFocus={() => onHover?.(true)}
       onBlur={() => onHover?.(false)}
-      className={cn('flex w-full min-w-0 flex-col gap-0.5 rounded-control px-3 py-2 text-left text-ui transition-colors duration-hover motion-reduce:transition-none max-[640px]:min-h-11', on ? 'bg-frame-active text-text' : 'text-text hover:bg-frame-hover', focusRing, 'focus-visible:ring-offset-frame')}
+      className={cn('flex w-full min-w-0 flex-col gap-0.5 rounded-control px-3 py-2 text-left text-ui transition-colors duration-hover motion-reduce:transition-none max-[640px]:min-h-11', on ? 'bg-frame-active text-text' : 'text-text hover:bg-frame-hover', focusRing)}
     >
       <span className="flex min-w-0 items-center gap-2">
         {leading}
