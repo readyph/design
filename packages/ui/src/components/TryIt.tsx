@@ -1,5 +1,5 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
-import { CheckCircle, Prohibit, WarningCircle } from '@phosphor-icons/react';
+import { CheckCircle, Prohibit, ShieldCheck, WarningCircle } from '@phosphor-icons/react';
 import { cn } from '../utils/cn';
 import { focusIfLost } from '../utils/focusIfLost';
 import { Button } from './Button';
@@ -27,6 +27,8 @@ export interface TryItQuestion {
   label: string;
   /** `TryItAbout` values this question belongs to. Omit for every "About". */
   about?: string[];
+  /** Right-aligned 12px muted text in the picker list (the `workshop` variant's business tag). */
+  meta?: ReactNode;
 }
 
 export interface TryItAnswer {
@@ -60,6 +62,15 @@ export interface TryItProps {
   thinkingMs?: number;
   title?: string;
   description?: string;
+  /**
+   * `workshop` (RDY-358): the Memory prototype's own layout: "A customer asks" heading, About and Question pickers one under the other,
+   * the chat bubbles (question right, Leda's answer in a bordered card), the reason line and a footnote. Default keeps the two-column layout.
+   */
+  variant?: 'default' | 'workshop';
+  /** `workshop` only: small muted line under the reply, e.g. "As customers see it in your mobile app, with the switches as they are now." */
+  footnote?: ReactNode;
+  /** `workshop` only: the shield note at the foot of the modal (what is never shared). */
+  note?: ReactNode;
   /** Runs when the modal has closed (see `Modal`); `preventDefault()` to place focus yourself. */
   onCloseAutoFocus?: (event: Event) => void;
 }
@@ -86,6 +97,9 @@ export function TryIt({
   thinkingMs = 900,
   title = 'Try it',
   description = 'See what customers’ Leda would say right now.',
+  variant = 'default',
+  footnote,
+  note,
   onCloseAutoFocus,
 }: TryItProps) {
   const uid = useId();
@@ -135,13 +149,95 @@ export function TryIt({
     else focusIfLost(replyRef.current, questionRef.current, { preventScroll: true });
   }, [run.kind]);
 
+  const idleText = '';
   const thinking = run.kind === 'thinking';
   const shown = run.kind === 'thinking' ? run.prev : run;
   const spoken =
     run.kind === 'thinking' ? 'Thinking…' : run.kind === 'done' ? `Leda says: ${run.result.answer} ${run.result.reason}` : run.kind === 'error' ? 'Couldn’t get Leda’s answer.' : '';
 
   const aboutOptions: SelectOption[] = abouts.map((a) => ({ value: a.value, label: a.label, icon: a.icon }));
-  const questionOptions: SelectOption[] = visible.map((q) => ({ value: q.value, label: q.label }));
+  const questionOptions: SelectOption[] = visible.map((q) => ({ value: q.value, label: q.label, meta: q.meta }));
+
+  if (variant === 'workshop') {
+    const done = shown.kind === 'done' ? shown : null;
+    const wl = 'm-0 text-[12px] leading-4 text-muted';
+    return (
+      <Modal
+        open={open}
+        onOpenChange={onOpenChange}
+        size="panel"
+        initialFocus={questionRef as RefObject<HTMLElement | null>}
+        onCloseAutoFocus={onCloseAutoFocus}
+      >
+        <Modal.Header iconNode={<LedaMark size={18} decorative effect="aurora" active={thinking} />} description={description} className="!border-border !pb-3.5 !pl-[22px] !pr-4 !pt-4 max-sm:!pl-4 max-sm:!pr-2 max-sm:!py-3">{title}</Modal.Header>
+        <Modal.Body className="!px-[22px] !pb-6 !pt-5 max-sm:!px-4">
+        <div>
+          <h3 className="m-0 text-[13px] font-semibold leading-5">A customer asks</h3>
+          <p id={`${uid}-about`} className={cn(wl, 'mt-2')}>About</p>
+          <div className="mt-1">
+            {aboutFixed ? (
+              <p aria-labelledby={`${uid}-about`} className="m-0 flex min-h-10 items-center gap-2 text-[14px] leading-5">
+                {aboutItem?.icon ? <span className="inline-flex shrink-0 items-center">{aboutItem.icon}</span> : null}
+                <span className="min-w-0 [overflow-wrap:anywhere]">{aboutItem?.label}</span>
+              </p>
+            ) : (
+              <Select aria-labelledby={`${uid}-about`} options={aboutOptions} value={aboutValue} wrap onValueChange={(v) => { setAboutInner(v); onAboutChange?.(v); }} />
+            )}
+          </div>
+          <p id={`${uid}-q`} className={cn(wl, 'mt-3')}>Question</p>
+          <div className="mt-1">
+            <Select
+              ref={questionRef}
+              aria-labelledby={`${uid}-q`}
+              options={questionOptions}
+              value={question}
+              wrap
+              placeholder="No questions yet"
+              disabled={questionOptions.length === 0}
+              onValueChange={(v) => { setQuestionInner(v); onQuestionChange?.(v); }}
+            />
+          </div>
+          <div ref={replyRef} className="mt-4 flex min-w-0 flex-col gap-2" aria-busy={thinking || undefined}>
+            {shown.kind === 'error' ? (
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                <p className="m-0 flex min-w-0 flex-1 basis-48 items-start gap-2 text-[14px] leading-5">
+                  <WarningCircle aria-hidden size={16} className="mt-0.5 shrink-0 text-bad-dot" />
+                  <span>{thinking ? 'Thinking…' : 'Couldn’t get Leda’s answer.'}</span>
+                </p>
+                <Button variant="secondary" aria-disabled={thinking || undefined} aria-busy={thinking || undefined} onClick={() => { if (!thinking) setAttempt((n) => n + 1); }}>Try again</Button>
+              </div>
+            ) : (
+              <>
+                <p className="m-0 max-w-[88%] self-end rounded-card rounded-br-[2px] bg-accent px-3 py-2 text-[13px] leading-[19px] text-accent-ink [overflow-wrap:anywhere]">
+                  {questions.find((q) => q.value === (done?.question ?? question))?.label ?? ''}
+                </p>
+                <div className="relative m-0 flex gap-2 self-stretch rounded-card rounded-bl-[2px] border border-border bg-surface px-3 py-2 text-[13px] leading-[19px] [overflow-wrap:anywhere]">
+                  <span aria-hidden className="mt-px shrink-0"><LedaMark size={16} tile decorative effect="aurora" active={thinking} /></span>
+                  <span className={cn('min-w-0', thinking && 'invisible')}>{done ? done.result.answer : idleText}</span>
+                  {thinking ? <span aria-hidden className="absolute left-9 top-2 text-muted">Thinking…</span> : null}
+                </div>
+                {done ? (
+                  <p className={cn('m-0 mt-1 flex gap-1.5 text-[13px] leading-[18px] text-muted', thinking && 'invisible')}>
+                    {done.result.tone === 'ok' ? <CheckCircle aria-hidden size={14} className="mt-0.5 shrink-0 text-ok" /> : <Prohibit aria-hidden size={14} className="mt-0.5 shrink-0 text-bad" />}
+                    <span className="min-w-0">{done.result.reason}</span>
+                  </p>
+                ) : null}
+              </>
+            )}
+          </div>
+          {footnote ? <p className="m-0 mt-3 text-[12px] leading-4 text-muted">{footnote}</p> : null}
+          {note ? (
+            <p className="m-0 mt-6 flex gap-2 border-t border-rule pt-4 text-[13px] leading-[18px] text-muted">
+              <ShieldCheck aria-hidden size={15} className="shrink-0" />
+              <span>{note}</span>
+            </p>
+          ) : null}
+          <p role="status" aria-live="polite" className="sr-only">{spoken}</p>
+        </div>
+        </Modal.Body>
+      </Modal>
+    );
+  }
 
   return (
     <Modal

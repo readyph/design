@@ -419,7 +419,7 @@ export function MemoryPage(props: MemoryPageProps) {
     { value: "stockroom", label: srcName("stockroom"), icon: <Logo src="stockroom" /> },
   ];
   const tryQuestions = ["any", "company", "autoworks", "stockroom"].flatMap((sc) =>
-    pvItems(sc).map((i) => ({ value: `${sc}#${i.v}`, label: i.q, about: [sc] })),
+    pvItems(sc).map((i) => ({ value: `${sc}#${i.v}`, label: i.q, about: [sc], meta: i.meta })),
   );
   const askTry = (about: string, qv: string): TryItAnswer => {
     const it = pvItems(about).find((x) => `${about}#${x.v}` === qv) ?? pvItems(about)[0];
@@ -595,20 +595,20 @@ export function MemoryPage(props: MemoryPageProps) {
   );
   const sheetBar = inDoc ? (
     <SheetBar actions={actions} flatActions>
-      <nav aria-label="You are here" className="flex min-w-0 items-center gap-2 text-[13px] leading-5">
-        <button type="button" title="Back to Memory (Esc)" onClick={closeDoc} className={cn("inline-flex shrink-0 items-center gap-1.5 rounded-[4px] px-1 py-1 text-muted hover:text-text", focusRing)}>
+      <nav aria-label="You are here" className="flex min-w-0 items-center gap-2 text-[13px] leading-[18px] text-muted">
+        <button type="button" title="Back to Memory (Esc)" onClick={closeDoc} className={cn("inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[2px] font-medium text-muted hover:text-text", focusRing)}>
           <ArrowLeft size={14} aria-hidden />
           Memory
         </button>
         <span aria-hidden className="text-control">/</span>
         {curTopic ? (
-          <button type="button" onClick={() => pickFolder(curTopic.src)} className={cn("inline-flex min-w-0 items-center gap-1.5 rounded-[4px] px-1 py-1 text-muted hover:text-text", focusRing)}>
+          <button type="button" onClick={() => pickFolder(curTopic.src)} className={cn("-ml-1.5 inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-control px-1.5 text-muted hover:bg-raised hover:text-text", focusRing)}>
             <Logo src={curTopic.src} size={14} />
-            <span className="truncate">{srcName(curTopic.src)}</span>
+            <span>{srcName(curTopic.src)}</span>
           </button>
         ) : null}
         <span aria-hidden className="text-control">/</span>
-        <b className="min-w-0 truncate font-medium text-text" aria-current="page">{curTopic?.title ?? "Topic"}</b>
+        <b className="inline-flex min-w-0 items-center gap-1.5 truncate font-medium text-text" aria-current="page"><span className="truncate">{curTopic?.title ?? "Topic"}</span></b>
       </nav>
     </SheetBar>
   ) : (
@@ -902,7 +902,7 @@ export function MemoryPage(props: MemoryPageProps) {
         {q && list.length ? (
           <p aria-live="polite" className="m-0 mt-3 flex items-center gap-2 text-[13px] leading-[18px] text-muted">
             {plural(list.length, "topic")} match “{q}”{f ? ", in every folder" : ""}.
-            <Button variant="text" onClick={() => setQ("")} className="!h-7 !px-1.5 !text-[13px]">Clear</Button>
+            <Button variant="text" onClick={() => setQ("")} className="!h-7 !border-0 !px-1.5 !text-[13px]">Clear</Button>
           </p>
         ) : null}
         <div id="lbres">{res}</div>
@@ -1149,11 +1149,11 @@ export function MemoryPage(props: MemoryPageProps) {
           ) : (
             <h1 id="docH" className="m-0 min-w-0 flex-1 text-[24px] font-semibold leading-8 tracking-[-0.01em] max-[640px]:text-[20px] max-[640px]:leading-7">{t.title}</h1>
           )}
-          <label className="mt-1.5 flex max-w-[240px] shrink-0 items-start gap-2.5 max-[640px]:min-h-11 max-[640px]:max-w-none">
+          <label className="mt-1.5 flex max-w-[240px] shrink-0 items-start gap-3 max-[640px]:min-h-11 max-[640px]:max-w-none">
             <Switch aria-label={`Customers' Leda can use ${t.title}`} checked={t.on} disabled={readOnly} onCheckedChange={(v) => setTopic(t, v)} />
             <span className="text-[13px] font-medium leading-[18px]">
               {t.on ? "Customers' Leda can use this" : "Off for customers"}
-              <span className="block font-normal text-muted">{t.on ? "Saves as you switch it" : "Leda won't use it for customers"}</span>
+              <span className="block text-[12px] font-medium leading-4 text-muted">{t.on ? "Saves as you switch it" : "Leda won't use it for customers"}</span>
             </span>
           </label>
         </div>
@@ -1166,11 +1166,11 @@ export function MemoryPage(props: MemoryPageProps) {
             <label htmlFor="docC" className={sr}>What Leda should know</label>
             <textarea id="docC" maxLength={8000} rows={5} value={edit!.c} onChange={(e) => setEdit({ ...edit!, c: e.target.value, err: undefined })} placeholder="Write it as you would explain it to a customer, in full sentences. Leda answers from it in its own words." className={cn("-ml-[9px] mt-[18px] block min-h-[190px] w-[calc(100%+18px)] resize-none rounded-control border border-transparent bg-transparent px-2 py-1.5 text-[16px] leading-[27px] text-text placeholder:text-faint hover:border-border max-[640px]:text-[16px] max-[640px]:leading-[26px]", focusRing)} />
             <div className="mt-3.5 flex flex-wrap items-center gap-x-3.5 gap-y-2 border-t border-rule pt-3 text-[13px] leading-[18px] text-muted">
-              {dirty ? <span className="inline-flex items-center gap-1.5 text-warn"><PencilSimpleLine size={14} aria-hidden />Unsaved changes</span> : <span className="inline-flex items-center gap-1.5"><Check size={14} aria-hidden className="text-ok" />Saved</span>}
+              {dirty ? <span className="inline-flex items-center gap-1.5 text-warn"><PencilSimpleLine size={16} aria-hidden />Unsaved changes</span> : <span className="inline-flex items-center gap-1.5"><Check size={16} aria-hidden className="text-ok" />Saved</span>}
               <span className="tabular-nums">{num(room)} characters left in memory</span>
               <span className="flex-1" />
-              <Button variant="text" leftIcon={Trash} onClick={() => setDelAsk(t)} className="max-[640px]:h-11">Delete</Button>
-              <Button variant="text" disabled={!dirty} onClick={() => { setEdit({ t: t.title, c: t.text }); }} className="max-[640px]:h-11">Discard</Button>
+              <Button variant="text" leftIcon={Trash} onClick={() => setDelAsk(t)} className="!border-0 !px-2 [&_svg]:text-bad max-[640px]:h-11">Delete</Button>
+              <Button variant="text" disabled={!dirty} onClick={() => { setEdit({ t: t.title, c: t.text }); }} className="!border-0 !px-2 max-[640px]:h-11">Discard</Button>
               <Button disabled={!dirty} onClick={save} className="max-[640px]:h-11">Save</Button>
             </div>
           </>
@@ -1204,7 +1204,7 @@ export function MemoryPage(props: MemoryPageProps) {
                 </li>
               ))}
             </ul>
-            <Button variant="text" leftIcon={ArrowRight} onClick={() => openTry(undefined, `any#${t.src}|t:${t.k}`)} className="-ml-2 mt-1.5 !h-8 !px-2 !text-[13px] max-[640px]:!h-11">
+            <Button variant="text" leftIcon={ArrowRight} onClick={() => openTry(undefined, `any#${t.src}|t:${t.k}`)} className="-ml-2 mt-1.5 !h-8 !border-0 !px-2 !text-[13px] max-[640px]:!h-11">
               See what Leda says to “{t.ask}”
             </Button>
           </section>
@@ -1263,6 +1263,10 @@ export function MemoryPage(props: MemoryPageProps) {
         question={tryQ}
         onQuestionChange={setTryQ}
         ask={askTry}
+        variant="workshop"
+        description="Ask as a customer and see what Leda says, and why."
+        footnote="As customers see it in your mobile app, with the switches as they are now."
+        note="Other customers' details, staff notes and pay are never used for customers. Your team's own use of Leda follows their role on Team."
       />
       <ConfirmDialog
         open={!!bulkAsk}
