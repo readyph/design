@@ -142,31 +142,48 @@ export interface ReadyLogoProps {
   className?: string;
 }
 
-/** The horizontal lockup: falcon mark and the "Ready" wordmark (and, optionally, the tagline). Static. */
+/**
+ * The horizontal lockup: falcon mark and the "Ready" wordmark. With `tagline` the line "Are you ready?" sits to the right on a vermilion
+ * divider, as in the designer's lockup (mark-sketch-dive.html: 72px lockup, 24px / 500 tagline, 26px gap to a 2px divider). Static.
+ */
 export function ReadyLogo({ size = 32, tone = 'color', tagline = false, scheme, label = 'Ready', decorative, className }: ReadyLogoProps) {
   useReadyStyles();
-  const vbH = tagline ? 346 : 266;
-  const k = size / 266;
-  const width = 904.72 * k;
-  const height = vbH * k;
+  const k = size / 72;
+  const width = (904.72 * size) / 266;
   const fill = tone === 'color' ? undefined : MONO[tone];
-  return (
+  const svg = (
     <svg
       width={Math.round(width * 100) / 100}
-      height={Math.round(height * 100) / 100}
-      viewBox={`-227.86 -10 904.72 ${vbH}`}
+      height={size}
+      viewBox="-227.86 -10 904.72 266"
       {...a11y(decorative, label)}
-      className={cn('rd-mark rd-lockup', scheme && `rd-scheme-${scheme}`, className)}
+      className={cn('rd-mark rd-lockup', !tagline && scheme && `rd-scheme-${scheme}`, !tagline && className)}
     >
       {tone === 'color'
         ? LOCKUP_MARK_COLOR.map((d, i) => <path key={d} className={['rd-d', 'rd-l', 'rd-m'][i]} fillRule="evenodd" d={d} />)
         : LOCKUP_MARK_MONO.map((d) => <path key={d} fill={fill} fillRule="evenodd" d={d} />)}
       {LOCKUP_WORDMARK.map((d) => <path key={d} className={tone === 'color' ? 'rd-ink' : undefined} fill={fill} d={d} />)}
-      {tagline ? (
-        <text x="0" y="312" fontSize="52" fontFamily="inherit" fill={fill ?? 'var(--rd-ink)'} opacity=".72">
-          Are you ready?
-        </text>
-      ) : null}
     </svg>
+  );
+  if (!tagline) return svg;
+  return (
+    <span className={cn('rd-lockup-tag inline-flex items-center', scheme && `rd-scheme-${scheme}`, className)} style={{ gap: 28 * k }}>
+      {svg}
+      <span
+        aria-hidden={decorative ? true : undefined}
+        style={{
+          fontSize: 24 * k,
+          fontWeight: 500,
+          letterSpacing: '-0.01em',
+          lineHeight: 1.1,
+          paddingLeft: 26 * k,
+          borderLeft: `${Math.max(1, 2 * k)}px solid ${fill ?? 'var(--rd-mid)'}`,
+          color: fill ?? 'var(--rd-ink)',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        Are you ready?
+      </span>
+    </span>
   );
 }

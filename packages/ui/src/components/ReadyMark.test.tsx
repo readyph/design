@@ -84,8 +84,8 @@ describe('ReadyLogo', () => {
   it('lockup is named Ready; the tagline is optional live text', () => {
     const { container, rerender } = render(<ReadyLogo />);
     expect(screen.getByRole('img', { name: 'Ready' })).toBeTruthy();
-    expect(container.querySelector('text')).toBeNull();
+    expect(container.textContent).not.toContain('Are you ready?');
     rerender(<ReadyLogo tagline />);
-    expect(container.querySelector('text')?.textContent).toBe('Are you ready?');
+    expect(container.textContent).toBe('Are you ready?');
   });
 });
