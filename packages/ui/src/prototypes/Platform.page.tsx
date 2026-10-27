@@ -890,7 +890,7 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
       </header>
     );
     return (
-      <section ref={panelRef} role={ob ? undefined : 'tabpanel'} aria-labelledby={ob ? `${uid}-h-${sec}` : tabId} tabIndex={-1} className="outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent focus-visible:border-accent">
+      <section ref={panelRef} role={ob ? undefined : 'tabpanel'} aria-labelledby={ob ? `${uid}-h-${sec}` : tabId} tabIndex={-1} className="outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent">
         {head}
         {editable(sec) && !ob ? (
           <form onSubmit={(e) => { e.preventDefault(); submit(sec); }} noValidate>
