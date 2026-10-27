@@ -580,7 +580,7 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
         {p.lists.length && !err ? (
           <div className={cn('mt-5 grid gap-x-14 gap-y-12 @max-[720px]/sheet:gap-x-10', phone ? 'grid-cols-[minmax(0,1fr)]' : 'grid-cols-[repeat(auto-fit,minmax(236px,1fr))]')}>
             {listsOf(p).map((l) => (
-              <PlatformToday key={l.id} surface="surface" platform={{ name: p.name, src: p.logo, index: p.index }} aria-label={`${p.name}: ${l.title}`} bare lists={[l]} maxRows={6} rowLayout={phone ? 'phone' : bodyW <= 720 ? 'narrow' : 'wide'} />
+              <PlatformToday key={l.id} surface="surface" platform={{ name: p.name, src: p.logo, index: p.index }} aria-label={`${p.name}: ${l.title}`} bare level={2} lists={[l]} maxRows={6} rowLayout={phone ? 'phone' : bodyW <= 720 ? 'narrow' : 'wide'} />
             ))}
           </div>
         ) : null}
