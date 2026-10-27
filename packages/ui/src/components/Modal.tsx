@@ -117,7 +117,7 @@ export function ModalBody({ className, children, ...rest }: HTMLAttributes<HTMLD
   return (
     <div
       tabIndex={0}
-      className={cn('min-h-0 flex-1 overflow-y-auto px-pad py-5 text-body text-text max-[640px]:px-4', focusRing, 'focus-visible:ring-inset focus-visible:ring-offset-0', className)}
+      className={cn('min-h-0 flex-1 overflow-y-auto px-pad py-5 text-body text-text max-[640px]:px-4', focusRing, 'focus-visible:-outline-offset-2', className)}
       {...rest}
     >
       {children}

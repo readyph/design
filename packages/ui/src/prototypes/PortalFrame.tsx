@@ -61,7 +61,6 @@ const defaultAccount = { name: 'Ramon Dela Cruz', email: 'mon@delacruzauto.ph', 
 const tabClass = cn(
   'relative flex min-h-11 flex-col items-center justify-center gap-[3px] rounded-chip text-tiny leading-5 text-muted',
   focusRing,
-  'focus-visible:ring-offset-frame',
 );
 
 export function PortalFrame({ current, pageName, leda, topBar, hidePhoneNav = false, teamCount = 0, onAddPlatform, account = defaultAccount, onNavigate, children, ...shell }: PortalFrameProps) {

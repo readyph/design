@@ -118,7 +118,7 @@ const VARIANT = {
   overview: {
     outer: 'flex w-full max-w-leda-w-overview shrink basis-auto',
     wrap: 'w-full max-w-leda-w-overview',
-    bar: 'h-[var(--ctl-touch)]',
+    bar: 'h-[var(--ctl-touch)] gap-3 pl-3.5 pr-2 text-[14px]', // workshop .ov-cmd: gap 12, padding 0 8 0 14, 14px text
     mark: 22,
   },
   field: {

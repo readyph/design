@@ -36,4 +36,4 @@ export const focusForced = 'forced-colors:outline-0 forced-colors:focus-visible:
 
 /** The single focus-visible treatment shared by interactive components. */
 export const focusRing =
-  'outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface ' + focusForced;
+  'outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ' + focusForced;

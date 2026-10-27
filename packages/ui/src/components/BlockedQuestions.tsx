@@ -108,7 +108,7 @@ function cleanQuestion(raw: string): string {
 }
 
 const field =
-  'block w-full min-w-0 rounded-control border bg-surface px-3 text-body text-text placeholder:text-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent aria-[readonly=true]:bg-raised';
+  'block w-full min-w-0 rounded-control border bg-surface px-3 text-body text-text placeholder:text-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent focus-visible:border-accent aria-[readonly=true]:bg-raised';
 
 /** j / k belong to the list; typing them in a form control (including the "Blocked for" list) must never move its cursor. */
 function keepJK(e: KeyboardEvent<HTMLElement>) {

@@ -78,6 +78,9 @@ function syncControls(root: HTMLElement) {
 /** Inset ring: the strips scroll, so an outside ring would be clipped. */
 const ring = 'outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent forced-colors:outline-0 forced-colors:focus-visible:outline forced-colors:focus-visible:outline-2 forced-colors:focus-visible:outline-[Highlight]';
 
+/** Vertical and fixed (workshop `.snav a:focus-visible`, `#mtabs .tab:focus-visible`): 2px accent outline, offset -2px (drawn inside the tab). */
+const ringVertical = 'outline-none focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent forced-colors:outline-0 forced-colors:focus-visible:outline forced-colors:focus-visible:outline-2 forced-colors:focus-visible:outline-[Highlight]';
+
 const toSurface = (v: TabsVariant) => (v === 'underline' ? 'fixed' : v === 'pill' ? 'chips' : v);
 
 const rootCls: Record<ReturnType<typeof toSurface>, string> = {
@@ -172,7 +175,7 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
               onDoubleClick={item.preview && onPin ? () => onPin(item.value) : undefined}
               className={cn(
                 'text-ui text-muted transition-colors duration-hover disabled:cursor-not-allowed disabled:opacity-50',
-                ring,
+                v === 'vertical' || v === 'fixed' ? ringVertical : ring,
                 v === 'editor' &&
                   cn(
                     'relative flex h-full min-w-0 flex-1 items-center gap-[7px] rounded-t-chip px-2 text-[13px] hover:bg-raised hover:text-text',
