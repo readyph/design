@@ -436,7 +436,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
           {set === 'live' && !filter ? <span> · Stockroom → Auto Works, parts for jobs</span> : null} · <span className="whitespace-nowrap">{clock()}</span>
         </p>
       </div>
-      <div className={cn('grid grid-cols-1 gap-x-10 gap-y-12', shown.length > 1 && '@min-[720px]/sheet:grid-cols-2 @min-[720px]/sheet:gap-x-14')}>
+      <div className={cn('grid gap-y-12 gap-x-14 @max-[720px]/sheet:gap-x-10', phone || shown.length <= 1 ? 'grid-cols-[minmax(0,1fr)]' : 'grid-cols-[repeat(auto-fit,minmax(236px,1fr))]')}>
         {shown.map((p) => (
           <div
             key={idKey(p)}
