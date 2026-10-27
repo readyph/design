@@ -88,7 +88,7 @@ export interface TownMapProps {
   dimOthers?: boolean;
   /** Building or label picked, or `null` for empty ground / Escape. */
   onSelect?: (id: string | null) => void;
-  /** Pointer over a building or label, or focus on a label; `null` when it leaves. */
+  /** Pointer over a building or label (map.js mouseenter; keyboard focus only shows the focus outline); `null` when it leaves. */
   onHover?: (id: string | null) => void;
   /** Labels without status, no controls, selection ignored. */
   loading?: boolean;
@@ -429,8 +429,6 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
                     }}
                     onMouseEnter={() => onHover?.(p.id)}
                     onMouseLeave={() => onHover?.(null)}
-                    onFocus={() => onHover?.(p.id)}
-                    onBlur={() => onHover?.(null)}
                     className={cn(
                       'group/lbl pointer-events-auto absolute left-0 top-0 z-[1] flex max-w-[calc(100%-16px)] flex-col gap-px whitespace-nowrap rounded-control border bg-surface py-0.5 pl-[5px] pr-1.5 text-left opacity-0 transition-colors duration-hover [transform:translate(var(--lx,0px),var(--ly,0px))_translateY(-100%)] will-change-transform data-[placed]:opacity-100',
                       'after:pointer-events-none after:absolute after:left-[var(--stem-x,50%)] after:top-full after:h-[var(--stem,10px)] after:w-px after:bg-control after:content-[""] forced-colors:after:hidden',

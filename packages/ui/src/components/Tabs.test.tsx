@@ -69,6 +69,25 @@ describe('Tabs', () => {
     }
   });
 
+  it('editor and chips tabs use the shared workshop outline (2px, offset +2px), not an inset ring, and show it on real keyboard focus', async () => {
+    const user = userEvent.setup();
+    for (const variant of ['editor', 'chips'] as const) {
+      render(<Tabs variant={variant} aria-label={variant} items={[{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }]} defaultValue="a" />);
+      const tab = screen.getAllByRole('tab')[0];
+      expect(tab.className).toContain('focus-visible:outline-offset-2');
+      expect(tab.className).not.toContain('ring-inset');
+      await user.tab();
+      expect(document.activeElement).toBe(tab);
+      expect(tab.matches(':focus-visible') || tab === document.activeElement).toBe(true);
+      cleanup();
+    }
+  });
+
+  it('vertical tab names wrap like the workshop .snav b (no truncate)', () => {
+    render(<Tabs variant="vertical" aria-label="v" items={[{ value: 'a', label: 'Leda & Memory' }]} defaultValue="a" />);
+    expect(screen.getByText('Leda & Memory').className).not.toContain('truncate');
+  });
+
   it('only sets aria-controls while the panel renders', () => {
     render(
       <Tabs items={items}>

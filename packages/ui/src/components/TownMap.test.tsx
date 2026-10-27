@@ -55,7 +55,7 @@ describe('TownMap', () => {
     expect(screen.getByRole('group', { name: 'Platform map' }).getAttribute('aria-busy')).toBe('true');
   });
 
-  it('reports hover and keyboard focus the same way', () => {
+  it('reports hover only; keyboard focus does not highlight (workshop map.js)', () => {
     const onHover = vi.fn();
     render(<TownMap platforms={three} onHover={onHover} />);
     const b = screen.getByRole('button', { name: /^Café POS/ });
@@ -63,7 +63,8 @@ describe('TownMap', () => {
     fireEvent.mouseLeave(b);
     fireEvent.focus(b);
     fireEvent.blur(b);
-    expect(onHover.mock.calls.map((c) => c[0])).toEqual(['cafe', null, 'cafe', null]);
+    expect(onHover.mock.calls.map((c) => c[0])).toEqual(['cafe', null]);
+    expect(b.className).toContain('focus-visible:outline-offset-2');
   });
 
   it('rotate and zoom are real buttons reachable by keyboard and call the scene without throwing', () => {

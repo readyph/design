@@ -2,7 +2,7 @@ import { Fragment, forwardRef, useCallback, useEffect, useRef, type KeyboardEven
 import * as RadixTabs from '@radix-ui/react-tabs';
 import { X } from '@phosphor-icons/react';
 import type { Icon as PhosphorIcon } from '@phosphor-icons/react';
-import { cn } from '../utils/cn';
+import { cn, focusRing } from '../utils/cn';
 
 export interface TabItem {
   value: string;
@@ -73,8 +73,8 @@ function syncControls(root: HTMLElement) {
   });
 }
 
-/** Inset ring: the strips scroll, so an outside ring would be clipped. */
-const ring = 'outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent forced-colors:outline-0 forced-colors:focus-visible:outline forced-colors:focus-visible:outline-2 forced-colors:focus-visible:outline-[Highlight]';
+/** Editor tabs, chips and panel: the workshop's global :focus-visible (2px accent outline, offset 2px). */
+const ring = focusRing;
 
 /** Vertical and fixed (workshop `.snav a:focus-visible`, `#mtabs .tab:focus-visible`): 2px accent outline, offset -2px (drawn inside the tab). */
 const ringVertical = 'outline-none focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent forced-colors:outline-0 forced-colors:focus-visible:outline forced-colors:focus-visible:outline-2 forced-colors:focus-visible:outline-[Highlight]';
@@ -193,7 +193,7 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
             >
               {Lead && v !== 'chips' && <Lead size={v === 'editor' || v === 'fixed' ? 14 : 16} aria-hidden className={cn('shrink-0', v === 'vertical' && 'text-muted group-data-[state=active]:text-accent')} />}
               {item.leading && <span aria-hidden className="inline-flex shrink-0">{item.leading}</span>}
-              <span className={cn('min-w-0', v === 'editor' || v === 'fixed' ? 'truncate' : v === 'vertical' ? 'truncate font-medium' : '', item.preview && 'italic')}>
+              <span className={cn('min-w-0', v === 'editor' || v === 'fixed' ? 'truncate' : v === 'vertical' ? 'font-medium' : '', item.preview && 'italic')}>
                 {item.label}
               </span>
               {item.badge != null && <span className="shrink-0 text-small tabular-nums text-muted">{item.badge}</span>}

@@ -915,9 +915,9 @@ export function Team({ set = 'live', state = 'live', person, startInvite = false
           <Initials text={m.initials} size={40} />
           <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
             {phone ? (
-              <h1 ref={headingRef} data-subpage-focus tabIndex={-1} className="m-0 min-w-0 text-title text-text outline-none focus-visible:ring-2 focus-visible:ring-accent">{m.name}</h1>
+              <h1 ref={headingRef} data-subpage-focus tabIndex={-1} className={cn('m-0 min-w-0 text-title text-text', focusRing)}>{m.name}</h1>
             ) : (
-              <h2 ref={headingRef} data-subpage-focus tabIndex={-1} className="m-0 min-w-0 text-title text-text outline-none focus-visible:ring-2 focus-visible:ring-accent">{m.name}</h2>
+              <h2 ref={headingRef} data-subpage-focus tabIndex={-1} className={cn('m-0 min-w-0 text-title text-text', focusRing)}>{m.name}</h2>
             )}
             {m.id === AS ? <span className="text-ui text-muted">(you)</span> : null}
             {m.creator ? <Badge tone="neutral">Creator</Badge> : null}
