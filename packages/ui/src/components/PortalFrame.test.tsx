@@ -173,3 +173,12 @@ describe('DetailTopBar and hideSheetBarOnPhone (RDY-316)', () => {
     expect(pkg.DetailTopBar).toBe(DetailTopBar);
   });
 });
+
+describe('PortalFrame phone nav forced-colors (RDY-321)', () => {
+  it('marks the current phone tab with a Highlight bar', () => {
+    frame();
+    const cur = screen.getAllByRole('link', { hidden: true }).filter((a) => a.getAttribute('aria-current') === 'page' && a.className.includes('border-t-4'));
+    expect(cur.length).toBeGreaterThan(0);
+    expect(cur[0]!.className).toContain('forced-colors:border-[Highlight]');
+  });
+});

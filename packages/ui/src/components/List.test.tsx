@@ -150,3 +150,13 @@ describe('List', () => {
     expect(screen.getByText('14').className).toContain('text-right');
   });
 });
+
+describe('List forced-colors (RDY-321)', () => {
+  it('drops the transparent inset border and marks the cursor row with Highlight', () => {
+    plain();
+    const cls = screen.getAllByRole('listitem')[0]!.className;
+    expect(cls).toContain('forced-colors:border-x-0');
+    expect(cls).toContain('forced-colors:mx-0');
+    expect(cls).toContain('forced-colors:data-[current=true]:outline-[Highlight]');
+  });
+});

@@ -152,3 +152,11 @@ describe('IconRail in a shell slot', () => {
     expect(screen.getByRole('link', { name: 'Team, 3' })).toBeTruthy();
   });
 });
+
+describe('IconRailItem forced-colors (RDY-321)', () => {
+  it('marks only the current item with a Highlight bar', () => {
+    rail();
+    expect(screen.getByRole('link', { name: 'Home' }).className).toContain('forced-colors:border-[Highlight]');
+    expect(screen.getByRole('link', { name: 'Team, 3' }).className).not.toContain('forced-colors:border-[Highlight]');
+  });
+});
