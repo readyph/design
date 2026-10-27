@@ -91,11 +91,12 @@ function reply(q: string, scope: string): ChatMessageData['blocks'] {
 }
 
 export function Home({ set = 'live', state = 'live', startChat = false }: HomeProps) {
-  const data = sets[set];
+  const base = sets[set];
   const phone = useMatchMedia(PHONE);
   const quiet = state === 'quiet';
+  const data = quiet && base.quietSet ? base.quietSet : base;
   const loading = state === 'loading';
-  const failedId = state === 'error' ? data.platforms[Math.min(1, data.platforms.length - 1)]!.id : null;
+  const failedId = state === 'error' ? (data.platforms.find((p) => p.id === 'counter') ?? data.platforms[data.platforms.length - 1]!).id : null;
   const [fixed, setFixed] = useState(false);
   const failed = fixed ? null : failedId;
 
@@ -601,10 +602,12 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
     filter || loading
       ? undefined
       : quiet
-        ? `Watching ${data.watching.length}. Yesterday: 9 jobs completed, 41 stock movements.`
+        ? `Watching ${data.watching.length}. ${data.yesterdayLine ?? 'Yesterday: 9 jobs completed, 41 stock movements.'}`
         : open[0]?.id === 'q1'
           ? `${open.length} decisions. First: alternator for the 11:00 Vios, order by 9:45.`
-          : undefined;
+          : data.headline && open.length === data.items.length
+            ? data.headline
+            : undefined;
 
   const place = (
     <div className="flex h-full min-h-0 flex-col max-[640px]:h-auto">

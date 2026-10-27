@@ -1,8 +1,9 @@
-import { logoAutoworks, logoCafe } from './Home.logos';
+import { logoAutoworks } from './Home.logos';
+import { fewLive, fewQuiet, manyLive, manyQuiet } from './Home.sets.data';
 import type { DataListItem } from '../components/DataList';
 import type { DayBarMark } from '../components/DayBar';
 import type { OverviewPlatform } from '../components/OverviewCharts';
-import { autoWorks as weekAuto, cafe as weekCafe, stockroom as weekStock } from '../components/OverviewCharts.data';
+import { autoWorks as weekAuto, stockroom as weekStock } from '../components/OverviewCharts.data';
 import type { QueueDoneItem, QueueItem, QueuePlatform, QueueSnoozedItem, QueueWatchItem } from '../components/Queue';
 import type { TodayFact, TodayItem, TodayLedaMode, TodayList } from '../components/PlatformToday';
 import type { TownMapLink, TownMapPlatform, TownMapSlot } from '../components/TownMap';
@@ -29,6 +30,10 @@ export interface HomePlatform extends TownMapPlatform {
   facts: TodayFact[];
   lists: HomeList[];
   week: Omit<OverviewPlatform, 'onOpen' | 'onRetry' | 'state'>;
+  activity?: { id: string; at: string; text: string }[];
+  statusNote?: string;
+  ledaCanRead?: boolean;
+  initials?: string;
   /** The yesterday line: `value label` pairs in the platform's own words. */
   yesterday: TodayFact[];
 }
@@ -67,6 +72,14 @@ export interface HomeSet {
   plan: { used: number; max: number; cycleStart: string; cycleEnd: string; daysLeft: number };
   /** Place of each building on the map grid (workshop `mapOrder`): platform ids, `'hq'`, or `null` for an empty lot. Default: HQ then the platforms. */
   mapOrder?: (string | null)[];
+  /** False when the owner has no HQ plot (a set from the workshop's single-business data). Default true. */
+  hasHq?: boolean;
+  /** Leda's headline lines from the workshop data. */
+  headline?: string;
+  quietHeadline?: string;
+  yesterdayLine?: string;
+  /** The set as it reads on a quiet day (its own platforms, watching, yesterday), when it differs from the live one. */
+  quietSet?: HomeSet;
 }
 
 /** The words of each list's "View all" link, as in the workshop data.js (`viewAll`). */
@@ -122,26 +135,9 @@ const autoworks: HomePlatform = {
   yesterday: [{ value: '₱24,300', label: 'revenue' }, { value: 6, label: 'jobs closed' }],
 };
 
-const cafe: HomePlatform = {
-  id: 'cafe', name: 'Lia’s Cafe', shortName: 'Café', kind: 'Point of sale', mapType: 'store', status: 'ACTIVE', index: 7, logo: logoCafe, count: 1,
-  ledaCanAct: false,
-  facts: [{ value: 64, label: 'sales' }],
-  lists: [today('sales', 'Sales so far', 64, [
-    { id: 's1', ref: 'INV-77', title: 'Supplier invoice', detail: 'Delivery DR-3381', state: 'Differs', tone: 'warn', qty: '₱420', at: 'Fri' },
-    { id: 's2', title: 'Closed shift for Lia Santos', at: '10:12 AM' },
-  ])],
-  week: { ...weekCafe, id: 'cafe', name: 'Lia’s Cafe', logo: { index: 7, src: logoCafe }, status: { tone: 'ok', label: 'Running' } },
-  yesterday: [{ value: 104, label: 'sales' }],
-};
 
 
 
-const caseFor = (id: string, platformName: string): HomeCase => ({
-  id,
-  evidence: [{ label: 'Platform', value: platformName }],
-  note: `Leda reads ${platformName} but cannot write to it yet, so there is no draft. Open it to decide.`,
-  noDraft: true,
-});
 
 export const cases: Record<string, HomeCase> = {
   q1: {
@@ -276,45 +272,8 @@ export const live: HomeSet = {
   done,
 };
 
-export const few: HomeSet = {
-  ...live,
-  key: 'few',
-  platforms: [autoworks, stockroom, cafe],
-  links: [{ from: 'stockroom', to: 'autoworks', status: 'ok' }, { from: 'stockroom', to: 'cafe', status: 'slow' }],
-  items: [
-    ...liveItems.slice(0, 3),
-    { id: 'q5', platform: { id: 'cafe', name: 'Lia’s Cafe', index: 7, src: logoCafe }, due: 'Fri 23 Oct', title: 'Supplier invoice differs by ₱420', detail: 'Delivery DR-3381 vs invoice INV-77', action: 'Dispute or accept' },
-    liveItems[3]!,
-  ],
-  cases: { ...cases, q5: { ...cases.q3!, id: 'q5', evidence: [{ label: 'Invoice', value: 'INV-77', note: '₱420 more', tone: 'bad' }, { label: 'Delivery', value: 'DR-3381' }], note: 'The invoice is ₱420 higher than the delivery note.' } },
-};
-
-const manyNames: [string, string, string, TownMapPlatform['mapType'], TownMapPlatform['status']][] = [
-  ['books', 'Bookshop Loyalty', 'Books', undefined, 'OFFLINE'],
-  ['cebu', 'Cebu Parts Stockroom', 'Cebu Parts', 'warehouse', 'OFFLINE'],
-  ['makati', 'Makati Café', 'Makati', 'store', 'ACTIVE'],
-  ['cubao', 'Cubao Repair Shop', 'Cubao', 'service', 'ACTIVE'],
-  ['pasig', 'Pasig Hardware', 'Pasig', 'store', 'ACTIVE'],
-];
-const manyExtra: HomePlatform[] = manyNames.map(([id, name, shortName, mapType, status], i) => ({
-  ...(i % 2 ? stockroom : cafe),
-  id, name, shortName, mapType, status, index: 4 + i, count: i % 3 === 0 ? 0 : 1,
-  kind: i % 2 ? 'Inventory' : 'Point of sale',
-  week: { ...(i % 2 ? weekStock : weekCafe), id, name, logo: { index: 4 + i }, status: status === 'ACTIVE' ? { tone: 'ok' as const, label: 'Running' } : { tone: 'bad' as const, label: 'Offline' } },
-  lists: [today(`${id}-l`, i % 2 ? 'Stock movements' : 'Sales so far', 3, [{ id: `${id}-1`, title: 'Latest activity', detail: 'Nothing unusual', at: '9:05' }])],
-  ledaCanAct: false,
-}));
-export const many: HomeSet = {
-  ...live,
-  key: 'many',
-  platforms: [autoworks, stockroom, cafe, ...manyExtra],
-  links: [{ from: 'stockroom', to: 'autoworks', status: 'ok' }, { from: 'stockroom', to: 'cafe', status: 'slow' }, { from: 'cebu', to: 'makati', status: 'broken' }],
-  items: [...few.items, ...Array.from({ length: 5 }, (_, i): QueueItem => {
-    const p = manyExtra[i]!;
-    return { id: `x${i}`, platform: { id: p.id, name: p.name, index: p.index }, due: 'Today', title: `${p.shortName}: review ${i + 2} flagged items`, detail: 'Leda cannot draft this yet', action: 'Open' };
-  })],
-  cases: { ...few.cases, ...Object.fromEntries(Array.from({ length: 5 }, (_, i) => [`x${i}`, caseFor(`x${i}`, manyExtra[i]!.name)])) },
-};
+export const few: HomeSet = { ...fewLive, quietSet: fewQuiet };
+export const many: HomeSet = { ...manyLive, quietSet: manyQuiet };
 
 export const sets: Record<HomeSetKey, HomeSet> = { live, few, many };
 
@@ -330,7 +289,7 @@ export const mapSlots = (s: HomeSet): TownMapSlot[] => {
 
 export const queuePlatforms = (s: HomeSet): QueuePlatform[] => [
   ...s.platforms.map((p) => ({ id: p.id, name: p.name, index: p.index })),
-  { id: 'hq', name: 'HQ', hq: true },
+  ...(s.hasHq === false ? [] : [{ id: 'hq', name: 'HQ', hq: true }]),
 ];
 
 export const ledaMode = (p: HomePlatform): TodayLedaMode => (p.status === 'OFFLINE' ? 'offline' : p.ledaCanAct ? 'acts' : 'reads');
