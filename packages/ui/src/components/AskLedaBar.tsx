@@ -19,8 +19,8 @@ export const ASK_LEDA_TIMING = {
 export type AskLedaOpenSource = 'click' | 'shortcut' | 'slash';
 
 export interface AskLedaBarProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'onClick' | 'children' | 'type' | 'aria-label'> {
-  /** `bar`: 320px / 34px in the sheet bar (a 44px icon button at 640px and below). `overview`: centred 560px / 44px (full width when narrower). */
-  variant?: 'bar' | 'overview';
+  /** `bar`: 320px / 34px in the sheet bar (a 44px icon button at 640px and below). `overview`: centred 560px / 44px (full width when narrower). `field`: full width, 44px, 15px text, with the halo on a phone (Platforms column, prototype `.pask`). */
+  variant?: 'bar' | 'overview' | 'field';
   /** Page or platform short name: placeholder becomes "Ask Leda about {scope}". */
   scope?: string;
   /** Opens the palette. Called on click, on Cmd/Ctrl+K and on "/" (the palette itself is a separate component). */
@@ -121,6 +121,12 @@ const VARIANT = {
     bar: 'h-[var(--ctl-touch)]',
     mark: 22,
   },
+  field: {
+    outer: 'flex w-full shrink basis-auto',
+    wrap: 'w-full',
+    bar: 'h-[var(--ctl-touch)] gap-2.5 px-3 text-[15px]',
+    mark: 22,
+  },
 } as const;
 
 /**
@@ -162,7 +168,7 @@ export const AskLedaBar = forwardRef<HTMLButtonElement, AskLedaBarProps>(functio
     <span className={cn(className, v.outer)}>
     <span data-ask-leda={variant} className={cn('relative isolate inline-flex rounded-control', v.wrap)}>
       {halo && (
-        <span key={`g${pass}`} aria-hidden="true" data-halo="glow" className="pointer-events-none absolute -inset-px overflow-hidden rounded-control blur-[9px] animate-halo-fade [--halo-peak:.75] dark:[--halo-peak:.8] motion-reduce:hidden max-[640px]:hidden">
+        <span key={`g${pass}`} aria-hidden="true" data-halo="glow" className={cn('pointer-events-none absolute -inset-px overflow-hidden rounded-control blur-[9px] animate-halo-fade [--halo-peak:.75] dark:[--halo-peak:.8] motion-reduce:hidden', variant !== 'field' && 'max-[640px]:hidden')}>
           <span className="absolute left-1/2 top-1/2 aspect-square w-[200%] bg-halo animate-halo-spin" />
         </span>
       )}
@@ -185,7 +191,7 @@ export const AskLedaBar = forwardRef<HTMLButtonElement, AskLedaBarProps>(functio
         <kbd aria-hidden="true" className={cn('shrink-0 rounded-[3px] border border-border px-1 font-sans text-tiny text-muted max-[640px]:hidden')}>{kbd}</kbd>
       </button>
       {halo && (
-        <span key={`r${pass}`} aria-hidden="true" data-halo="ring" className="pointer-events-none absolute -inset-px z-[2] overflow-hidden rounded-control p-[2px] [mask-image:linear-gradient(#000_0_0),linear-gradient(#000_0_0)] [mask-clip:content-box,border-box] [mask-composite:exclude] dark:p-[1.5px] animate-halo-fade motion-reduce:animate-halo-fade-reduced max-[640px]:hidden">
+        <span key={`r${pass}`} aria-hidden="true" data-halo="ring" className={cn('pointer-events-none absolute -inset-px z-[2] overflow-hidden rounded-control p-[2px] [mask-image:linear-gradient(#000_0_0),linear-gradient(#000_0_0)] [mask-clip:content-box,border-box] [mask-composite:exclude] dark:p-[1.5px] animate-halo-fade motion-reduce:animate-halo-fade-reduced ', variant !== 'field' && 'max-[640px]:hidden')}>
           <span className="absolute left-1/2 top-1/2 aspect-square w-[200%] bg-halo animate-halo-spin motion-reduce:animate-none motion-reduce:[transform:translate(-50%,-50%)]" />
         </span>
       )}

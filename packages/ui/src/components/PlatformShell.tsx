@@ -124,7 +124,7 @@ export function PlatformShell({
         <header
           className={cn(
             'hidden',
-            'max-[640px]:col-start-1 max-[640px]:row-start-1 max-[640px]:flex max-[640px]:min-w-0 max-[640px]:items-center max-[640px]:gap-2 max-[640px]:border-b max-[640px]:border-border max-[640px]:bg-surface max-[640px]:px-pad',
+            'max-[640px]:col-start-1 max-[640px]:row-start-1 max-[640px]:flex max-[640px]:min-w-0 max-[640px]:items-center max-[640px]:gap-2 max-[640px]:bg-frame max-[640px]:pl-pad max-[640px]:pr-1',
             hiddenWins,
           )}
         >
@@ -200,7 +200,7 @@ export function PlatformShell({
         <footer
           aria-label={statusLabel}
           className={cn(
-            'col-span-full row-start-2 flex h-status min-w-0 items-center overflow-hidden px-2 text-small text-muted',
+            'col-span-full row-start-2 flex h-status min-w-0 items-center overflow-hidden pl-3 pr-2 text-small text-muted',
             'max-[640px]:hidden',
             hiddenWins,
           )}
@@ -215,7 +215,7 @@ export function PlatformShell({
           aria-label={phoneNavLabel}
           className={cn(
             'hidden',
-            'max-[640px]:col-start-1 max-[640px]:flex max-[640px]:min-w-0 max-[640px]:items-stretch max-[640px]:border-t max-[640px]:border-border max-[640px]:bg-surface',
+            'max-[640px]:col-start-1 max-[640px]:flex max-[640px]:min-w-0 max-[640px]:items-stretch max-[640px]:bg-frame',
             phoneNavRow,
             hiddenWins,
           )}

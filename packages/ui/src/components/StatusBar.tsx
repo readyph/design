@@ -44,6 +44,8 @@ export interface StatusBarLeda {
   max: number;
   /** Warn from this value. Defaults to 80% of `max`. */
   warnAt?: number;
+  /** "7 days left" after the count (dropped on narrow bars). */
+  daysLeft?: number;
   href?: string;
   onSelect?: () => void;
 }
@@ -63,6 +65,12 @@ export interface StatusBarProps {
   plan?: string;
   /** Last refresh, already formatted, e.g. "9:12 AM". Shown as "Updated 9:12 AM". */
   updatedAt?: string;
+  /** Leda usage first, before the platforms (the Portal prototype's order). */
+  ledaFirst?: boolean;
+  /** Text before the platform chips, e.g. "2 platforms" with "· all running" (dropped on narrow bars). */
+  summary?: ReactNode;
+  /** One plain note instead of platform chips ("Loading platforms", "No platforms yet"). */
+  note?: string;
   /** Names the list. The `PlatformShell` `status` footer already carries `aria-label="Status"`; set this only outside the shell. */
   'aria-label'?: string;
   /** Merged under the component classes: add colour or margin, it cannot move the layout. */
@@ -89,7 +97,7 @@ const dot: Record<StatusBarHealth, string> = {
 
 // Full class names so Tailwind can see them. `@max-[Npx]/status:` is a container query on the bar's own width.
 const item =
-  'inline-flex h-[26px] min-w-0 items-center gap-1.5 whitespace-nowrap rounded-chip px-1.5 text-small text-muted';
+  'inline-flex h-[26px] min-w-0 items-center gap-2 whitespace-nowrap rounded-chip px-[9px] text-small leading-5 text-muted';
 const interactive =
   'cursor-pointer hover:bg-frame-hover hover:text-text aria-pressed:bg-frame-active aria-[current=true]:bg-frame-active ' +
   'outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-frame forced-colors:outline-0 forced-colors:focus-visible:outline forced-colors:focus-visible:outline-2 forced-colors:focus-visible:outline-[Highlight]';
@@ -130,7 +138,7 @@ function Item({ href, onSelect, selected, 'aria-label': label, title, className,
   );
 }
 
-const Divider = () => <span aria-hidden="true" className="mr-1 h-3 w-px shrink-0 bg-control" />;
+const Divider = () => <span aria-hidden="true" className="ml-1.5 mr-2 h-3 w-px shrink-0 bg-control" />;
 
 const plural = (n: number, one: string, many: string) => `${n.toLocaleString('en-US')} ${n === 1 ? one : many}`;
 
@@ -146,7 +154,7 @@ const plural = (n: number, one: string, many: string) => `${n.toLocaleString('en
  * Items are plain text unless given `href` (link) or `onSelect` (button). A hidden live region announces health changes only.
  */
 export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function StatusBar(
-  { platforms = [], maxPlatforms = 8, moreHref, onMore, people, invites, leda, plan, updatedAt, 'aria-label': ariaLabel, className },
+  { platforms = [], maxPlatforms = 8, moreHref, onMore, people, invites, leda, plan, updatedAt, ledaFirst = false, summary, note, 'aria-label': ariaLabel, className },
   ref,
 ) {
   const shown = platforms.slice(0, maxPlatforms);
@@ -171,9 +179,34 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
 
   const sections: { key: string; cls: string; node: ReactNode }[] = [];
 
-  if (platforms.length > 0) {
+  const ledaSection = () => {
+    if (!leda) return;
+    const warnAt = leda.warnAt ?? leda.max * 0.8;
+    const text = `Leda usage, ${leda.used.toLocaleString('en-US')} of ${leda.max.toLocaleString('en-US')}`;
+    sections.push({ key: 'leda', cls: "flex shrink-0", node: (
+        <Item href={leda.href} onSelect={leda.onSelect}>
+          <LedaMark size={16} decorative />
+          <b className="text-ui font-medium text-text">Leda</b>
+          <ProgressBar value={leda.used} max={leda.max} warnAt={warnAt} aria-label={text} />
+          <span className="tabular-nums">
+            {leda.used.toLocaleString('en-US')} / {leda.max.toLocaleString('en-US')}
+          </span>
+          {leda.daysLeft !== undefined && <span className={cn('tabular-nums', dropUpdated)}>{leda.daysLeft} days left</span>}
+        </Item>
+      ) });
+  };
+  if (ledaFirst) ledaSection();
+
+  if (note) {
+    sections.push({ key: 'note', cls: 'flex min-w-0 shrink', node: <Item>{note}</Item> });
+  } else if (platforms.length > 0) {
     sections.push({ key: 'platforms', cls: 'flex min-w-0 shrink', node: (
         <ul role="list" aria-label="Platforms" className="flex min-w-0 items-center gap-0.5 overflow-hidden">
+          {summary ? (
+            <li className="flex shrink-0">
+              <Item className={dropUpdated}>{summary}</Item>
+            </li>
+          ) : null}
           {shown.map((p, i) => {
             const bad = !!p.health && p.health !== 'ok';
             return (
@@ -238,20 +271,7 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
       ) });
   }
 
-  if (leda) {
-    const warnAt = leda.warnAt ?? leda.max * 0.8;
-    const text = `Leda usage, ${leda.used.toLocaleString('en-US')} of ${leda.max.toLocaleString('en-US')}`;
-    sections.push({ key: 'leda', cls: "flex shrink-0", node: (
-        <Item href={leda.href} onSelect={leda.onSelect}>
-          <LedaMark size={16} decorative />
-          <span>Leda</span>
-          <ProgressBar value={leda.used} max={leda.max} warnAt={warnAt} aria-label={text} />
-          <span className="tabular-nums">
-            {leda.used.toLocaleString('en-US')} / {leda.max.toLocaleString('en-US')}
-          </span>
-        </Item>
-      ) });
-  }
+  if (!ledaFirst) ledaSection();
 
   if (plan) {
     sections.push({ key: 'plan', cls: cn('flex shrink-0', dropPlan), node: (
@@ -267,7 +287,7 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
 
   return (
     <div ref={ref} className={cn(className, '@container/status flex h-full w-full min-w-0 items-center')}>
-      <ul role="list" aria-label={ariaLabel} className="m-0 flex min-w-0 flex-1 list-none items-center gap-1 p-0">
+      <ul role="list" aria-label={ariaLabel} className="m-0 flex min-w-0 flex-1 list-none items-center gap-0.5 p-0">
         {sections.map((s, i) => (
           <li key={s.key} className={cn('items-center', s.cls)}>
             {i > 0 && s.key !== 'updated' && <Divider />}

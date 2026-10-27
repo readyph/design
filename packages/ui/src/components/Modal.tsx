@@ -91,17 +91,21 @@ export interface ModalHeaderProps extends Omit<HTMLAttributes<HTMLDivElement>, '
   icon?: PhosphorIcon;
   iconNode?: ReactNode;
   description?: ReactNode;
+  /** Replaces the title's type style (default `text-dialog`). */
+  titleClassName?: string;
+  /** Replaces the description's type style (default 13/18 muted). */
+  descriptionClassName?: string;
 }
 
 /** Header region: optional icon well, title (accessible name), description and close button. */
-export function ModalHeader({ icon, iconNode, description, className, children, ...rest }: ModalHeaderProps) {
+export function ModalHeader({ icon, iconNode, description, titleClassName, descriptionClassName, className, children, ...rest }: ModalHeaderProps) {
   const { hideClose } = useContext(ModalContext);
   return (
     <div className={cn('flex shrink-0 items-start gap-3 border-b border-rule px-pad py-4 max-sm:px-4', className)} {...rest}>
       {(icon || iconNode) && <ModalIconWell icon={icon}>{iconNode}</ModalIconWell>}
       <div className="min-w-0 flex-1">
-        <Dialog.Title className="text-dialog text-text">{children}</Dialog.Title>
-        {description && <Dialog.Description className="mt-0.5 text-[13px] leading-[18px] text-muted">{description}</Dialog.Description>}
+        <Dialog.Title className={cn(titleClassName ?? 'text-dialog', 'text-text')}>{children}</Dialog.Title>
+        {description && <Dialog.Description className={cn('mt-0.5 text-muted', descriptionClassName ?? 'text-[13px] leading-[18px]')}>{description}</Dialog.Description>}
       </div>
       {!hideClose && <CloseButton label={typeof children === 'string' ? children : undefined} />}
     </div>

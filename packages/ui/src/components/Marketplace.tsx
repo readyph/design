@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { Check, CheckCircle, DownloadSimple, type Icon as PhosphorIcon } from '@phosphor-icons/react';
+import { Check, DownloadSimple, type Icon as PhosphorIcon } from '@phosphor-icons/react';
 import { cn, focusRing } from '../utils/cn';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from './Modal';
 import { SegmentedControl } from './SegmentedControl';
@@ -93,7 +93,7 @@ export function marketplaceIoLine(item: Pick<MarketplaceItem, 'shares' | 'reads'
 }
 
 const gridClass =
-  'grid auto-rows-max grid-cols-3 content-start gap-3 max-[900px]:grid-cols-2 max-sm:grid-cols-1';
+  'grid auto-rows-max grid-cols-3 content-start gap-3 max-[900px]:grid-cols-2 max-[640px]:grid-cols-1 max-[640px]:gap-2';
 const tileHeight = 'min-h-[172px]';
 
 interface TileProps {
@@ -130,26 +130,26 @@ function Tile({ item, categoryLabel, checked, tabStop, onPick, onInstall, onKeyD
         'flex w-full min-w-0 flex-col items-start rounded-card border px-4 py-3.5 text-left transition-colors duration-hover',
         tileHeight,
         // Phone: compact icon-plus-text row (icon well left, text right) instead of the tall desktop tile.
-        'max-sm:grid max-sm:min-h-0 max-sm:grid-cols-[36px_minmax(0,1fr)_auto] max-sm:content-start max-sm:gap-x-3 max-sm:px-3.5 max-sm:py-3',
+        'max-[640px]:grid max-[640px]:min-h-0 max-[640px]:grid-cols-[36px_minmax(0,1fr)_auto] max-[640px]:content-start max-[640px]:gap-x-3 max-[640px]:px-3.5 max-[640px]:py-3',
         focusRing,
         soon
           ? 'cursor-default border-dashed border-control bg-surface'
           : checked
-            ? 'border-accent bg-accent-tint'
+            ? 'border-accent bg-accent-tint shadow-[inset_0_0_0_1px_var(--accent)]'
             : 'border-border bg-surface hover:border-control hover:bg-raised',
       )}
     >
-      <span className="flex w-full items-center justify-between gap-2 max-sm:contents">
+      <span className="flex w-full items-center justify-between gap-2 max-[640px]:contents">
         <span
           aria-hidden
           className={cn(
-            'grid size-9 shrink-0 place-items-center rounded-card max-sm:col-start-1 max-sm:row-span-4 max-sm:row-start-1',
+            'grid size-9 shrink-0 place-items-center rounded-card max-[640px]:col-start-1 max-[640px]:row-span-4 max-[640px]:row-start-1',
             checked ? 'bg-accent text-accent-ink' : soon ? 'bg-raised-2 text-muted' : 'bg-raised-2 text-text',
           )}
         >
           <Icon size={20} />
         </span>
-        <span className="flex min-w-0 items-center gap-2 max-sm:col-start-3 max-sm:row-start-1">
+        <span className="flex min-w-0 items-center gap-2 max-[640px]:hidden">
           {soon && <Badge tone="neutral" id={`${id}-s`}>Coming soon</Badge>}
           {!soon && owned > 0 && (
             <span id={`${id}-h`} className="inline-flex items-center gap-1 text-small text-muted">
@@ -157,15 +157,14 @@ function Tile({ item, categoryLabel, checked, tabStop, onPick, onInstall, onKeyD
               You have {owned}
             </span>
           )}
-          {checked && <CheckCircle size={20} weight="fill" aria-hidden className="shrink-0 text-accent" />}
         </span>
       </span>
-      <span id={`${id}-n`} className={cn('mt-3 break-words text-body font-semibold max-sm:col-start-2 max-sm:row-start-1 max-sm:mt-0 max-sm:min-w-0', soon ? 'text-muted' : 'text-text')}>
+      <span id={`${id}-n`} className={cn('mt-3 break-words text-[15px] font-semibold leading-[22px] max-[640px]:col-start-2 max-[640px]:row-start-1 max-[640px]:mt-0 max-[640px]:min-w-0', soon ? 'text-muted' : 'text-text')}>
         {item.name}
       </span>
-      <span id={`${id}-c`} className="text-small text-muted max-sm:col-span-2 max-sm:col-start-2 max-sm:row-start-2">{categoryLabel}</span>
-      <span id={`${id}-d`} className={cn('mt-1.5 break-words text-ui max-sm:col-span-2 max-sm:col-start-2 max-sm:row-start-3', soon ? 'text-muted' : 'text-text')}>{item.description}</span>
-      <span id={`${id}-io`} className="mt-auto break-words pt-2.5 text-small text-muted max-sm:col-span-2 max-sm:col-start-2 max-sm:row-start-4 max-sm:pt-1.5">{marketplaceIoLine(item)}</span>
+      <span id={`${id}-c`} className="text-small text-muted max-[640px]:col-span-2 max-[640px]:col-start-2 max-[640px]:row-start-2">{categoryLabel}</span>
+      <span id={`${id}-d`} className={cn('mt-1.5 break-words text-ui leading-[19px] max-[640px]:col-span-2 max-[640px]:col-start-2 max-[640px]:row-start-3', soon ? 'text-muted' : 'text-text')}>{item.description}</span>
+      <span id={`${id}-io`} className="mt-auto break-words pt-2.5 text-small text-muted max-[640px]:col-span-2 max-[640px]:col-start-2 max-[640px]:row-start-4 max-[640px]:pt-1.5">{marketplaceIoLine(item)}</span>
     </button>
   );
 }
@@ -249,9 +248,9 @@ function MarketplaceContent({
 
   return (
     <>
-      <ModalHeader icon={icon} description={description}>{title}</ModalHeader>
-      {ledaNote && <div className="mx-pad mt-3.5 shrink-0 max-sm:mx-4">{ledaNote}</div>}
-      <div className="mx-pad mt-4 shrink-0 max-sm:mx-4 max-sm:overflow-x-auto max-sm:[&_button]:px-2">
+      <ModalHeader icon={icon} description={description} titleClassName="text-[20px] font-semibold leading-7 tracking-[-0.01em]" descriptionClassName="text-body max-[640px]:text-[13px]" className="border-b-0 pb-0 pt-5 max-[640px]:gap-4 max-[640px]:pb-0 max-[640px]:pl-4 max-[640px]:pr-2 max-[640px]:pt-3">{title}</ModalHeader>
+      {ledaNote && <div className="mx-pad mt-3.5 shrink-0 max-[640px]:mx-4">{ledaNote}</div>}
+      <div className="mx-pad mt-4 shrink-0 max-[640px]:mx-4 max-[640px]:mt-3 max-[640px]:overflow-x-auto max-[640px]:[&_button]:h-9 [&_button]:leading-5">
         <SegmentedControl
           aria-label="Category"
           options={categories}
@@ -260,7 +259,7 @@ function MarketplaceContent({
           disabled={status !== 'ready'}
         />
       </div>
-      <ModalBody className="mt-1 [scrollbar-gutter:stable]" aria-busy={status === 'loading' || undefined}>
+      <ModalBody className="pb-5 pt-4 max-[640px]:pb-4 max-[640px]:pt-3 [scrollbar-gutter:stable]" aria-busy={status === 'loading' || undefined}>
         {status === 'loading' && (
           <div className={gridClass} role="status" aria-label="Loading the catalog">
             {Array.from({ length: 6 }, (_, i) => (
@@ -296,17 +295,17 @@ function MarketplaceContent({
           </div>
         )}
       </ModalBody>
-      <ModalFooter className="max-sm:flex-row max-sm:flex-wrap max-sm:gap-2 max-sm:pb-[calc(8px+env(safe-area-inset-bottom))] max-sm:pt-2">
+      <ModalFooter className="gap-2 border-border max-[640px]:flex-row max-[640px]:flex-wrap max-[640px]:gap-2 max-[640px]:pb-[calc(8px+env(safe-area-inset-bottom))] max-[640px]:pt-2">
         <div
           role="status"
-          className="flex min-w-0 items-center gap-2 text-ui text-muted sm:flex-1 max-sm:basis-full"
+          className="flex min-w-0 items-center gap-2 text-ui text-muted sm:flex-1 max-[640px]:basis-full"
         >
           {summary}
         </div>
         <Dialog.Close asChild>
-          <Button variant="secondary" className="shrink-0 max-sm:h-11 max-sm:flex-1">Cancel</Button>
+          <Button variant="secondary" className="shrink-0 max-[640px]:h-11 max-[640px]:flex-1">Cancel</Button>
         </Dialog.Close>
-        <Button className="min-w-0 overflow-hidden sm:max-w-[320px] max-sm:h-11 max-sm:flex-1 [&_svg]:shrink-0 [&>span]:min-w-0 [&>span:not([aria-hidden])]:max-w-full" leftIcon={DownloadSimple} disabled={!pickedItem || status !== 'ready'} onClick={() => pickedItem && onInstall?.(pickedItem)}>
+        <Button className="min-w-0 overflow-hidden disabled:opacity-50 sm:max-w-[320px] max-[640px]:h-11 max-[640px]:flex-1 [&_svg]:shrink-0 [&>span]:min-w-0 [&>span:not([aria-hidden])]:max-w-full" leftIcon={DownloadSimple} disabled={!pickedItem || status !== 'ready'} onClick={() => pickedItem && onInstall?.(pickedItem)}>
           <span className="min-w-0 truncate">{pickedItem ? `Install ${pickedItem.name}` : 'Install'}</span>
         </Button>
       </ModalFooter>

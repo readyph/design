@@ -27,21 +27,21 @@ export function initialsOf(name: string): string {
 }
 
 /** The 36px avatar button (28px initials circle). Spreads Radix trigger props. */
-export const AccountButton = forwardRef<HTMLButtonElement, ComponentPropsWithoutRef<'button'> & { name: string }>(
-  function AccountButton({ name, className, ...rest }, ref) {
+export const AccountButton = forwardRef<HTMLButtonElement, ComponentPropsWithoutRef<'button'> & { name: string; initials?: string }>(
+  function AccountButton({ name, initials, className, ...rest }, ref) {
     return (
       <button
         ref={ref}
         type="button"
         aria-label={`Account menu, ${name}`}
         {...rest}
-        className={cn('grid size-9 shrink-0 place-items-center rounded-control', focusRing, className)}
+        className={cn('grid size-9 shrink-0 place-items-center rounded-control max-[640px]:size-11', focusRing, className)}
       >
         <span
           aria-hidden
           className="grid size-7 place-items-center rounded-full bg-accent-tint text-small font-semibold text-accent"
         >
-          {initialsOf(name)}
+          {initials ?? initialsOf(name)}
         </span>
       </button>
     );
@@ -53,6 +53,8 @@ export interface AccountMenuProps {
   email: string;
   /** Role chip text, e.g. "Owner". */
   role: string;
+  /** Avatar initials when they are not the first and last word of `name` ("RD" for Ramon Dela Cruz). */
+  initials?: string;
   /** Controlled theme choice. */
   theme?: ThemeChoice;
   /** Uncontrolled initial choice. Default System. */
@@ -79,6 +81,7 @@ export function AccountMenu({
   name,
   email,
   role,
+  initials,
   theme,
   defaultTheme = 'system',
   onThemeChange,
@@ -177,7 +180,7 @@ export function AccountMenu({
   return (
     <RadixMenu.Root open={open} onOpenChange={setOpen} modal={false}>
       <RadixMenu.Trigger asChild>
-        <AccountButton name={name} onKeyDown={onTriggerKeyDown} />
+        <AccountButton name={name} initials={initials} onKeyDown={onTriggerKeyDown} />
       </RadixMenu.Trigger>
       <RadixMenu.Portal>
         <RadixMenu.Content
@@ -198,7 +201,7 @@ export function AccountMenu({
               aria-hidden
               className="grid size-8 shrink-0 place-items-center rounded-full bg-accent-tint text-ui font-semibold text-accent"
             >
-              {initialsOf(name)}
+              {initials ?? initialsOf(name)}
             </span>
             <div className="min-w-0 flex-1">
               <div className="truncate text-ui font-medium text-text">{name}</div>

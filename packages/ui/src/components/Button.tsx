@@ -27,15 +27,15 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 // One geometry for every variant: 32px (40 phone) tall, 5px radius, 13px / 500.
-// Each variant carries a 1px border (transparent unless `secondary`) so sizes match.
+// Only `secondary` has a border (the prototype's .btn); the others are borderless at the same height.
 export const base =
   'relative inline-flex h-[var(--ctl-button)] items-center justify-center gap-2 whitespace-nowrap rounded-control border border-transparent px-3 text-ui font-medium transition-colors duration-hover disabled:cursor-not-allowed disabled:opacity-70';
 
 export const variants: Record<ButtonVariant, string> = {
-  primary: 'bg-accent text-accent-ink hover:bg-accent-hover',
+  primary: 'border-0 bg-accent text-accent-ink hover:bg-accent-hover',
   secondary: 'border-control bg-surface text-text hover:border-muted active:bg-raised',
-  text: 'bg-transparent text-text hover:bg-raised active:bg-raised-2',
-  danger: 'bg-bad text-bad-on hover:bg-bad-dot',
+  text: 'border-0 bg-transparent px-2 text-text hover:bg-raised active:bg-raised-2',
+  danger: 'border-0 bg-bad text-bad-on hover:bg-bad-dot',
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(

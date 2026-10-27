@@ -1,5 +1,5 @@
-import { forwardRef, useCallback, useEffect, useId, useImperativeHandle, useLayoutEffect, useMemo, useRef } from 'react';
-import { ArrowClockwise, ArrowCounterClockwise, MagnifyingGlassMinus, MagnifyingGlassPlus } from '@phosphor-icons/react';
+import { forwardRef, useCallback, useEffect, useId, useImperativeHandle, useLayoutEffect, useMemo, useRef, type ReactNode } from 'react';
+import { ArrowClockwise, ArrowCounterClockwise, Minus, Plus } from '@phosphor-icons/react';
 import { identity } from '../tokens/colors';
 import { cn, focusRing } from '../utils/cn';
 import { PlatformLogo } from './PlatformLogo';
@@ -35,6 +35,10 @@ export interface TownMapPlatform {
   hq?: boolean;
   /** This platform's data did not load: label says "no data", the building keeps its lights. */
   error?: boolean;
+  /** Whole sub line of the label (replaces the generated one), e.g. "Repair shop · slow since 7:40". */
+  sub?: string;
+  /** Show the sub line without hover even for a running platform. */
+  subAlways?: boolean;
 }
 
 /** A grid slot: a platform, or `null` for an empty lot. Order is the layout order (row by row). */
@@ -92,7 +96,13 @@ export interface TownMapProps {
   error?: boolean;
   onRetry?: () => void;
   /** Plain text above the map, e.g. "2 platforms + HQ". */
-  caption?: string;
+  caption?: ReactNode;
+  /** Draw the caption inside the map's height (the prototype's `.tcap`): the whole block is `--map-h` tall. */
+  captionInside?: boolean;
+  /** Extra control after rotate and zoom, behind a separator (Platforms: Add platform). */
+  controlsEnd?: ReactNode;
+  /** Legend by count ("Linked 3", "Slow 1") instead of the default three words. */
+  legend?: Partial<Record<'ok' | 'slow' | 'broken', number>>;
   /** Accessible name of the whole map (a group of buttons, one per platform). */
   label?: string;
   /** Overrides the accessible name of a platform button. */
@@ -121,12 +131,16 @@ const defaultLabel = (p: TownMapPlatform): string => {
 };
 
 /** Shape-coded status mark (never colour alone): slow = filled dot, offline = ring, no data = dashed ring. */
-function StatusMark({ status, error, className }: { status: TownStatus; error?: boolean; className?: string }) {
+function StatusMark({ status, error, filled, className }: { status: TownStatus; error?: boolean; filled?: boolean; className?: string }) {
   const shape = error
     ? 'border border-dashed border-faint'
-    : status === 'OFFLINE'
+    : status === 'OFFLINE' && filled
+      ? 'bg-bad-dot'
+      : status === 'OFFLINE'
       ? 'border-2 border-bad-dot'
-      : 'bg-warn-dot forced-colors:bg-[CanvasText]';
+      : status === 'ACTIVE'
+        ? 'bg-ok-dot forced-colors:bg-[CanvasText]'
+        : 'bg-warn-dot forced-colors:bg-[CanvasText]';
   return <span aria-hidden="true" className={cn('inline-block size-[7px] shrink-0 rounded-full', shape, className)} />;
 }
 
@@ -162,6 +176,9 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
     error = false,
     onRetry,
     caption,
+    captionInside = false,
+    controlsEnd,
+    legend,
     label = 'Platform map',
     platformLabel = defaultLabel,
     className,
@@ -216,6 +233,14 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
   }, []);
   const layoutRef = useRef(layout);
   layoutRef.current = layout;
+  // labels are measured in the page font: place them again once it has loaded (the prototype does the same)
+  useEffect(() => {
+    let on = true;
+    if (typeof document !== 'undefined' && document.fonts?.ready) void document.fonts.ready.then(() => on && layoutRef.current());
+    return () => {
+      on = false;
+    };
+  }, []);
 
   // scene lifetime: created on mount, destroyed on unmount; observers and listeners released with it
   useEffect(() => {
@@ -292,6 +317,13 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
   useLayoutEffect(() => {
     layout();
   }, [labelSig, layout]);
+  // a label that changes size on its own (the page font arrives after first paint) is placed again
+  useEffect(() => {
+    if (typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => layoutRef.current());
+    labelEls.current.forEach((el) => ro.observe(el));
+    return () => ro.disconnect();
+  }, [labelSig]);
 
   useImperativeHandle(
     ref,
@@ -326,8 +358,9 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
         }
       }}
     >
-      {caption ? <p className="m-0 flex h-5 flex-none items-center px-3 text-small text-muted max-[640px]:hidden">{caption}</p> : null}
+      {caption && !captionInside ? <p className="m-0 flex h-5 flex-none items-center px-3 text-small text-muted max-[640px]:hidden">{caption}</p> : null}
       <div className="@container/town relative mt-1 flex h-map-h flex-none flex-col overflow-hidden rounded-card max-[640px]:mt-0 max-[640px]:rounded-none">
+        {caption && captionInside ? <p className="pointer-events-none m-0 flex h-5 flex-none items-center px-3 text-small text-muted max-[640px]:hidden">{caption}</p> : null}
         <div ref={mountRef} className="relative min-h-0 flex-1 overflow-hidden">
           <svg
             ref={svgRef}
@@ -373,9 +406,9 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
               const alert = !loading && (p.status !== 'ACTIVE' || !!p.error);
               const short = p.shortName ?? p.name;
               const n = loading ? 0 : (p.count ?? 0);
-              const sub = p.error
+              const sub = p.sub ?? (p.error
                 ? `${p.kind} · no data`
-                : `${p.kind}${p.status === 'DEGRADED' && p.statusSince ? ` · since ${p.statusSince}` : p.status === 'OFFLINE' ? ' · offline' : ''}`;
+                : `${p.kind}${p.status === 'DEGRADED' && p.statusSince ? ` · since ${p.statusSince}` : p.status === 'OFFLINE' ? ' · offline' : ''}`);
               return (
                 <li key={p.id} className="contents">
                   <button
@@ -399,7 +432,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
                     onFocus={() => onHover?.(p.id)}
                     onBlur={() => onHover?.(null)}
                     className={cn(
-                      'group/lbl pointer-events-auto absolute left-0 top-0 z-[1] flex max-w-[calc(100%-16px)] flex-col gap-px whitespace-nowrap rounded-control border bg-surface px-1.5 py-0.5 text-left opacity-0 transition-colors duration-hover [transform:translate(var(--lx,0px),var(--ly,0px))_translateY(-100%)] will-change-transform data-[placed]:opacity-100',
+                      'group/lbl pointer-events-auto absolute left-0 top-0 z-[1] flex max-w-[calc(100%-16px)] flex-col gap-px whitespace-nowrap rounded-control border bg-surface py-0.5 pl-[5px] pr-1.5 text-left opacity-0 transition-colors duration-hover [transform:translate(var(--lx,0px),var(--ly,0px))_translateY(-100%)] will-change-transform data-[placed]:opacity-100',
                       'after:pointer-events-none after:absolute after:left-[var(--stem-x,50%)] after:top-full after:h-[var(--stem,10px)] after:w-px after:bg-control after:content-[""] forced-colors:after:hidden',
                       focusRing,
                       'focus-visible:z-[3] hover:z-[3]',
@@ -414,17 +447,17 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
                       <PlatformLogo name={p.name} src={p.logo} index={p.index} color={p.color} initials={p.initials} hq={p.hq} decorative size={16} />
                       <span
                         className={cn(
-                          'max-w-[190px] truncate text-ui font-medium',
+                          'max-w-[190px] truncate text-ui font-medium leading-4',
                           dim ? 'text-muted' : 'text-text',
                           many ? 'hidden' : '@max-[400px]/town:hidden',
                         )}
                       >
                         {p.name}
                       </span>
-                      <span className={cn('max-w-[120px] truncate text-ui font-medium', dim ? 'text-muted' : 'text-text', many ? 'inline' : 'hidden @max-[400px]/town:inline')}>
+                      <span className={cn('max-w-[120px] truncate text-ui font-medium leading-4', dim ? 'text-muted' : 'text-text', many ? 'inline' : 'hidden @max-[400px]/town:inline')}>
                         {p.hq ? 'HQ' : short}
                       </span>
-                      {alert && !sel ? <StatusMark status={p.status} error={p.error} className="hidden @max-[400px]/town:inline-block" /> : null}
+                      {alert && !sel ? <StatusMark status={p.status} error={p.error} filled={!!p.sub} className="hidden @max-[400px]/town:inline-block" /> : null}
                       {n ? (
                         <span className="ml-0.5 h-4 min-w-4 rounded-chip bg-text px-1 text-center text-tiny font-medium tabular-nums text-surface forced-colors:border forced-colors:border-[CanvasText]">
                           {n}
@@ -434,11 +467,11 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
                     {!p.hq ? (
                       <span
                         className={cn(
-                          'items-center gap-[5px] text-tiny',
+                          'items-center gap-[5px] text-tiny leading-[14px]',
                           p.error ? 'text-muted' : p.status === 'DEGRADED' ? 'text-warn' : p.status === 'OFFLINE' ? 'text-bad' : 'text-muted',
                           sel
                             ? 'flex'
-                            : alert
+                            : alert || p.subAlways
                               ? 'flex @max-[400px]/town:hidden'
                               : 'hidden group-hover/lbl:flex group-focus-visible/lbl:flex @max-[400px]/town:hidden @max-[400px]/town:group-hover/lbl:hidden @max-[400px]/town:group-focus-visible/lbl:hidden',
                         )}
@@ -447,7 +480,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
                           <span aria-hidden="true" className="my-0.5 block h-2.5 w-[76px] rounded-chip bg-skeleton" />
                         ) : (
                           <>
-                            {alert ? <StatusMark status={p.status} error={p.error} /> : null}
+                            {alert ? <StatusMark status={p.status} error={p.error} filled={!!p.sub} /> : p.sub ? <StatusMark status={p.status} /> : null}
                             {sub}
                           </>
                         )}
@@ -486,11 +519,17 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
             </button>
             <span aria-hidden="true" className="mx-0.5 h-4 w-px bg-border" />
             <button type="button" aria-label="Zoom out" title="Zoom out" onClick={() => sceneRef.current?.zoom(-1)} className={cn(ctl, focusRing)}>
-              <MagnifyingGlassMinus size={16} aria-hidden />
+              <Minus size={16} aria-hidden />
             </button>
             <button type="button" aria-label="Zoom in" title="Zoom in" onClick={() => sceneRef.current?.zoom(1)} className={cn(ctl, focusRing)}>
-              <MagnifyingGlassPlus size={16} aria-hidden />
+              <Plus size={16} aria-hidden />
             </button>
+            {controlsEnd ? (
+              <>
+                <span aria-hidden="true" className="mx-0.5 h-4 w-px bg-border" />
+                {controlsEnd}
+              </>
+            ) : null}
           </div>
         ) : null}
         {links.length && !loading ? (
@@ -498,23 +537,32 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
             aria-hidden="true"
             className="absolute bottom-2 right-2 flex gap-2.5 rounded-control border border-border bg-surface px-2 py-1.5 text-tiny text-muted opacity-0 transition-opacity duration-hover group-hover/town:opacity-100 group-focus-within/town:opacity-100 max-[960px]:hidden @max-[400px]/town:hidden"
           >
-            {(['ok', 'slow', 'broken'] as const).map((s) => (
-              <span key={s} className="inline-flex items-center gap-1.5 whitespace-nowrap">
-                <svg width="22" height="6" viewBox="0 0 22 6" className="flex-none" aria-hidden="true">
-                  <line
-                    x1="2"
-                    y1="3"
-                    x2="20"
-                    y2="3"
-                    strokeWidth={s === 'broken' ? 3 : 4}
-                    strokeLinecap="round"
-                    strokeDasharray={s === 'slow' ? '8 3' : s === 'broken' ? '1 5' : undefined}
-                    className={s === 'ok' ? 'stroke-accent' : s === 'slow' ? 'stroke-warn-dot' : 'stroke-bad-dot'}
-                  />
-                </svg>
-                {s === 'ok' ? 'Working' : s === 'slow' ? 'Slow' : 'Broken'}
-              </span>
-            ))}
+            {legend
+              ? (['ok', 'slow'] as const)
+                  .filter((k) => legend[k])
+                  .map((k) => (
+                    <span key={k} className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                      <i aria-hidden="true" className={cn('h-1 w-3.5 flex-none rounded-sm', k === 'ok' ? 'bg-accent' : 'bg-warn-dot')} />
+                      {k === 'ok' ? 'Linked' : 'Slow'} <span className="tabular-nums">{legend[k]}</span>
+                    </span>
+                  ))
+              : (['ok', 'slow', 'broken'] as const).map((s) => (
+                  <span key={s} className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                    <svg width="22" height="6" viewBox="0 0 22 6" className="flex-none" aria-hidden="true">
+                      <line
+                        x1="2"
+                        y1="3"
+                        x2="20"
+                        y2="3"
+                        strokeWidth={s === 'broken' ? 3 : 4}
+                        strokeLinecap="round"
+                        strokeDasharray={s === 'slow' ? '8 3' : s === 'broken' ? '1 5' : undefined}
+                        className={s === 'ok' ? 'stroke-accent' : s === 'slow' ? 'stroke-warn-dot' : 'stroke-bad-dot'}
+                      />
+                    </svg>
+                    {s === 'ok' ? 'Working' : s === 'slow' ? 'Slow' : 'Broken'}
+                  </span>
+                ))}
           </div>
         ) : null}
       </div>
