@@ -490,7 +490,7 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
   ) : null;
   const todayContent = (
     <>
-      <div className="mb-5 flex flex-wrap items-baseline gap-x-3.5">
+      <div className="mb-5 flex flex-wrap items-baseline gap-3.5">
         <h2 ref={headingEl} tabIndex={-1} className="m-0 text-case tracking-normal text-text outline-none focus-visible:ring-2 focus-visible:ring-accent">Today</h2>
         <p className="m-0 text-ui leading-5 text-muted tabular-nums">
           {filter === 'hq' ? 'HQ only' : filter && shown.length === 1 ? `${shown[0]!.name} only` : `${data.platforms.length} ${data.platforms.length === 1 ? 'platform' : 'platforms'}`}
