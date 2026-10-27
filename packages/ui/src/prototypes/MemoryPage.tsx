@@ -639,7 +639,7 @@ export function MemoryPage(props: MemoryPageProps) {
           {loading ? <span className="mt-[3px] block h-[13px] w-[88%] rounded-[3px] bg-skeleton" /> : <span>{headline}</span>}
         </p>
         {phone ? (
-          <div className="mt-3">
+          <div className="mt-3 max-[640px]:[&_[data-ph]]:text-[15px] max-[640px]:[&_[data-ask-leda]_svg]:!size-6">
             <AskLedaBar variant="overview" scope="memory" shortcuts={false} paused={tryShown} />
           </div>
         ) : null}
@@ -709,7 +709,7 @@ export function MemoryPage(props: MemoryPageProps) {
                 : `${num(left)} left. Topics from your platforms' data don't use any.`}
             </p>
           </div>
-          <p className="m-0 mx-3 mt-2 text-[12px] leading-4 text-muted">Off means Leda never uses it for customers. Your team's own use of Leda follows their role on Team.</p>
+          <p className="m-0 mx-3 mt-2 text-[12px] leading-4 text-muted max-[640px]:mx-4">Off means Leda never uses it for customers. Your team's own use of Leda follows their role on Team.</p>
         </>
       )}
     </div>
