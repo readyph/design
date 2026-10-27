@@ -51,25 +51,44 @@ function build(key, quiet) {
   const watching = items.filter((i) => i.watch).map((it) => ({ id: it.id, platform: pref(srcPid(it)), ...(plat(it.platformId) ? {} : { source: `HQ · ${it.scope === 'plan' ? 'Plan' : 'Team'}` }), title: it.title, ...(it.detail ? { detail: it.detail } : {}) }));
 
   const cases = {};
+  const human = (v) => (typeof v === 'string' && /^[A-Z][A-Z_]+( · [A-Z][A-Z_]+)*$/.test(v) ? v.split(' · ').map((w, i) => { const x = w.replace(/_/g, ' ').toLowerCase(); return i ? x : x[0].toUpperCase() + x.slice(1); }).join(' · ') : v);
+  const ledaLine = (it) => {
+    const a = it.action || {}, tp = plat(a.actsIn);
+    if (a.via === 'leda_proposal' && tp) return { tone: 'can', text: `Leda acts in ${tp.label}` };
+    if (a.via === 'approve') return { tone: 'plain', text: 'You approve in Portal' };
+    if (tp) return tp.ledaCanAct ? { tone: 'can', text: `Leda acts in ${tp.label}` } : { tone: 'cant', text: `Leda can't act in ${tp.label} yet` };
+    return null;
+  };
+  const lineOf = (l) => ({ name: l.name, ...(l.ref ? { ref: l.ref } : {}), ...(l.supplier ? { supplier: l.supplier } : {}), qty: l.qty, unit: l.unit, unitCost: l.unitCost });
   items.forEach((it) => {
     const d = dueInfo(it), a = it.action || {}, pr = a.proposalId && t.proposal(a.proposalId), p = plat(it.platformId);
     const c = { id: it.id };
-    if (d) c.due = d.text;
-    if (d && d.left != null && d.left > 0) c.left = { text: `${dur(d.left)} left`, tone: 'warn' };
-    if (d && d.deadline) c.deadline = d.deadline.text;
-    if (it.impact && (it.impact.amount || it.impact.label)) { const il = d ? String(it.impact.label).replace(/,?\s*(promised|due)\s+\d{1,2}:\d{2}\b/i, '').replace(/^job\s+/i, '') : it.impact.label; c.impact = `${it.impact.amount ? peso(it.impact.amount) + ' ' : ''}${il}`.trim(); }
+    const facts = [];
+    if (d) facts.push({ b: d.text, ...(d.left != null && d.left > 0 ? { left: d.t } : {}) });
+    if (d && d.deadline) facts.push({ text: d.deadline.text });
+    if (it.since && !d) facts.push({ text: `Since ${clock(it.since)}` });
+    if (it.impact && (it.impact.amount || it.impact.label)) {
+      const il = d ? String(it.impact.label).replace(/,?\s*(promised|due)\s+\d{1,2}:\d{2}\b/i, '').replace(/^job\s+/i, '') : it.impact.label;
+      if (it.impact.amount && /^[A-Z]{2,}-\d+$/.test(il)) { const evl = (it.evidence || []).find((e) => e.value === il); facts.push({ pre: evl ? evl.label : '', b: peso(it.impact.amount), num: true }, { text: il, mono: true }); }
+      else facts.push({ ...(it.impact.amount ? { b: peso(it.impact.amount), num: true } : {}), post: il });
+    }
+    const ll = ledaLine(it); if (ll) facts.push({ leda: ll.tone, text: ll.text });
+    c.facts = facts;
     if (d && d.today) {
       const h = (p && p.hours) || t.tenant.hours; const marks = [{ kind: 'due', at: d.t, label: d.text, shortLabel: clock(it.due.at), ...(d.urgent ? { tone: 'bad' } : {}) }];
       if (d.deadline && d.deadline.t != null) marks.push({ kind: 'deadline', at: d.deadline.t, label: d.deadline.text, shortLabel: hm(d.deadline.t) });
       c.day = { hours: { open: toMin(h.open), close: toMin(h.close) }, now: NOW, marks };
     }
-    c.evidence = (it.evidence || []).slice(0, 6).map((e) => ({ label: e.label, value: e.value, ...(e.note ? { note: e.note } : {}), ...(e.tone ? { tone: e.tone } : {}) }));
+    c.evidence = (it.evidence || []).slice(0, 6).map((e) => ({ label: e.label, value: human(e.value), ...(e.note ? { note: human(e.note) } : {}), ...(e.tone === 'bad' ? { tone: 'bad' } : {}), ...(e.mono ? { mono: true } : {}) }));
     c.note = it.leda || '';
     if (pr) {
-      const opt = pr.options ? pr.options[0] : null, writes = opt ? opt.writes : pr.writes, notifies = opt ? opt.notifies : pr.notifies;
-      c.proposal = { id: pr.id, title: opt ? `Settle ${(pr.title.match(/PO-\d+/) || [pr.id])[0]}` : pr.title, writes: [...writes], ...((names(notifies) || pr.cannot) ? { notes: [...(names(notifies) ? [`Notifies ${names(notifies)}.`] : [])] } : {}), ...(pr.cannot ? { cannot: pr.cannot } : {}), confirmLabel: (opt && opt.confirmLabel) || pr.confirmLabel || 'Confirm', toast: (opt ? opt.after : pr.after) || '' };
-      if (pr.options) c.variance = true;
-    } else c.noDraft = true;
+      const opts = pr.options ? pr.options.map((o) => ({ id: o.id, label: o.label, writes: [...o.writes], ...(names(o.notifies) ? { notifies: names(o.notifies) } : {}), confirmLabel: o.confirmLabel || pr.confirmLabel || 'Confirm', after: o.after })) : null;
+      c.proposal = { id: pr.id, title: pr.title, ...(pr.lines && pr.lines.length ? { lines: pr.lines.map(lineOf) } : {}), writes: [...(pr.writes || [])], ...(pr.cannot ? { cannot: pr.cannot } : {}), ...(names(pr.notifies) ? { notifies: names(pr.notifies) } : {}), confirmLabel: pr.confirmLabel || 'Confirm', after: pr.after || '', ...(opts ? { options: opts } : {}),
+        ...(pr.addOn ? { addOn: { label: pr.addOn.label, proposalId: pr.addOn.proposalId, line: lineOf(pr.addOn.line) } } : {}) };
+    } else if (a.via === 'open_platform' && plat(a.actsIn)) c.open = { label: a.label, platformId: a.actsIn, primary: !it.watch };
+    else if (it.scope === 'plan') c.plan = true;
+    if (a.actsIn && it.platformId && a.actsIn !== it.platformId) c.van = [a.actsIn, it.platformId];
+    c.pids = [...new Set([it.platformId || (hasHq ? 'hq' : null), ...(it.involves || []), a.actsIn].filter(Boolean))];
     cases[it.id] = c;
   });
 
@@ -103,7 +122,7 @@ function build(key, quiet) {
   const own = t.people.find((p) => p.role === 'Owner') || t.people[0];
   const sug = [...t.leda.answers.map((a) => a.q).slice(0, 2), ...t.leda.commands.filter((c) => c.allowed).map((c) => c.q).slice(0, 2)];
   const out = { owner: { name: own.name, short: own.short, initials: own.initials || own.name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase() }, suggestions: sug, weekRange: WEEK.range, key: { b: 'few', all: 'many', duo: 'live' }[key], platforms, hasHq, hq, links, items: queueItems, watching, snoozed: [], done: [], cases,
-    next: (tl.quiet && tl.quiet.next) || '', yesterdayDate: t.yesterday.date, plan: { used: u.used, max: u.limit, cycleStart: u.cycleStart, cycleEnd: u.cycleEnd, daysLeft: u.daysLeft },
+    next: (tl.quiet && tl.quiet.next) || '', yesterdayDate: t.yesterday.date, plan: { name: t.tenant.plan, used: u.used, max: u.limit, cycleStart: u.cycleStart, cycleEnd: u.cycleEnd, daysLeft: u.daysLeft },
     headline: t.leda.headline, quietHeadline: t.leda.quietHeadline, yesterdayLine: t.leda.yesterdayLine, decisions: t.counts.decisions,
     mapOrder: tl.mapOrder || tl.mapPlatforms.map((m) => m && m.id) };
   return out;

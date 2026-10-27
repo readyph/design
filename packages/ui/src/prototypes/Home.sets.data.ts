@@ -395,12 +395,21 @@ export const fewLive = {
  "cases": {
   "b-out": {
    "id": "b-out",
-   "due": "Lunch service 11:00",
-   "left": {
-    "text": "1h 48m left",
-    "tone": "warn"
-   },
-   "impact": "₱9,340 4 draft POs",
+   "facts": [
+    {
+     "b": "Lunch service 11:00",
+     "left": 660
+    },
+    {
+     "b": "₱9,340",
+     "num": true,
+     "post": "4 draft POs"
+    },
+    {
+     "leda": "can",
+     "text": "Leda acts in Inventory"
+    }
+   ],
    "day": {
     "hours": {
      "open": 420,
@@ -444,20 +453,68 @@ export const fewLive = {
    "proposal": {
     "id": "PO-BUNDLE-4",
     "title": "Restock 4 out-of-stock items",
+    "lines": [
+     {
+      "name": "Salmon Fillet",
+      "ref": "PO-0141",
+      "supplier": "Navotas Fresh Seafood",
+      "qty": 6,
+      "unit": "kg",
+      "unitCost": 720
+     },
+     {
+      "name": "Fresh Basil",
+      "ref": "PO-0142",
+      "supplier": "La Trinidad Vegetable Growers",
+      "qty": 2,
+      "unit": "kg",
+      "unitCost": 320
+     },
+     {
+      "name": "Salted Caramel Sauce 1L",
+      "ref": "PO-0143",
+      "supplier": "Monin Philippines",
+      "qty": 3,
+      "unit": "bottle",
+      "unitCost": 260
+     },
+     {
+      "name": "Matcha Powder",
+      "ref": "PO-0144",
+      "supplier": "Metro Dry Goods & Commissary",
+      "qty": 2,
+      "unit": "kg",
+      "unitCost": 1800
+     }
+    ],
     "writes": [
      "PO-0141 to PO-0144: draft → ordered",
      "Sent to 4 suppliers"
     ],
-    "notes": [
-     "Notifies Lloyd, Andrea."
-    ],
+    "notifies": "Lloyd, Andrea",
     "confirmLabel": "Confirm 4 POs",
-    "toast": "4 POs sent (₱9,340). Lloyd and Andrea are notified."
-   }
+    "after": "4 POs sent (₱9,340). Lloyd and Andrea are notified."
+   },
+   "pids": [
+    "inventory"
+   ]
   },
   "b-books": {
    "id": "b-books",
-   "impact": "₱19,080 sales not synced",
+   "facts": [
+    {
+     "text": "Since Wed 18:05"
+    },
+    {
+     "b": "₱19,080",
+     "num": true,
+     "post": "sales not synced"
+    },
+    {
+     "leda": "cant",
+     "text": "Leda can't act in Books yet"
+    }
+   ],
    "evidence": [
     {
      "label": "Offline since",
@@ -476,10 +533,24 @@ export const fewLive = {
     }
    ],
    "note": "Leda can't act in Accounting. Reconnect it in Books.",
-   "noDraft": true
+   "open": {
+    "label": "Reconnect in Books",
+    "platformId": "books",
+    "primary": true
+   },
+   "pids": [
+    "books",
+    "cafepos"
+   ]
   },
   "b-low": {
    "id": "b-low",
+   "facts": [
+    {
+     "leda": "can",
+     "text": "Leda acts in Inventory"
+    }
+   ],
    "evidence": [
     {
      "label": "Oat Milk Barista",
@@ -508,10 +579,18 @@ export const fewLive = {
     }
    ],
    "note": "None run out before tomorrow.",
-   "noDraft": true
+   "open": {
+    "label": "Open Inventory",
+    "platformId": "inventory",
+    "primary": false
+   },
+   "pids": [
+    "inventory"
+   ]
   },
   "b-ai": {
    "id": "b-ai",
+   "facts": [],
    "evidence": [
     {
      "label": "Used",
@@ -523,12 +602,14 @@ export const fewLive = {
     }
    ],
    "note": "Well within the plan.",
-   "noDraft": true
+   "plan": true,
+   "pids": []
   }
  },
  "next": "Next: Magnolia delivery Fri 23 Oct, 7:00.",
  "yesterdayDate": "Wed 21 Oct",
  "plan": {
+  "name": "Starter",
   "used": 610,
   "max": 2000,
   "cycleStart": "30 Sep",
@@ -910,6 +991,12 @@ export const fewQuiet = {
  "cases": {
   "b-q-low": {
    "id": "b-q-low",
+   "facts": [
+    {
+     "leda": "can",
+     "text": "Leda acts in Inventory"
+    }
+   ],
    "evidence": [
     {
      "label": "Oat Milk Barista",
@@ -938,10 +1025,18 @@ export const fewQuiet = {
     }
    ],
    "note": "None run out before tomorrow.",
-   "noDraft": true
+   "open": {
+    "label": "Open Inventory",
+    "platformId": "inventory",
+    "primary": false
+   },
+   "pids": [
+    "inventory"
+   ]
   },
   "b-ai": {
    "id": "b-ai",
+   "facts": [],
    "evidence": [
     {
      "label": "Used",
@@ -953,12 +1048,14 @@ export const fewQuiet = {
     }
    ],
    "note": "Well within the plan.",
-   "noDraft": true
+   "plan": true,
+   "pids": []
   }
  },
  "next": "Next: Magnolia delivery Fri 23 Oct, 7:00.",
  "yesterdayDate": "Wed 21 Oct",
  "plan": {
+  "name": "Starter",
   "used": 610,
   "max": 2000,
   "cycleStart": "30 Sep",
@@ -1910,13 +2007,28 @@ export const manyLive = {
  "cases": {
   "a-alt": {
    "id": "a-alt",
-   "due": "Leave by 10:15",
-   "left": {
-    "text": "1h 3m left",
-    "tone": "warn"
-   },
-   "deadline": "Promised 11:00",
-   "impact": "₱12,550 KAP-0412",
+   "facts": [
+    {
+     "b": "Leave by 10:15",
+     "left": 615
+    },
+    {
+     "text": "Promised 11:00"
+    },
+    {
+     "pre": "Job",
+     "b": "₱12,550",
+     "num": true
+    },
+    {
+     "text": "KAP-0412",
+     "mono": true
+    },
+    {
+     "leda": "can",
+     "text": "Leda acts in Parts Stockroom"
+    }
+   ],
    "day": {
     "hours": {
      "open": 480,
@@ -1943,7 +2055,8 @@ export const manyLive = {
     {
      "label": "Job",
      "value": "KAP-0412",
-     "note": "PENDING · WAITING_FOR_PARTS"
+     "note": "Pending · waiting for parts",
+     "mono": true
     },
     {
      "label": "Customer",
@@ -1970,26 +2083,61 @@ export const manyLive = {
    "proposal": {
     "id": "TR-0087",
     "title": "Transfer 1 alternator to Kapitolyo",
+    "lines": [
+     {
+      "name": "Alternator, Vios NCP150 (reman.)",
+      "ref": "ALT-NCP150",
+      "qty": 1,
+      "unit": "pc",
+      "unitCost": 7200
+     }
+    ],
     "writes": [
      "Transfer TR-0087: Parts Stockroom → Kapitolyo",
      "Parts Stockroom ALT-NCP150: 1 → 0"
     ],
-    "notes": [
-     "Notifies Arnel, Carla."
-    ],
     "cannot": "Leda can't update job KAP-0412 in Repair shop; Carla moves it.",
+    "notifies": "Arnel, Carla",
     "confirmLabel": "Confirm transfer",
-    "toast": "TR-0087 created. Arnel leaves by 10:15; Carla sees the alternator as incoming."
-   }
+    "after": "TR-0087 created. Arnel leaves by 10:15; Carla sees the alternator as incoming.",
+    "addOn": {
+     "label": "Also add 1 alternator to Friday's PO-0219",
+     "proposalId": "PO-0219",
+     "line": {
+      "name": "Alternator, Vios NCP150 (reman.)",
+      "ref": "ALT-NCP150",
+      "qty": 1,
+      "unit": "pc",
+      "unitCost": 7200
+     }
+    }
+   },
+   "van": [
+    "stockroom",
+    "kapitolyo"
+   ],
+   "pids": [
+    "kapitolyo",
+    "stockroom"
+   ]
   },
   "b-out": {
    "id": "b-out",
-   "due": "Lunch service 11:00",
-   "left": {
-    "text": "1h 48m left",
-    "tone": "warn"
-   },
-   "impact": "₱9,340 4 draft POs",
+   "facts": [
+    {
+     "b": "Lunch service 11:00",
+     "left": 660
+    },
+    {
+     "b": "₱9,340",
+     "num": true,
+     "post": "4 draft POs"
+    },
+    {
+     "leda": "can",
+     "text": "Leda acts in Café Inventory"
+    }
+   ],
    "day": {
     "hours": {
      "open": 420,
@@ -2033,25 +2181,67 @@ export const manyLive = {
    "proposal": {
     "id": "PO-BUNDLE-4",
     "title": "Restock 4 out-of-stock items",
+    "lines": [
+     {
+      "name": "Salmon Fillet",
+      "ref": "PO-0141",
+      "supplier": "Navotas Fresh Seafood",
+      "qty": 6,
+      "unit": "kg",
+      "unitCost": 720
+     },
+     {
+      "name": "Fresh Basil",
+      "ref": "PO-0142",
+      "supplier": "La Trinidad Vegetable Growers",
+      "qty": 2,
+      "unit": "kg",
+      "unitCost": 320
+     },
+     {
+      "name": "Salted Caramel Sauce 1L",
+      "ref": "PO-0143",
+      "supplier": "Monin Philippines",
+      "qty": 3,
+      "unit": "bottle",
+      "unitCost": 260
+     },
+     {
+      "name": "Matcha Powder",
+      "ref": "PO-0144",
+      "supplier": "Metro Dry Goods & Commissary",
+      "qty": 2,
+      "unit": "kg",
+      "unitCost": 1800
+     }
+    ],
     "writes": [
      "PO-0141 to PO-0144: draft → ordered",
      "Sent to 4 suppliers"
     ],
-    "notes": [
-     "Notifies Lloyd, Andrea."
-    ],
+    "notifies": "Lloyd, Andrea",
     "confirmLabel": "Confirm 4 POs",
-    "toast": "4 POs sent (₱9,340). Lloyd and Andrea are notified."
-   }
+    "after": "4 POs sent (₱9,340). Lloyd and Andrea are notified."
+   },
+   "pids": [
+    "inventory"
+   ]
   },
   "a-po": {
    "id": "a-po",
-   "due": "Order by 12:00",
-   "left": {
-    "text": "2h 48m left",
-    "tone": "warn"
-   },
-   "impact": "2 jobs short today",
+   "facts": [
+    {
+     "b": "Order by 12:00",
+     "left": 720
+    },
+    {
+     "post": "2 jobs short today"
+    },
+    {
+     "leda": "can",
+     "text": "Leda acts in Parts Stockroom"
+    }
+   ],
    "day": {
     "hours": {
      "open": 480,
@@ -2094,20 +2284,50 @@ export const manyLive = {
    "proposal": {
     "id": "PO-0219",
     "title": "Reorder from Banawe Autoparts Supply",
+    "lines": [
+     {
+      "name": "Toyota oil filter",
+      "ref": "90915-YZZE1",
+      "qty": 40,
+      "unit": "pc",
+      "unitCost": 285
+     },
+     {
+      "name": "Bendix brake pads, Vios front",
+      "ref": "BX-DB1863",
+      "qty": 3,
+      "unit": "set",
+      "unitCost": 2350
+     }
+    ],
     "writes": [
      "PO-0219: draft → ordered",
      "Sent to Banawe Autoparts Supply"
     ],
-    "notes": [
-     "Notifies Arnel."
-    ],
+    "notifies": "Arnel",
     "confirmLabel": "Confirm PO",
-    "toast": "PO-0219 sent to Banawe (₱18,450). Arrives Fri 23 Oct before 10:00."
-   }
+    "after": "PO-0219 sent to Banawe (₱18,450). Arrives Fri 23 Oct before 10:00."
+   },
+   "pids": [
+    "stockroom"
+   ]
   },
   "b-books": {
    "id": "b-books",
-   "impact": "₱19,080 sales not synced",
+   "facts": [
+    {
+     "text": "Since Wed 18:05"
+    },
+    {
+     "b": "₱19,080",
+     "num": true,
+     "post": "sales not synced"
+    },
+    {
+     "leda": "cant",
+     "text": "Leda can't act in Books yet"
+    }
+   ],
    "evidence": [
     {
      "label": "Offline since",
@@ -2126,10 +2346,24 @@ export const manyLive = {
     }
    ],
    "note": "Leda can't act in Accounting. Reconnect it in Books.",
-   "noDraft": true
+   "open": {
+    "label": "Reconnect in Books",
+    "platformId": "books",
+    "primary": true
+   },
+   "pids": [
+    "books",
+    "cafepos"
+   ]
   },
   "a-inv": {
    "id": "a-inv",
+   "facts": [
+    {
+     "leda": "plain",
+     "text": "You approve in Portal"
+    }
+   ],
    "evidence": [
     {
      "label": "Invited by",
@@ -2154,23 +2388,55 @@ export const manyLive = {
    "note": "Matches Marikina's other mechanics.",
    "proposal": {
     "id": "INV-RICO",
-    "title": "Settle INV-RICO",
-    "writes": [
-     "Invite email to rico.lim.mech@gmail.com",
-     "Rico Lim: Mechanic, write access to Marikina"
-    ],
-    "notes": [
-     "Notifies Paolo."
-    ],
-    "confirmLabel": "Approve invite",
-    "toast": "Invite sent to Rico Lim. Paolo is notified."
+    "title": "Approve Rico Lim's invite",
+    "writes": [],
+    "confirmLabel": "Confirm",
+    "after": "",
+    "options": [
+     {
+      "id": "approve",
+      "label": "Approve",
+      "writes": [
+       "Invite email to rico.lim.mech@gmail.com",
+       "Rico Lim: Mechanic, write access to Marikina"
+      ],
+      "notifies": "Paolo",
+      "confirmLabel": "Approve invite",
+      "after": "Invite sent to Rico Lim. Paolo is notified."
+     },
+     {
+      "id": "decline",
+      "label": "Decline",
+      "writes": [
+       "Invite for Rico Lim withdrawn"
+      ],
+      "notifies": "Paolo",
+      "confirmLabel": "Decline invite",
+      "after": "Rico Lim's invite declined. Paolo is notified."
+     }
+    ]
    },
-   "variance": true
+   "pids": [
+    "hq",
+    "marikina"
+   ]
   },
   "a-var": {
    "id": "a-var",
-   "due": "Dispute by Fri 23 Oct",
-   "impact": "₱2,790 paid for stock not received",
+   "facts": [
+    {
+     "b": "Dispute by Fri 23 Oct"
+    },
+    {
+     "b": "₱2,790",
+     "num": true,
+     "post": "paid for stock not received"
+    },
+    {
+     "leda": "can",
+     "text": "Leda acts in Parts Stockroom"
+    }
+   ],
    "evidence": [
     {
      "label": "Ordered",
@@ -2196,21 +2462,59 @@ export const manyLive = {
    "note": "Petron credited the last short delivery within 3 days.",
    "proposal": {
     "id": "VAR-0214",
-    "title": "Settle PO-0214",
-    "writes": [
-     "Dispute on PO-0214: 6 bottles, ₱2,790",
-     "PO-0214 stays partially_received"
+    "title": "Resolve PO-0214 short delivery",
+    "lines": [
+     {
+      "name": "Petron Blaze Racing 10W-40, 1L",
+      "ref": "PET-BLZ-1L",
+      "qty": 6,
+      "unit": "bottle",
+      "unitCost": 465
+     }
     ],
-    "notes": [
-     "Notifies Arnel."
-    ],
-    "confirmLabel": "Send dispute",
-    "toast": "Dispute sent to Petron for 6 bottles (₱2,790)."
+    "writes": [],
+    "confirmLabel": "Confirm",
+    "after": "",
+    "options": [
+     {
+      "id": "dispute",
+      "label": "Dispute",
+      "writes": [
+       "Dispute on PO-0214: 6 bottles, ₱2,790",
+       "PO-0214 stays partially_received"
+      ],
+      "notifies": "Arnel",
+      "confirmLabel": "Send dispute",
+      "after": "Dispute sent to Petron for 6 bottles (₱2,790)."
+     },
+     {
+      "id": "accept",
+      "label": "Accept",
+      "writes": [
+       "PO-0214: partially_received → received (42 of 48)",
+       "₱2,790 off the Petron bill"
+      ],
+      "notifies": "Liza",
+      "confirmLabel": "Accept variance",
+      "after": "PO-0214 closed at 42 received. ₱2,790 off the Petron bill."
+     }
+    ]
    },
-   "variance": true
+   "pids": [
+    "stockroom"
+   ]
   },
   "a-mk": {
    "id": "a-mk",
+   "facts": [
+    {
+     "text": "Since 7:40"
+    },
+    {
+     "leda": "cant",
+     "text": "Leda can't act in Marikina yet"
+    }
+   ],
    "evidence": [
     {
      "label": "Since",
@@ -2228,10 +2532,23 @@ export const manyLive = {
     }
    ],
    "note": "Nothing is lost; updates arrive late. I'll flag it if it passes 10:00.",
-   "noDraft": true
+   "open": {
+    "label": "Open Marikina",
+    "platformId": "marikina",
+    "primary": false
+   },
+   "pids": [
+    "marikina"
+   ]
   },
   "b-low": {
    "id": "b-low",
+   "facts": [
+    {
+     "leda": "can",
+     "text": "Leda acts in Café Inventory"
+    }
+   ],
    "evidence": [
     {
      "label": "Oat Milk Barista",
@@ -2260,10 +2577,18 @@ export const manyLive = {
     }
    ],
    "note": "None run out before tomorrow.",
-   "noDraft": true
+   "open": {
+    "label": "Open Inventory",
+    "platformId": "inventory",
+    "primary": false
+   },
+   "pids": [
+    "inventory"
+   ]
   },
   "a-ai": {
    "id": "a-ai",
+   "facts": [],
    "evidence": [
     {
      "label": "Used",
@@ -2276,17 +2601,20 @@ export const manyLive = {
     {
      "label": "Runs out",
      "value": "Sun 25 Oct",
-     "note": "cycle ends 29 Oct",
-     "tone": "warn"
+     "note": "cycle ends 29 Oct"
     }
    ],
    "note": "At this pace it runs out Sunday.",
-   "noDraft": true
+   "plan": true,
+   "pids": [
+    "hq"
+   ]
   }
  },
  "next": "Next: Magnolia delivery Fri 23 Oct, 7:00.",
  "yesterdayDate": "Wed 21 Oct",
  "plan": {
+  "name": "Business",
   "used": 1742,
   "max": 2000,
   "cycleStart": "30 Sep",
@@ -3155,6 +3483,7 @@ export const manyQuiet = {
  "cases": {
   "a-ai": {
    "id": "a-ai",
+   "facts": [],
    "evidence": [
     {
      "label": "Used",
@@ -3167,15 +3496,23 @@ export const manyQuiet = {
     {
      "label": "Runs out",
      "value": "Sun 25 Oct",
-     "note": "cycle ends 29 Oct",
-     "tone": "warn"
+     "note": "cycle ends 29 Oct"
     }
    ],
    "note": "At this pace it runs out Sunday.",
-   "noDraft": true
+   "plan": true,
+   "pids": [
+    "hq"
+   ]
   },
   "a-q-low": {
    "id": "a-q-low",
+   "facts": [
+    {
+     "leda": "can",
+     "text": "Leda acts in Parts Stockroom"
+    }
+   ],
    "evidence": [
     {
      "label": "Below reorder",
@@ -3187,10 +3524,23 @@ export const manyQuiet = {
     }
    ],
    "note": "The other 2 sell slowly.",
-   "noDraft": true
+   "open": {
+    "label": "Open Parts Stockroom",
+    "platformId": "stockroom",
+    "primary": false
+   },
+   "pids": [
+    "stockroom"
+   ]
   },
   "b-q-low": {
    "id": "b-q-low",
+   "facts": [
+    {
+     "leda": "can",
+     "text": "Leda acts in Café Inventory"
+    }
+   ],
    "evidence": [
     {
      "label": "Oat Milk Barista",
@@ -3219,12 +3569,20 @@ export const manyQuiet = {
     }
    ],
    "note": "None run out before tomorrow.",
-   "noDraft": true
+   "open": {
+    "label": "Open Inventory",
+    "platformId": "inventory",
+    "primary": false
+   },
+   "pids": [
+    "inventory"
+   ]
   }
  },
  "next": "Next: Magnolia delivery Fri 23 Oct, 7:00.",
  "yesterdayDate": "Wed 21 Oct",
  "plan": {
+  "name": "Business",
   "used": 1742,
   "max": 2000,
   "cycleStart": "30 Sep",
@@ -4075,13 +4433,28 @@ export const duoLive = {
  "cases": {
   "d-alt": {
    "id": "d-alt",
-   "due": "Order by 9:45",
-   "left": {
-    "text": "33 min left",
-    "tone": "warn"
-   },
-   "deadline": "Promised 11:00",
-   "impact": "₱12,550 JO-0412",
+   "facts": [
+    {
+     "b": "Order by 9:45",
+     "left": 585
+    },
+    {
+     "text": "Promised 11:00"
+    },
+    {
+     "pre": "Job",
+     "b": "₱12,550",
+     "num": true
+    },
+    {
+     "text": "JO-0412",
+     "mono": true
+    },
+    {
+     "leda": "can",
+     "text": "Leda acts in Parts Stockroom"
+    }
+   ],
    "day": {
     "hours": {
      "open": 480,
@@ -4108,7 +4481,8 @@ export const duoLive = {
     {
      "label": "Job",
      "value": "JO-0412",
-     "note": "PENDING · WAITING_FOR_PARTS"
+     "note": "Pending · waiting for parts",
+     "mono": true
     },
     {
      "label": "Customer",
@@ -4136,26 +4510,59 @@ export const duoLive = {
    "proposal": {
     "id": "PO-0221",
     "title": "Rush 1 alternator from Banawe Autoparts",
+    "lines": [
+     {
+      "name": "Alternator, Vios NCP150 (reman.)",
+      "ref": "ALT-NCP150",
+      "qty": 1,
+      "unit": "pc",
+      "unitCost": 7200
+     }
+    ],
     "writes": [
      "PO-0221: draft → ordered, rush delivery 10:30",
      "Reserve ALT-NCP150 for JO-0412 on arrival"
     ],
-    "notes": [
-     "Notifies Arnel, Jun."
-    ],
     "cannot": "Leda can't move JO-0412 in Repair shop; Jun moves it.",
+    "notifies": "Arnel, Jun",
     "confirmLabel": "Confirm rush PO",
-    "toast": "PO-0221 sent. Alternator arrives 10:30, reserved for JO-0412."
-   }
+    "after": "PO-0221 sent. Alternator arrives 10:30, reserved for JO-0412.",
+    "addOn": {
+     "label": "Also add 1 alternator to PO-0219 for stock",
+     "proposalId": "PO-0219",
+     "line": {
+      "name": "Alternator, Vios NCP150 (reman.)",
+      "ref": "ALT-NCP150",
+      "qty": 1,
+      "unit": "pc",
+      "unitCost": 7200
+     }
+    }
+   },
+   "van": [
+    "stockroom",
+    "autoworks"
+   ],
+   "pids": [
+    "autoworks",
+    "stockroom"
+   ]
   },
   "d-po": {
    "id": "d-po",
-   "due": "Order by 12:00",
-   "left": {
-    "text": "2h 48m left",
-    "tone": "warn"
-   },
-   "impact": "2 jobs short today",
+   "facts": [
+    {
+     "b": "Order by 12:00",
+     "left": 720
+    },
+    {
+     "post": "2 jobs short today"
+    },
+    {
+     "leda": "can",
+     "text": "Leda acts in Parts Stockroom"
+    }
+   ],
    "day": {
     "hours": {
      "open": 480,
@@ -4198,21 +4605,51 @@ export const duoLive = {
    "proposal": {
     "id": "PO-0219",
     "title": "Reorder from Banawe Autoparts Supply",
+    "lines": [
+     {
+      "name": "Toyota oil filter",
+      "ref": "90915-YZZE1",
+      "qty": 40,
+      "unit": "pc",
+      "unitCost": 285
+     },
+     {
+      "name": "Bendix brake pads, Vios front",
+      "ref": "BX-DB1863",
+      "qty": 3,
+      "unit": "set",
+      "unitCost": 2350
+     }
+    ],
     "writes": [
      "PO-0219: draft → ordered",
      "Sent to Banawe Autoparts Supply"
     ],
-    "notes": [
-     "Notifies Arnel."
-    ],
+    "notifies": "Arnel",
     "confirmLabel": "Confirm PO",
-    "toast": "PO-0219 sent to Banawe (₱18,450). Arrives Fri 23 Oct before 10:00."
-   }
+    "after": "PO-0219 sent to Banawe (₱18,450). Arrives Fri 23 Oct before 10:00."
+   },
+   "pids": [
+    "stockroom",
+    "autoworks"
+   ]
   },
   "d-var": {
    "id": "d-var",
-   "due": "Dispute by Fri 23 Oct",
-   "impact": "₱2,790 paid for stock not received",
+   "facts": [
+    {
+     "b": "Dispute by Fri 23 Oct"
+    },
+    {
+     "b": "₱2,790",
+     "num": true,
+     "post": "paid for stock not received"
+    },
+    {
+     "leda": "can",
+     "text": "Leda acts in Parts Stockroom"
+    }
+   ],
    "evidence": [
     {
      "label": "Ordered",
@@ -4238,21 +4675,56 @@ export const duoLive = {
    "note": "Petron credited the last short delivery within 3 days.",
    "proposal": {
     "id": "VAR-0214",
-    "title": "Settle PO-0214",
-    "writes": [
-     "Dispute on PO-0214: 6 bottles, ₱2,790",
-     "PO-0214 stays partially_received"
+    "title": "Resolve PO-0214 short delivery",
+    "lines": [
+     {
+      "name": "Petron Blaze Racing 10W-40, 1L",
+      "ref": "PET-BLZ-1L",
+      "qty": 6,
+      "unit": "bottle",
+      "unitCost": 465
+     }
     ],
-    "notes": [
-     "Notifies Arnel."
-    ],
-    "confirmLabel": "Send dispute",
-    "toast": "Dispute sent to Petron for 6 bottles (₱2,790)."
+    "writes": [],
+    "confirmLabel": "Confirm",
+    "after": "",
+    "options": [
+     {
+      "id": "dispute",
+      "label": "Dispute",
+      "writes": [
+       "Dispute on PO-0214: 6 bottles, ₱2,790",
+       "PO-0214 stays partially_received"
+      ],
+      "notifies": "Arnel",
+      "confirmLabel": "Send dispute",
+      "after": "Dispute sent to Petron for 6 bottles (₱2,790)."
+     },
+     {
+      "id": "accept",
+      "label": "Accept",
+      "writes": [
+       "PO-0214: partially_received → received (42 of 48)",
+       "₱2,790 off the Petron bill"
+      ],
+      "notifies": "Liza",
+      "confirmLabel": "Accept variance",
+      "after": "PO-0214 closed at 42 received. ₱2,790 off the Petron bill."
+     }
+    ]
    },
-   "variance": true
+   "pids": [
+    "stockroom"
+   ]
   },
   "d-inv": {
    "id": "d-inv",
+   "facts": [
+    {
+     "leda": "plain",
+     "text": "You approve in Portal"
+    }
+   ],
    "evidence": [
     {
      "label": "Invited by",
@@ -4277,21 +4749,50 @@ export const duoLive = {
    "note": "Matches the shop's other mechanics.",
    "proposal": {
     "id": "INV-RICO",
-    "title": "Settle INV-RICO",
-    "writes": [
-     "Invite email to rico.lim.mech@gmail.com",
-     "Rico Lim: Mechanic, write access to Dela Cruz Auto Works"
-    ],
-    "notes": [
-     "Notifies Jun."
-    ],
-    "confirmLabel": "Approve invite",
-    "toast": "Invite sent to Rico Lim. Jun is notified."
+    "title": "Approve Rico Lim's invite",
+    "writes": [],
+    "confirmLabel": "Confirm",
+    "after": "",
+    "options": [
+     {
+      "id": "approve",
+      "label": "Approve",
+      "writes": [
+       "Invite email to rico.lim.mech@gmail.com",
+       "Rico Lim: Mechanic, write access to Dela Cruz Auto Works"
+      ],
+      "notifies": "Jun",
+      "confirmLabel": "Approve invite",
+      "after": "Invite sent to Rico Lim. Jun is notified."
+     },
+     {
+      "id": "decline",
+      "label": "Decline",
+      "writes": [
+       "Invite for Rico Lim withdrawn"
+      ],
+      "notifies": "Jun",
+      "confirmLabel": "Decline invite",
+      "after": "Rico Lim's invite declined. Jun is notified."
+     }
+    ]
    },
-   "variance": true
+   "pids": [
+    "hq",
+    "autoworks"
+   ]
   },
   "d-qt": {
    "id": "d-qt",
+   "facts": [
+    {
+     "text": "Since Tue 15:40"
+    },
+    {
+     "leda": "cant",
+     "text": "Leda can't act in Dela Cruz Auto Works yet"
+    }
+   ],
    "evidence": [
     {
      "label": "Estimate",
@@ -4310,10 +4811,18 @@ export const duoLive = {
     }
    ],
    "note": "Grace usually follows up after 2 days.",
-   "noDraft": true
+   "open": {
+    "label": "Open Auto Works",
+    "platformId": "autoworks",
+    "primary": false
+   },
+   "pids": [
+    "autoworks"
+   ]
   },
   "d-ai": {
    "id": "d-ai",
+   "facts": [],
    "evidence": [
     {
      "label": "Used",
@@ -4326,17 +4835,20 @@ export const duoLive = {
     {
      "label": "Runs out",
      "value": "Sun 25 Oct",
-     "note": "cycle ends 29 Oct",
-     "tone": "warn"
+     "note": "cycle ends 29 Oct"
     }
    ],
    "note": "At this pace it runs out Sunday.",
-   "noDraft": true
+   "plan": true,
+   "pids": [
+    "hq"
+   ]
   }
  },
  "next": "Next: Banawe delivery Fri 23 Oct before 10:00.",
  "yesterdayDate": "Wed 21 Oct",
  "plan": {
+  "name": "Starter",
   "used": 1742,
   "max": 2000,
   "cycleStart": "30 Sep",
@@ -5094,6 +5606,7 @@ export const duoQuiet = {
  "cases": {
   "d-ai": {
    "id": "d-ai",
+   "facts": [],
    "evidence": [
     {
      "label": "Used",
@@ -5106,15 +5619,23 @@ export const duoQuiet = {
     {
      "label": "Runs out",
      "value": "Sun 25 Oct",
-     "note": "cycle ends 29 Oct",
-     "tone": "warn"
+     "note": "cycle ends 29 Oct"
     }
    ],
    "note": "At this pace it runs out Sunday.",
-   "noDraft": true
+   "plan": true,
+   "pids": [
+    "hq"
+   ]
   },
   "d-q-low": {
    "id": "d-q-low",
+   "facts": [
+    {
+     "leda": "can",
+     "text": "Leda acts in Parts Stockroom"
+    }
+   ],
    "evidence": [
     {
      "label": "Below reorder",
@@ -5126,12 +5647,20 @@ export const duoQuiet = {
     }
    ],
    "note": "The other 2 sell slowly.",
-   "noDraft": true
+   "open": {
+    "label": "Open Parts Stockroom",
+    "platformId": "stockroom",
+    "primary": false
+   },
+   "pids": [
+    "stockroom"
+   ]
   }
  },
  "next": "Next: Banawe delivery Fri 23 Oct before 10:00.",
  "yesterdayDate": "Wed 21 Oct",
  "plan": {
+  "name": "Starter",
   "used": 1742,
   "max": 2000,
   "cycleStart": "30 Sep",

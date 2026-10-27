@@ -32,7 +32,7 @@ export const LedaNote = forwardRef<HTMLDivElement, LedaNoteProps>(function LedaN
       </span>
       <div className="min-w-0 flex-1">
         <p>{children}</p>
-        {byline && <p className="text-small text-muted">{byline}</p>}
+        {byline && <p className="mt-0.5 text-small text-muted">{byline}</p>}
       </div>
     </div>
   );

@@ -1,25 +1,21 @@
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, ArrowSquareOut, CalendarBlank, Clock, Gauge, House, SquaresFour, Users } from '@phosphor-icons/react';
+import { Fragment, useCallback, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { ArrowLeft, ArrowRight, ArrowSquareOut, CalendarBlank, CaretDown, CheckCircle, Clock, Prohibit, Gauge, House, SquaresFour, Users } from '@phosphor-icons/react';
 import { AskLedaBar } from '../components/AskLedaBar';
 import { Badge } from '../components/Badge';
-import { Breadcrumbs } from '../components/Breadcrumbs';
 import { Button } from '../components/Button';
 import { ChatChips, ChatComposer, ChatEmpty, ChatHeader, ChatMessage, ChatThread, Chat, usePersistedChat, type ChatChip, type ChatMessageData, type ChatProposalData } from '../components/Chat';
 import { chatSample } from '../components/Chat.sample';
 import { CommandPalette, type CommandPaletteGroup, type CommandPaletteItem } from '../components/CommandPalette';
-import { DataList } from '../components/DataList';
-import { DayBar } from '../components/DayBar';
 import { Fact, FactsLine } from '../components/FactsLine';
 import { IconButton } from '../components/IconButton';
 import { LedaMark } from '../components/Leda';
 import { LedaNote } from '../components/LedaNote';
-import { LedaProposal, type LedaProposalState } from '../components/LedaProposal';
+import type { LedaProposalState } from '../components/LedaProposal';
 import { Menu } from '../components/Menu';
 import { OverviewCharts } from '../components/OverviewCharts';
 import { PlatformLogo } from '../components/PlatformLogo';
 import { LedaFact, PlatformToday } from '../components/PlatformToday';
 import { Queue } from '../components/Queue';
-import { SegmentedControl } from '../components/SegmentedControl';
 import { SheetBar } from '../components/SheetBar';
 import { cn } from '../utils/cn';
 import { StatusBar, type StatusBarHealth } from '../components/StatusBar';
@@ -29,9 +25,10 @@ import { TownMap, type TownMapHandle } from '../components/TownMap';
 import { Toaster } from '../components/toast/Toaster';
 import { toast } from '../components/toast/toastStore';
 import { PortalFrame } from './PortalFrame';
+import { CaseKv, DayLine, LedaDraft, MoreButton, peso, type DraftLine } from './Home.case';
 import { destFromHash, go } from './protoNav';
 import { useMatchMedia } from '../utils/useMatchMedia';
-import { ledaMode, mapSlots, queuePlatforms, sets, defaultSuggestions, type HomeCase, type HomePlatform, type HomeSetKey, type HomeState } from './Home.data';
+import { ledaMode, mapSlots, queuePlatforms, sets, defaultSuggestions, type HomeCase, type HomeCaseLine, type HomePlatform, type HomeSetKey, type HomeState } from './Home.data';
 
 /**
  * Portal Home (RDY-255): the place column (map, Needs you), the sheet (Today, a case, or the overview) and Leda's
@@ -54,6 +51,8 @@ const healthOf = (p: HomePlatform): StatusBarHealth => (p.status === 'ACTIVE' ? 
 const dayPart = NOW < 12 * 60 ? 'morning' : NOW < 18 * 60 ? 'afternoon' : 'evening';
 const clock = () => new Date(2026, 9, 26, 9, 12).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 let seq = 100;
+const toMin = (v: string) => { const m = /^(\d{1,2}):(\d{2})$/.exec(v); return m ? +m[1]! * 60 + +m[2]! : null; };
+const hmin = (t: number) => `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
 
 function useWidth<T extends HTMLElement>(dep: unknown): [React.RefObject<T>, number] {
   const ref = useRef<T>(null);
@@ -129,6 +128,10 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
   const [flash, setFlash] = useState(0);
   const [flashRow, setFlashRow] = useState<{ pid: string; ref: string; n: number } | null>(null);
   const [showMore, setShowMore] = useState<Record<string, boolean>>({});
+  const [addOn, setAddOn] = useState<Record<string, boolean>>({});
+  const [extraLines, setExtraLines] = useState<Record<string, HomeCaseLine[]>>({});
+  const [writes, setWrites] = useState(0);
+  const nowMin = NOW + writes;
 
   // Leda
   const [palette, setPalette] = useState(false);
@@ -163,14 +166,14 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
     const c = data.cases[id];
     if (c) return c;
     const it = lookup(id);
-    return { id, evidence: [{ label: 'Platform', value: it?.platform.name ?? '' }], note: `${(it as { detail?: string } | undefined)?.detail ?? 'Leda is watching this.'} Nothing needs you yet.`, noDraft: true };
+    return { id, evidence: [{ label: 'Platform', value: it?.platform.name ?? '' }], note: `${(it as { detail?: string } | undefined)?.detail ?? 'Leda is watching this.'} Nothing needs you yet.`, facts: [] };
   };
 
   // The platforms a decision touches: its own, and where Leda acts (the van's ends), as the workshop's platformsOf.
   const platformsOf = (id: string): string[] => {
     const it = lookup(id);
     if (!it) return [];
-    return [...new Set([it.platform.id, ...(data.cases[id]?.proposal?.van ?? [])])];
+    return data.cases[id]?.pids ?? [it.platform.id];
   };
   const platTab = tab && tab.startsWith('plat:') ? tab.slice(5) : null;
   const caseTab = tab && tab !== 'today' && !platTab ? tab : null;
@@ -190,7 +193,7 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
   }, [tab, flash, phoneDetail]);
 
   const openCase = useCallback((id: string, focus: 'confirm' | 'heading') => {
-    setTabs((t) => (t.includes(id) ? t : [...t, id]));
+    setTabs((t) => [id, ...t.filter((x) => x === 'today' || x.startsWith('plat:'))]);
     setTab(id);
     setPhoneDetail(true);
     pendingFocus.current = focus;
@@ -282,28 +285,47 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
     if (phone) setPhoneDetail(false);
     pendingFocus.current = 'heading';
   };
-  const confirm = (id: string, c: NonNullable<HomeCase['proposal']>) => {
+  const finish = (id: string, text: string, opts: { van?: [string, string]; leda: boolean; at: string; undo: () => void }) => {
+    setPstate((s) => ({ ...s, [id]: 'done' }));
+    setOpenIds((o) => o.filter((x) => x !== id));
+    setDoneExtra((d) => [{ id, at: opts.at }, ...d]);
+    setWrites((n) => n + 1);
+    if (opts.van && opts.van[0] !== opts.van[1]) {
+      mapRef.current?.runVan(opts.van[0], opts.van[1]);
+      setHover([opts.van[0], opts.van[1]]);
+      window.setTimeout(() => setHover(null), 2600);
+    }
+    toast.undo(text, () => {
+      setPstate((s) => ({ ...s, [id]: 'waiting' }));
+      setOpenIds((o) => (o.includes(id) ? o : [...o, id]));
+      setDoneExtra((d) => d.filter((x) => x.id !== id));
+      setWrites((n) => Math.max(0, n - 1));
+      opts.undo();
+      openCase(id, 'heading');
+    }, { leda: opts.leda });
+    advance(id);
+  };
+  const confirm = (id: string) => {
+    const c = caseOf(id);
+    const pr = c.proposal;
+    if (!pr || pstate[id] === 'writing') return Promise.resolve();
+    const opt = pr.options ? (pr.options.find((o) => o.id === (choice[pr.id] ?? pr.options![0]!.id)) ?? pr.options[0]) : null;
+    let text = opt ? opt.after : pr.after;
+    const add = pr.addOn && addOn[pr.id] ? pr.addOn : null;
+    if (add) text += ` ${add.proposalId} + ${add.line.qty} ${add.line.unit}.`;
     setPstate((s) => ({ ...s, [id]: 'writing' }));
     return new Promise<void>((res) =>
       window.setTimeout(() => {
-        setPstate((s) => ({ ...s, [id]: 'done' }));
-        setOpenIds((o) => o.filter((x) => x !== id));
-        setDoneExtra((d) => [{ id, at: '9:13' }, ...d]);
-        if (c.van && c.van[0] !== c.van[1]) {
-          mapRef.current?.runVan(c.van[0], c.van[1]);
-          setHover([c.van[0], c.van[1]]);
-          window.setTimeout(() => setHover(null), 2600);
-        }
-        toast.undo(c.toast, () => {
-          setPstate((s) => ({ ...s, [id]: 'waiting' }));
-          setOpenIds((o) => (o.includes(id) ? o : [...o, id]));
-          setDoneExtra((d) => d.filter((x) => x.id !== id));
-          openCase(id, 'heading');
-        }, { leda: true });
-        advance(id);
+        if (add) setExtraLines((x) => ({ ...x, [add.proposalId]: [...(x[add.proposalId] ?? []), add.line] }));
+        finish(id, text, { van: c.van, leda: true, at: hmin(nowMin + 1), undo: () => { if (add) setExtraLines((x) => ({ ...x, [add.proposalId]: (x[add.proposalId] ?? []).slice(0, -1) })); } });
         res();
       }, 550),
     );
+  };
+  const discard = (id: string) => {
+    const pr = caseOf(id).proposal;
+    if (!pr) return;
+    finish(id, `${pr.id} discarded. Nothing was written.`, { leda: false, at: hmin(nowMin + 1), undo: () => {} });
   };
 
   // Leda
@@ -567,94 +589,132 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
     );
   };
 
+  const dur = (m: number) => (m >= 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m} min`);
+  const propOf = (pid: string) => Object.values(data.cases).find((x) => x.proposal?.id === pid)?.proposal;
+  const linesOf = (pid: string): DraftLine[] => [...(propOf(pid)?.lines ?? []), ...(extraLines[pid] ?? []).map((l) => ({ ...l, added: true }))];
   const caseView = (id: string) => {
     const item = lookup(id);
     if (!item) return null;
     const c = caseOf(id);
     const p = platformById(item.platform.id)!;
+    const src = (item as { source?: string }).source;
     const isOpen = openIds.includes(id);
-    const kind = 'due' in item || openIds.includes(id) ? 'open' : data.watching.some((w) => w.id === id) ? 'watching' : 'closed';
-    const st = pstate[id] ?? 'waiting';
-    const ch = choice[id] ?? 'dispute';
-    const label = c.variance ? (ch === 'accept' ? 'Accept' : 'Dispute') : c.proposal?.confirmLabel ?? 'Confirm';
-    const more = showMore[id];
+    const watch = !isOpen && data.watching.some((w) => w.id === id);
+    const pr = c.proposal;
+    const opt = pr?.options ? (pr.options.find((o) => o.id === (choice[pr.id] ?? pr.options![0]!.id)) ?? pr.options[0]) : null;
+    const more = !!showMore[id];
+    const involved = platformsOf(id).filter((pid) => pid !== failed);
+    const acts = involved
+      .flatMap((pid) => (platformById(pid)?.activity ?? []).map((a) => ({ ...a, pid })))
+      .map((a) => ({ ...a, m: toMin(a.at) }))
+      .filter((a) => a.m != null)
+      .sort((x, y) => y.m! - x.m!)
+      .slice(0, 4);
+    const ev = c.evidence.slice(0, 6);
+    const fold = ev.length > 3 || acts.length > 0;
+    const sep = <span aria-hidden className="text-control">/</span>;
+    const crumbs: ReactNode[] = [
+      <span key="p" className="inline-flex items-center gap-1.5"><PlatformLogo name={p.name} src={p.logo} index={p.index} hq={p.hq} size={16} decorative /><b className="font-semibold text-text">{src ?? p.name}</b></span>,
+      ...(!src && p.kind ? [<span key="k" className="inline-flex items-center gap-1.5">{p.kind}</span>] : []),
+      ...(p.status !== 'ACTIVE' ? [<Badge key="s" tone={p.status === 'DEGRADED' ? 'warn' : 'bad'}>{p.status}</Badge>] : []),
+      ...(watch ? [<Badge key="w" tone="neutral">Watching</Badge>] : []),
+    ];
+    const snz = snoozed.find((x) => x.id === id);
     return (
       <div className="px-pad pb-10 pt-5">
-        <Breadcrumbs
-          aria-label="Where this is"
-          items={[
-            { label: p.name, logo: <PlatformLogo name={p.name} src={p.logo} index={p.index} hq={p.hq} size={16} decorative />, href: p.hq ? '#team' : `#${p.id}`, onClick: (e) => { e.preventDefault(); go(p.hq ? { to: 'team' } : { to: 'platform', id: p.id }); } },
-            { label: p.kind },
-          ]}
-        />
-        <div className="mt-1 flex flex-wrap items-center gap-2">
-          {p.status !== 'ACTIVE' ? <Badge tone={p.status === 'DEGRADED' ? 'warn' : 'bad'}>{p.status === 'DEGRADED' ? 'Slow' : 'Offline'}</Badge> : null}
-          {kind === 'watching' ? <Badge tone="accent">Watching</Badge> : null}
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-small text-muted">
+          {crumbs.map((x, i) => <Fragment key={i}>{i ? sep : null}{x}</Fragment>)}
         </div>
-        <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
-          <h2 ref={headingEl} tabIndex={-1} className="m-0 min-w-0 text-title text-text outline-none focus-visible:ring-2 focus-visible:ring-accent">{item.title}</h2>
-          <div className="flex shrink-0 items-center gap-2">
-            <Button variant="secondary" rightIcon={ArrowSquareOut} onClick={() => go({ to: 'platform', id: p.id })}>Open {p.shortName ?? p.name}</Button>
-            {isOpen ? (
-              <span className="max-[640px]:hidden">
-                <Menu trigger={<Button variant="secondary" leftIcon={Clock}>Snooze</Button>} items={snoozeItems(id)} align="end" />
-              </span>
-            ) : null}
+        <div className="mt-2 flex items-start gap-4 max-[640px]:flex-col max-[640px]:gap-2.5">
+          <h2 ref={headingEl} tabIndex={-1} className="m-0 min-w-0 text-case text-text outline-none focus-visible:ring-2 focus-visible:ring-accent">{item.title}</h2>
+          <div className="ml-auto flex flex-none gap-2 max-[640px]:ml-0">
+            {p && !c.open ? <Button variant="secondary" leftIcon={ArrowSquareOut} className="@max-[680px]/sheet:hidden" onClick={() => go(p.hq ? { to: 'team' } : { to: 'platform', id: p.id })}>Open {p.name}</Button> : null}
+            {isOpen && !phone ? <Menu trigger={<Button variant="secondary" leftIcon={Clock} rightIcon={CaretDown}>Snooze</Button>} items={snoozeItems(id)} align="end" /> : null}
           </div>
         </div>
+        {snz ? <p className="m-0 mt-3 flex items-start gap-2.5 rounded-card bg-raised px-3.5 py-3 text-ui leading-[19px] text-text"><Clock aria-hidden size={14} className="mt-0.5" /><span>Snoozed · {snz.until}</span></p> : null}
         <FactsLine aria-label="Case facts" className="mt-2">
-          {c.due ? <Fact value={c.due}>Due</Fact> : null}
-          {c.left ? <Fact tone={c.left.tone} value={c.left.text}>Time</Fact> : null}
-          {c.deadline ? <Fact value={c.deadline}>Deadline</Fact> : null}
-          {c.impact ? <Fact value={c.impact}>Impact</Fact> : null}
-          {p.ledaCanAct ? <Fact tone="ok">Leda acts in {p.shortName ?? p.name}</Fact> : <Fact tone="muted">Leda can’t act in {p.shortName ?? p.name} yet</Fact>}
+          {c.facts.map((f, i) => {
+            const left = f.left != null ? f.left - nowMin : 0;
+            return (
+              <Fact key={i} className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                {f.leda ? (f.leda === 'cant' ? <Prohibit aria-hidden size={14} /> : <CheckCircle aria-hidden size={14} />) : null}
+                {f.pre}
+                {f.b ? <b className={cn('font-semibold text-text', f.num && 'tabular-nums')}>{f.b}</b> : null}
+                {f.mono ? <span className="font-mono text-ui leading-5">{f.text}</span> : f.text && !f.leda ? f.text : null}
+                {f.leda ? <span className={f.leda === 'can' ? 'text-ok' : undefined}>{f.text}</span> : null}
+                {f.post}
+                {left > 0 ? <span className={cn('font-semibold', left <= 90 ? 'text-bad' : 'text-warn')}>{dur(left)} left</span> : null}
+              </Fact>
+            );
+          })}
         </FactsLine>
-        {c.day ? <DayBar className="mt-4" aria-label={`Today at ${p.name}`} hours={c.day.hours} now={NOW} marks={c.day.marks} /> : null}
-        <div className="mt-6 grid grid-cols-1 gap-x-10 gap-y-6 @min-[760px]/sheet:grid-cols-2">
-          <div className="min-w-0">
-            <DataList items={more ? c.evidence : c.evidence.slice(0, 3)} />
-            {c.evidence.length > 3 ? (
-              <Button variant="text" className="mt-1" aria-expanded={!!more} onClick={() => setShowMore((s) => ({ ...s, [id]: !s[id] }))}>
-                {more ? 'Fewer details' : 'More details'}
-              </Button>
+        {c.day ? (
+          <DayLine
+            open={c.day.hours.open}
+            close={c.day.hours.close}
+            now={nowMin}
+            window={c.day.marks[0]!.at}
+            marks={[{ t: nowMin, label: `Now ${hmin(nowMin)}`, short: 'Now', tone: 'now' }, ...c.day.marks.map((m) => ({ t: m.at, label: m.label, short: m.shortLabel ?? hmin(m.at), tone: (m.tone === 'bad' ? 'bad' : 'ink') as 'bad' | 'ink' }))]}
+          />
+        ) : null}
+        <div className="mt-[22px] grid grid-cols-[minmax(0,1fr)_360px] items-start gap-gap @max-[900px]/sheet:grid-cols-[minmax(0,1fr)_320px] @max-[680px]/sheet:grid-cols-1">
+          <div>
+            <CaseKv items={(more ? ev : ev.slice(0, 3)).map((e) => ({ label: String(e.label), value: String(e.value), note: e.note ? String(e.note) : undefined, tone: e.tone, mono: e.mono }))} />
+            {fold ? <MoreButton open={more} onClick={() => setShowMore((s) => ({ ...s, [id]: !s[id] }))} /> : null}
+            {more && acts.length ? (
+              <section className="mt-3">
+                <h3 className="m-0 mb-1 text-ui font-semibold leading-5 text-text">Today in {involved.map((pid) => platformById(pid)?.name).join(' and ')}</h3>
+                <ol className="m-0 list-none p-0">
+                  {acts.map((a) => (
+                    <li key={a.id + a.pid} className="grid grid-cols-[76px_minmax(0,1fr)] gap-x-3 border-t border-rule py-[7px] text-ui leading-[19px]">
+                      <span className="whitespace-nowrap tabular-nums text-muted">{a.at}</span>
+                      <span className="inline-flex items-start gap-1.5">{involved.length > 1 ? <span className="mt-0.5"><PlatformLogo name={platformById(a.pid)!.name} src={platformById(a.pid)!.logo} index={platformById(a.pid)!.index} hq={platformById(a.pid)!.hq} size={14} decorative /></span> : null}<span>{a.text}</span></span>
+                    </li>
+                  ))}
+                </ol>
+              </section>
             ) : null}
-            <LedaNote className="mt-4">{c.note}</LedaNote>
+            {c.note ? <LedaNote className="mt-4" byline={`Leda, ${hmin(NOW)} AM`}>{c.note}</LedaNote> : null}
           </div>
-          <div className="min-w-0">
-            {c.proposal ? (
-              <>
-                {c.variance && st === 'waiting' ? (
-                  <div className="mb-3 flex flex-wrap items-center gap-3">
-                    <span className="text-ui text-muted">Your choice</span>
-                    <SegmentedControl
-                      aria-label="Your choice"
-                      semantics="radio"
-                      value={ch}
-                      onChange={(v) => setChoice((s) => ({ ...s, [id]: v }))}
-                      options={[{ value: 'dispute', label: 'Dispute' }, { value: 'accept', label: 'Accept' }]}
-                    />
-                  </div>
-                ) : null}
-                <div key={`${id}-${flash}`} className={flash && tab === id ? 'animate-row-flash rounded-card' : 'rounded-card'}>
-                  <LedaProposal
-                    ref={proposalEl}
-                    id={c.proposal.id}
-                    title={c.variance && ch === 'accept' ? 'Accept the invoice as it is' : c.proposal.title}
-                    writes={c.proposal.writes}
-                    notes={c.proposal.notes}
-                    state={st}
-                    confirmLabel={label}
-                    doneAt="9:13"
-                    after={c.proposal.toast}
-                    discardedText="Draft discarded."
-                    onConfirm={() => confirm(id, { ...c.proposal!, confirmLabel: label })}
-                    onDiscard={() => setPstate((s) => ({ ...s, [id]: 'discarded' }))}
-                  />
+          <div>
+            {pr ? (
+              <LedaDraft
+                ref={proposalEl}
+                id={pr.id}
+                title={opt && pr.options ? `${opt.label}: ${pr.title.replace(/^(Approve|Resolve)\s/, '')}` : pr.title}
+                options={pr.options?.map((o) => ({ id: o.id, label: o.label }))}
+                option={opt?.id}
+                onOption={(v) => setChoice((s) => ({ ...s, [pr.id]: v }))}
+                lines={linesOf(pr.id)}
+                writes={[...(opt ? opt.writes : pr.writes), ...(pr.addOn && addOn[pr.id] ? [`${pr.addOn.proposalId}: + ${pr.addOn.line.qty} ${pr.addOn.line.unit} ${pr.addOn.line.ref} (${peso(pr.addOn.line.qty * pr.addOn.line.unitCost)})`] : [])]}
+                cannot={pr.cannot}
+                notifies={opt ? opt.notifies : pr.notifies}
+                addOn={pr.addOn ? { label: pr.addOn.label, amount: pr.addOn.line.qty * pr.addOn.line.unitCost, checked: !!addOn[pr.id], onChange: (v) => setAddOn((s) => ({ ...s, [pr.id]: v })) } : undefined}
+                confirmLabel={opt?.confirmLabel ?? pr.confirmLabel}
+                busy={pstate[id] === 'writing'}
+                kbd={!phone}
+                barOwnsConfirm={phone}
+                onConfirm={() => confirm(id)}
+                onDiscard={() => discard(id)}
+              />
+            ) : c.open ? (
+              <div id="prop" ref={proposalEl} className="rounded-card bg-raised px-[18px] pb-[18px] pt-4 max-[640px]:px-4 max-[640px]:pb-4">
+                <div className="flex items-center gap-2 text-small leading-5 text-muted"><LedaMark size={16} decorative /><span>No draft</span><span aria-hidden>·</span><span>{platformById(c.open.platformId)?.kind}</span></div>
+                <h3 className="m-0 mt-2 text-[16px] font-semibold leading-[22px] text-text">{c.open.label}</h3>
+                <div className="mt-[18px] flex flex-wrap items-center gap-2"><Button variant={c.open.primary ? 'primary' : 'secondary'} leftIcon={ArrowSquareOut} onClick={() => go({ to: 'platform', id: c.open!.platformId })}>Open {platformById(c.open.platformId)?.name}</Button></div>
+              </div>
+            ) : c.plan ? (
+              <div id="prop" ref={proposalEl} className="rounded-card bg-raised px-[18px] pb-[18px] pt-4 max-[640px]:px-4 max-[640px]:pb-4">
+                <div className="flex items-center gap-2 text-small leading-5 text-muted"><LedaMark size={16} decorative /><span>{data.plan.name ?? 'Starter'} plan</span><span aria-hidden>·</span><span className="tabular-nums">{data.plan.cycleStart} to {data.plan.cycleEnd}</span></div>
+                <h3 className="m-0 mt-2 text-[16px] font-semibold leading-[22px] tabular-nums text-text">{data.plan.used.toLocaleString('en-PH')} of {data.plan.max.toLocaleString('en-PH')} requests</h3>
+                <div className="mt-3">
+                  <div className="relative h-2 overflow-hidden rounded bg-raised-2"><span className={cn('absolute inset-y-0 left-0 rounded', Math.round((data.plan.used / data.plan.max) * 100) >= 80 ? 'bg-warn-dot' : 'bg-accent')} style={{ width: `${Math.round((data.plan.used / data.plan.max) * 100)}%` }} /></div>
+                  <div className="mt-1.5 flex justify-between text-small text-muted"><span className="tabular-nums">0</span><span><b className="font-medium tabular-nums text-text">{Math.round((data.plan.used / data.plan.max) * 100)}%</b> used</span><span className="tabular-nums">{data.plan.max.toLocaleString('en-PH')}</span></div>
                 </div>
-              </>
-            ) : (
-              <p className="m-0 text-ui text-muted">No draft for this one. Open {p.shortName ?? p.name} to decide.</p>
-            )}
+                <div className="mt-[18px] flex flex-wrap items-center gap-2"><Button variant="secondary" onClick={() => go({ to: 'plan' })}>See plan</Button></div>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
@@ -745,10 +805,10 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
     if (id === 'today') return { value: 'today', label: 'Today', icon: SquaresFour, closable: true };
     if (id.startsWith('plat:')) {
       const pp = platformById(id.slice(5));
-      return { value: id, label: pp?.name ?? id, leading: pp ? <PlatformLogo name={pp.name} src={pp.logo} index={pp.index} hq={pp.hq} size={16} decorative /> : undefined, closable: true };
+      return { value: id, label: pp?.name ?? id, leading: pp ? <PlatformLogo name={pp.name} src={pp.logo} index={pp.index} hq={pp.hq} size={14} decorative /> : undefined, closable: true };
     }
     const it = lookup(id);
-    return { value: id, label: it?.title ?? id, leading: it ? <PlatformLogo name={it.platform.name} src={it.platform.src} index={it.platform.index} hq={it.platform.hq} size={16} decorative /> : undefined, closable: true };
+    return { value: id, label: it ? (it.title.length > 30 ? `${it.title.slice(0, 29)}…` : it.title) : id, leading: it ? <PlatformLogo name={it.platform.name} src={it.platform.src} index={it.platform.index} hq={it.platform.hq} size={14} decorative /> : undefined, closable: true };
   });
 
   const sheetBar = phone ? undefined : overview ? undefined : (
