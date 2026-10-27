@@ -20,8 +20,8 @@ export interface TabItem {
   preview?: boolean;
   /** Vertical list: a status word under the right edge, for example "Saved" or "Unsaved". */
   status?: string;
-  /** `warn` colours the status word (use it for "Unsaved"). */
-  statusTone?: 'muted' | 'warn';
+  /** `warn` colours the status word (use it for "Unsaved"), `ok` makes it green. */
+  statusTone?: 'muted' | 'warn' | 'ok';
 }
 
 /**
@@ -88,7 +88,7 @@ const rootCls: Record<ReturnType<typeof toSurface>, string> = {
 const listCls: Record<ReturnType<typeof toSurface>, string> = {
   editor: 'flex h-full min-w-0 items-stretch gap-1 overflow-x-auto overflow-y-hidden',
   fixed: 'flex min-h-0 min-w-0 flex-1 items-stretch gap-1 overflow-x-auto overflow-y-hidden border-b border-border',
-  vertical: 'flex flex-col gap-1',
+  vertical: 'flex flex-col gap-1 pb-3 pt-1',
   chips: 'flex min-w-0 items-center gap-2 overflow-x-auto overflow-y-hidden py-0.5',
 };
 
@@ -183,19 +183,19 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
                     'after:absolute after:inset-x-2 after:-bottom-px after:h-0.5 data-[state=active]:after:bg-accent',
                   ),
                 v === 'vertical' &&
-                  'flex w-full items-center gap-2 rounded-control p-2.5 text-left hover:bg-raised hover:text-text data-[state=active]:bg-accent-tint data-[state=active]:font-medium data-[state=active]:text-text',
+                  'group grid w-full grid-cols-[20px_minmax(0,1fr)_auto] items-center gap-x-2.5 gap-y-0.5 rounded-card border border-transparent px-3 py-2.5 text-left text-[14px] leading-5 text-text hover:bg-frame-hover data-[state=active]:border-border data-[state=active]:bg-surface',
                 v === 'chips' &&
                   'inline-flex h-[30px] shrink-0 items-center gap-2 whitespace-nowrap rounded-control border border-border px-3 hover:bg-raised hover:text-text max-[640px]:h-11 data-[state=active]:border-accent data-[state=active]:bg-accent-tint data-[state=active]:font-medium data-[state=active]:text-text',
               )}
             >
-              {Lead && <Lead size={16} aria-hidden className="shrink-0" />}
+              {Lead && <Lead size={16} aria-hidden className={cn('shrink-0', v === 'vertical' && 'text-muted group-data-[state=active]:text-accent')} />}
               {item.leading && <span aria-hidden className="inline-flex shrink-0">{item.leading}</span>}
-              <span className={cn('min-w-0', v === 'editor' || v === 'fixed' ? 'truncate' : v === 'vertical' ? 'flex-1 truncate' : '', item.preview && 'italic')}>
+              <span className={cn('min-w-0', v === 'editor' || v === 'fixed' ? 'truncate' : v === 'vertical' ? 'truncate font-medium' : '', item.preview && 'italic')}>
                 {item.label}
               </span>
               {item.badge != null && <span className="shrink-0 text-small tabular-nums text-muted">{item.badge}</span>}
               {item.status && v === 'vertical' && (
-                <span className={cn('shrink-0 text-small', item.statusTone === 'warn' ? 'text-warn' : 'text-muted')}>
+                <span className={cn('shrink-0 whitespace-nowrap text-small leading-4', item.statusTone === 'warn' ? 'text-warn' : item.statusTone === 'ok' ? 'text-ok' : 'text-muted')}>
                   {item.status}
                 </span>
               )}

@@ -152,3 +152,17 @@ describe('Tabs editor, workshop tab (RDY-364)', () => {
     expect(container.querySelectorAll('[data-close]')).toHaveLength(2);
   });
 });
+describe('Tabs vertical, workshop .snav (RDY-364)', () => {
+  it('grid 20px / 1fr / auto, 10px 12px padding, card radius; selected is a surface with a border; ok status is green', () => {
+    render(<Tabs variant="vertical" aria-label="Sections" value="a" items={[{ value: 'a', label: 'Setup', status: 'Done', statusTone: 'ok' }, { value: 'b', label: 'Hours', status: 'Unsaved', statusTone: 'warn' }]} />);
+    const [a] = screen.getAllByRole('tab');
+    expect(a!.className).toContain('grid-cols-[20px_minmax(0,1fr)_auto]');
+    expect(a!.className).toContain('px-3 py-2.5');
+    expect(a!.className).toContain('rounded-card');
+    expect(a!.className).toContain('data-[state=active]:bg-surface');
+    expect(a!.className).toContain('data-[state=active]:border-border');
+    expect(screen.getByText('Done').className).toContain('text-ok');
+    expect(screen.getByRole('tablist').className).toContain('gap-1');
+  });
+});
+
