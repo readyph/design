@@ -179,7 +179,7 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
 
   const sections: { key: string; cls: string; node: ReactNode }[] = [];
 
-  if (platforms.length > 0) {
+  if (platforms.length > 0 || portalSummary) {
     sections.push({ key: 'platforms', cls: 'flex min-w-0 shrink', node: (
         <ul role="list" aria-label="Platforms" className="flex min-w-0 items-center gap-0.5 overflow-hidden">
           {portalSummary && (

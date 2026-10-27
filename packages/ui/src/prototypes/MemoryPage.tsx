@@ -62,6 +62,7 @@ import {
   type MemRequest,
   type MemSrc,
   type MemTopic,
+  priceListTopic,
 } from "./Memory.proto.data";
 
 /**
@@ -208,6 +209,7 @@ export function MemoryPage(props: MemoryPageProps) {
   const loading = state === "loading";
   const error = state === "error";
   const empty = state === "empty";
+  const SRCS: MemSrc[] = empty ? ["company"] : MEM_SOURCES;
 
   const [tab, setTab] = useState<"topics" | "blocked" | "requests">(tab0);
   const [folder, setFolder] = useState<"" | MemSrc>(doc0 ? doc0.src : folder0);
@@ -255,7 +257,7 @@ export function MemoryPage(props: MemoryPageProps) {
     () =>
       empty
         ? []
-        : [...memTopics, ...added]
+        : [...memTopics, ...(state === "full" ? [priceListTopic()] : []), ...added]
             .filter((t) => !removed.includes(keyOf(t)))
             .map((t) => (custom[keyOf(t)] ? { ...t, ...custom[keyOf(t)] } : t))
             .map((t) => ({ ...t, on: on[keyOf(t)] ?? t.on })),
@@ -265,7 +267,7 @@ export function MemoryPage(props: MemoryPageProps) {
   const onCount = (src: MemSrc | "") => topicsOf(src).filter((t) => t.on).length;
   const blockedAll = empty ? [] : blocked;
   const requestsAll: MemRequest[] = memRequests.map((r) => ({ ...r, on: reqOn[`${r.src}|${r.key}`] }));
-  const used = state === "full" ? Math.round(MEM_CAP * 0.93) : 2201 + added.reduce((n, t) => n + t.title.length + t.text.length, 0) - removed.reduce((n) => n, 0);
+  const used = allTopics.filter((t) => t.type === "custom").reduce((n, t) => n + t.title.length + t.text.length, 0);
   const left = MEM_CAP - used;
   const roomState: "ok" | "near" | "full" = used / MEM_CAP >= 1 ? "full" : used / MEM_CAP >= 0.85 ? "near" : "ok";
   const curTopic = doc ? allTopics.find((t) => keyOf(t) === doc) : undefined;
@@ -324,6 +326,10 @@ export function MemoryPage(props: MemoryPageProps) {
     <span className="inline-block h-3 w-[150px] rounded-[3px] bg-skeleton align-middle" />
   ) : error ? (
     <span>No data</span>
+  ) : empty ? (
+    <span>
+      <b className="font-semibold text-text">No platforms yet</b> · the company is the HQ plot
+    </span>
   ) : shown ? (
     <span>
       <b className="font-semibold text-text">{srcName(shown)}</b> · {onCount(shown)} of {topicsOf(shown).length} topics on
@@ -401,7 +407,7 @@ export function MemoryPage(props: MemoryPageProps) {
 
   // ----- Try it (answerOf in memory.js) -----
   const pvItems = (scope: string) => {
-    const srcs = scope === "any" ? MEM_SOURCES : [scope as MemSrc];
+    const srcs = scope === "any" ? SRCS : [scope as MemSrc];
     const tag = (s: MemSrc) => (scope === "any" ? srcShort(s) : "");
     const out: { v: string; q: string; kind: "topic" | "req" | "blocked"; t?: MemTopic; r?: MemRequest; b?: MemBlocked; src: MemSrc; meta: string }[] = [];
     srcs.forEach((src) => {
@@ -451,7 +457,7 @@ export function MemoryPage(props: MemoryPageProps) {
   // ----- the left column -----
   const folderRows: { id: "" | MemSrc; name: string; note: string }[] = [
     { id: "", name: "All topics", note: allTopics.length ? `${onCount("")} of ${allTopics.length} on` : "None yet" },
-    ...MEM_SOURCES.map((s) => ({ id: s as MemSrc, name: srcName(s), note: topicsOf(s).length ? `${onCount(s)} of ${topicsOf(s).length} on` : "None yet" })),
+    ...SRCS.map((s) => ({ id: s as MemSrc, name: srcName(s), note: topicsOf(s).length ? `${onCount(s)} of ${topicsOf(s).length} on` : "None yet" })),
   ];
   const curFolder: "" | MemSrc | undefined = phone && !phoneSheet ? undefined : doc && curTopic ? curTopic.src : folder;
   const lrow = (on0: boolean) =>
@@ -480,17 +486,15 @@ export function MemoryPage(props: MemoryPageProps) {
     <div className="flex h-full min-h-0 flex-col overflow-y-auto pb-4">
       <div className="min-h-[220px] shrink-0">
         <TownMap
-          platforms={mapSlots}
+          platforms={error ? [null, null, null, null] : empty ? [null, null, null, mapSlots[3]] : mapSlots}
           caption={caption}
           loading={loading}
-          error={error}
-          onRetry={() => toast.info("Memory loaded.")}
           selected={shown ? BUILDING[shown] : null}
           highlight={hover ? [hover] : null}
           onSelect={(id) => (id ? pickFolder(mapOf(id) as MemSrc) : pickFolder(""))}
         />
       </div>
-      <div className="px-3 pb-2 pr-1 pt-3 max-[640px]:px-4">
+      <div className="px-3 pb-3 pr-1 pt-3 max-[640px]:px-4">
         <div className="flex items-center gap-2.5">
           {phone && phoneSheet ? null : <LedaMark size={20} decorative className="shrink-0" />}
           {phone && phoneSheet ? (
@@ -521,7 +525,7 @@ export function MemoryPage(props: MemoryPageProps) {
       ) : error ? (
         <>
           {ghead("Folders")}
-          <p className="m-0 px-3 py-2 text-[13px] leading-[18px] text-muted">No data. Try again in the main panel.</p>
+          <p className="mx-3 my-0 rounded-card border border-dashed border-control px-3 py-2.5 text-[13px] leading-[18px] text-muted max-[640px]:mx-4">No data. Try again in the main panel.</p>
         </>
       ) : (
         <>
@@ -559,11 +563,11 @@ export function MemoryPage(props: MemoryPageProps) {
           {ghead("Memory room", "Topics you write", true)}
           <div className="mx-3 pt-1 text-[13px] leading-[18px]">
             <div className="flex items-center gap-2.5 font-medium">
-              <span className="tabular-nums">
+              <span className={cn("tabular-nums", roomState === "full" ? "text-bad" : roomState === "near" && "text-warn")}>
                 {num(used)} of {num(MEM_CAP)} characters
               </span>
-              <span aria-hidden="true" className="h-1 w-24 overflow-hidden rounded-full bg-raised-2">
-                <i className={cn("block h-full rounded-full", roomState === "full" ? "bg-bad-dot" : roomState === "near" ? "bg-warn-dot" : "bg-muted")} style={{ width: `${Math.min(100, Math.round((used / MEM_CAP) * 100))}%` }} />
+              <span aria-hidden="true" className="ml-auto h-1 w-24 shrink-0 overflow-hidden rounded-[2px] bg-frame-active">
+                <i className={cn("block h-full", roomState === "full" ? "bg-bad-dot" : roomState === "near" ? "bg-warn-dot" : "bg-control")} style={{ width: `${Math.min(100, Math.round((used / MEM_CAP) * 100))}%` }} />
               </span>
             </div>
             <p className="m-0 mt-1 text-muted">
@@ -635,7 +639,7 @@ export function MemoryPage(props: MemoryPageProps) {
         aria-label={`Business: ${folder ? srcName(folder) : "All businesses"}`}
         options={[
           { value: "", label: "All businesses", icon: <Books size={14} aria-hidden /> },
-          ...MEM_SOURCES.map((s) => ({ value: s, label: srcName(s), icon: <Logo src={s} size={14} /> })),
+          ...SRCS.map((s) => ({ value: s, label: srcName(s), icon: <Logo src={s} size={14} /> })),
         ]}
         value={folder}
         onValueChange={(v) => pickFolder(v as "" | MemSrc)}
@@ -717,7 +721,7 @@ export function MemoryPage(props: MemoryPageProps) {
         {all ? "Turn all off" : "Turn all on"}
       </Button>
     ) : null;
-    const sub = `${ts.length ? `${onN} of ${ts.length} on` : "No topics yet"} · ${f ? (f === "company" ? "Leda uses these for every business" : MEM_KIND[f]) : plural(MEM_SOURCES.length, "folder")}`;
+    const sub = `${ts.length ? `${onN} of ${ts.length} on` : "No topics yet"} · ${f ? (f === "company" ? "Leda uses these for every business" : MEM_KIND[f]) : plural(SRCS.length, "folder")}`;
     const title = f ? (
       <span className="inline-flex items-center gap-2.5">
         <Logo src={f} size={24} />
@@ -946,8 +950,8 @@ export function MemoryPage(props: MemoryPageProps) {
       return (
         <>
           <Head h={hh} title="All topics" sub="Nothing yet" />
-          <div className="mt-5 max-w-[600px] rounded-card bg-raised px-5 py-[18px]">
-            <h3 className="m-0 text-[15px] font-semibold leading-[21px]">Nothing for Leda to know yet</h3>
+          <div className="mt-5 rounded-card bg-raised px-5 pb-5 pt-[18px]">
+            <h3 className="m-0 text-base font-semibold leading-[22px]">Nothing for Leda to know yet</h3>
             <p className="m-0 mt-0.5 text-[14px] leading-5 text-muted">Add a platform and its data becomes topics Leda can answer from, like services and prices or opening hours. You can also write your own: payment options, warranty, how to find you.</p>
             <div className="mt-3.5 flex flex-wrap gap-2">
               {canEdit ? <Button leftIcon={Plus} onClick={() => newTopic("company")}>Add a company topic</Button> : null}
@@ -964,7 +968,7 @@ export function MemoryPage(props: MemoryPageProps) {
     const f = folder;
     const list = f ? blockedAll.filter((b) => b.src === f) : blockedAll;
     const inherited = f && f !== "company" ? blockedAll.filter((b) => b.src === "company") : [];
-    const srcs = f ? [f] : MEM_SOURCES;
+    const srcs = f ? [f] : SRCS;
     const sub = `${plural(list.length, "question")} · ${f ? (f === "company" ? "for every business" : `at ${srcShort(f)}`) : "for the company and each platform"}`;
     const addBlocked = () => {
       const v = bqText.trim().replace(/^["“]|["”]$/g, "");
@@ -1240,7 +1244,7 @@ export function MemoryPage(props: MemoryPageProps) {
         status={
           <StatusBar
             ledaFirst
-            platforms={[
+            platforms={empty ? [] : [
               { id: "autoworks", name: "Auto Works", logoSrc: AUTO_LOGO },
               { id: "stockroom", name: "Stockroom", color: "#6d48c6", initials: "PS" },
             ]}
