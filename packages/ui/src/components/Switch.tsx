@@ -23,6 +23,8 @@ export interface SwitchProps {
   /** Id of the element naming the switch when there is no visible `label`. */
   'aria-labelledby'?: string;
   className?: string;
+  /** `workshop` (RDY-358): the prototype's track: off is the control grey with a white thumb, no hover change. Default keeps the design-system look. */
+  look?: 'default' | 'workshop';
 }
 
 /**
@@ -30,7 +32,7 @@ export interface SwitchProps {
  * Stack rows with `gap-field-y`. Without a `label` it renders the bare switch.
  */
 export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(function Switch(
-  { checked, defaultChecked, onCheckedChange, disabled, name, id, label, description, example, lockNote, className, 'aria-label': ariaLabel, 'aria-labelledby': ariaLabelledby },
+  { checked, defaultChecked, onCheckedChange, disabled, name, id, label, description, example, lockNote, className, look = 'default', 'aria-label': ariaLabel, 'aria-labelledby': ariaLabelledby },
   ref,
 ) {
   const auto = useId();
@@ -54,15 +56,18 @@ export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(function Switch
       aria-describedby={describedBy}
       className={cn(
         'group relative inline-flex h-5 w-[34px] shrink-0 cursor-pointer items-center rounded-full border transition-colors duration-hover',
-        'border-faint bg-raised hover:bg-raised-2 data-[state=checked]:border-accent data-[state=checked]:bg-accent data-[state=checked]:hover:border-accent-hover data-[state=checked]:hover:bg-accent-hover',
-        'disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-raised disabled:data-[state=checked]:hover:bg-accent',
+        look === 'workshop'
+          ? 'border-control bg-control data-[state=checked]:border-accent data-[state=checked]:bg-accent'
+          : 'border-faint bg-raised hover:bg-raised-2 data-[state=checked]:border-accent data-[state=checked]:bg-accent data-[state=checked]:hover:border-accent-hover data-[state=checked]:hover:bg-accent-hover',
+        'disabled:cursor-not-allowed disabled:opacity-50',
+        look !== 'workshop' && 'disabled:hover:bg-raised disabled:data-[state=checked]:hover:bg-accent',
         // Forced-colors repaints fills, so the states need system colours: off = Canvas track, CanvasText border and thumb; on = Highlight track, HighlightText thumb.
         'forced-colors:border-[CanvasText] forced-colors:bg-[Canvas] forced-colors:data-[state=checked]:border-[Highlight] forced-colors:data-[state=checked]:bg-[Highlight] forced-colors:disabled:border-[GrayText]',
         focusRing,
         !label && className,
       )}
     >
-      <RadixSwitch.Thumb className="block h-3.5 w-3.5 translate-x-0.5 rounded-full bg-faint transition-transform duration-hover motion-reduce:transition-none data-[state=checked]:translate-x-4 data-[state=checked]:bg-accent-ink forced-colors:bg-[CanvasText] forced-colors:data-[state=checked]:bg-[HighlightText]" />
+      <RadixSwitch.Thumb className={cn('block h-3.5 w-3.5 translate-x-0.5 rounded-full transition-transform duration-hover motion-reduce:transition-none data-[state=checked]:translate-x-4 data-[state=checked]:bg-accent-ink forced-colors:bg-[CanvasText] forced-colors:data-[state=checked]:bg-[HighlightText]', look === 'workshop' ? 'bg-surface' : 'bg-faint')} />
     </RadixSwitch.Root>
   );
 
