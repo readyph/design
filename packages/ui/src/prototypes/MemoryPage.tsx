@@ -37,7 +37,6 @@ import { go as navGo, type Dest } from "./protoNav";
 import { StatusBar } from "../components/StatusBar";
 import { SheetBar } from "../components/SheetBar";
 import { Select } from "../components/Select";
-import { Skeleton } from "../components/Skeleton";
 import { SubpageLane, SubpageTransition, type SubpageDirection } from "../components/SubpageTransition";
 import { Switch } from "../components/Switch";
 import { Tabs } from "../components/Tabs";
@@ -919,7 +918,7 @@ export function MemoryPage(props: MemoryPageProps) {
     if (loading)
       return (
         <>
-          <Skeleton variant="text" lines={1} className="mb-2.5 w-[140px]" />
+          <div className="mb-2.5 flex h-3"><span className="block h-3 w-[140px] rounded-[3px] bg-skeleton" /></div>
           <Head h={hh} title="All topics" sub={<span className="inline-block h-[13px] w-[220px] rounded-[3px] bg-skeleton align-middle" />} />
           <div className="mt-5"><span className="block h-10 w-full rounded-[3px] bg-skeleton" /></div>
           <div className="mt-4">
@@ -937,7 +936,7 @@ export function MemoryPage(props: MemoryPageProps) {
       return (
         <>
           <Head h={hh} title="What customers' Leda knows" />
-          <div role="alert" className="mt-4 flex items-center gap-2.5 rounded-card border border-border bg-raised px-3.5 py-3 text-[14px] leading-5">
+          <div role="alert" className="mt-5 flex items-center gap-2.5 rounded-card border border-dashed border-control px-3.5 py-3 text-[14px] leading-5">
             <WarningCircle size={18} aria-hidden className="shrink-0 text-bad" />
             <span className="min-w-0 flex-1">Couldn't load what Leda knows. Customers' Leda keeps using the last saved switches.</span>
             <Button variant="secondary" onClick={() => toast.info("Memory loaded.")}>Try again</Button>
@@ -1240,7 +1239,7 @@ export function MemoryPage(props: MemoryPageProps) {
         place={placeBody}
         sheetLabel="Memory"
         sheetBar={sheetBar}
-        account={{ name: "Ramon Dela Cruz", email: "ramon@delacruz.ph", role: "Owner" }}
+        account={readOnly ? { name: "Arnel Cruz", email: "arnel@example.ph", role: "Member" } : { name: "Ramon Dela Cruz", email: "ramon@delacruz.ph", role: "Owner" }}
         status={
           <StatusBar
             ledaFirst
