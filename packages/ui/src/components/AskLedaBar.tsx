@@ -112,7 +112,7 @@ const VARIANT = {
   bar: {
     outer: 'inline-flex w-auto max-w-full shrink-0 basis-auto',
     wrap: 'w-leda-w shrink-0 max-[640px]:w-[var(--ctl-touch)]',
-    bar: 'h-[var(--ctl-leda-bar)] gap-2.5 pl-2.5 pr-1.5 leading-5 max-[640px]:h-[var(--ctl-touch)] max-[640px]:justify-center max-[640px]:px-0',
+    bar: 'h-[var(--ctl-leda-bar)] gap-2.5 pl-2.5 pr-1.5 leading-5 max-[640px]:h-[var(--ctl-touch)] max-[640px]:justify-center max-[640px]:border-0 max-[640px]:bg-transparent max-[640px]:px-0',
     mark: 20,
   },
   overview: {

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   ArrowLeft,
+  CaretLeft,
   ArrowRight,
   Buildings,
   Check,
@@ -583,7 +584,7 @@ export function MemoryPage(props: MemoryPageProps) {
   // ----- sheet parts -----
   const tryBtn =
     loading || error ? null : (
-      <Button variant="secondary" leftIcon={ChatCircle} aria-haspopup="dialog" onClick={() => openTry(folder || undefined)} className="max-[640px]:h-10">
+      <Button variant="secondary" leftIcon={ChatCircle} aria-haspopup="dialog" onClick={() => openTry(folder || undefined)} className="max-[640px]:h-10 min-[641px]:max-[1100px]:ml-auto">
         Try it
       </Button>
     );
@@ -593,7 +594,25 @@ export function MemoryPage(props: MemoryPageProps) {
       <AskLedaBar scope="memory" paused={tryShown} />
     </>
   );
-  const sheetBar = inDoc ? (
+  const detailPhone = phone && (inDoc || phoneSheet);
+  // Phone detail screens: one fixed bar on --frame (back, Try it, the Ask Leda icon) replaces the top bar (shell.css .pback / memory.css .sb-try).
+  const detailBar = detailPhone ? (
+    <>
+      <button
+        type="button"
+        onClick={() => (inDoc ? closeDoc() : setPhoneSheet(false))}
+        className={cn("-ml-3 inline-flex h-11 shrink-0 items-center gap-1 self-center rounded-control px-2 text-[14px] leading-5 text-text", focusRing)}
+      >
+        <CaretLeft size={14} aria-hidden />
+        <span>Memory</span>
+      </button>
+      <span className="ml-auto flex shrink-0 items-center gap-5">
+        {tryBtn}
+        <AskLedaBar variant="bar" scope="memory" paused={tryShown} />
+      </span>
+    </>
+  ) : undefined;
+  const sheetBar = detailPhone ? undefined : inDoc ? (
     <SheetBar actions={actions}>
       <nav aria-label="You are here" className="flex min-w-0 items-center gap-2 text-[13px] leading-5">
         <button type="button" title="Back to Memory (Esc)" onClick={closeDoc} className={cn("inline-flex shrink-0 items-center gap-1.5 rounded-[4px] px-1 py-1 text-muted hover:text-text", focusRing)}>
@@ -616,7 +635,7 @@ export function MemoryPage(props: MemoryPageProps) {
       <button type="button" className="mr-3 inline-flex shrink-0 items-center gap-1 text-[14px] text-muted hover:text-text sm:hidden" onClick={() => setPhoneSheet(false)}>
         <ArrowLeft size={14} aria-hidden /> Memory
       </button>
-      <div className="flex min-w-0 flex-1 items-stretch [&_[role=tab]]:text-[13px] [&_[role=tab]_svg]:size-[14px]">
+      <div className={cn("flex min-w-0 flex-1 items-stretch [&_[role=tab]]:text-[13px] [&_[role=tab]_svg]:size-[14px]", !phone && "[&_[role=tab]]:!font-normal")}>
       <Tabs
         variant={phone ? "chips" : "fixed"}
         aria-label="Memory"
@@ -1221,7 +1240,18 @@ export function MemoryPage(props: MemoryPageProps) {
   })();
 
   const sheet = (
-    <div ref={bodyRef} className="px-6 pb-8 pt-5 max-[640px]:px-4">
+    <div ref={bodyRef} className="px-6 pb-8 pt-5 max-[640px]:px-4 max-[640px]:pt-2">
+      {detailPhone && !inDoc ? (
+        <div className="mb-6">
+          <Tabs
+            variant="chips"
+            aria-label="Memory"
+            items={TABS.map((t) => ({ value: t.value, label: t.label }))}
+            value={tab}
+            onValueChange={goTab}
+          />
+        </div>
+      ) : null}
       {inDoc ? docBody : renderPanel()}
     </div>
   );
@@ -1236,6 +1266,7 @@ export function MemoryPage(props: MemoryPageProps) {
         onNavigate={(d: Dest) => (d.to === "memory" ? (inDoc ? closeDoc() : undefined) : navGo(d))}
         leda={<AskLedaBar variant="bar" scope="memory" paused={tryShown} onOpen={() => openTry()} />}
         detail={inDoc || phoneSheet}
+        topBar={detailBar}
         placeLabel="Memory folders"
         place={placeBody}
         sheetLabel="Memory"
