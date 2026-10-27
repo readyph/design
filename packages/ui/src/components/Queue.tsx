@@ -96,6 +96,8 @@ export interface QueueProps {
   hideEmpty?: boolean;
   /** Drops the rule above the pinned groups (the content above brings its own). */
   flushGroups?: boolean;
+  /** Phone page: the groups follow the list 10px under it with no rule above and nothing below (the content under them brings its own rule). */
+  tightGroups?: boolean;
   /** A line after the groups (a quiet day's "Next: ..." on a phone). */
   footer?: ReactNode;
   /** Heading level of the title (pinned groups sit one level below). Default 1. */
@@ -328,6 +330,7 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
     title = 'Needs you',
     hideEmpty = false,
     flushGroups = false,
+    tightGroups = false,
     footer,
     headingLevel = 1,
     headline,
@@ -550,7 +553,7 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
           className={cn(
             // While loading the skeletons are not focusable, so the box must not scroll (axe scrollable-region-focusable).
             'min-h-0 flex-initial overscroll-contain scroll-pb-8 px-0 pt-0',
-            hideEmpty && isEmpty ? 'pb-0' : 'pb-3',
+            hideEmpty && isEmpty ? 'pb-0' : tightGroups && hasPinned ? 'pb-1.5' : 'pb-3',
             loading ? 'overflow-hidden' : 'overflow-y-auto',
             'data-[more=true]:[mask-image:linear-gradient(to_bottom,#000_calc(100%-28px),transparent)]',
           )}
@@ -617,7 +620,7 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
         </div>
 
         {hasPinned ? (
-          <div className={cn('flex max-h-[45%] shrink-0 flex-col gap-2.5 overflow-y-auto overscroll-contain pb-2.5 pt-1', !flushGroups && 'border-t border-rule')}>
+          <div className={cn('flex max-h-[45%] shrink-0 flex-col gap-2.5 overflow-y-auto overscroll-contain pt-1', tightGroups ? 'pb-0' : 'pb-2.5', !flushGroups && !tightGroups && 'border-t border-rule')}>
             {vWatching.length ? (
               <PinnedGroup kind="watching" count={vWatching.length} level={pinnedLevel} open={open.has('watching')} onToggle={() => toggle('watching')}>
                 <ul className="m-0 flex list-none flex-col gap-2 p-0 pb-1">

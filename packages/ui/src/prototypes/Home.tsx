@@ -826,6 +826,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
         title={quiet && !filter ? 'All clear' : undefined}
         hideEmpty={quiet && data.watching.length > 0}
         flushGroups={!!phoneOverview}
+        tightGroups={phone && !phoneOverview}
         footer={phoneOverview ? data.next : undefined}
         belowHeadline={phone ? <>{askBar('overview', false)}{phoneOverview}</> : undefined}
         defaultOpenGroups={quiet ? ['watching'] : []}
