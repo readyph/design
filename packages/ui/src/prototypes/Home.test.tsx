@@ -49,12 +49,20 @@ describe('Home', () => {
       await vi.advanceTimersByTimeAsync(900);
     });
     expect(queue().getAllByRole('listitem')).toHaveLength(3);
-    // the pressed button is gone: focus is on the result line, never on <body>
-    expect(document.activeElement).not.toBe(document.body);
-    expect(document.activeElement?.closest('[data-state="done"]')).toBeTruthy();
-    // next: focus moves to the next case's heading
-    fireEvent.click(screen.getByRole('button', { name: /Next: Oil filters/ }));
+    // the workshop moves on by itself to the next decision in the same tab, focus on its heading
+    expect(screen.queryByRole('button', { name: /Next: / })).toBeNull();
     expect(document.activeElement).toBe(screen.getByRole('heading', { level: 2, name: /Oil filters at 4/ }));
+    expect(screen.getAllByRole('tab', { name: /Oil filters at 4/ })).toHaveLength(1);
+    expect(screen.queryByRole('tab', { name: /alternator/i })).toBeNull();
+  });
+
+  it('picking a platform on the map opens its tab with the platform page; picking it again closes the tab', () => {
+    render(<Home />);
+    fireEvent.click(screen.getByRole('button', { name: /^Dela Cruz Auto Works/ }));
+    expect(screen.getByRole('tab', { name: /Auto Works/ })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 3, name: 'Linked platforms' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /^Dela Cruz Auto Works/ }));
+    expect(screen.queryByRole('tab', { name: /Auto Works/ })).toBeNull();
   });
 
   it('snoozing a case moves it to Snoozed and puts focus on the sheet, not body', async () => {

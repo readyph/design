@@ -123,6 +123,8 @@ export interface PlatformTodayProps extends Omit<HTMLAttributes<HTMLElement>, 't
    * list), and a Today block is a side panel. Turn on only when this block is the page's main list.
    */
   shortcuts?: boolean;
+  /** Lists only: no header and no facts line, for a page that draws its own (the Home platform tab). Needs `aria-label`. */
+  bare?: boolean;
 }
 
 /**
@@ -274,6 +276,7 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
     rowLayout = 'narrow',
     flashRow = null,
     shortcuts = false,
+    bare = false,
     className,
     ...rest
   },
@@ -343,12 +346,13 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
   return (
     <section
       ref={ref}
-      aria-labelledby={nameId}
+      aria-labelledby={bare ? undefined : nameId}
       aria-busy={loading || undefined}
       data-surface={surface}
       className={cn('@container/today relative min-w-0', className)}
       {...rest}
     >
+      {bare ? null : (
       <header className={cn('sticky top-0 z-10 flex items-center gap-2.5 border-b border-control bg-[var(--scope-bg)] pb-2.5 pt-0.5')}>
         <PlatformLogo {...platform} name={platform.name} decorative size={24} className="mt-px" />
         <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2.5">
@@ -370,7 +374,8 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
           </Button>
         ) : null}
       </header>
-      {hasFacts && !loading ? (
+      )}
+      {hasFacts && !loading && !bare ? (
         <FactsLine aria-label={`${platform.name} facts`} className="mt-1.5">
           {shown.map((f, i) => (
             <Fact key={i} value={f.value} tone={f.tone} valueFirst>

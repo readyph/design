@@ -23,13 +23,13 @@ import { SegmentedControl } from '../components/SegmentedControl';
 import { SheetBar } from '../components/SheetBar';
 import { cn } from '../utils/cn';
 import { StatusBar, type StatusBarHealth } from '../components/StatusBar';
+import { SubpageLane, SubpageTransition, type SubpageDirection } from '../components/SubpageTransition';
 import { Tabs, type TabItem } from '../components/Tabs';
 import { TownMap, type TownMapHandle } from '../components/TownMap';
 import { Toaster } from '../components/toast/Toaster';
 import { toast } from '../components/toast/toastStore';
 import { PortalFrame } from './PortalFrame';
 import { destFromHash, go } from './protoNav';
-import { focusIfLost } from '../utils/focusIfLost';
 import { useMatchMedia } from '../utils/useMatchMedia';
 import { ledaMode, mapSlots, queuePlatforms, sets, defaultSuggestions, type HomeCase, type HomePlatform, type HomeSetKey, type HomeState } from './Home.data';
 
@@ -53,7 +53,7 @@ const dayPart = NOW < 12 * 60 ? 'morning' : NOW < 18 * 60 ? 'afternoon' : 'eveni
 const clock = () => new Date(2026, 9, 26, 9, 12).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 let seq = 100;
 
-function useWidth<T extends HTMLElement>(): [React.RefObject<T>, number] {
+function useWidth<T extends HTMLElement>(dep: unknown): [React.RefObject<T>, number] {
   const ref = useRef<T>(null);
   const [w, setW] = useState(1200);
   useLayoutEffect(() => {
@@ -63,7 +63,7 @@ function useWidth<T extends HTMLElement>(): [React.RefObject<T>, number] {
     ro.observe(el);
     setW(el.clientWidth);
     return () => ro.disconnect();
-  }, []);
+  }, [dep]);
   return [ref as React.RefObject<T>, w];
 }
 
@@ -116,7 +116,10 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
   const [tab, setTab] = useState<string | null>(quiet ? null : 'today');
   const [phoneDetail, setPhoneDetail] = useState(false);
   const [filter, setFilter] = useState<string | null>(null);
-  const [hover, setHover] = useState<string | null>(null);
+  const [hover, setHover] = useState<string[] | null>(null);
+  const [sub, setSub] = useState<{ n: number; dir: SubpageDirection }>({ n: 0, dir: 'in' });
+  const slide = (dir: SubpageDirection) => setSub((x) => ({ n: x.n + 1, dir }));
+  const lastOpened = useRef<string | null>(null);
   const [cursor, setCursor] = useState<string | null>(() => itemsAll[0]?.id ?? null);
   const [pstate, setPstate] = useState<Record<string, LedaProposalState>>({});
   const [choice, setChoice] = useState<Record<string, string>>({});
@@ -138,7 +141,10 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
   const headingRef = useRef<HTMLHeadingElement>(null);
   const proposalRef = useRef<HTMLDivElement>(null);
   const pendingFocus = useRef<'confirm' | 'heading' | null>(null);
-  const [bodyRef, bodyW] = useWidth<HTMLDivElement>();
+  const [bodyRef, bodyW] = useWidth<HTMLDivElement>(sub.n);
+  // The subpage lane keeps the old pane mounted for a moment: refs here only ever take the newest element, never reset to null by the leaving one.
+  const headingEl = (el: HTMLHeadingElement | null) => { if (el) (headingRef as { current: HTMLHeadingElement | null }).current = el; };
+  const proposalEl = (el: HTMLDivElement | null) => { if (el) (proposalRef as { current: HTMLDivElement | null }).current = el; };
 
   const platformById = (id: string) => (id === 'hq' ? data.hq : data.platforms.find((p) => p.id === id));
   const shortOf = (id: string | null) => (id ? platformById(id)?.shortName ?? 'HQ' : null);
@@ -156,6 +162,16 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
     const it = lookup(id);
     return { id, evidence: [{ label: 'Platform', value: it?.platform.name ?? '' }], note: `${(it as { detail?: string } | undefined)?.detail ?? 'Leda is watching this.'} Nothing needs you yet.`, noDraft: true };
   };
+
+  // The platforms a decision touches: its own, and where Leda acts (the van's ends), as the workshop's platformsOf.
+  const platformsOf = (id: string): string[] => {
+    const it = lookup(id);
+    if (!it) return [];
+    return [...new Set([it.platform.id, ...(data.cases[id]?.proposal?.van ?? [])])];
+  };
+  const platTab = tab && tab.startsWith('plat:') ? tab.slice(5) : null;
+  const caseTab = tab && tab !== 'today' && !platTab ? tab : null;
+  const mapHighlight = hover ?? (caseTab ? platformsOf(caseTab) : platTab ? [platTab] : filter ? [filter] : null);
 
   // After the sheet changes by the user's own action: focus Confirm (row action) or the heading. Layout effect, no timeout.
   useLayoutEffect(() => {
@@ -178,6 +194,20 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
     if (focus === 'confirm') setFlash((n) => n + 1);
   }, []);
 
+  /** A click on a queue row or its action: the case slides in (phone: over the list); j/k, confirms and palette stay instant. */
+  const pushCase = (id: string, focus: 'confirm' | 'heading') => {
+    lastOpened.current = id;
+    const same = tab === id && !(phone && !phoneDetail);
+    if (!same && (phone ? !phoneDetail : true)) slide('in');
+    openCase(id, focus);
+  };
+  const openPlatform = (pid: string) => {
+    const id = `plat:${pid}`;
+    setTabs((t) => (t.includes(id) ? t : [...t, id]));
+    setTab(id);
+    setPhoneDetail(true);
+    pendingFocus.current = 'heading';
+  };
   const showToday = () => {
     setTabs((t) => (t.includes('today') ? t : ['today', ...t]));
     setTab('today');
@@ -187,6 +217,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
   const closeTab = (value: string) => {
     const next = tabs.filter((t) => t !== value);
     setTabs(next);
+    if (value === `plat:${filter}`) setFilter(null);
     if (tab === value) {
       const i = tabs.indexOf(value);
       setTab(next[i] ?? next[i - 1] ?? null);
@@ -194,11 +225,25 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
       pendingFocus.current = 'heading';
     }
   };
+  // The map, the chips and the status bar pick a platform: it becomes the filter and (not on a phone) opens its tab; the
+  // previous filter's tab closes. Picking it again, or an empty spot, clears the filter (the workshop's pickPlatform).
   const setFilterTo = (id: string | null) => {
+    const drop = (pid: string | null) => {
+      if (!pid) return;
+      const gone = `plat:${pid}`;
+      setTabs((t) => t.filter((x) => x !== gone));
+      if (tab === gone) setTab(tabs.filter((x) => x !== gone).slice(-1)[0] ?? null);
+    };
+    if (!id || filter === id) {
+      setFilter(null);
+      drop(filter);
+      return;
+    }
+    if (filter && filter !== id) drop(filter);
     setFilter(id);
-    // switching filters closes the previous platform's case tabs
-    setTabs((t) => t.filter((x) => x === 'today' || openIds.includes(x) === false || itemsAll.find((i) => i.id === x)?.platform.id === id || !id));
-    if (tab && tab !== 'today' && id && itemsAll.find((i) => i.id === tab)?.platform.id !== id) setTab(tabs.includes('today') ? 'today' : null);
+    if (phone) return;
+    if (id === 'hq') showToday();
+    else openPlatform(id);
   };
 
   const snooze = (id: string, until: string) => {
@@ -219,6 +264,21 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
     { label: 'Tomorrow', meta: '8:00', onSelect: () => snooze(id, 'Tomorrow · 8:00') },
   ];
 
+  // After a confirm the sheet moves on to the next decision in view, in the same tab (a phone goes back to the list), as the workshop does.
+  const advance = (id: string) => {
+    const rest = open.filter((o) => o.id !== id);
+    const next = rest.find((o) => !filter || o.platform.id === filter) ?? rest[0];
+    if (next) {
+      setTabs((t) => (t.includes(next.id) ? t.filter((x) => x !== id) : t.map((x) => (x === id ? next.id : x))));
+      setTab(next.id);
+      setCursor(next.id);
+    } else {
+      setTabs((t) => t.filter((x) => x !== id));
+      setTab(tabs.includes('today') ? 'today' : null);
+    }
+    if (phone) setPhoneDetail(false);
+    pendingFocus.current = 'heading';
+  };
   const confirm = (id: string, c: NonNullable<HomeCase['proposal']>) => {
     setPstate((s) => ({ ...s, [id]: 'writing' }));
     return new Promise<void>((res) =>
@@ -226,14 +286,20 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
         setPstate((s) => ({ ...s, [id]: 'done' }));
         setOpenIds((o) => o.filter((x) => x !== id));
         setDoneExtra((d) => [{ id, at: '9:13' }, ...d]);
-        if (c.van && c.van[0] !== c.van[1]) mapRef.current?.runVan(c.van[0], c.van[1]);
+        if (c.van && c.van[0] !== c.van[1]) {
+          mapRef.current?.runVan(c.van[0], c.van[1]);
+          setHover([c.van[0], c.van[1]]);
+          window.setTimeout(() => setHover(null), 2600);
+        }
         toast.undo(c.toast, () => {
           setPstate((s) => ({ ...s, [id]: 'waiting' }));
           setOpenIds((o) => (o.includes(id) ? o : [...o, id]));
           setDoneExtra((d) => d.filter((x) => x.id !== id));
+          openCase(id, 'heading');
         }, { leda: true });
+        advance(id);
         res();
-      }, 800),
+      }, 550),
     );
   };
 
@@ -329,51 +395,8 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
   const inlineToday = phone && !phoneDetail;
   const pct = Math.round((data.plan.used / data.plan.max) * 100);
 
-  const hqGo = filter === 'hq' ? (
-    <p className="m-0 mt-4 flex flex-wrap gap-2">
-      <Button variant="secondary" leftIcon={Users} onClick={() => go({ to: 'team' })}>Open Team</Button>
-      <Button variant="secondary" leftIcon={Gauge} onClick={() => go({ to: 'plan' })}>Open Plan</Button>
-    </p>
-  ) : null;
-  const todayContent = (
-    <>
-      <div className="mb-5 flex flex-wrap items-baseline gap-x-3.5">
-        <h2 ref={headingRef} tabIndex={-1} className="m-0 text-case tracking-normal text-text outline-none focus-visible:ring-2 focus-visible:ring-accent">Today</h2>
-        <p className="m-0 text-ui leading-5 text-muted tabular-nums">
-          {filter === 'hq' ? 'HQ only' : `${shown.length} ${shown.length === 1 ? 'platform' : 'platforms'}`}
-          {set === 'live' && !filter ? <span> · Stockroom → Auto Works, parts for jobs</span> : null} · <span className="whitespace-nowrap">{clock()}</span>
-        </p>
-      </div>
-      <div className={cn('grid grid-cols-1 gap-x-10 gap-y-12', shown.length > 1 && '@min-[720px]/sheet:grid-cols-2 @min-[720px]/sheet:gap-x-14')}>
-        {shown.map((p) => (
-          <div
-            key={idKey(p)}
-            id={`today-${p.id}`}
-            tabIndex={-1}
-            className="rounded-card outline-none"
-            onMouseEnter={() => setHover(p.id)}
-            onMouseLeave={() => setHover(null)}
-          >
-            <PlatformToday
-              surface="surface"
-              level={3}
-              platform={{ name: p.name, src: p.logo, index: p.index, hq: p.hq }}
-              kind={p.kind}
-              facts={p.facts}
-              leda={p.hq ? undefined : ledaMode(p)}
-              headerNote={p.hq && open.some((o) => o.platform.id === 'hq') ? `${open.filter((o) => o.platform.id === 'hq').length} in Needs you` : undefined}
-              maxRows={maxRows}
-              rowLayout={inlineToday ? 'phone' : phone || bodyW <= 720 ? 'narrow' : 'wide'}
-              flashRow={flashRow?.pid === p.id ? flashRow : null}
-              loading={loading}
-              error={failed === p.id}
-              lastLoaded="9:10 AM"
-              retryLabel="Retry"
-              onRetry={() => {
-                window.setTimeout(() => setFixed(true), 600);
-              }}
-              onOpen={p.hq ? undefined : () => go({ to: 'platform', id: p.id })}
-              lists={p.lists.map((l) => ({
+  const listsOf = (p: HomePlatform) =>
+    p.lists.map((l) => ({
                 ...l,
                 onViewAll: () => toast(`All ${l.total} in ${p.shortName ?? p.name}…`),
                 items: l.items.map((it) => {
@@ -396,7 +419,53 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
                       }
                     : it;
                 }),
-              }))}
+              }));
+
+  const hqGo = filter === 'hq' ? (
+    <p className="m-0 mt-4 flex flex-wrap gap-2">
+      <Button variant="secondary" leftIcon={Users} onClick={() => go({ to: 'team' })}>Open Team</Button>
+      <Button variant="secondary" leftIcon={Gauge} onClick={() => go({ to: 'plan' })}>Open Plan</Button>
+    </p>
+  ) : null;
+  const todayContent = (
+    <>
+      <div className="mb-5 flex flex-wrap items-baseline gap-x-3.5">
+        <h2 ref={headingEl} tabIndex={-1} className="m-0 text-case tracking-normal text-text outline-none focus-visible:ring-2 focus-visible:ring-accent">Today</h2>
+        <p className="m-0 text-ui leading-5 text-muted tabular-nums">
+          {filter === 'hq' ? 'HQ only' : `${shown.length} ${shown.length === 1 ? 'platform' : 'platforms'}`}
+          {set === 'live' && !filter ? <span> · Stockroom → Auto Works, parts for jobs</span> : null} · <span className="whitespace-nowrap">{clock()}</span>
+        </p>
+      </div>
+      <div className={cn('grid grid-cols-1 gap-x-10 gap-y-12', shown.length > 1 && '@min-[720px]/sheet:grid-cols-2 @min-[720px]/sheet:gap-x-14')}>
+        {shown.map((p) => (
+          <div
+            key={idKey(p)}
+            id={`today-${p.id}`}
+            tabIndex={-1}
+            className="rounded-card outline-none"
+            onMouseEnter={() => setHover([p.id])}
+            onMouseLeave={() => setHover(null)}
+          >
+            <PlatformToday
+              surface="surface"
+              level={3}
+              platform={{ name: p.name, src: p.logo, index: p.index, hq: p.hq }}
+              kind={p.kind}
+              facts={p.facts}
+              leda={p.hq ? undefined : ledaMode(p)}
+              headerNote={p.hq && open.some((o) => o.platform.id === 'hq') ? `${open.filter((o) => o.platform.id === 'hq').length} in Needs you` : undefined}
+              maxRows={maxRows}
+              rowLayout={inlineToday ? 'phone' : phone || bodyW <= 720 ? 'narrow' : 'wide'}
+              flashRow={flashRow?.pid === p.id ? flashRow : null}
+              loading={loading}
+              error={failed === p.id}
+              lastLoaded="9:10 AM"
+              retryLabel="Retry"
+              onRetry={() => {
+                window.setTimeout(() => setFixed(true), 600);
+              }}
+              onOpen={p.hq ? undefined : () => go({ to: 'platform', id: p.id })}
+              lists={listsOf(p)}
             >
               {p.hq ? (
                 <div>
@@ -422,6 +491,77 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
   );
   const todayView = <div className="px-pad pb-8 pt-5">{todayContent}</div>;
 
+
+  const linkLabel = (from: string, to: string) => (set === 'live' && from === 'stockroom' && to === 'autoworks' ? 'Parts for jobs' : '');
+  const platformView = (pid: string) => {
+    const p = platformById(pid);
+    if (!p) return null;
+    const conns = data.links.filter((c) => c.from === pid || c.to === pid);
+    const n = open.filter((o) => o.platform.id === pid).length;
+    const err = failed === pid;
+    const statusText = p.status === 'ACTIVE' ? 'Running' : p.status === 'DEGRADED' ? 'Slow' : 'Offline';
+    return (
+      <div className="px-pad pb-10 pt-5">
+        <p className="m-0 text-small text-muted">{[p.kind, n ? `${n} in Needs you` : ''].filter(Boolean).map((t, i) => <span key={t}>{i ? <span aria-hidden className="mx-2 text-faint">/</span> : null}{t}</span>)}</p>
+        <div className="mt-2 flex flex-wrap items-center gap-3">
+          <PlatformLogo name={p.name} src={p.logo} index={p.index} size={24} decorative />
+          <h2 ref={headingEl} tabIndex={-1} className="m-0 min-w-0 text-title text-text outline-none focus-visible:ring-2 focus-visible:ring-accent">{p.name}</h2>
+          <Button variant="primary" leftIcon={ArrowSquareOut} className="ml-auto" onClick={() => go({ to: 'platform', id: p.id })}>Open {p.name}</Button>
+        </div>
+        <FactsLine aria-label={`${p.name} facts`} className="mt-2">
+          <Fact><Badge tone={p.status === 'ACTIVE' ? 'ok' : p.status === 'DEGRADED' ? 'warn' : 'bad'}>{p.status === 'ACTIVE' ? 'ACTIVE' : statusText}</Badge></Fact>
+          {err ? <Fact tone="muted">no data · last good 9:10 AM</Fact> : p.facts.slice(0, 3).map((f, i) => <Fact key={i} value={f.value} tone={f.tone} valueFirst>{f.label}</Fact>)}
+          {p.ledaCanAct ? <Fact tone="ok">Leda acts here</Fact> : <Fact tone="muted">Leda reads only, can’t act here yet</Fact>}
+        </FactsLine>
+        {err ? <p className="m-0 mt-5 text-ui text-muted">Couldn’t load {p.name}’s overview. Last good 9:10 AM.</p> : null}
+        {p.lists.length && !err ? (
+          <div className={cn('mt-2 grid grid-cols-1 gap-x-10', p.lists.length > 1 && '@min-[720px]/sheet:grid-cols-2')}>
+            {listsOf(p).map((l) => (
+              <PlatformToday key={l.id} surface="surface" platform={{ name: p.name, src: p.logo, index: p.index }} aria-label={`${p.name}: ${l.title}`} bare lists={[l]} maxRows={6} rowLayout={phone ? 'phone' : bodyW <= 720 ? 'narrow' : 'wide'} />
+            ))}
+          </div>
+        ) : null}
+        <div className="mt-8 grid grid-cols-1 gap-x-10 gap-y-8 @min-[760px]/sheet:grid-cols-2">
+          <section>
+            <h3 className="m-0 text-ui font-semibold text-text">Today</h3>
+            {err ? (
+              <p className="m-0 mt-2 text-ui text-muted">No data</p>
+            ) : (
+              <ol className="m-0 mt-1 list-none p-0">
+                {(p.activity ?? []).map((a) => (
+                  <li key={a.id} className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 border-t border-rule py-2 text-ui">
+                    <span className="min-w-[4.5ch] text-small tabular-nums leading-5 text-muted">{a.at}</span>
+                    <span className="min-w-0 [overflow-wrap:anywhere]">{a.text}</span>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </section>
+          {conns.length ? (
+            <section>
+              <h3 className="m-0 text-ui font-semibold text-text">Linked platforms</h3>
+              <ul className="m-0 mt-1 list-none p-0">
+                {conns.map((c) => {
+                  const o = platformById(c.from === pid ? c.to : c.from)!;
+                  const word = { ok: 'OK', slow: 'Slow', broken: 'Broken' }[c.status];
+                  return (
+                    <li key={`${c.from}-${c.to}`} className="flex items-center gap-2 border-t border-rule py-2 text-ui">
+                      <span aria-hidden className={cn('h-0.5 w-3 shrink-0 rounded-full', c.status === 'broken' ? 'bg-bad-dot' : c.status === 'slow' ? 'bg-warn-dot' : 'bg-accent')} />
+                      <PlatformLogo name={o.name} src={o.logo} index={o.index} hq={o.hq} size={16} decorative />
+                      <span>{o.name}</span>
+                      <span className="text-muted">{linkLabel(c.from, c.to)}</span>
+                      <span className={cn('ml-auto', c.status === 'broken' ? 'text-bad' : c.status === 'slow' ? 'text-warn' : 'text-ok')}>{word}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ) : null}
+        </div>
+      </div>
+    );
+  };
+
   const caseView = (id: string) => {
     const item = lookup(id);
     if (!item) return null;
@@ -433,7 +573,6 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
     const ch = choice[id] ?? 'dispute';
     const label = c.variance ? (ch === 'accept' ? 'Accept' : 'Dispute') : c.proposal?.confirmLabel ?? 'Confirm';
     const more = showMore[id];
-    const nextOpen = open.find((o) => o.id !== id);
     return (
       <div className="px-pad pb-10 pt-5">
         <Breadcrumbs
@@ -448,7 +587,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
           {kind === 'watching' ? <Badge tone="accent">Watching</Badge> : null}
         </div>
         <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
-          <h2 ref={headingRef} tabIndex={-1} className="m-0 min-w-0 text-title text-text outline-none focus-visible:ring-2 focus-visible:ring-accent">{item.title}</h2>
+          <h2 ref={headingEl} tabIndex={-1} className="m-0 min-w-0 text-title text-text outline-none focus-visible:ring-2 focus-visible:ring-accent">{item.title}</h2>
           <div className="flex shrink-0 items-center gap-2">
             <Button variant="secondary" rightIcon={ArrowSquareOut} onClick={() => go({ to: 'platform', id: p.id })}>Open {p.shortName ?? p.name}</Button>
             {isOpen ? (
@@ -493,7 +632,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
                 ) : null}
                 <div key={`${id}-${flash}`} className={flash && tab === id ? 'animate-row-flash rounded-card' : 'rounded-card'}>
                   <LedaProposal
-                    ref={proposalRef}
+                    ref={proposalEl}
                     id={c.proposal.id}
                     title={c.variance && ch === 'accept' ? 'Accept the invoice as it is' : c.proposal.title}
                     writes={c.proposal.writes}
@@ -502,7 +641,6 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
                     confirmLabel={label}
                     doneAt="9:13"
                     after={c.proposal.toast}
-                    doneAction={nextOpen ? <Button variant="secondary" rightIcon={ArrowRight} onClick={() => openCase(nextOpen.id, 'heading')}>Next: {nextOpen.title}</Button> : undefined}
                     discardedText="Draft discarded."
                     onConfirm={() => confirm(id, { ...c.proposal!, confirmLabel: label })}
                     onDiscard={() => setPstate((s) => ({ ...s, [id]: 'discarded' }))}
@@ -521,7 +659,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
   const hero = (
     <div className="mx-auto flex flex-col items-center px-pad pt-9 text-center max-[640px]:pt-6">
       <LedaMark size={88} effect={loading ? 'aurora' : 'glint'} active={loading} once={!loading} decorative />
-      <h2 ref={headingRef} tabIndex={-1} className="m-0 mt-3.5 text-case text-text outline-none focus-visible:ring-2 focus-visible:ring-accent">Good {dayPart}, {owner.short}</h2>
+      <h2 ref={headingEl} tabIndex={-1} className="m-0 mt-3.5 text-case text-text outline-none focus-visible:ring-2 focus-visible:ring-accent">Good {dayPart}, {owner.short}</h2>
       <p className="m-0 mt-1 text-body text-muted">{run}</p>
       <div className="mt-7 w-full max-w-[560px] max-[640px]:hidden">{askBar('overview', true)}</div>
       <ChatChips
@@ -557,7 +695,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
               ),
               state: loading ? 'loading' : failed === p.id ? 'error' : 'ready',
               onRetry: () => { window.setTimeout(() => setFixed(true), 600); },
-              onOpen: () => setFilterTo(p.id),
+              onOpen: () => openPlatform(p.id),
             }))}
           />
         </div>
@@ -600,6 +738,10 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
 
   const tabItems: TabItem[] = tabs.map((id) => {
     if (id === 'today') return { value: 'today', label: 'Today', icon: SquaresFour, closable: true };
+    if (id.startsWith('plat:')) {
+      const pp = platformById(id.slice(5));
+      return { value: id, label: pp?.name ?? id, leading: pp ? <PlatformLogo name={pp.name} src={pp.logo} index={pp.index} hq={pp.hq} size={16} decorative /> : undefined, closable: true };
+    }
     const it = lookup(id);
     return { value: id, label: it?.title ?? id, leading: it ? <PlatformLogo name={it.platform.name} src={it.platform.src} index={it.platform.index} hq={it.platform.hq} size={16} decorative /> : undefined, closable: true };
   });
@@ -610,7 +752,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
     </SheetBar>
   );
 
-  const sheetBody = overview ? overviewView : tab === 'today' ? (inlineToday ? null : todayView) : caseView(tab);
+  const sheetBody = overview ? overviewView : tab === 'today' ? (inlineToday ? null : todayView) : platTab ? platformView(platTab) : caseView(tab);
 
   const phoneOverview = phone && quiet && !filter ? (
     <div className="-mx-1 mt-4 border-b border-border px-1 pb-6">
@@ -663,10 +805,10 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
         identityPlots={false}
         label="Your platforms"
         selected={filter}
-        highlight={hover ? [hover] : null}
+        highlight={mapHighlight}
         loading={loading}
         onSelect={setFilterTo}
-        onHover={setHover}
+        onHover={(id) => setHover(id ? [id] : null)}
       />
       <Queue
         className="min-h-0 flex-1"
@@ -690,9 +832,9 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
         onRetry={() => { window.setTimeout(() => setFixed(true), 600); }}
         cursorId={cursor}
         onCursorChange={setCursor}
-        onItemHover={(id) => setHover(id ? lookup(id)?.platform.id ?? null : null)}
-        onOpen={(id) => openCase(id, 'heading')}
-        onAction={(id) => openCase(id, 'confirm')}
+        onItemHover={(id) => setHover(id ? platformsOf(id) : null)}
+        onOpen={(id) => pushCase(id, 'heading')}
+        onAction={(id) => pushCase(id, 'confirm')}
         onSnooze={(id) => snooze(id, 'Later today · 13:00')}
         shortcuts={!phone || !phoneDetail}
       />
@@ -700,22 +842,19 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
     </div>
   );
 
-  const caseId = tab && tab !== 'today' ? tab : null;
+  const caseId = caseTab;
   const detailBar = phone && phoneDetail ? (
     <>
       <IconButton
         icon={ArrowLeft}
         label="Back to Needs you"
         onClick={() => {
-          const prev = tab;
+          lastOpened.current = tab;
+          slide('out');
           setPhoneDetail(false);
-          requestAnimationFrame(() => {
-            const row = prev ? document.querySelector<HTMLElement>(`[data-row-id="${prev}"] button`) : null;
-            focusIfLost(sheetRef.current, row ?? document.querySelector<HTMLElement>('[data-shell-place] h1'));
-          });
         }}
       />
-      <span className="min-w-0 flex-1 truncate text-ui font-semibold">{caseId ? lookup(caseId)?.platform.name : tab === 'today' ? 'Today' : 'Overview'}</span>
+      <span className="min-w-0 flex-1 truncate text-ui font-semibold">{caseId ? lookup(caseId)?.platform.name : platTab ? platformById(platTab)?.name : tab === 'today' ? 'Today' : 'Overview'}</span>
       {caseId && openIds.includes(caseId) ? <Menu trigger={<IconButton icon={Clock} label="Snooze" />} items={snoozeItems(caseId)} align="end" /> : null}
       {askBar('bar', false)}
     </>
@@ -723,6 +862,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
 
   return (
     <>
+      <SubpageTransition paneKey={`k${sub.n}`} direction={sub.dir} restoreFocus={() => (lastOpened.current ? document.querySelector<HTMLElement>(`[data-row-id="${lastOpened.current}"] button`) : null) ?? document.querySelector<HTMLElement>('[data-shell-place] h1')}>
       <PortalFrame
         current="home"
         account={{ name: owner.name, email: owner.email, role: 'Owner', initials: owner.initials }}
@@ -734,7 +874,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
         placeLabel="Your platforms"
         heading={phone && phoneDetail ? 'Home' : null}
         sheetBar={sheetBar}
-        sheetLabel={overview ? 'Overview' : tab === 'today' ? 'Today' : 'Case'}
+        sheetLabel={overview ? 'Overview' : tab === 'today' ? 'Today' : platTab ? (platformById(platTab)?.name ?? 'Platform') : 'Case'}
         detail={phone && phoneDetail}
         topBar={detailBar}
         status={
@@ -749,10 +889,13 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
           />
         }
       >
-        <div ref={(el) => { (bodyRef as { current: HTMLDivElement | null }).current = el; (sheetRef as { current: HTMLDivElement | null }).current = el; }} data-home-body>
-          {sheetBody}
-        </div>
+        <SubpageLane from="right">
+          <div ref={(el) => { if (el) { (bodyRef as { current: HTMLDivElement | null }).current = el; (sheetRef as { current: HTMLDivElement | null }).current = el; } }} data-home-body>
+            {sheetBody}
+          </div>
+        </SubpageLane>
       </PortalFrame>
+      </SubpageTransition>
       <CommandPalette
         open={palette}
         onOpenChange={setPalette}
@@ -768,15 +911,16 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
       />
       {chat && (
         <Chat onClose={() => setChat(false)} returnFocusTo={opener}>
-          <ChatHeader busy={busy} empty={messages.length === 0} onNewConversation={() => setMessages([])} onClose={() => setChat(false)} />
+          <ChatHeader layout="inline" busy={busy} empty={messages.length === 0} onNewConversation={() => setMessages([])} onClose={() => setChat(false)} />
           {messages.length === 0 ? (
-            <div className="min-h-0 flex-1 overflow-y-auto"><ChatEmpty scope={scopeName} chips={suggestions.map((q) => ({ id: q, label: q }))} onPick={(c) => send(c.label)} /></div>
+            <div className="min-h-0 flex-1 overflow-y-auto"><ChatEmpty layout="workshop" scope={scopeName} chips={suggestions.map((q) => ({ id: q, label: q }))} onPick={(c) => send(c.label)} /></div>
           ) : (
             <ChatThread>
               {messages.map((m) => (
                 <ChatMessage
                   key={m.id}
                   message={m}
+                  layout="workshop"
                   onChip={(c) => send(c.label)}
                   onAction={(a) => { if (a.href) go(destFromHash(a.href)); }}
                   onConfirm={(bid) => {
@@ -794,7 +938,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
               ))}
             </ChatThread>
           )}
-          <ChatComposer value={text} onChange={setText} onSend={send} busy={busy} scope={`About ${scopeName}`} />
+          <ChatComposer layout="workshop" label="Message Leda" placeholder="Reply to Leda" value={text} onChange={setText} onSend={send} busy={busy} scope={`About ${scopeName}`} />
         </Chat>
       )}
       <Toaster />
