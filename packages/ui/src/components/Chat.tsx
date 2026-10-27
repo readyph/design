@@ -12,7 +12,7 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
-import { NotePencil, PaperPlaneRight, PaperPlaneTilt, X } from '@phosphor-icons/react';
+import { NotePencil, Prohibit, PaperPlaneRight, PaperPlaneTilt, X } from '@phosphor-icons/react';
 import { cn, focusRing } from '../utils/cn';
 import { focusIfLost } from '../utils/focusIfLost';
 import { useMatchMedia } from '../utils/useMatchMedia';
@@ -47,6 +47,16 @@ export interface ChatTableBlock {
   columns: { key: string; label: string; align?: 'left' | 'right' }[];
   rows: Record<string, string>[];
 }
+/** A table answer as the workshop draws it: no box, hairline rows, a bar under the lead figure, a total row. Cells are formatted by the caller. */
+export interface ChatAnswerTableBlock {
+  type: 'answerTable';
+  caption: string;
+  columns: string[];
+  rows: { label: string; cells: string[]; /** A bar under cell `at`, `pct` wide. */ bar?: { at: number; pct: number }; lead?: boolean }[];
+  /** The "All" row. */
+  foot?: string[];
+  unit?: string;
+}
 export interface ChatActionItem {
   id: string;
   label: string;
@@ -63,6 +73,9 @@ export type ChatBlock =
   | { type: 'meta'; text: string }
   | ChatTableBlock
   | { type: 'figure'; value: string; label: string; detail?: string }
+  | ChatAnswerTableBlock
+  | { type: 'answerFigure'; figure: string; sub: string }
+  | { type: 'refuse'; text: string }
   | { type: 'refusal'; text: string; actions?: ChatActionItem[] }
   | { type: 'actions'; actions: ChatActionItem[] }
   | { type: 'proposal'; blockId: string; proposal: ChatProposalData }
@@ -232,12 +245,12 @@ export function ChatHeader({ busy = false, empty = false, onNewConversation, onC
   const ranNew = useRef(false);
   return (
     <header {...rest} className={cn(className, 'flex h-12 shrink-0 items-center border-b border-border', inline ? 'gap-2.5 pl-4 pr-2 max-[640px]:pr-1' : 'gap-2 px-3')}>
-      <span aria-hidden className="grid h-6 w-6 shrink-0 place-items-center">
+      <span aria-hidden className={cn('grid shrink-0 place-items-center', inline ? 'h-5 w-5' : 'h-6 w-6')}>
         <LedaMark size={20} effect="aurora" active={busy} decorative />
       </span>
       <div className={cn('min-w-0 flex-1', inline ? 'flex items-baseline gap-2' : 'leading-none')}>
         <h2 className="truncate text-[15px] font-semibold leading-5">Leda</h2>
-        <p className={cn('text-small text-muted', inline ? 'whitespace-nowrap' : 'truncate')}>
+        <p className={cn('text-small text-muted', inline ? 'whitespace-nowrap leading-5' : 'truncate')}>
           <span className={busy ? 'motion-reduce:hidden' : undefined}>{tagline}</span>
           {busy && <span aria-hidden className="hidden motion-reduce:inline">Thinking…</span>}
         </p>
@@ -253,7 +266,7 @@ export function ChatHeader({ busy = false, empty = false, onNewConversation, onC
           }}
           leftIcon={inline ? NotePencil : undefined}
           aria-label={inline ? 'New conversation' : undefined}
-          className={cn('shrink-0', inline && 'text-muted hover:text-text max-[640px]:h-11 max-[640px]:w-11 max-[640px]:justify-center max-[640px]:!px-0 max-[640px]:[&_svg]:size-[18px]', empty && 'cursor-not-allowed opacity-60 hover:bg-transparent')}
+          className={cn('shrink-0', inline && '!px-[7px] max-[640px]:h-11 max-[640px]:w-11 max-[640px]:justify-center max-[640px]:!px-0 max-[640px]:[&_svg]:size-[18px]', empty && 'cursor-default opacity-50 hover:bg-transparent')}
         >
           {inline ? <span className="max-[640px]:hidden">New conversation</span> : 'New conversation'}
         </Button>
@@ -344,7 +357,7 @@ export const ChatThread = forwardRef<HTMLDivElement, ChatThreadProps>(function C
 /* ------------------------------------------------------------------ chips */
 
 const chipBase =
-  'inline-flex min-h-7 max-w-full items-center rounded-chip border border-control bg-surface px-2.5 text-left text-[13px] leading-4 text-text transition-colors duration-hover hover:border-accent motion-reduce:transition-none max-[640px]:min-h-10';
+  'inline-flex min-h-7 max-w-full items-center rounded-control border border-border bg-surface px-2.5 py-1 text-left text-[13px] leading-[18px] text-text transition-colors duration-hover hover:border-control hover:bg-raised motion-reduce:transition-none max-[640px]:min-h-9';
 
 export interface ChatChipsProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onSelect'> {
   chips: ChatChip[];
@@ -522,6 +535,57 @@ export function ChatBlocks({ blocks, onChip, onAction, onConfirm, onDiscard, onP
                 {b.detail && <p className="text-small text-muted">{b.detail}</p>}
               </div>
             );
+          case 'answerTable':
+            return (
+              <div key={i} className="min-w-0 overflow-x-auto rounded-card border border-border bg-surface px-3 py-2.5">
+                <table className="w-full border-collapse text-ui leading-[18px]">
+                  <caption className={sr}>{b.caption}</caption>
+                  <thead>
+                    <tr>
+                      {b.columns.map((c, ci) => (
+                        <th key={ci} scope="col" className={cn('whitespace-nowrap pb-1.5 pl-0 pr-2 pt-0 text-small font-normal leading-[18px] text-muted', ci ? 'pl-3 text-right tabular-nums' : 'text-left', ci === b.columns.length - 1 && 'pr-0')}>{c}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {b.rows.map((r, ri) => (
+                      <tr key={ri} className={r.lead ? 'font-medium' : undefined}>
+                        <th scope="row" className="border-t border-rule py-[7px] pl-0 pr-2 text-left align-middle [font-weight:inherit]">{r.label}</th>
+                        {r.cells.map((c, ci) => (
+                          <td key={ci} className={cn('whitespace-nowrap border-t border-rule py-[7px] pl-3 pr-2 text-right align-middle tabular-nums', ci === r.cells.length - 1 && 'pr-0')}>
+                            {c}
+                            {r.bar && r.bar.at === ci ? <div className="mt-[5px] h-[3px] overflow-hidden rounded-[2px] bg-raised-2"><i className={cn('block h-full', r.lead ? 'bg-accent' : 'bg-control')} style={{ width: `${r.bar.pct}%` }} /></div> : null}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                  {b.foot ? (
+                    <tfoot>
+                      <tr className="font-semibold">
+                        <td className="border-t border-control py-[7px] pl-0 pr-2">All</td>
+                        {b.foot.map((c, ci) => <td key={ci} className={cn('border-t border-control py-[7px] pl-3 pr-2 text-right tabular-nums', ci === b.foot!.length - 1 && 'pr-0')}>{c}</td>)}
+                      </tr>
+                    </tfoot>
+                  ) : null}
+                </table>
+                {b.unit ? <p className="m-0 mt-2 text-small text-muted">{b.unit}</p> : null}
+              </div>
+            );
+          case 'answerFigure':
+            return (
+              <div key={i} className="min-w-0 overflow-x-auto rounded-card border border-border bg-surface px-3 py-2.5">
+                <p className="m-0 text-[30px] font-medium leading-9 tracking-[-0.01em] tabular-nums text-text">{b.figure}</p>
+                <p className="m-0 mt-0.5 text-ui text-muted">{b.sub}</p>
+              </div>
+            );
+          case 'refuse':
+            return (
+              <div key={i} className="flex items-start gap-2.5 rounded-card bg-raised px-3 py-2.5 text-ui leading-[19px]">
+                <Prohibit aria-hidden size={18} className="mt-px shrink-0 text-muted" />
+                <span>{b.text}</span>
+              </div>
+            );
           case 'refusal':
             return (
               <div key={i} className={onRaised}>
@@ -575,13 +639,13 @@ export function ChatMessage({ message: m, initials, layout = 'default', ...handl
   const ws = layout === 'workshop';
   return (
     <article aria-label={`${m.name}${m.time ? `, ${m.time}` : ''}`} className={cn('group/msg flex py-2 hover:bg-raised', ws ? 'gap-2.5 px-4 max-[640px]:hover:bg-transparent' : 'gap-2 px-3')} aria-busy={m.thinking || undefined}>
-      <div className="grid h-7 w-7 shrink-0 place-items-center">
+      <div className={cn('grid h-7 w-7 shrink-0 place-items-center', ws && 'mt-0.5')}>
         {leda ? (
           <span aria-hidden className="grid h-7 w-7 place-items-center">
-            <LedaMark size={ws ? 30 : 16} effect="aurora" active={!!m.thinking} decorative />
+            <LedaMark size={ws ? 28 : 16} effect="aurora" active={!!m.thinking} decorative />
           </span>
         ) : (
-          <span aria-hidden className="grid h-7 w-7 place-items-center rounded-full bg-avatar-bg text-small font-semibold text-avatar-text">{initials ?? initialsFrom(m.name)}</span>
+          <span aria-hidden className="grid h-7 w-7 place-items-center rounded-full bg-avatar-bg text-[11px] font-semibold text-avatar-text">{initials ?? initialsFrom(m.name)}</span>
         )}
       </div>
       <div className={cn('flex min-w-0 flex-1 flex-col', ws ? 'gap-0' : 'gap-1.5')}>
@@ -595,7 +659,7 @@ export function ChatMessage({ message: m, initials, layout = 'default', ...handl
         ) : (
           <ChatBlocks blocks={m.blocks} layout={ws ? 'workshop' : 'default'} {...handlers} />
         )}
-        {m.scope && ws && <ChatScopeChip className="mt-2 self-start">{m.scope}</ChatScopeChip>}
+        {m.scope && ws && <ChatScopeChip className="mt-2 self-start text-muted">{m.scope}</ChatScopeChip>}
       </div>
     </article>
   );
@@ -629,7 +693,7 @@ export function ChatEmpty({
     <div {...rest} className={cn(className, 'flex flex-col items-start', ws ? 'px-6 pb-2 pt-7' : 'gap-2 px-4 py-6')}>
       <LedaMark size={32} decorative />
       <h3 className={cn('font-semibold text-text', ws ? 'mt-3 text-dialog' : 'text-[15px] leading-5')}>Ask Leda about {scope}</h3>
-      <p className={cn('text-ui text-muted', ws && 'mt-1')}>{description}</p>
+      <p className={cn('text-ui text-muted', ws && 'mt-1 leading-[19px]')}>{description}</p>
       {chips.length > 0 && <ChatChips chips={chips} onPick={onPick} label={`Questions about ${scope}`} className={ws ? 'mt-3.5' : 'mt-1'} />}
     </div>
   );

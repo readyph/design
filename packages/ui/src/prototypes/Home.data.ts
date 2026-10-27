@@ -63,7 +63,12 @@ export interface HomeCase {
   pids?: string[];
 }
 
+export interface HomeLedaAnswer { q: string; kind: 'figure' | 'table'; figure?: string; sub?: string; columns?: string[]; rows?: { label: string; values: (string | number)[] }[]; unit?: string; note?: string; from: string; next?: string[] }
+export interface HomeLedaCommand { q: string; platformId: string; platformLabel: string; allowed: boolean; proposal?: { id: string; title: string; lines: HomeCaseLine[]; writes: string[]; notifies?: string; confirmLabel: string; after: string }; refusal?: string; offerLabel?: string }
+
 export interface HomeSet {
+  /** What Leda answers and does in the conversation, from the workshop data. */
+  leda?: { answers: HomeLedaAnswer[]; commands: HomeLedaCommand[] };
   key: HomeSetKey;
   platforms: HomePlatform[];
   hq: HomePlatform;
@@ -149,6 +154,7 @@ export const live: HomeSet = {
   hq: hqPlatform,
   links: [{ from: 'stockroom', to: 'autoworks', status: 'ok' }],
   mapOrder: ['stockroom', 'autoworks', null, 'hq'],
+  leda: duoLive.leda,
   headline: duoLive.headline,
   quietHeadline: duoLive.quietHeadline,
   yesterdayLine: duoLive.yesterdayLine,

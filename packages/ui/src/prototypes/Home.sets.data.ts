@@ -7,6 +7,100 @@ const PESO = chartNumberFormat({ locale: 'en-PH', currency: 'PHP' });
 const PESOK = (v: number) => (v === 0 ? '0' : `₱${Math.round(v / 1000).toLocaleString('en-PH')}k`);
 
 export const fewLive = {
+ "leda": {
+  "answers": [
+   {
+    "q": "Top sellers yesterday",
+    "kind": "table",
+    "columns": [
+     "Item",
+     "Sold",
+     "Sales"
+    ],
+    "rows": [
+     {
+      "label": "Spanish Latte",
+      "values": [
+       64,
+       "₱10,240"
+      ]
+     },
+     {
+      "label": "Iced Americano",
+      "values": [
+       52,
+       "₱6,760"
+      ]
+     },
+     {
+      "label": "Butter Croissant",
+      "values": [
+       47,
+       "₱4,465"
+      ]
+     },
+     {
+      "label": "Matcha Latte",
+      "values": [
+       38,
+       "₱6,460"
+      ]
+     },
+     {
+      "label": "Salmon Rice Bowl",
+      "values": [
+       21,
+       "₱6,090"
+      ]
+     }
+    ],
+    "note": "Matcha Latte sold 38; matcha is out today.",
+    "from": "Café POS",
+    "next": [
+     "What did lunch sell yesterday?",
+     "Which items use salmon?"
+    ]
+   },
+   {
+    "q": "Ilan ang orders kahapon?",
+    "kind": "figure",
+    "figure": "411",
+    "sub": "orders · ₱54,380 · Miy 21 Okt",
+    "note": "Mas marami ng 23 kaysa Martes.",
+    "from": "",
+    "next": [
+     "Ilan ngayong umaga?"
+    ]
+   }
+  ],
+  "commands": [
+   {
+    "q": "Set oat milk reorder level to 24",
+    "platformId": "inventory",
+    "platformLabel": "Inventory",
+    "allowed": true,
+    "proposal": {
+     "id": "CMD-OAT",
+     "title": "Reorder level Oat Milk Barista: 18 → 24 L",
+     "lines": [],
+     "writes": [
+      "Oat Milk Barista reorder level: 18 → 24 L"
+     ],
+     "notifies": "Lloyd",
+     "confirmLabel": "Confirm change",
+     "after": "Reorder level is now 24 L."
+    }
+   },
+   {
+    "q": "Mark yesterday synced in Books",
+    "platformId": "books",
+    "platformLabel": "Books",
+    "allowed": false,
+    "refusal": "Leda can't write to Accounting, and Books is offline.",
+    "offerLabel": "Open Books"
+   }
+  ]
+ },
  "owner": {
   "name": "Bea Santos",
   "short": "Bea",
@@ -628,6 +722,100 @@ export const fewLive = {
 } as unknown as HomeSet;
 
 export const fewQuiet = {
+ "leda": {
+  "answers": [
+   {
+    "q": "Top sellers yesterday",
+    "kind": "table",
+    "columns": [
+     "Item",
+     "Sold",
+     "Sales"
+    ],
+    "rows": [
+     {
+      "label": "Spanish Latte",
+      "values": [
+       64,
+       "₱10,240"
+      ]
+     },
+     {
+      "label": "Iced Americano",
+      "values": [
+       52,
+       "₱6,760"
+      ]
+     },
+     {
+      "label": "Butter Croissant",
+      "values": [
+       47,
+       "₱4,465"
+      ]
+     },
+     {
+      "label": "Matcha Latte",
+      "values": [
+       38,
+       "₱6,460"
+      ]
+     },
+     {
+      "label": "Salmon Rice Bowl",
+      "values": [
+       21,
+       "₱6,090"
+      ]
+     }
+    ],
+    "note": "Matcha Latte sold 38; matcha is out today.",
+    "from": "Café POS",
+    "next": [
+     "What did lunch sell yesterday?",
+     "Which items use salmon?"
+    ]
+   },
+   {
+    "q": "Ilan ang orders kahapon?",
+    "kind": "figure",
+    "figure": "411",
+    "sub": "orders · ₱54,380 · Miy 21 Okt",
+    "note": "Mas marami ng 23 kaysa Martes.",
+    "from": "",
+    "next": [
+     "Ilan ngayong umaga?"
+    ]
+   }
+  ],
+  "commands": [
+   {
+    "q": "Set oat milk reorder level to 24",
+    "platformId": "inventory",
+    "platformLabel": "Inventory",
+    "allowed": true,
+    "proposal": {
+     "id": "CMD-OAT",
+     "title": "Reorder level Oat Milk Barista: 18 → 24 L",
+     "lines": [],
+     "writes": [
+      "Oat Milk Barista reorder level: 18 → 24 L"
+     ],
+     "notifies": "Lloyd",
+     "confirmLabel": "Confirm change",
+     "after": "Reorder level is now 24 L."
+    }
+   },
+   {
+    "q": "Mark yesterday synced in Books",
+    "platformId": "books",
+    "platformLabel": "Books",
+    "allowed": false,
+    "refusal": "Leda can't write to Accounting, and Books is offline.",
+    "offerLabel": "Open Books"
+   }
+  ]
+ },
  "owner": {
   "name": "Bea Santos",
   "short": "Bea",
@@ -1074,6 +1262,180 @@ export const fewQuiet = {
 } as unknown as HomeSet;
 
 export const manyLive = {
+ "leda": {
+  "answers": [
+   {
+    "q": "How did each branch do this week?",
+    "kind": "table",
+    "columns": [
+     "Platform",
+     "Mon 19",
+     "Tue 20",
+     "Wed 21",
+     "Total"
+    ],
+    "rows": [
+     {
+      "label": "Cubao",
+      "values": [
+       12,
+       12,
+       11
+      ]
+     },
+     {
+      "label": "Kapitolyo",
+      "values": [
+       8,
+       10,
+       7
+      ]
+     },
+     {
+      "label": "Marikina",
+      "values": [
+       10,
+       10,
+       9
+      ]
+     }
+    ],
+    "unit": "jobs completed",
+    "note": "Cubao completed the most jobs, Mon-Wed.",
+    "from": "Cubao, Kapitolyo, Marikina",
+    "next": [
+     "Which jobs waited longest?",
+     "Sales at the counter this week"
+    ]
+   },
+   {
+    "q": "Top sellers yesterday",
+    "kind": "table",
+    "columns": [
+     "Item",
+     "Sold",
+     "Sales"
+    ],
+    "rows": [
+     {
+      "label": "Spanish Latte",
+      "values": [
+       64,
+       "₱10,240"
+      ]
+     },
+     {
+      "label": "Iced Americano",
+      "values": [
+       52,
+       "₱6,760"
+      ]
+     },
+     {
+      "label": "Butter Croissant",
+      "values": [
+       47,
+       "₱4,465"
+      ]
+     },
+     {
+      "label": "Matcha Latte",
+      "values": [
+       38,
+       "₱6,460"
+      ]
+     },
+     {
+      "label": "Salmon Rice Bowl",
+      "values": [
+       21,
+       "₱6,090"
+      ]
+     }
+    ],
+    "note": "Matcha Latte sold 38; matcha is out today.",
+    "from": "Café POS",
+    "next": [
+     "What did lunch sell yesterday?",
+     "Which items use salmon?"
+    ]
+   },
+   {
+    "q": "Magkano benta ng counter kahapon?",
+    "kind": "figure",
+    "figure": "₱61,250",
+    "sub": "74 resibo · Miy 21 Okt",
+    "note": "Mas mataas ng ₱2,350 kaysa Lunes.",
+    "from": "",
+    "next": [
+     "Ano ang pinakamabenta?"
+    ]
+   },
+   {
+    "q": "Ilan ang orders kahapon?",
+    "kind": "figure",
+    "figure": "411",
+    "sub": "orders · ₱54,380 · Miy 21 Okt",
+    "note": "Mas marami ng 23 kaysa Martes.",
+    "from": "",
+    "next": [
+     "Ilan ngayong umaga?"
+    ]
+   }
+  ],
+  "commands": [
+   {
+    "q": "Raise oil filter reorder level to 30",
+    "platformId": "stockroom",
+    "platformLabel": "Parts Stockroom",
+    "allowed": true,
+    "proposal": {
+     "id": "CMD-RL",
+     "title": "Reorder level 90915-YZZE1: 20 → 30",
+     "lines": [],
+     "writes": [
+      "Toyota oil filter reorder level: 20 → 30"
+     ],
+     "notifies": "Arnel",
+     "confirmLabel": "Confirm change",
+     "after": "Reorder level is now 30."
+    }
+   },
+   {
+    "q": "Set oat milk reorder level to 24",
+    "platformId": "inventory",
+    "platformLabel": "Café Inventory",
+    "allowed": true,
+    "proposal": {
+     "id": "CMD-OAT",
+     "title": "Reorder level Oat Milk Barista: 18 → 24 L",
+     "lines": [],
+     "writes": [
+      "Oat Milk Barista reorder level: 18 → 24 L"
+     ],
+     "notifies": "Lloyd",
+     "confirmLabel": "Confirm change",
+     "after": "Reorder level is now 24 L."
+    }
+   },
+   {
+    "q": "Move KAP-0412 to In progress",
+    "platformId": "kapitolyo",
+    "platformLabel": "Kapitolyo",
+    "allowed": false,
+    "refusal": "Leda can't write to Repair shop yet.",
+    "offerLabel": "Open Kapitolyo"
+   },
+   {
+    "q": "Mark yesterday synced in Books",
+    "platformId": "books",
+    "platformLabel": "Books",
+    "allowed": false,
+    "refusal": "Leda can't write to Accounting, and Books is offline.",
+    "offerLabel": "Open Books"
+   }
+  ]
+ },
  "owner": {
   "name": "Ramon Dela Cruz",
   "short": "Mon",
@@ -2639,6 +3001,180 @@ export const manyLive = {
 } as unknown as HomeSet;
 
 export const manyQuiet = {
+ "leda": {
+  "answers": [
+   {
+    "q": "How did each branch do this week?",
+    "kind": "table",
+    "columns": [
+     "Platform",
+     "Mon 19",
+     "Tue 20",
+     "Wed 21",
+     "Total"
+    ],
+    "rows": [
+     {
+      "label": "Cubao",
+      "values": [
+       12,
+       12,
+       11
+      ]
+     },
+     {
+      "label": "Kapitolyo",
+      "values": [
+       8,
+       10,
+       7
+      ]
+     },
+     {
+      "label": "Marikina",
+      "values": [
+       10,
+       10,
+       9
+      ]
+     }
+    ],
+    "unit": "jobs completed",
+    "note": "Cubao completed the most jobs, Mon-Wed.",
+    "from": "Cubao, Kapitolyo, Marikina",
+    "next": [
+     "Which jobs waited longest?",
+     "Sales at the counter this week"
+    ]
+   },
+   {
+    "q": "Top sellers yesterday",
+    "kind": "table",
+    "columns": [
+     "Item",
+     "Sold",
+     "Sales"
+    ],
+    "rows": [
+     {
+      "label": "Spanish Latte",
+      "values": [
+       64,
+       "₱10,240"
+      ]
+     },
+     {
+      "label": "Iced Americano",
+      "values": [
+       52,
+       "₱6,760"
+      ]
+     },
+     {
+      "label": "Butter Croissant",
+      "values": [
+       47,
+       "₱4,465"
+      ]
+     },
+     {
+      "label": "Matcha Latte",
+      "values": [
+       38,
+       "₱6,460"
+      ]
+     },
+     {
+      "label": "Salmon Rice Bowl",
+      "values": [
+       21,
+       "₱6,090"
+      ]
+     }
+    ],
+    "note": "Matcha Latte sold 38; matcha is out today.",
+    "from": "Café POS",
+    "next": [
+     "What did lunch sell yesterday?",
+     "Which items use salmon?"
+    ]
+   },
+   {
+    "q": "Magkano benta ng counter kahapon?",
+    "kind": "figure",
+    "figure": "₱61,250",
+    "sub": "74 resibo · Miy 21 Okt",
+    "note": "Mas mataas ng ₱2,350 kaysa Lunes.",
+    "from": "",
+    "next": [
+     "Ano ang pinakamabenta?"
+    ]
+   },
+   {
+    "q": "Ilan ang orders kahapon?",
+    "kind": "figure",
+    "figure": "411",
+    "sub": "orders · ₱54,380 · Miy 21 Okt",
+    "note": "Mas marami ng 23 kaysa Martes.",
+    "from": "",
+    "next": [
+     "Ilan ngayong umaga?"
+    ]
+   }
+  ],
+  "commands": [
+   {
+    "q": "Raise oil filter reorder level to 30",
+    "platformId": "stockroom",
+    "platformLabel": "Parts Stockroom",
+    "allowed": true,
+    "proposal": {
+     "id": "CMD-RL",
+     "title": "Reorder level 90915-YZZE1: 20 → 30",
+     "lines": [],
+     "writes": [
+      "Toyota oil filter reorder level: 20 → 30"
+     ],
+     "notifies": "Arnel",
+     "confirmLabel": "Confirm change",
+     "after": "Reorder level is now 30."
+    }
+   },
+   {
+    "q": "Set oat milk reorder level to 24",
+    "platformId": "inventory",
+    "platformLabel": "Café Inventory",
+    "allowed": true,
+    "proposal": {
+     "id": "CMD-OAT",
+     "title": "Reorder level Oat Milk Barista: 18 → 24 L",
+     "lines": [],
+     "writes": [
+      "Oat Milk Barista reorder level: 18 → 24 L"
+     ],
+     "notifies": "Lloyd",
+     "confirmLabel": "Confirm change",
+     "after": "Reorder level is now 24 L."
+    }
+   },
+   {
+    "q": "Move KAP-0412 to In progress",
+    "platformId": "kapitolyo",
+    "platformLabel": "Kapitolyo",
+    "allowed": false,
+    "refusal": "Leda can't write to Repair shop yet.",
+    "offerLabel": "Open Kapitolyo"
+   },
+   {
+    "q": "Mark yesterday synced in Books",
+    "platformId": "books",
+    "platformLabel": "Books",
+    "allowed": false,
+    "refusal": "Leda can't write to Accounting, and Books is offline.",
+    "offerLabel": "Open Books"
+   }
+  ]
+ },
  "owner": {
   "name": "Ramon Dela Cruz",
   "short": "Mon",
@@ -3607,6 +4143,86 @@ export const manyQuiet = {
 } as unknown as HomeSet;
 
 export const duoLive = {
+ "leda": {
+  "answers": [
+   {
+    "q": "How did the shop do this week?",
+    "kind": "table",
+    "columns": [
+     "Day",
+     "Jobs completed",
+     "Parts issued"
+    ],
+    "rows": [
+     {
+      "label": "Mon 19",
+      "values": [
+       10,
+       31
+      ]
+     },
+     {
+      "label": "Tue 20",
+      "values": [
+       12,
+       38
+      ]
+     },
+     {
+      "label": "Wed 21",
+      "values": [
+       9,
+       29
+      ]
+     }
+    ],
+    "note": "Tuesday was the busiest day.",
+    "from": "Dela Cruz Auto Works",
+    "next": [
+     "Which jobs waited longest?",
+     "Which parts ran out this week?"
+    ]
+   },
+   {
+    "q": "Anong parts ang pinakamaraming nagamit kahapon?",
+    "kind": "figure",
+    "figure": "12 bote",
+    "sub": "Engine oil 10W-40 · Miy 21 Okt",
+    "note": "Sumunod ang oil filter, 7 piraso.",
+    "from": "",
+    "next": [
+     "Ilan pa ang natitira?"
+    ]
+   }
+  ],
+  "commands": [
+   {
+    "q": "Raise oil filter reorder level to 30",
+    "platformId": "stockroom",
+    "platformLabel": "Parts Stockroom",
+    "allowed": true,
+    "proposal": {
+     "id": "CMD-RL",
+     "title": "Reorder level 90915-YZZE1: 20 → 30",
+     "lines": [],
+     "writes": [
+      "Toyota oil filter reorder level: 20 → 30"
+     ],
+     "notifies": "Arnel",
+     "confirmLabel": "Confirm change",
+     "after": "Reorder level is now 30."
+    }
+   },
+   {
+    "q": "Move JO-0412 to In progress",
+    "platformId": "autoworks",
+    "platformLabel": "Dela Cruz Auto Works",
+    "allowed": false,
+    "refusal": "Leda can't write to Repair shop yet.",
+    "offerLabel": "Open Auto Works"
+   }
+  ]
+ },
  "owner": {
   "name": "Ramon Dela Cruz",
   "short": "Mon",
@@ -4868,6 +5484,86 @@ export const duoLive = {
 } as unknown as HomeSet;
 
 export const duoQuiet = {
+ "leda": {
+  "answers": [
+   {
+    "q": "How did the shop do this week?",
+    "kind": "table",
+    "columns": [
+     "Day",
+     "Jobs completed",
+     "Parts issued"
+    ],
+    "rows": [
+     {
+      "label": "Mon 19",
+      "values": [
+       10,
+       31
+      ]
+     },
+     {
+      "label": "Tue 20",
+      "values": [
+       12,
+       38
+      ]
+     },
+     {
+      "label": "Wed 21",
+      "values": [
+       9,
+       29
+      ]
+     }
+    ],
+    "note": "Tuesday was the busiest day.",
+    "from": "Dela Cruz Auto Works",
+    "next": [
+     "Which jobs waited longest?",
+     "Which parts ran out this week?"
+    ]
+   },
+   {
+    "q": "Anong parts ang pinakamaraming nagamit kahapon?",
+    "kind": "figure",
+    "figure": "12 bote",
+    "sub": "Engine oil 10W-40 · Miy 21 Okt",
+    "note": "Sumunod ang oil filter, 7 piraso.",
+    "from": "",
+    "next": [
+     "Ilan pa ang natitira?"
+    ]
+   }
+  ],
+  "commands": [
+   {
+    "q": "Raise oil filter reorder level to 30",
+    "platformId": "stockroom",
+    "platformLabel": "Parts Stockroom",
+    "allowed": true,
+    "proposal": {
+     "id": "CMD-RL",
+     "title": "Reorder level 90915-YZZE1: 20 → 30",
+     "lines": [],
+     "writes": [
+      "Toyota oil filter reorder level: 20 → 30"
+     ],
+     "notifies": "Arnel",
+     "confirmLabel": "Confirm change",
+     "after": "Reorder level is now 30."
+    }
+   },
+   {
+    "q": "Move JO-0412 to In progress",
+    "platformId": "autoworks",
+    "platformLabel": "Dela Cruz Auto Works",
+    "allowed": false,
+    "refusal": "Leda can't write to Repair shop yet.",
+    "offerLabel": "Open Auto Works"
+   }
+  ]
+ },
  "owner": {
   "name": "Ramon Dela Cruz",
   "short": "Mon",

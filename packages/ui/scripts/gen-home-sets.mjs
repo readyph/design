@@ -121,7 +121,11 @@ function build(key, quiet) {
   const links = t.connections.map((c) => ({ from: c.from, to: c.to, status: c.status }));
   const own = t.people.find((p) => p.role === 'Owner') || t.people[0];
   const sug = [...t.leda.answers.map((a) => a.q).slice(0, 2), ...t.leda.commands.filter((c) => c.allowed).map((c) => c.q).slice(0, 2)];
-  const out = { owner: { name: own.name, short: own.short, initials: own.initials || own.name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase() }, suggestions: sug, weekRange: WEEK.range, key: { b: 'few', all: 'many', duo: 'live' }[key], platforms, hasHq, hq, links, items: queueItems, watching, snoozed: [], done: [], cases,
+  const label = (id) => (plat(id) || {}).label || id;
+  const answers = t.leda.answers.map((a) => ({ q: a.q, kind: a.kind, ...(a.kind === 'figure' ? { figure: a.figure, sub: a.sub } : { columns: a.columns, rows: a.rows.map((r) => ({ label: r.platformId ? label(r.platformId) : r.label, values: r.values })), ...(a.unit ? { unit: a.unit } : {}) }), ...(a.note ? { note: a.note } : {}),
+    from: a.kind === 'figure' ? '' : a.source ? label(a.source) : [...new Set(a.rows.map((x) => x.platformId).filter(Boolean))].map(label).join(', '), ...(a.next && a.next.length ? { next: a.next } : {}) }));
+  const commands = t.leda.commands.map((c) => ({ q: c.q, platformId: c.platformId, platformLabel: label(c.platformId), allowed: !!c.allowed, ...(c.allowed ? { proposal: { id: c.proposal.id, title: c.proposal.title, lines: (c.proposal.lines || []).map(lineOf), writes: [...c.proposal.writes], ...(names(c.proposal.notifies) ? { notifies: names(c.proposal.notifies) } : {}), confirmLabel: c.proposal.confirmLabel || 'Confirm', after: c.proposal.after } } : { refusal: c.refusal, offerLabel: c.offer.label }) }));
+  const out = { leda: { answers, commands }, owner: { name: own.name, short: own.short, initials: own.initials || own.name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase() }, suggestions: sug, weekRange: WEEK.range, key: { b: 'few', all: 'many', duo: 'live' }[key], platforms, hasHq, hq, links, items: queueItems, watching, snoozed: [], done: [], cases,
     next: (tl.quiet && tl.quiet.next) || '', yesterdayDate: t.yesterday.date, plan: { name: t.tenant.plan, used: u.used, max: u.limit, cycleStart: u.cycleStart, cycleEnd: u.cycleEnd, daysLeft: u.daysLeft },
     headline: t.leda.headline, quietHeadline: t.leda.quietHeadline, yesterdayLine: t.leda.yesterdayLine, decisions: t.counts.decisions,
     mapOrder: tl.mapOrder || tl.mapPlatforms.map((m) => m && m.id) };

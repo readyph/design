@@ -4,7 +4,6 @@ import { AskLedaBar } from '../components/AskLedaBar';
 import { Badge } from '../components/Badge';
 import { Button } from '../components/Button';
 import { ChatChips, ChatComposer, ChatEmpty, ChatHeader, ChatMessage, ChatThread, Chat, usePersistedChat, type ChatChip, type ChatMessageData, type ChatProposalData } from '../components/Chat';
-import { chatSample } from '../components/Chat.sample';
 import { CommandPalette, type CommandPaletteGroup, type CommandPaletteItem } from '../components/CommandPalette';
 import { Fact, FactsLine } from '../components/FactsLine';
 import { LedaMark } from '../components/Leda';
@@ -27,7 +26,7 @@ import { PortalFrame } from './PortalFrame';
 import { CaseKv, DayLine, LedaDraft, MoreButton, peso, type DraftLine } from './Home.case';
 import { destFromHash, go } from './protoNav';
 import { useMatchMedia } from '../utils/useMatchMedia';
-import { ledaMode, mapSlots, queuePlatforms, sets, defaultSuggestions, type HomeCase, type HomeCaseLine, type HomePlatform, type HomeSetKey, type HomeState } from './Home.data';
+import { ledaMode, mapSlots, queuePlatforms, sets, defaultSuggestions, type HomeCase, type HomeLedaAnswer, type HomeCaseLine, type HomePlatform, type HomeSetKey, type HomeState } from './Home.data';
 
 /**
  * Portal Home (RDY-255): the place column (map, Needs you), the sheet (Today, a case, or the overview) and Leda's
@@ -65,29 +64,6 @@ function useWidth<T extends HTMLElement>(dep: unknown): [React.RefObject<T>, num
     return () => ro.disconnect();
   }, [dep]);
   return [ref as React.RefObject<T>, w];
-}
-
-function reply(q: string, scope: string): ChatMessageData['blocks'] {
-  const t = q.toLowerCase();
-  if (t.includes('reorder'))
-    return [
-      { type: 'text', text: 'Here is the change. Nothing is written until you confirm.' },
-      { type: 'proposal', blockId: `CMD-RL-${seq}`, proposal: { id: 'CMD-RL', title: 'Raise oil filter reorder level to 30', writes: ['Oil filter (OF-114) reorder level: 20 to 30'], notes: ['Nothing is ordered yet.'], confirmLabel: 'Confirm change' } },
-    ];
-  if (t.includes('move jo'))
-    return [{ type: 'refusal', text: 'Leda can’t write to Dela Cruz Auto Works yet. Open it to move the job.', actions: [{ id: 'go', label: 'Open Auto Works', href: '#autoworks' }] }];
-  if (t.includes('disconnect'))
-    return [{ type: 'refusal', text: 'Leda can’t add, rename or disconnect platforms or change links.', actions: [{ id: 'go', label: 'Go to Parts Stockroom', href: '#stockroom' }] }];
-  if (t.includes('week'))
-    return [
-      { type: 'text', text: 'Sales are up on last week, and parts moved faster than usual.', stream: true },
-      { type: 'figure', value: '₱148,200', label: 'Sales this week', detail: 'Last week ₱131,900' },
-      { type: 'meta', text: `Read from Auto Works and Parts Stockroom, ${scope}` },
-      { type: 'chips', chips: [{ id: 'x', label: 'What shares data with what?' }] },
-    ];
-  if (t.includes('parts'))
-    return [{ type: 'text', text: 'Kahapon, ang pinakamaraming nagamit ay ang oil filter: 31 pcs.', stream: true }, { type: 'meta', text: 'Read from Parts Stockroom, yesterday' }];
-  return [{ type: 'text', text: 'Sorry, I can’t answer that in this prototype.', stream: true }, { type: 'chips', chips: chatSample.chips.slice(0, 2) }];
 }
 
 export function Home({ set = 'live', state = 'live', startChat = false, filter: initialFilter }: HomeProps) {
@@ -343,6 +319,51 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
     setPalette(false);
     setChat(true);
   };
+  const numFmt = (n: number) => Number(n).toLocaleString('en-PH');
+  const ledaSuggest = [...(data.leda?.answers ?? []).map((a) => a.q), ...(data.leda?.commands ?? []).map((c) => c.q)];
+  const findAsk = (q: string) => {
+    const s = q.toLowerCase().trim();
+    const cmds = data.leda?.commands ?? [], ans = data.leda?.answers ?? [];
+    const cmd = cmds.find((c) => c.q.toLowerCase() === s) ?? (s.length > 4 ? cmds.find((c) => c.q.toLowerCase().includes(s)) : undefined);
+    if (cmd) return { cmd };
+    const a = ans.find((x) => x.q.toLowerCase() === s) ?? (s.length > 4 ? ans.find((x) => x.q.toLowerCase().includes(s)) : undefined);
+    return a ? { a } : null;
+  };
+  const answerBlock = (a: HomeLedaAnswer): ChatMessageData['blocks'][number] => {
+    if (a.kind === 'figure') return { type: 'answerFigure', figure: a.figure!, sub: a.sub! };
+    const cols = a.columns!, rows = a.rows!;
+    const withTotal = cols.length === rows[0]!.values.length + 2;
+    const tot = rows.map((x) => x.values.reduce<number>((s, v) => s + Number(v), 0));
+    const rank = withTotal ? tot : rows.map((x) => Number(x.values[0]));
+    const max = Math.max(...rank), lead = rank.indexOf(max);
+    return {
+      type: 'answerTable',
+      caption: a.q,
+      columns: cols,
+      rows: rows.map((x, i) => {
+        const cells = [...x.values.map((v) => (typeof v === 'number' ? numFmt(v) : String(v))), ...(withTotal ? [numFmt(tot[i]!)] : [])];
+        return { label: x.label, cells, lead: i === lead, bar: { at: withTotal ? cells.length - 1 : 0, pct: Math.round(((withTotal ? tot[i]! : Number(x.values[0])) / max) * 100) } };
+      }),
+      ...(withTotal ? { foot: [...rows[0]!.values.map((_, j) => numFmt(rows.reduce((s, x) => s + Number(x.values[j]), 0))), numFmt(tot.reduce((s, v) => s + v, 0))] } : {}),
+      ...(a.unit ? { unit: a.unit } : {}),
+    };
+  };
+  const reply = (q: string): ChatMessageData['blocks'] => {
+    const r = findAsk(q);
+    if (!r) return [{ type: 'text', text: "Sorry, I can't answer that in this prototype.", stream: true }, ...(ledaSuggest.length ? [{ type: 'text' as const, text: 'These ones work here:', stream: true }, { type: 'chips' as const, chips: ledaSuggest.map((x) => ({ id: x, label: x })) }] : [])];
+    if (r.cmd) {
+      const c = r.cmd;
+      if (!c.allowed) return [{ type: 'refuse', text: c.refusal! }, { type: 'actions', actions: [{ id: `open:${c.platformId}`, label: c.offerLabel!, href: `#${c.platformId}` }] }];
+      const pr = c.proposal!;
+      return [
+        { type: 'text', text: `Here is the change for ${c.platformLabel}. Nothing is written until you confirm.`, stream: true },
+        { type: 'proposal', blockId: `${pr.id}-${seq}`, proposal: { id: pr.id, title: pr.title, topLabel: 'You asked · drafted by Leda', writes: pr.writes, writesHeading: 'Leda will write', notes: pr.notifies ? [`Notifies ${pr.notifies}`] : [], confirmLabel: pr.confirmLabel, after: pr.after } },
+      ];
+    }
+    const a = r.a!;
+    const said = a.note ? ({ type: 'text', text: a.note, stream: true } as const) : null, widget = answerBlock(a);
+    return [...(a.kind === 'figure' ? [widget, said] : [said, widget]), a.from ? { type: 'meta' as const, text: `Read from ${a.from}` } : null, a.next?.length ? { type: 'chips' as const, chips: a.next.map((x) => ({ id: x, label: x })) } : null].filter(Boolean) as ChatMessageData['blocks'];
+  };
   const send = useCallback(
     (q: string) => {
       const id = `m${++seq}`;
@@ -354,7 +375,7 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
         { id: `${id}l`, from: 'leda', name: 'Leda', time: clock(), thinking: true, blocks: [] },
       ]);
       window.setTimeout(() => {
-        setMessages((m) => m.map((x) => (x.id === `${id}l` ? { ...x, thinking: false, blocks: reply(q, 'today') } : x)));
+        setMessages((m) => m.map((x) => (x.id === `${id}l` ? { ...x, thinking: false, blocks: reply(q) } : x)));
         setBusy(false);
       }, 1000);
     },
@@ -1001,7 +1022,7 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
         <Chat onClose={() => setChat(false)} returnFocusTo={opener}>
           <ChatHeader layout="inline" busy={busy} empty={messages.length === 0} onNewConversation={() => setMessages([])} onClose={() => setChat(false)} />
           {messages.length === 0 ? (
-            <div className="min-h-0 flex-1 overflow-y-auto"><ChatEmpty layout="workshop" scope={scopeName} chips={suggestions.map((q) => ({ id: q, label: q }))} onPick={(c) => send(c.label)} /></div>
+            <div className="min-h-0 flex-1 overflow-y-auto pt-2"><ChatEmpty layout="workshop" scope={scopeName} chips={ledaSuggest.map((q) => ({ id: q, label: q }))} onPick={(c) => send(c.label)} /></div>
           ) : (
             <ChatThread>
               {messages.map((m) => (
@@ -1013,10 +1034,12 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
                   onAction={(a) => { if (a.href) go(destFromHash(a.href)); }}
                   onConfirm={(bid) => {
                     setBlockProposal(bid, 'writing');
+                    const after = messages.flatMap((m) => m.blocks).find((b) => b.type === 'proposal' && b.blockId === bid && b.proposal.after);
+                    const text = after && after.type === 'proposal' ? String(after.proposal.after) : 'Done.';
                     return new Promise<void>((res) =>
                       window.setTimeout(() => {
-                        setBlockProposal(bid, 'done', { after: 'Reorder level is now 30.', doneAt: clock() });
-                        toast.undo('Oil filter reorder level is now 30.', () => setBlockProposal(bid, 'waiting'), { leda: true });
+                        setBlockProposal(bid, 'done', { after: text, doneAt: clock() });
+                        toast.undo(text, () => setBlockProposal(bid, 'waiting'), { leda: true });
                         res();
                       }, 800),
                     );
