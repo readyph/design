@@ -125,7 +125,7 @@ describe('Tabs editor', () => {
 });
 
 describe('SheetBar', () => {
-  it('is 48px with side padding and a bottom border', () => {
+  it('is 48px with side padding (PlatformShell draws the border under it)', () => {
     render(<SheetBar actions={<button>Invite</button>}>left</SheetBar>);
     const bar = screen.getByText('left').parentElement!;
     expect(bar.className).toContain('h-[calc(var(--sheet-bar)-1px)]');
