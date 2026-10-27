@@ -11,9 +11,10 @@ import { Breadcrumbs } from '../components/Breadcrumbs';
 import { Button } from '../components/Button';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { ConnectionsEditor, type Connection, type ConnectionOption, type ConnectionPlatform } from '../components/ConnectionsEditor';
-import { DataList } from '../components/DataList';
 import { ErrorBlock } from '../components/ErrorBlock';
 import { Fact, FactsLine } from '../components/FactsLine';
+import { TextField } from '../components/TextField';
+import { FactsTable } from '../components/FactsTable';
 import { IconButton } from '../components/IconButton';
 import { LedaMark } from '../components/Leda';
 import { LedaNote } from '../components/LedaNote';
@@ -89,47 +90,17 @@ const link = 'text-accent underline underline-offset-2 hover:text-accent-hover';
 
 /* ---------- small pieces ---------- */
 const KIND_CATALOG: Record<string, string> = { repair: 'repair_shop' };
-function KindIcon({ kind }: { kind: string }) {
+function KindIcon({ kind, size = 16 }: { kind: string; size?: number }) {
   const Icon = catalogItem(KIND_CATALOG[kind] ?? kind)?.icon;
-  return Icon ? <Icon size={16} aria-hidden /> : null;
+  return Icon ? <Icon size={size} aria-hidden /> : null;
+}
+/** The workshop `.hl`: dot and word at 12/16 in the health colour. */
+function Health({ tone, word }: { tone: StatusTone; word: string }) {
+  return <StatusDot status={tone} label={word} className={cn('leading-4', tone === 'ok' && 'text-ok', tone === 'warn' && 'text-warn', tone === 'bad' && 'text-bad')} />;
 }
 /** One platform's identity: its uploaded logo or default monogram on its colour (as in the Platforms page). */
-function Logo({ x, size = 32, src }: { x: PlatformRec; size?: 14 | 16 | 20 | 32; src?: string }) {
+function Logo({ x, size = 32, src }: { x: PlatformRec; size?: 14 | 16 | 20 | 24 | 32 | 40; src?: string }) {
   return <PlatformLogo name={x.label} size={size} decorative color={x.color} src={src ?? x.logo} initials={x.mono} />;
-}
-
-function Field({ id, label, value, onChange, hint, error, unit, type = 'text', required, wide, max = 120, className }: {
-  id: string; label: string; value: string | number; onChange: (v: string) => void; hint?: string; error?: string; unit?: string; type?: 'text' | 'tel' | 'number'; required?: boolean; wide?: boolean; max?: number; className?: string;
-}) {
-  const d = hint || error ? `${id}-d` : undefined;
-  const box = (
-    <input
-      id={id}
-      type={type}
-      inputMode={type === 'number' ? 'numeric' : undefined}
-      min={type === 'number' ? 0 : undefined}
-      maxLength={type === 'number' ? undefined : max}
-      value={value}
-      required={required}
-      autoComplete="off"
-      aria-invalid={error ? true : undefined}
-      aria-describedby={d}
-      onChange={(e) => onChange(e.target.value)}
-      className={cn(field, 'h-[var(--ctl-dropdown)]', error ? 'border-bad' : 'border-control', unit && 'rounded-r-none')}
-    />
-  );
-  return (
-    <div className={cn('min-w-0', wide && 'sm:col-span-2', className)}>
-      <label htmlFor={id} className="mb-1 block text-ui font-medium text-text">{label}</label>
-      {unit ? (
-        <div className="flex">
-          {box}
-          <span className="grid shrink-0 place-items-center rounded-r-control border border-l-0 border-control bg-raised px-3 text-ui text-muted">{unit}</span>
-        </div>
-      ) : box}
-      {error ? <p id={d} className="mt-1 text-small text-bad-ink">{error}</p> : hint ? <p id={d} className="mt-1 text-small text-muted">{hint}</p> : null}
-    </div>
-  );
 }
 
 function SwitchField({ label, hint, checked, onChange }: { label: string; hint?: string; checked: boolean; onChange: (v: boolean) => void }) {
@@ -152,10 +123,10 @@ function Heading({ id, level = 3, children, aside }: { id: string; level?: 3 | 4
 
 function FormFoot({ dirty, saveLabel, onDiscard, saveRef }: { dirty: boolean; saveLabel: string; onDiscard: () => void; saveRef?: React.Ref<HTMLButtonElement> }) {
   return (
-    <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-border pt-4">
-      <Button ref={saveRef} type="submit" variant="primary" disabled={!dirty} keepFocus>{saveLabel}</Button>
-      <Button type="button" variant="text" disabled={!dirty} keepFocus onClick={onDiscard}>Discard</Button>
-      <span role="status" className="text-small text-warn-ink">{dirty ? 'Unsaved changes' : ''}</span>
+    <div className="mt-8 flex flex-wrap items-center gap-2">
+      <Button ref={saveRef} type="submit" variant="primary" disabled={!dirty} keepFocus className="aria-disabled:opacity-50">{saveLabel}</Button>
+      <Button type="button" variant="text" disabled={!dirty} keepFocus className="aria-disabled:opacity-50" onClick={onDiscard}>Discard</Button>
+      <span role="status" className="ml-1 text-small text-muted">{dirty ? 'Unsaved changes' : ''}</span>
     </div>
   );
 }
@@ -556,26 +527,26 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
 
   /* =============== section bodies =============== */
   const generalBody = () => {
-    const customLogo = !!general.logo;
+    const customLogo = general.logo ? true : general.logo === '' ? false : !!p?.logo;
     return (
       <>
-        <div className="grid gap-x-4 gap-y-4 sm:grid-cols-2">
-          <Field id={`${uid}-name`} label="Name" value={general.label} required hint="Give this a clear name, like a branch name." error={genErr || undefined} onChange={(v) => { setGenErr(''); setDraft('general', { ...general, label: v }); }} />
+        <div className="grid max-w-[720px] gap-x-6 gap-y-6 sm:grid-cols-2">
+          <TextField id={`${uid}-name`} label="Name" value={general.label} required hint="Give this a clear name, like a branch name." error={genErr || undefined} onChange={(v) => { setGenErr(''); setDraft('general', { ...general, label: v }); }} />
           <div className="min-w-0">
-            <span id={`${uid}-logo`} className="mb-1 block text-ui font-medium text-text">Logo</span>
-            <div role="group" aria-labelledby={`${uid}-logo`} className="flex flex-wrap items-center gap-3">
-              {p ? <Logo x={p} src={general.logo ?? undefined} size={32} /> : <PlatformLogo name={general.label || kind.name} src={general.logo ?? undefined} index={platforms.length + 1} size={32} decorative />}
+            <span id={`${uid}-logo`} className="block text-body font-medium text-text">Logo</span>
+            <div role="group" aria-labelledby={`${uid}-logo`} className="mt-2 flex flex-wrap items-center gap-3">
+              {p ? <Logo x={p} src={general.logo ?? undefined} size={40} /> : <PlatformLogo name={general.label || kind.name} src={general.logo ?? undefined} index={platforms.length + 1} size={40} decorative />}
               <input ref={logoInput} type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" className="sr-only" tabIndex={-1} aria-hidden onChange={(e) => { readLogo(e.target.files?.[0]); e.target.value = ''; }} />
               <Button ref={uploadBtn} type="button" variant="secondary" leftIcon={UploadSimple} onClick={() => logoInput.current?.click()}>Upload</Button>
               {customLogo ? (
-                <Button type="button" variant="text" onClick={() => { setDraft('general', { ...general, logo: null }); refocus('upload'); }}>Use the default</Button>
+                <Button type="button" variant="text" onClick={() => { setDraft('general', { ...general, logo: '' }); refocus('upload'); }}>Use the default</Button>
               ) : (
-                <span className="text-small text-muted">Default: initials on a colour. PNG, JPG or SVG.</span>
+                <span className="text-small text-muted">Default: initials on a colour.<br />PNG, JPG or SVG.</span>
               )}
             </div>
           </div>
           {kind.basics.map((b) => (
-            <Field key={b} id={`${uid}-b-${b}`} label={basicLabels[b][0]} hint={basicLabels[b][1]} type={b === 'phone' ? 'tel' : 'text'} wide={b === 'address'} value={general.basics[b] ?? ''} onChange={(v) => setDraft('general', { ...general, basics: { ...general.basics, [b]: v } })} />
+            <TextField key={b} id={`${uid}-b-${b}`} label={basicLabels[b][0]} hint={basicLabels[b][1]} type={b === 'phone' ? 'tel' : 'text'} className={b === 'address' ? 'sm:col-span-2' : undefined} value={general.basics[b] ?? ''} onChange={(v) => setDraft('general', { ...general, basics: { ...general.basics, [b]: v } })} />
           ))}
         </div>
       </>
@@ -586,27 +557,27 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
     const h = healthOf(p);
     return (
       <>
-        <DataList
+        <FactsTable
           className="mt-8"
           items={[
             { label: 'Kind', value: <span className="inline-flex items-center gap-2"><KindIcon kind={p.kind} />{kind.name}</span> },
-            { label: 'Status', value: <StatusDot status={h.tone} label={h.word} /> },
+            { label: 'Status', value: <Health tone={h.tone} word={h.word} /> },
             { label: 'Version', value: p.version ?? 'Not reported yet' },
             { label: 'Last synced', value: p.synced ?? 'Not synced yet' },
             { label: 'Connected', value: p.connected },
-            { label: 'App', value: kind.hasApp ? <Button type="button" variant="secondary" leftIcon={ArrowSquareOut} onClick={() => toast({ description: `Opening ${shortName({ label: nameOf(p.id) })}.` })}>Open {shortName({ label: nameOf(p.id) })}</Button> : <span className="text-muted">No app yet. It works through its data links.</span> },
+            { label: 'App', value: kind.hasApp ? <Button type="button" variant="secondary" className="h-7" leftIcon={ArrowSquareOut} onClick={() => toast({ description: `Opening ${shortName({ label: nameOf(p.id) })}.` })}>Open {shortName({ label: nameOf(p.id) })}</Button> : <span className="text-muted">No app yet. It works through its data links.</span> },
           ]}
         />
-        <section aria-labelledby={`${uid}-dz`} className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-card border border-border p-4">
-          <div className="min-w-0 flex-1 basis-64">
-            <h3 id={`${uid}-dz`} className="m-0 text-ui font-semibold text-text">Disconnect</h3>
-            <p className="m-0 mt-0.5 text-ui text-muted">
+        <section aria-labelledby={`${uid}-dz`} className="mt-8 flex max-w-[720px] items-start gap-4 rounded-card border border-border p-4 max-[640px]:flex-col max-[640px]:gap-2.5">
+          <div className="min-w-0">
+            <h3 id={`${uid}-dz`} className="m-0 text-ui font-semibold leading-5 text-text">Disconnect</h3>
+            <p className="m-0 mt-0.5 text-ui leading-[19px] text-muted">
               {sharing.length
                 ? `${andList([...new Set(sharing.map((l) => nameOf(l.to)))])} ${sharing.length === 1 ? 'reads' : 'read'} its ${andList([...new Set(sharing.map((l) => dataKinds[l.kind].name.toLowerCase()))])}. Remove ${sharing.length === 1 ? 'that link' : 'those links'} first.`
                 : 'Removes it and its data links. This can’t be undone.'}
             </p>
           </div>
-          <Button type="button" variant="danger" leftIcon={LinkBreak} onClick={startDisconnect}>Disconnect</Button>
+          <Button type="button" variant="secondary" leftIcon={LinkBreak} onClick={startDisconnect} className="ml-auto shrink-0 text-bad hover:border-bad max-[640px]:ml-0 max-[640px]:h-[var(--ctl-touch)]">Disconnect</Button>
         </section>
       </>
     );
@@ -625,11 +596,11 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
           {f.hint ? <p className="mt-1 text-small text-muted">{f.hint}</p> : null}
         </div>
       );
-    return <Field key={f.key} id={id} label={f.label} unit={f.unit} hint={f.hint} type={f.type === 'number' ? 'number' : 'text'} value={String(v ?? '')} onChange={(nv) => set(f.type === 'number' ? (nv === '' ? '' : Number(nv)) : nv)} />;
+    return <TextField key={f.key} id={id} label={f.label} unit={f.unit} hint={f.hint} type={f.type === 'number' ? 'number' : 'text'} value={String(v ?? '')} onChange={(nv) => set(f.type === 'number' ? (nv === '' ? '' : Number(nv)) : nv)} />;
   };
   const systemBody = () => (
     <>
-      <div className="grid gap-x-4 gap-y-4 sm:grid-cols-2">{kind.settings.map(settingField)}</div>
+      <div className="grid max-w-[720px] gap-x-6 gap-y-6 sm:grid-cols-2">{kind.settings.map(settingField)}</div>
       <div className="mt-8">
         <OpeningHours
           value={system.hours}
@@ -889,25 +860,28 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
 
   const section = (sec: SectionId) => {
     const dirty = editable(sec) && isDirty(sec);
-    const inner = body(sec);
+    const foot = <FormFoot dirty={dirty} saveLabel={`Save ${lowerName(saveName(sec))}`} onDiscard={() => { clearDraft(sec); setGenErr(''); }} />;
+    const inner = sec === 'general' && !ob ? <>{generalBody()}{foot}{factsAndDanger()}</> : body(sec);
     const head = (
-      <header className="mb-4">
-        <h2 id={`${uid}-h-${sec}`} className="m-0 flex items-center gap-2 text-header font-semibold text-text">
+      <header className="flex flex-wrap items-baseline gap-x-2.5">
+        <h2 id={`${uid}-h-${sec}`} className="m-0 flex items-center gap-2 text-dialog font-semibold text-text">
           {sec === 'leda' ? <LedaMark size={20} decorative /> : null}{sectionNames[sec]}
         </h2>
-        <p className="m-0 mt-1 text-ui text-muted">{subs[sec]}</p>
+        <p className="m-0 text-ui leading-[18px] text-muted">{subs[sec]}</p>
       </header>
     );
     return (
-      <section ref={panelRef} role={ob ? undefined : 'tabpanel'} aria-labelledby={ob ? `${uid}-h-${sec}` : tabId} tabIndex={-1} className="outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent">
+      <section ref={panelRef} role={ob ? undefined : 'tabpanel'} aria-labelledby={ob ? `${uid}-h-${sec}` : tabId} tabIndex={-1} className={cn('outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent', !ob && 'mt-5 border-t border-rule pb-2 pt-7')}>
         {head}
         {editable(sec) && !ob ? (
-          <form onSubmit={(e) => { e.preventDefault(); submit(sec); }} noValidate>
+          <form onSubmit={(e) => { e.preventDefault(); submit(sec); }} noValidate className="mt-6">
             {inner}
-            <FormFoot dirty={dirty} saveLabel={`Save ${lowerName(saveName(sec))}`} onDiscard={() => { clearDraft(sec); setGenErr(''); }} />
+            {sec === 'general' ? null : foot}
           </form>
-        ) : (
+        ) : ob ? (
           inner
+        ) : (
+          <div className="mt-6">{inner}</div>
         )}
       </section>
     );
@@ -923,15 +897,15 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
     : [];
   const kindAny = kind;
   const header = p && !ob ? (
-    <div className="mb-6">
-      <div className="flex items-center gap-2 text-ui text-muted">
-        <a href="#platforms" onClick={(e) => { e.preventDefault(); go({ to: 'platforms' }); }} className="rounded-[2px] font-medium hover:text-text">All platforms</a>
+    <div>
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-small text-muted">
+        <a href="#platforms" onClick={(e) => { e.preventDefault(); go({ to: 'platforms' }); }} className="rounded-[2px] hover:text-text">All platforms</a>
         <span aria-hidden className="text-control">/</span>
-        <span className="inline-flex items-center gap-1.5"><KindIcon kind={p.kind} />{kind.name}</span>
+        <span className="inline-flex items-center gap-1.5"><KindIcon kind={p.kind} size={14} />{kind.name}</span>
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-3">
         <Logo x={p} src={details[p.id].logo} />
-        <h1 className="m-0 min-w-0 flex-1 basis-48 text-title font-semibold text-text [overflow-wrap:anywhere]">{nameOf(p.id)}</h1>
+        <h1 className="m-0 min-w-0 flex-1 basis-48 text-case font-semibold text-text [overflow-wrap:anywhere]">{nameOf(p.id)}</h1>
         {needsLink(p) ? (
           <Button variant="primary" leftIcon={ArrowRight} onClick={() => { setTab('connections'); setFlashId(null); refocus('panel'); }}>Finish setup</Button>
         ) : kindAny.hasApp ? (
@@ -941,7 +915,7 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
         )}
       </div>
       <FactsLine className="mt-2" aria-label="Facts">
-        <Fact><StatusDot status={healthOf(p).tone} label={healthOf(p).word} /></Fact>
+        <Fact><Health tone={healthOf(p).tone} word={healthOf(p).word} /></Fact>
         <Fact>{p.synced ? `Synced ${p.synced}` : 'Not synced yet'}</Fact>
         {p.version ? <Fact>{p.version}</Fact> : null}
         <Fact>Connected {p.connected}</Fact>
@@ -978,7 +952,7 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
         </div>
         <p className="m-0 mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px] leading-5 text-muted">
           <span>{kind.name}{p?.place ? ` · ${p.place}` : ''}</span>
-          {p ? <StatusDot status={healthOf(p).tone} label={healthOf(p).word} /> : <span>Not added yet</span>}
+          {p ? <Health tone={healthOf(p).tone} word={healthOf(p).word} /> : <span>Not added yet</span>}
         </p>
       </div>
       {p && !ob ? (
@@ -1041,8 +1015,8 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
       );
     }
     return (
-      <div ref={sheetRef} className="p-pad">
-        <div className="max-w-[760px]">
+      <div ref={sheetRef} className="p-pad pb-8 pt-5">
+        <div>
           {phone && p ? (
             <div ref={tabsRef} className="mb-4">
               <Tabs variant="chips" aria-label={nameOf(p.id)} items={tabItems.map((t) => ({ ...t, status: undefined }))} value={tab} onValueChange={(v) => { setTab(v as SectionId); setFlashId(null); }} />
