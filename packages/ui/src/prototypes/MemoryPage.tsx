@@ -618,6 +618,8 @@ export function MemoryPage(props: MemoryPageProps) {
           platforms={error ? [null, null, null, null] : empty ? [null, null, null, mapSlots[3]] : mapSlots}
           caption={caption}
           loading={loading}
+          error={error}
+          errorNotice={false}
           fadeOthers
           onAddPlatform={() => navGo({ to: "platforms", add: true })}
           hqLabel={() => `Company, ${onCount("company")} of ${topicsOf("company").length} topics on`}
@@ -727,31 +729,13 @@ export function MemoryPage(props: MemoryPageProps) {
   const actions = (
     <>
       {tryBtn}
-      <AskLedaBar scope="memory" paused={tryShown} className="min-[641px]:max-[1100px]:ml-2" />
+      <AskLedaBar scope="memory" paused={tryShown} />
     </>
   );
-  const detailPhone = phone && (inDoc || phoneSheet);
-  // Phone detail screens: one fixed bar on --frame (back, Try it, the Ask Leda icon) replaces the top bar (shell.css .pback / memory.css .sb-try).
-  const detailBar = detailPhone ? (
-    <>
-      <button
-        type="button"
-        onClick={() => (inDoc ? closeDoc() : setPhoneSheet(false))}
-        className={cn("-ml-3 inline-flex h-11 shrink-0 items-center gap-1 self-center rounded-control px-2 text-[14px] leading-5 text-text", focusRing)}
-      >
-        <CaretLeft size={14} aria-hidden />
-        <span>Memory</span>
-      </button>
-      <span className="ml-auto flex shrink-0 items-center gap-5">
-        {tryBtn}
-        <AskLedaBar variant="bar" scope="memory" paused={tryShown} />
-      </span>
-    </>
-  ) : undefined;
-  const sheetBar = detailPhone ? undefined : inDoc ? (
-    <SheetBar actions={actions}>
-      <nav aria-label="You are here" className="flex min-w-0 items-center gap-2 text-[13px] leading-5">
-        <button type="button" title="Back to Memory (Esc)" onClick={closeDoc} className={cn("inline-flex shrink-0 items-center gap-1.5 rounded-[4px] px-1 py-1 text-muted hover:text-text", focusRing)}>
+  const sheetBar = inDoc ? (
+    <SheetBar actions={actions} className="min-[641px]:max-[1100px]:[&>div:first-child]:!h-auto">
+      <nav aria-label="You are here" className="flex min-w-0 items-center gap-2 text-[13px] leading-[18px] text-muted">
+        <button type="button" title="Back to Memory (Esc)" onClick={closeDoc} className={cn("inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[2px] font-medium text-muted hover:text-text", focusRing)}>
           <ArrowLeft size={14} aria-hidden />
           Memory
         </button>
@@ -771,7 +755,7 @@ export function MemoryPage(props: MemoryPageProps) {
       <button type="button" className="mr-3 inline-flex shrink-0 items-center gap-1 text-[14px] text-muted hover:text-text sm:hidden" onClick={() => setPhoneSheet(false)}>
         <ArrowLeft size={14} aria-hidden /> Memory
       </button>
-      <div className={cn("flex min-w-0 flex-1 items-stretch [&_[role=tab]]:text-[13px] [&_[role=tab]_svg]:size-[14px]", !phone && "[&_[role=tab]]:!font-normal")}>
+      <div className="flex min-w-0 flex-1 items-stretch [&_[role=tab]]:text-[13px] [&_[role=tab]]:font-normal [&_[role=tab]_svg]:size-[14px]">
       <Tabs
         keepInView={false}
         variant={phone ? "chips" : "fixed"}
@@ -785,6 +769,33 @@ export function MemoryPage(props: MemoryPageProps) {
   );
 
   // Phone detail screens (the workshop's fixed .sbar): the way back, Try it and the Leda entry replace the frame's top bar; the tabs become icon-less chips under it.
+  const phoneDetail = phone && (phoneSheet || inDoc);
+  const phoneTop = phoneDetail ? (
+    <>
+      <button type="button" onClick={() => (inDoc ? closeDoc() : setPhoneSheet(false))} className={cn("-ml-3 inline-flex h-11 shrink-0 items-center gap-1 self-center rounded-control px-2 text-[14px] text-text", focusRing)}>
+        <CaretLeft size={16} aria-hidden />
+        <span>Memory</span>
+      </button>
+      <span className="flex-1" />
+      {tryBtn}
+      <AskLedaBar variant="bar" scope="memory" paused={tryShown} onOpen={() => openTry()} className="max-[640px]:[&_button]:!border-0 max-[640px]:[&_button]:!bg-transparent" />
+    </>
+  ) : undefined;
+  const phoneChips =
+    phone && phoneSheet && !inDoc ? (
+      <div className="sticky top-0 z-[5] flex gap-1.5 overflow-x-auto border-b border-rule bg-surface px-4 py-2 [scrollbar-width:none]">
+        <Tabs
+          keepInView={false}
+          variant="chips"
+          aria-label="Memory"
+          items={TABS.map((t) => ({ value: t.value, label: t.label }))}
+          value={tab}
+          onValueChange={goTab}
+          className="[&_[role=tablist]]:gap-1.5 [&_[role=tablist]]:py-0 [&_[role=tab]]:!h-9 [&_[role=tab]]:!rounded-[18px] [&_[role=tab]]:!bg-transparent [&_[role=tab]]:text-[13px] [&_[role=tab]]:font-normal [&_[role=tab]]:text-text [&_[role=tab][data-state=active]]:!border-accent [&_[role=tab][data-state=active]]:!text-accent"
+        />
+      </div>
+    ) : null;
+
   const bizFilter = (
     <div className="w-[216px] min-w-0 shrink-0 max-[640px]:w-auto max-[640px]:flex-1 max-[640px]:basis-full [&_[role=combobox]]:pl-2.5 [&_[role=combobox]]:pr-2 [&_[role=combobox]]:text-[13px]">
       <Select
@@ -876,7 +887,7 @@ export function MemoryPage(props: MemoryPageProps) {
     const title = f ? (
       <span className="inline-flex items-center gap-2.5 max-[640px]:mb-[0.5px]">
         <Logo src={f} size={24} />
-        <span>{srcName(f)}</span>
+        <span className="max-[640px]:relative max-[640px]:top-[0.5px]">{srcName(f)}</span>
       </span>
     ) : (
       "All topics"
@@ -1090,8 +1101,8 @@ export function MemoryPage(props: MemoryPageProps) {
           <Head h={hh} title="What customers' Leda knows" />
           <div role="alert" className="mt-5 flex items-center gap-2.5 rounded-card border border-dashed border-control px-3.5 py-3 text-[14px] leading-5">
             <WarningCircle size={18} aria-hidden className="shrink-0 text-bad" />
-            <span className="min-w-0 flex-1">Couldn't load what Leda knows. Customers' Leda keeps using the last saved switches.</span>
-            <Button variant="secondary" onClick={() => toast.info("Memory loaded.")}>Try again</Button>
+            <span>Couldn't load what Leda knows. Customers' Leda keeps using the last saved switches.</span>
+            <Button variant="secondary" className="ml-auto" onClick={() => toast.info("Memory loaded.")}>Try again</Button>
           </div>
         </>
       );
@@ -1429,19 +1440,9 @@ export function MemoryPage(props: MemoryPageProps) {
   })();
 
   const sheet = (
-    <div ref={bodyRef} className="px-6 pb-8 pt-5 max-[640px]:px-4 max-[640px]:pt-2">
-      {detailPhone && !inDoc ? (
-        <div className="mb-6">
-          <Tabs
-            variant="chips"
-            aria-label="Memory"
-            items={TABS.map((t) => ({ value: t.value, label: t.label }))}
-            value={tab}
-            onValueChange={goTab}
-          />
-        </div>
-      ) : null}
-      {inDoc ? docBody : renderPanel()}
+    <div ref={bodyRef} className="px-6 pb-8 pt-5 max-[640px]:px-0 max-[640px]:pt-0">
+      {phoneChips}
+      <div className="max-[640px]:px-4 max-[640px]:pb-[120px] max-[640px]:pt-4">{inDoc ? docBody : renderPanel()}</div>
     </div>
   );
 
@@ -1454,12 +1455,12 @@ export function MemoryPage(props: MemoryPageProps) {
         onAddPlatform={() => navGo({ to: "platforms", add: true })}
         onNavigate={(d: Dest) => (d.to === "memory" ? (inDoc ? closeDoc() : undefined) : navGo(d))}
         detail={inDoc || phoneSheet}
-        topBar={detailBar}
-        hidePhoneNav={detailPhone}
         placeLabel="Memory folders"
         place={placeBody}
         sheetLabel="Memory"
-        sheetBar={sheetBar}
+        sheetBar={phoneDetail ? undefined : sheetBar}
+        topBar={phoneTop}
+        hidePhoneNav={phoneDetail}
         account={readOnly ? { name: "Arnel Cruz", email: "arnel@example.ph", role: "Member" } : { name: "Ramon Dela Cruz", email: "ramon@delacruz.ph", role: "Owner" }}
         status={
           <StatusBar

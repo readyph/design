@@ -6,6 +6,7 @@ import { PlatformShell } from './PlatformShell';
 import { StatusBar } from './StatusBar';
 import { Switch } from './Switch';
 import { Tabs } from './Tabs';
+import { Select } from './Select';
 import { TownMap } from './TownMap';
 import { TryIt } from './TryIt';
 import { sampleAbouts, sampleAsk, sampleQuestions } from './TryIt.sample';
@@ -68,6 +69,49 @@ describe('TownMap hqLabel', () => {
   it('keeps the default HQ name', () => {
     render(<TownMap platforms={[{ id: 'hq', name: 'Company', kind: 'HQ', status: 'ACTIVE', hq: true }]} />);
     expect(screen.getByRole('button', { name: /^HQ, your team and plan/ })).toBeTruthy();
+  });
+});
+
+describe('TownMap loading, hqSub and fadeOthers (RDY-358)', () => {
+  const plats = [
+    { id: 'hq', name: 'Company', kind: 'HQ', status: 'ACTIVE' as const, hq: true },
+    { id: 'a', name: 'Auto Works', kind: 'Workshop', status: 'ACTIVE' as const },
+  ];
+  it('hides the building labels while loading (the map shows its lots, not names it has not loaded)', () => {
+    const { container } = render(<TownMap platforms={plats} loading />);
+    expect(container.querySelector('ul[aria-label="Platforms"]')!.className).toContain('invisible');
+  });
+  it('keeps the labels when not loading', () => {
+    const { container } = render(<TownMap platforms={plats} />);
+    expect(container.querySelector('ul[aria-label="Platforms"]')!.className).not.toContain('invisible');
+  });
+  it('adds a second HQ line only with hqSub', () => {
+    const { rerender } = render(<TownMap platforms={plats} />);
+    expect(screen.queryByText('HQ · 6 of 7 on')).toBeNull();
+    rerender(<TownMap platforms={plats} hqSub={() => 'HQ · 6 of 7 on'} />);
+    expect(screen.getByText('HQ · 6 of 7 on')).toBeTruthy();
+  });
+  it('fades the other labels (not the text) when a building is selected with fadeOthers', () => {
+    render(<TownMap platforms={plats} selected="hq" fadeOthers />);
+    const other = document.querySelector('[data-pid="a"]')!;
+    expect(other.className).toContain('data-[placed]:opacity-55');
+    expect(document.querySelector('[data-pid="hq"]')!.className).not.toContain('data-[placed]:opacity-55');
+  });
+  it('dims the map to 35% when the data did not load', () => {
+    const { container } = render(<TownMap platforms={plats} error errorNotice={false} />);
+    expect(container.querySelector('.opacity-\\[\\.35\\]')).toBeTruthy();
+  });
+});
+
+describe('Select trigger (workshop .dd-btn)', () => {
+  it('shows the accent border and a 1px offset ring when it takes keyboard focus', async () => {
+    const user = (await import('@testing-library/user-event')).default.setup();
+    render(<Select aria-label="Business" options={[{ value: 'a', label: 'All' }, { value: 'b', label: 'Two' }]} value="a" onValueChange={() => {}} />);
+    await user.tab();
+    const trigger = screen.getByRole('combobox', { name: 'Business' });
+    expect(document.activeElement).toBe(trigger);
+    expect(trigger.className).toContain('focus-visible:border-accent');
+    expect(trigger.className).toContain('focus-visible:outline-offset-1');
   });
 });
 
