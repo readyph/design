@@ -25,7 +25,7 @@ describe('PortalFrame', () => {
     const navs = screen.getAllByRole('navigation', { hidden: true });
     expect(navs).toHaveLength(2); // rail + phone nav; CSS shows exactly one per viewport
     const phone = within(navs[1]!);
-    expect(phone.getAllByRole('link', { hidden: true }).map((a) => a.textContent)).toEqual(['Home', 'Platforms', 'Reports', 'Team2']);
+    expect(phone.getAllByRole('link', { hidden: true }).map((a) => a.textContent)).toEqual(['Home', 'Platforms', 'Reports', 'Team']);
     expect(phone.getByText('More')).toBeTruthy();
     expect(phone.getByRole('link', { name: 'Platforms', hidden: true }).getAttribute('aria-current')).toBe('page');
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);

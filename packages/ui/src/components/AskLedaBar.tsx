@@ -118,7 +118,7 @@ const VARIANT = {
   overview: {
     outer: 'flex w-full max-w-leda-w-overview shrink basis-auto',
     wrap: 'w-full max-w-leda-w-overview',
-    bar: 'h-[var(--ctl-touch)]',
+    bar: 'h-[var(--ctl-touch)] max-[640px]:pl-3 max-[640px]:pr-3 max-[640px]:text-[15px]',
     mark: 22,
   },
 } as const;
@@ -162,7 +162,7 @@ export const AskLedaBar = forwardRef<HTMLButtonElement, AskLedaBarProps>(functio
     <span className={cn(className, v.outer)}>
     <span data-ask-leda={variant} className={cn('relative isolate inline-flex rounded-control', v.wrap)}>
       {halo && (
-        <span key={`g${pass}`} aria-hidden="true" data-halo="glow" className="pointer-events-none absolute -inset-px overflow-hidden rounded-control blur-[9px] animate-halo-fade [--halo-peak:.75] dark:[--halo-peak:.8] motion-reduce:hidden max-[640px]:hidden">
+        <span key={`g${pass}`} aria-hidden="true" data-halo="glow" className={cn('pointer-events-none absolute -inset-px overflow-hidden rounded-control blur-[9px] animate-halo-fade [--halo-peak:.75] dark:[--halo-peak:.8] motion-reduce:hidden', variant === 'bar' && 'max-[640px]:hidden')}>
           <span className="absolute left-1/2 top-1/2 aspect-square w-[200%] bg-halo animate-halo-spin" />
         </span>
       )}
@@ -185,7 +185,7 @@ export const AskLedaBar = forwardRef<HTMLButtonElement, AskLedaBarProps>(functio
         <kbd aria-hidden="true" className={cn('inline-block min-w-[18px] shrink-0 rounded-[3px] bg-raised-2 px-1 text-center font-sans text-tiny leading-4 text-text max-[640px]:hidden')}>{kbd}</kbd>
       </button>
       {halo && (
-        <span key={`r${pass}`} aria-hidden="true" data-halo="ring" className="pointer-events-none absolute -inset-px z-[2] overflow-hidden rounded-control p-[2px] [mask-image:linear-gradient(#000_0_0),linear-gradient(#000_0_0)] [mask-clip:content-box,border-box] [mask-composite:exclude] dark:p-[1.5px] animate-halo-fade motion-reduce:animate-halo-fade-reduced max-[640px]:hidden">
+        <span key={`r${pass}`} aria-hidden="true" data-halo="ring" className={cn('pointer-events-none absolute -inset-px z-[2] overflow-hidden rounded-control p-[2px] [mask-image:linear-gradient(#000_0_0),linear-gradient(#000_0_0)] [mask-clip:content-box,border-box] [mask-composite:exclude] dark:p-[1.5px] animate-halo-fade motion-reduce:animate-halo-fade-reduced', variant === 'bar' && 'max-[640px]:hidden')}>
           <span className="absolute left-1/2 top-1/2 aspect-square w-[200%] bg-halo animate-halo-spin motion-reduce:animate-none motion-reduce:[transform:translate(-50%,-50%)]" />
         </span>
       )}

@@ -321,8 +321,11 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
     return `${all}.${open.length === 0 ? ' Nothing needs you right now.' : ''}`;
   })();
 
-  const todayView = (
-    <div className="px-pad pb-8 pt-5">
+  // Phone (workshop `.plive`): the Today blocks sit under the Needs-you list in the same scroll, so the sheet keeps no copy of them.
+  const inlineToday = phone && !phoneDetail;
+
+  const todayContent = (
+    <>
       <div className="mb-5 flex flex-wrap items-baseline gap-x-3.5">
         <h2 ref={headingRef} tabIndex={-1} className="m-0 text-case tracking-normal text-text outline-none focus-visible:ring-2 focus-visible:ring-accent">Today</h2>
         <p className="m-0 text-ui leading-5 text-muted tabular-nums">
@@ -348,7 +351,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
               facts={p.facts}
               leda={ledaMode(p)}
               maxRows={maxRows}
-              rowLayout={phone ? 'phone' : bodyW <= 720 ? 'narrow' : 'wide'}
+              rowLayout={inlineToday ? 'phone' : phone || bodyW <= 720 ? 'narrow' : 'wide'}
               flashRow={flashRow?.pid === p.id ? flashRow : null}
               loading={loading}
               error={failed === p.id}
@@ -393,8 +396,9 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
           </div>
         ))}
       </div>
-    </div>
+    </>
   );
+  const todayView = <div className="px-pad pb-8 pt-5">{todayContent}</div>;
 
   const caseView = (id: string) => {
     const item = lookup(id);
@@ -572,7 +576,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
     </SheetBar>
   );
 
-  const sheetBody = overview ? overviewView : tab === 'today' ? todayView : caseView(tab);
+  const sheetBody = overview ? overviewView : tab === 'today' ? (inlineToday ? null : todayView) : caseView(tab);
 
   const queueHeadline =
     filter || loading
@@ -623,10 +627,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
         onSnooze={(id) => snooze(id, 'Later today · 13:00')}
         shortcuts={!phone || !phoneDetail}
       />
-      <div className="mt-3 hidden flex-wrap gap-2 px-3 pb-4 max-[640px]:flex">
-        <Button variant="secondary" leftIcon={SquaresFour} onClick={showToday}>Today at your platforms</Button>
-        <Button variant="secondary" onClick={() => { setTabs([]); setTab(null); setPhoneDetail(true); pendingFocus.current = 'heading'; }}>Last 7 days</Button>
-      </div>
+      {inlineToday && !overview ? <div className="mt-2 border-t border-border px-4 pb-2 pt-5">{todayContent}</div> : null}
     </div>
   );
 
@@ -655,11 +656,11 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
     <>
       <PortalFrame
         current="home"
-        account={{ name: owner.name, email: owner.email, role: 'Owner' }}
+        account={{ name: owner.name, email: owner.email, role: 'Owner', initials: 'RD' }}
         teamCount={1}
         onAddPlatform={() => go({ to: 'platforms', add: true })}
         onNavigate={go}
-        leda={askBar('bar', false)}
+        pageName={`${data.platforms.length} platforms + HQ`}
         place={place}
         placeLabel="Your platforms"
         heading={phone && phoneDetail ? 'Home' : null}

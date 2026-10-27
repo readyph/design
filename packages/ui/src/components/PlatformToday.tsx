@@ -193,7 +193,7 @@ function Row({ item, platform, label, layout, flash }: { item: TodayItem; platfo
       {wide ? <span className="overflow-hidden text-ellipsis whitespace-nowrap pt-px font-mono text-small text-muted">{item.ref}</span> : null}
       <div className="flex min-w-0 flex-col">
         <div>
-          {!wide && item.ref ? <span className="mr-1.5 whitespace-nowrap font-mono text-small text-muted">{item.ref}</span> : null}
+          {!wide && layout !== 'phone' && item.ref ? <span className="mr-1.5 whitespace-nowrap font-mono text-small text-muted">{item.ref}</span> : null}
           {item.onActivate ? (
             <button
               type="button"

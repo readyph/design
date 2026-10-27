@@ -531,7 +531,7 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
             </span>
             <span className="min-w-0 [overflow-wrap:anywhere]">{loading ? 'Looking at your platforms…' : summary}</span>
           </p>
-          {belowHeadline ? <div className="mt-2">{belowHeadline}</div> : null}
+          {belowHeadline ? <div className="mt-3">{belowHeadline}</div> : null}
         </header>
 
         <div

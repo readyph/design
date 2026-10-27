@@ -124,7 +124,7 @@ export function PlatformShell({
         <header
           className={cn(
             'hidden',
-            'max-[640px]:col-start-1 max-[640px]:row-start-1 max-[640px]:flex max-[640px]:min-w-0 max-[640px]:items-center max-[640px]:gap-2 max-[640px]:border-b max-[640px]:border-border max-[640px]:bg-surface max-[640px]:px-pad',
+            'max-[640px]:col-start-1 max-[640px]:row-start-1 max-[640px]:flex max-[640px]:min-w-0 max-[640px]:items-center max-[640px]:gap-2 max-[640px]:bg-frame max-[640px]:pl-pad max-[640px]:pr-1',
             hiddenWins,
           )}
         >
