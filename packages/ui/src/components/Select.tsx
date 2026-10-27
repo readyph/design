@@ -50,6 +50,8 @@ export interface SelectProps {
 
 const LISTBOX_MAX = 264;
 const TYPEAHEAD_MS = 600;
+/** Minimum clearance between the listbox and every viewport edge. */
+const EDGE = 8;
 
 function textOf(o: SelectOption): string {
   return (o.textValue ?? (typeof o.label === 'string' ? o.label : o.value)).toLowerCase();
@@ -138,6 +140,26 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
     const need = Math.min(LISTBOX_MAX, options.length * 32 + 8) + 8;
     setUp(window.innerHeight - r.bottom < need && r.top > window.innerHeight - r.bottom);
   }, [open, options.length]);
+
+  // Keep the listbox EDGE px inside the viewport: shift it sideways, narrow it if it is wider than the screen.
+  useLayoutEffect(() => {
+    const ul = list.current;
+    if (!open || !ul || !root.current) return;
+    ul.style.left = '';
+    ul.style.maxWidth = '';
+    ul.style.minWidth = '';
+    const vw = window.innerWidth;
+    const room = vw - EDGE * 2;
+    const rootLeft = root.current.getBoundingClientRect().left;
+    let w = ul.getBoundingClientRect().width;
+    if (w > room) {
+      ul.style.maxWidth = `${room}px`;
+      ul.style.minWidth = `${room}px`;
+      w = room;
+    }
+    const shift = Math.min(Math.max(rootLeft, EDGE), vw - EDGE - w) - rootLeft;
+    if (shift) ul.style.left = `${shift}px`;
+  }, [open, options.length, up]);
 
   // Keep the active option in view.
   useEffect(() => {
@@ -302,7 +324,7 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
               }}
               className={cn(
                 'flex min-h-8 cursor-pointer items-center gap-2 rounded-chip px-2 text-body text-text max-sm:min-h-10',
-                i === active && 'bg-frame-hover',
+                i === active && 'bg-frame-hover forced-colors:outline forced-colors:outline-2 forced-colors:-outline-offset-2 forced-colors:outline-[Highlight]',
                 o.disabled && 'cursor-not-allowed text-faint',
               )}
             >
