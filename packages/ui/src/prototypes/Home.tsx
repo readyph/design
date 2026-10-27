@@ -521,7 +521,7 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
   const todayContent = (
     <>
       <div className="mb-5 flex flex-wrap items-baseline gap-3.5">
-        <h2 ref={headingEl} tabIndex={-1} className="m-0 text-case tracking-normal text-text outline-none focus-visible:ring-2 focus-visible:ring-accent">Today</h2>
+        <h2 ref={headingEl} tabIndex={-1} className={cn('m-0 text-case tracking-normal text-text', focusRing)}>Today</h2>
         <p className="m-0 text-ui leading-5 text-muted tabular-nums">
           {filter === 'hq' ? 'HQ only' : filter && shown.length === 1 ? `${shown[0]!.name} only` : `${data.platforms.length} ${data.platforms.length === 1 ? 'platform' : 'platforms'}`}
           {!filter && data.links.length === 1 ? <span> · Stockroom → Auto Works, parts for jobs</span> : !filter && data.links.length > 1 ? <span> · {data.links.length} links</span> : null} · <span className="whitespace-nowrap">{clock()}</span>
@@ -598,7 +598,7 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
         <p className="m-0 text-small text-muted">{[p.kind, p.place ?? '', n ? `${n} in Needs you` : ''].filter(Boolean).map((t, i) => <span key={t}>{i ? <span aria-hidden className="mx-2 text-faint">/</span> : null}{t}</span>)}</p>
         <div className="mt-2 flex flex-wrap items-center gap-3">
           <PlatformLogo name={p.name} src={p.logo} index={p.index} size={24} decorative />
-          <h2 ref={headingEl} tabIndex={-1} className="m-0 min-w-0 text-title text-text outline-none focus-visible:ring-2 focus-visible:ring-accent">{p.name}</h2>
+          <h2 ref={headingEl} tabIndex={-1} className={cn('m-0 min-w-0 text-title text-text', focusRing)}>{p.name}</h2>
           <Button variant="primary" leftIcon={ArrowSquareOut} className="ml-auto" onClick={() => go({ to: 'platform', id: p.id })}>Open {p.name}</Button>
         </div>
         <FactsLine aria-label={`${p.name} facts`} className="mt-2">
@@ -692,7 +692,7 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
           {crumbs.map((x, i) => <Fragment key={i}>{i ? sep : null}{x}</Fragment>)}
         </div>
         <div className="mt-2 flex items-start gap-4 max-[640px]:flex-col max-[640px]:gap-2.5">
-          <h2 ref={headingEl} tabIndex={-1} className="m-0 min-w-0 text-case text-text outline-none focus-visible:ring-2 focus-visible:ring-accent">{item.title}</h2>
+          <h2 ref={headingEl} tabIndex={-1} className={cn('m-0 min-w-0 text-case text-text', focusRing)}>{item.title}</h2>
           <div className="ml-auto flex flex-none gap-2 max-[640px]:ml-0">
             {p && !c.open ? <Button variant="secondary" leftIcon={ArrowSquareOut} className="@max-[680px]/sheet:hidden" onClick={() => go(p.hq ? { to: 'team' } : { to: 'platform', id: p.id })}>Open {p.name}</Button> : null}
             {!phone ? <Menu trigger={<Button variant="secondary" leftIcon={Clock} rightIcon={CaretDown}>Snooze</Button>} items={snoozeItems(id)} align="end" /> : null}
@@ -790,7 +790,7 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
   const hero = (
     <div className="mx-auto flex flex-col items-center px-pad pt-9 text-center max-[640px]:pt-6">
       <LedaMark size={88} effect={loading ? 'aurora' : 'glint'} active={loading} once={!loading} decorative />
-      <h2 ref={headingEl} tabIndex={-1} className="m-0 mt-3.5 text-case text-text outline-none focus-visible:ring-2 focus-visible:ring-accent">Good {dayPart}, {owner.short}</h2>
+      <h2 ref={headingEl} tabIndex={-1} className={cn('m-0 mt-3.5 text-case text-text', focusRing)}>Good {dayPart}, {owner.short}</h2>
       <p className="m-0 mt-1 text-body text-muted">{run}</p>
       <div className="mt-7 w-full max-w-[560px] max-[640px]:hidden">{askBar('overview', true)}</div>
       <ChatChips

@@ -8,6 +8,16 @@ afterEach(cleanup);
 const p = (n: number) => Array.from({ length: n }, (_, i) => ({ id: String(i), name: `Plat ${i}` }));
 
 describe('StatusBar', () => {
+  it('interactive items use the shared focusRing (outline 2px, offset 2px), not ring-2 + ring-offset', () => {
+    render(<StatusBar ledaFirst={false} platforms={p(2).map((x) => ({ ...x, onSelect: () => {} }))} people={{ count: 12, onSelect: () => {} }} plan="Starter" updatedAt="9:12 AM" />);
+    const items = screen.getAllByRole('button');
+    expect(items.length).toBeGreaterThan(0);
+    for (const el of items) {
+      expect(el.className).toContain('focus-visible:outline-offset-2');
+      expect(el.className).not.toContain('ring-offset');
+    }
+  });
+
   it('has no footer of its own; the shell footer is the only one', () => {
     render(<PlatformShell status={<StatusBar platforms={p(2)} />}>x</PlatformShell>);
     expect(screen.getAllByRole('contentinfo')).toHaveLength(1);
