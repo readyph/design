@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   ArrowLeft,
   CaretLeft,
@@ -31,6 +31,7 @@ import {
 import { AskLedaBar } from "../components/AskLedaBar";
 import { Button } from "../components/Button";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { Modal } from "../components/Modal";
 import { LedaMark } from "../components/Leda";
 import { PlatformLogo } from "../components/PlatformLogo";
 import { PortalFrame } from "./PortalFrame";
@@ -38,7 +39,6 @@ import { go as navGo, type Dest } from "./protoNav";
 import { StatusBar } from "../components/StatusBar";
 import { SheetBar } from "../components/SheetBar";
 import { Select } from "../components/Select";
-import { Skeleton } from "../components/Skeleton";
 import { SubpageLane, SubpageTransition, type SubpageDirection } from "../components/SubpageTransition";
 import { Switch } from "../components/Switch";
 import { Tabs } from "../components/Tabs";
@@ -63,6 +63,7 @@ import {
   type MemRequest,
   type MemSrc,
   type MemTopic,
+  priceListTopic,
 } from "./Memory.proto.data";
 
 /**
@@ -90,7 +91,7 @@ const mapSlots: TownMapSlot[] = [
   { id: "stockroom", name: "Parts Stockroom", shortName: "Stockroom", kind: "Inventory", mapType: "warehouse", status: "ACTIVE", initials: "PS", color: "#6d48c6" },
   { id: "autoworks", name: "Dela Cruz Auto Works", shortName: "Auto Works", kind: "Repair shop", mapType: "service", status: "ACTIVE", logo: AUTO_LOGO },
   null,
-  { id: "hq", name: "Company", kind: "HQ", status: "ACTIVE", hq: true },
+  { id: "hq", name: "Company", shortName: "Company", kind: "HQ", status: "ACTIVE", hq: true },
 ];
 
 const TABS: { value: "topics" | "blocked" | "requests"; label: string; icon: Icon }[] = [
@@ -117,6 +118,7 @@ const sentences = (t: string, n: number) => ((t.match(/[^.!?]+[.!?]+/g) || [t]).
 const srcName = (s: MemSrc) => MEM_NAME[s];
 const srcShort = (s: MemSrc) => MEM_SHORT[s];
 const keyOf = (t: { src: MemSrc; k: string }) => `${t.src}|${t.k}`;
+const NEW_DOC = "new";
 
 function params(): URLSearchParams {
   try {
@@ -146,8 +148,8 @@ function SegBtn({ pressed, onClick, label, children, className }: { pressed: boo
       title={label}
       onClick={onClick}
       className={cn(
-        "flex h-7 items-center whitespace-nowrap rounded-[4px] border text-[13px] font-medium leading-5",
-        pressed ? "border-border bg-surface text-text" : "border-transparent text-muted hover:text-text",
+        "flex h-7 items-center whitespace-nowrap rounded-[4px] border text-[13px] leading-5",
+        pressed ? "border-border bg-surface font-medium text-text" : "border-transparent text-muted hover:text-text",
         focusRing,
         className,
       )}
@@ -161,8 +163,8 @@ function SegBtn({ pressed, onClick, label, children, className }: { pressed: boo
 function Head({ title, sub, extra, h = "h2" }: { title: ReactNode; sub?: ReactNode; extra?: ReactNode; h?: "h1" | "h2" }) {
   const H = h;
   return (
-    <div className="flex flex-wrap items-start gap-4 max-[640px]:flex-wrap">
-      <div className="min-w-0">
+    <div className="flex items-start gap-4 max-[640px]:flex-wrap max-[640px]:gap-2.5">
+      <div>
         <H className="m-0 text-[20px] font-semibold leading-7 tracking-[-0.01em] max-[640px]:text-[18px] max-[640px]:leading-[25px]">{title}</H>
         {sub ? <p className="m-0 mt-0.5 text-[14px] leading-5 text-muted">{sub}</p> : null}
       </div>
@@ -172,6 +174,52 @@ function Head({ title, sub, extra, h = "h2" }: { title: ReactNode; sub?: ReactNo
 }
 
 const roNoteClass = "mt-4 flex items-start gap-2 rounded-card border border-dashed border-control px-3 py-2.5 text-[13px] leading-[18px] text-muted";
+
+/** The workshop's own confirm card (platforms.css dialog.dlg): a 440px card, a 16px title with an optional mark, one muted line, the buttons on the right. */
+function DlgCard({
+  open,
+  title,
+  mark,
+  children,
+  cancelLabel = "Cancel",
+  confirmLabel,
+  tone,
+  focus = "confirm",
+  onCancel,
+  onConfirm,
+}: {
+  open: boolean;
+  title: string;
+  mark?: ReactNode;
+  children: ReactNode;
+  cancelLabel?: string;
+  confirmLabel: string;
+  tone: "primary" | "danger";
+  focus?: "confirm" | "cancel";
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  const goRef = useRef<HTMLButtonElement>(null);
+  const noRef = useRef<HTMLButtonElement>(null);
+  return (
+    <Modal
+      open={open}
+      onOpenChange={(o) => !o && onCancel()}
+      size="confirm"
+      role="alertdialog"
+      aria-label={title}
+      initialFocus={focus === "confirm" ? goRef : noRef}
+      className="w-[min(440px,calc(100vw-32px))] px-[22px] py-5"
+    >
+      <h2 aria-hidden className="m-0 flex items-center gap-2.5 text-base font-semibold leading-[22px]">{mark}{title}</h2>
+      {children}
+      <div className="mt-5 flex flex-wrap justify-end gap-2">
+        <Button ref={noRef} variant="secondary" onClick={onCancel} className="max-[640px]:h-11 max-[640px]:flex-auto">{cancelLabel}</Button>
+        <Button ref={goRef} variant={tone === "danger" ? "danger" : "primary"} onClick={onConfirm} className="max-[640px]:h-11 max-[640px]:flex-auto">{confirmLabel}</Button>
+      </div>
+    </Modal>
+  );
+}
 
 export interface MemoryPageProps {
   state?: MemoryState;
@@ -209,9 +257,10 @@ export function MemoryPage(props: MemoryPageProps) {
   const loading = state === "loading";
   const error = state === "error";
   const empty = state === "empty";
+  const SRCS: MemSrc[] = empty ? ["company"] : MEM_SOURCES;
 
   const [tab, setTab] = useState<"topics" | "blocked" | "requests">(tab0);
-  const [folder, setFolder] = useState<"" | MemSrc>(doc0 ? doc0.src : folder0);
+  const [folder, setFolder] = useState<"" | MemSrc>(folder0);
   const [q, setQ] = useState(props.initialQuery ?? "");
   const [filter, setFilter] = useState<Filter>(props.initialFilter ?? "all");
   const [layout, setLayout] = useState<"list" | "grid">(() => {
@@ -232,14 +281,15 @@ export function MemoryPage(props: MemoryPageProps) {
   const [removed, setRemoved] = useState<string[]>([]);
   const [doc, setDoc] = useState<string | null>(doc0 ? keyOf(doc0) : null);
   const [dir, setDir] = useState<SubpageDirection>("in");
-  const [phoneSheet, setPhoneSheet] = useState(!!props.startDetail || !!doc0 || tab0 !== "topics" || !!folder0);
+  const [phoneSheet, setPhoneSheet] = useState(!!props.startDetail || !!props.tryOpen || !!doc0 || tab0 !== "topics" || !!folder0);
   const [tryShown, setTryShown] = useState(props.tryOpen ?? url.get("tab") === "try");
   const [tryAbout, setTryAbout] = useState<string | undefined>();
   const [tryQ, setTryQ] = useState<string | undefined>();
   const [hover, setHover] = useState<string | null>(null);
   const [bulkAsk, setBulkAsk] = useState<{ src: MemSrc; how: "on" | "off" } | null>(null);
   const [delAsk, setDelAsk] = useState<MemTopic | null>(null);
-  const [edit, setEdit] = useState<{ t: string; c: string; err?: string; errAt?: "t" | "c" } | null>(doc0 && doc0.type === "custom" && !readOnly ? { t: doc0.title, c: doc0.text } : null);
+  const [edit, setEdit] = useState<{ t: string; c: string; err?: string; errAt?: "t" | "c"; src?: MemSrc; pick?: boolean } | null>(doc0 && doc0.type === "custom" && !readOnly ? { t: doc0.title, c: doc0.text } : null);
+  const [bulkSens, setBulkSens] = useState(false);
   const [leaveAsk, setLeaveAsk] = useState<(() => void) | null>(null);
   const [refEdit, setRefEdit] = useState<{ src: MemSrc; v: string; err?: string } | null>(null);
   const [bqText, setBqText] = useState("");
@@ -247,6 +297,22 @@ export function MemoryPage(props: MemoryPageProps) {
   const [bqErr, setBqErr] = useState<string | null>(null);
   const [rmAsk, setRmAsk] = useState<MemBlocked | null>(null);
   const bodyRef = useRef<HTMLDivElement | null>(null);
+  const pushRef = useRef(false);
+  const allTopicsRef = useRef<MemTopic[]>([]);
+  // the topic's paragraph grows with its words (memory.js autoGrow), on every render, on resize and once fonts are ready
+  const autoGrow = () => {
+    const c = document.getElementById("docC");
+    if (c) {
+      c.style.height = "auto";
+      c.style.height = `${c.scrollHeight + 2}px`;
+    }
+  };
+  useLayoutEffect(autoGrow);
+  useEffect(() => {
+    window.addEventListener("resize", autoGrow);
+    document.fonts?.ready.then(autoGrow);
+    return () => window.removeEventListener("resize", autoGrow);
+  }, []);
   const first = useRef(true);
 
   const hh: "h1" | "h2" = phone && phoneSheet ? "h1" : "h2";
@@ -256,20 +322,29 @@ export function MemoryPage(props: MemoryPageProps) {
     () =>
       empty
         ? []
-        : [...memTopics, ...added]
+        : [...memTopics, ...(state === "full" ? [priceListTopic()] : []), ...added]
             .filter((t) => !removed.includes(keyOf(t)))
             .map((t) => (custom[keyOf(t)] ? { ...t, ...custom[keyOf(t)] } : t))
             .map((t) => ({ ...t, on: on[keyOf(t)] ?? t.on })),
     [empty, added, removed, custom, on],
   );
+  allTopicsRef.current = allTopics;
   const topicsOf = (src: MemSrc | "") => (src ? allTopics.filter((t) => t.src === src) : allTopics);
   const onCount = (src: MemSrc | "") => topicsOf(src).filter((t) => t.on).length;
   const blockedAll = empty ? [] : blocked;
-  const requestsAll: MemRequest[] = memRequests.map((r) => ({ ...r, on: reqOn[`${r.src}|${r.key}`] }));
-  const used = state === "full" ? Math.round(MEM_CAP * 0.93) : 2201 + added.reduce((n, t) => n + t.title.length + t.text.length, 0) - removed.reduce((n) => n, 0);
+  const requestsAll: MemRequest[] = (empty ? [] : memRequests).map((r) => ({ ...r, on: reqOn[`${r.src}|${r.key}`] }));
+  const used = allTopics.filter((t) => t.type === "custom").reduce((n, t) => n + t.title.length + t.text.length, 0);
   const left = MEM_CAP - used;
   const roomState: "ok" | "near" | "full" = used / MEM_CAP >= 1 ? "full" : used / MEM_CAP >= 0.85 ? "near" : "ok";
-  const curTopic = doc ? allTopics.find((t) => keyOf(t) === doc) : undefined;
+  // the bulk confirm (memory.js bulk): what would change, and the topics that start off and need their own tick
+  const bulkTopics = bulkAsk ? allTopics.filter((t) => t.src === bulkAsk.src) : [];
+  const bulkChange = bulkAsk ? bulkTopics.filter((t) => t.on !== (bulkAsk.how === "on")) : [];
+  const bulkSensTopics = bulkAsk?.how === "on" ? bulkChange.filter((t) => t.sensitive) : [];
+  const bulkPlain = bulkChange.filter((t) => !bulkSensTopics.includes(t));
+  // a new topic is a page of its own until it is added (memory.js docHTML with k "new"): it is not in the list yet
+  const isNew = doc === NEW_DOC;
+  const draft: MemTopic = { src: edit?.src ?? "company", k: NEW_DOC, type: "custom", title: "", text: "", on: true, ask: "", qs: [], updated: "" };
+  const curTopic = isNew ? draft : doc ? allTopics.find((t) => keyOf(t) === doc) : undefined;
 
   // fade a tab or folder switch: 120ms ease-out (shell: no slide for these), never under reduced motion
   useEffect(() => {
@@ -290,16 +365,39 @@ export function MemoryPage(props: MemoryPageProps) {
       if (doc && curTopic) {
         u.searchParams.set("tab", "topics");
         u.searchParams.set("folder", curTopic.src);
-        u.searchParams.set("topic", curTopic.k);
+        if (!isNew) u.searchParams.set("topic", curTopic.k);
       } else if (!phone || phoneSheet) {
         if (tab !== "topics" || folder || phone) u.searchParams.set("tab", tab);
         if (folder) u.searchParams.set("folder", folder);
       }
-      window.history.replaceState(window.history.state, "", u.toString());
+      if (pushRef.current) {
+        pushRef.current = false;
+        window.history.pushState({ mem: 1 }, "", u.toString());
+      } else window.history.replaceState(window.history.state, "", u.toString());
     } catch {
       /* ignore */
     }
-  }, [tab, folder, doc, curTopic, phone, phoneSheet]);
+  }, [tab, folder, doc, curTopic, phone, phoneSheet, isNew]);
+
+  // Back and Forward (memory.js popstate): the address says which tab, folder and topic page
+  useEffect(() => {
+    const onPop = () => {
+      const u = new URL(window.location.href).searchParams;
+      const t = u.get("tab");
+      const f = u.get("folder");
+      const k = u.get("topic");
+      const nextFolder = (MEM_SOURCES.includes(f as MemSrc) ? f : "") as "" | MemSrc;
+      const topic = k ? allTopicsRef.current.find((x) => x.k === k && (!nextFolder || x.src === nextFolder)) : undefined;
+      setDir("out");
+      setTab(t === "blocked" || t === "requests" ? t : "topics");
+      setFolder(nextFolder);
+      setDoc(topic ? keyOf(topic) : null);
+      setEdit(topic && topic.type === "custom" && !readOnly ? { t: topic.title, c: topic.text } : null);
+      setPhoneSheet(!!(t || f || k));
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [readOnly]);
 
   const headline = loading
     ? null
@@ -325,6 +423,10 @@ export function MemoryPage(props: MemoryPageProps) {
     <span className="inline-block h-3 w-[150px] rounded-[3px] bg-skeleton align-middle" />
   ) : error ? (
     <span>No data</span>
+  ) : empty ? (
+    <span>
+      <b className="font-semibold text-text">No platforms yet</b> · the company is the HQ plot
+    </span>
   ) : shown ? (
     <span>
       <b className="font-semibold text-text">{srcName(shown)}</b> · {onCount(shown)} of {topicsOf(shown).length} topics on
@@ -342,6 +444,7 @@ export function MemoryPage(props: MemoryPageProps) {
   };
   const dirty = (() => {
     if (!edit || !curTopic) return false;
+    if (doc === NEW_DOC) return !!(edit.t.trim() || edit.c.trim());
     return edit.t !== curTopic.title || edit.c !== curTopic.text;
   })();
   const pickFolder = (id: "" | MemSrc) => {
@@ -357,7 +460,7 @@ export function MemoryPage(props: MemoryPageProps) {
   };
   const openDoc = (t: MemTopic) => {
     setDir("in");
-    setFolder(t.src);
+    pushRef.current = true;
     setTab("topics");
     setDoc(keyOf(t));
     setPhoneSheet(true);
@@ -365,10 +468,41 @@ export function MemoryPage(props: MemoryPageProps) {
   };
   const closeDoc = () =>
     guardLeave(() => {
+      // a topic page opened here sits on its own history entry: Back pops it, as memory.js does
+      if (window.history.state?.mem) {
+        window.history.back();
+        return;
+      }
       setDir("out");
       setDoc(null);
       setEdit(null);
     });
+  // Esc (memory.js onEscape): leaves a topic page (a phone detail screen goes back to the folders), or clears the search. Dialogs, menus and text fields keep their own Esc.
+  const escRef = useRef<() => void>(() => undefined);
+  escRef.current = () => {
+    if (document.querySelector('[role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"]')) return;
+    const a = document.activeElement as HTMLInputElement | null;
+    if (a && /INPUT|TEXTAREA/.test(a.tagName) && a.type !== "checkbox") return;
+    if (doc) closeDoc();
+    else if (phone && phoneSheet) setPhoneSheet(false);
+    else if (q) {
+      setQ("");
+      document.getElementById("mq")?.focus();
+    }
+  };
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !e.defaultPrevented) escRef.current();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+  // a new topic starts on its title (memory.js newDoc focus '#docT')
+  useEffect(() => {
+    if (!isNew) return undefined;
+    const id = window.setTimeout(() => document.getElementById("docT")?.focus(), 60);
+    return () => window.clearTimeout(id);
+  }, [isNew]);
   const goTab = (v: string) =>
     guardLeave(() => {
       setDoc(null);
@@ -402,7 +536,7 @@ export function MemoryPage(props: MemoryPageProps) {
 
   // ----- Try it (answerOf in memory.js) -----
   const pvItems = (scope: string) => {
-    const srcs = scope === "any" ? MEM_SOURCES : [scope as MemSrc];
+    const srcs = scope === "any" ? SRCS : [scope as MemSrc];
     const tag = (s: MemSrc) => (scope === "any" ? srcShort(s) : "");
     const out: { v: string; q: string; kind: "topic" | "req" | "blocked"; t?: MemTopic; r?: MemRequest; b?: MemBlocked; src: MemSrc; meta: string }[] = [];
     srcs.forEach((src) => {
@@ -420,7 +554,7 @@ export function MemoryPage(props: MemoryPageProps) {
     { value: "stockroom", label: srcName("stockroom"), icon: <Logo src="stockroom" /> },
   ];
   const tryQuestions = ["any", "company", "autoworks", "stockroom"].flatMap((sc) =>
-    pvItems(sc).map((i) => ({ value: `${sc}#${i.v}`, label: i.q, about: [sc] })),
+    pvItems(sc).map((i) => ({ value: `${sc}#${i.v}`, label: i.q, about: [sc], meta: i.meta })),
   );
   const askTry = (about: string, qv: string): TryItAnswer => {
     const it = pvItems(about).find((x) => `${about}#${x.v}` === qv) ?? pvItems(about)[0];
@@ -452,17 +586,17 @@ export function MemoryPage(props: MemoryPageProps) {
   // ----- the left column -----
   const folderRows: { id: "" | MemSrc; name: string; note: string }[] = [
     { id: "", name: "All topics", note: allTopics.length ? `${onCount("")} of ${allTopics.length} on` : "None yet" },
-    ...MEM_SOURCES.map((s) => ({ id: s as MemSrc, name: srcName(s), note: topicsOf(s).length ? `${onCount(s)} of ${topicsOf(s).length} on` : "None yet" })),
+    ...SRCS.map((s) => ({ id: s as MemSrc, name: srcName(s), note: topicsOf(s).length ? `${onCount(s)} of ${topicsOf(s).length} on` : "None yet" })),
   ];
   const curFolder: "" | MemSrc | undefined = phone && !phoneSheet ? undefined : doc && curTopic ? curTopic.src : folder;
   const lrow = (on0: boolean) =>
     cn(
-      "flex w-full items-center rounded-[6px] border px-3 py-[9px] text-left max-[640px]:min-h-11 max-[640px]:px-4 max-[640px]:py-3",
+      "flex w-full items-center rounded-[6px] border px-3 py-[9px] text-left max-[640px]:min-h-11 max-[640px]:rounded-none max-[640px]:border-0 max-[640px]:px-4 max-[640px]:py-3 max-[640px]:[button+&]:mt-0.5 max-[640px]:[button+&]:border-t max-[640px]:[button+&]:border-rule max-[640px]:[div:not(:first-child)>&]:border-t max-[640px]:[div:not(:first-child)>&]:border-rule",
       on0 ? "border-border bg-surface" : "border-transparent hover:bg-frame-hover",
       focusRing,
     );
   const ghead = (b: string, span?: string, mt = false) => (
-    <div className={cn("flex items-center gap-2 px-3 pb-1.5 pt-2 text-[12px] leading-5 text-muted", mt && "mt-2.5")}>
+    <div className={cn("flex items-center gap-2 px-3 pb-1.5 pt-2 text-[12px] leading-5 text-muted max-[640px]:px-4 max-[640px]:pt-3", mt && "mt-2.5")}>
       <b className="text-[13px] font-semibold leading-5 text-text">{b}</b>
       {span ? <span className="ml-auto">{span}</span> : null}
     </div>
@@ -479,21 +613,25 @@ export function MemoryPage(props: MemoryPageProps) {
   };
   const placeBody = (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto pb-4">
-      <div className="min-h-[220px] shrink-0">
+      <div className="min-h-[220px] shrink-0 max-[640px]:min-h-0">
         <TownMap
-          platforms={mapSlots}
+          platforms={error ? [null, null, null, null] : empty ? [null, null, null, mapSlots[3]] : mapSlots}
           caption={caption}
           loading={loading}
           error={error}
-          onRetry={() => toast.info("Memory loaded.")}
+          errorNotice={false}
+          fadeOthers
+          onAddPlatform={() => navGo({ to: "platforms", add: true })}
+          hqLabel={() => `Company, ${onCount("company")} of ${topicsOf("company").length} topics on`}
+          hqSub={() => `HQ · ${onCount("company")} of ${topicsOf("company").length} on`}
           selected={shown ? BUILDING[shown] : null}
-          highlight={hover ? [hover] : null}
+          focus={hover ?? (shown ? BUILDING[shown] : null)}
           onSelect={(id) => (id ? pickFolder(mapOf(id) as MemSrc) : pickFolder(""))}
         />
       </div>
-      <div className="px-3 pb-2 pr-1 pt-3 max-[640px]:px-4">
+      <div className="px-3 pb-3 pr-1 pt-3 max-[640px]:px-4 max-[640px]:pt-4">
         <div className="flex items-center gap-2.5">
-          {phone && phoneSheet ? null : <LedaMark size={20} decorative />}
+          {phone && phoneSheet ? null : <LedaMark size={20} decorative className="shrink-0" />}
           {phone && phoneSheet ? (
             <p className="m-0 text-[22px] font-semibold leading-7 tracking-[-0.01em]">Memory</p>
           ) : (
@@ -501,12 +639,12 @@ export function MemoryPage(props: MemoryPageProps) {
           )}
         </div>
         <p className="m-0 mt-1.5 flex gap-2 text-[14px] leading-5">
-          <LedaMark size={16} decorative className="mt-0.5" />
-          {loading ? <span className="mt-[3px] block h-[13px] w-[88%] rounded-[3px] bg-skeleton" /> : <span>{headline}</span>}
+          <LedaMark size={16} decorative className="mt-0.5 shrink-0" />
+          {loading ? <span className="flex-1"><span className="mt-[3px] block h-[13px] w-[88%] rounded-[3px] bg-skeleton" /></span> : <span>{headline}</span>}
         </p>
-        {phone && !loading ? (
+        {phone ? (
           <div className="mt-3">
-            <AskLedaBar variant="overview" scope="memory" shortcuts={false} paused={tryShown} />
+            <AskLedaBar variant="field" scope="memory" shortcuts={false} paused={tryShown} />
           </div>
         ) : null}
       </div>
@@ -514,7 +652,7 @@ export function MemoryPage(props: MemoryPageProps) {
         <>
           {ghead("Folders")}
           {[0, 1, 2, 3].map((i) => (
-            <div key={i} aria-hidden="true" className="flex px-3 py-[9px]">
+            <div key={i} aria-hidden="true" className={cn("block border border-transparent px-3 py-[9px] text-[14px] leading-5 max-[640px]:min-h-11 max-[640px]:border-0 max-[640px]:px-4 max-[640px]:py-3", i > 0 && "mt-0.5 max-[640px]:border-t max-[640px]:border-rule")}>
               <span className="block h-[13px] w-[70%] rounded-[3px] bg-skeleton" />
             </div>
           ))}
@@ -522,14 +660,14 @@ export function MemoryPage(props: MemoryPageProps) {
       ) : error ? (
         <>
           {ghead("Folders")}
-          <p className="m-0 px-3 py-2 text-[13px] leading-[18px] text-muted">No data. Try again in the main panel.</p>
+          <p className="mx-3 my-0 rounded-card border border-dashed border-control px-3 py-2.5 text-[13px] leading-[18px] text-muted max-[640px]:mx-4">No data. Try again in the main panel.</p>
         </>
       ) : (
         <>
           {ghead("Folders", "Where Leda's knowledge comes from")}
           <div role="list" aria-label="Folders" className="pb-1 max-[640px]:px-0">
             {folderRows.map((f) => (
-              <div role="listitem" key={f.id || "all"} className={f.id ? "mt-0.5" : ""}>
+              <div role="listitem" key={f.id || "all"} className={(f.id ? "mt-0.5" : "")}>
                 <button
                   type="button"
                   aria-pressed={curFolder === f.id}
@@ -549,7 +687,7 @@ export function MemoryPage(props: MemoryPageProps) {
             <>
               {ghead("Rules", "For customers", true)}
               {tabRow("blocked", String(blockedAll.length), Prohibit)}
-              {tabRow("requests", `${requestsAll.filter((r) => r.on).length} of ${requestsAll.length} on`, HandWaving)}
+              {requestsAll.length ? tabRow("requests", `${requestsAll.filter((r) => r.on).length} of ${requestsAll.length} on`, HandWaving) : null}
               <button type="button" className={cn(lrow(false), "gap-1.5")} onClick={() => openTry()}>
                 <ChatCircle size={14} aria-hidden className="shrink-0 text-muted" />
                 <span className="min-w-0 truncate text-[13px] font-medium leading-[18px]">Try it</span>
@@ -558,13 +696,13 @@ export function MemoryPage(props: MemoryPageProps) {
             </>
           ) : null}
           {ghead("Memory room", "Topics you write", true)}
-          <div className="mx-3 pt-1 text-[13px] leading-[18px]">
+          <div className="mx-3 pt-1 text-[13px] leading-[18px] max-[640px]:mx-4">
             <div className="flex items-center gap-2.5 font-medium">
-              <span className="tabular-nums">
+              <span className={cn("tabular-nums", roomState === "full" ? "text-bad" : roomState === "near" && "text-warn")}>
                 {num(used)} of {num(MEM_CAP)} characters
               </span>
-              <span aria-hidden="true" className="h-1 w-24 overflow-hidden rounded-full bg-raised-2">
-                <i className={cn("block h-full rounded-full", roomState === "full" ? "bg-bad-dot" : roomState === "near" ? "bg-warn-dot" : "bg-muted")} style={{ width: `${Math.min(100, Math.round((used / MEM_CAP) * 100))}%` }} />
+              <span aria-hidden="true" className="ml-auto h-1 w-24 shrink-0 overflow-hidden rounded-[2px] bg-frame-active">
+                <i className={cn("block h-full", roomState === "full" ? "bg-bad-dot" : roomState === "near" ? "bg-warn-dot" : "bg-control")} style={{ width: `${Math.min(100, Math.round((used / MEM_CAP) * 100))}%` }} />
               </span>
             </div>
             <p className="m-0 mt-1 text-muted">
@@ -575,7 +713,7 @@ export function MemoryPage(props: MemoryPageProps) {
                 : `${num(left)} left. Topics from your platforms' data don't use any.`}
             </p>
           </div>
-          <p className="m-0 mx-3 mt-2 text-[12px] leading-4 text-muted">Off means Leda never uses it for customers. Your team's own use of Leda follows their role on Team.</p>
+          <p className="m-0 mx-3 mt-2 text-[12px] leading-4 text-muted max-[640px]:mx-4">Off means Leda never uses it for customers. Your team's own use of Leda follows their role on Team.</p>
         </>
       )}
     </div>
@@ -594,40 +732,22 @@ export function MemoryPage(props: MemoryPageProps) {
       <AskLedaBar scope="memory" paused={tryShown} />
     </>
   );
-  const detailPhone = phone && (inDoc || phoneSheet);
-  // Phone detail screens: one fixed bar on --frame (back, Try it, the Ask Leda icon) replaces the top bar (shell.css .pback / memory.css .sb-try).
-  const detailBar = detailPhone ? (
-    <>
-      <button
-        type="button"
-        onClick={() => (inDoc ? closeDoc() : setPhoneSheet(false))}
-        className={cn("-ml-3 inline-flex h-11 shrink-0 items-center gap-1 self-center rounded-control px-2 text-[14px] leading-5 text-text", focusRing)}
-      >
-        <CaretLeft size={14} aria-hidden />
-        <span>Memory</span>
-      </button>
-      <span className="ml-auto flex shrink-0 items-center gap-5">
-        {tryBtn}
-        <AskLedaBar variant="bar" scope="memory" paused={tryShown} />
-      </span>
-    </>
-  ) : undefined;
-  const sheetBar = detailPhone ? undefined : inDoc ? (
-    <SheetBar actions={actions}>
-      <nav aria-label="You are here" className="flex min-w-0 items-center gap-2 text-[13px] leading-5">
-        <button type="button" title="Back to Memory (Esc)" onClick={closeDoc} className={cn("inline-flex shrink-0 items-center gap-1.5 rounded-[4px] px-1 py-1 text-muted hover:text-text", focusRing)}>
+  const sheetBar = inDoc ? (
+    <SheetBar actions={actions} className="min-[641px]:max-[1100px]:[&>div:first-child]:!h-auto">
+      <nav aria-label="You are here" className="flex min-w-0 items-center gap-2 text-[13px] leading-[18px] text-muted">
+        <button type="button" title="Back to Memory (Esc)" onClick={closeDoc} className={cn("inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[2px] font-medium text-muted hover:text-text", focusRing)}>
           <ArrowLeft size={14} aria-hidden />
           Memory
         </button>
-        <span aria-hidden className="text-faint">/</span>
+        <span aria-hidden className="text-control">/</span>
         {curTopic ? (
-          <button type="button" onClick={() => pickFolder(curTopic.src)} className={cn("inline-flex min-w-0 items-center gap-1.5 rounded-[4px] px-1 py-1 text-muted hover:text-text", focusRing)}>
+          <button type="button" onClick={() => pickFolder(curTopic.src)} className={cn("-ml-1.5 inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-control px-1.5 text-muted hover:bg-raised hover:text-text", focusRing)}>
             <Logo src={curTopic.src} size={14} />
-            <span className="truncate">{srcName(curTopic.src)}</span>
+            <span>{srcName(curTopic.src)}</span>
           </button>
         ) : null}
-        <span aria-hidden className="text-faint">/</span>
-        <b className="min-w-0 truncate font-medium text-text" aria-current="page">{curTopic?.title ?? "Topic"}</b>
+        <span aria-hidden className="text-control">/</span>
+        <b className="inline-flex min-w-0 items-center gap-1.5 truncate font-medium text-text" aria-current="page"><span className="truncate">{curTopic?.title || (isNew ? "New topic" : "Topic")}</span></b>
       </nav>
     </SheetBar>
   ) : (
@@ -635,8 +755,9 @@ export function MemoryPage(props: MemoryPageProps) {
       <button type="button" className="mr-3 inline-flex shrink-0 items-center gap-1 text-[14px] text-muted hover:text-text sm:hidden" onClick={() => setPhoneSheet(false)}>
         <ArrowLeft size={14} aria-hidden /> Memory
       </button>
-      <div className={cn("flex min-w-0 flex-1 items-stretch [&_[role=tab]]:text-[13px] [&_[role=tab]_svg]:size-[14px]", !phone && "[&_[role=tab]]:!font-normal")}>
+      <div className="flex min-w-0 flex-1 items-stretch [&_[role=tab]]:text-[13px] [&_[role=tab]]:font-normal [&_[role=tab]_svg]:size-[14px]">
       <Tabs
+        keepInView={false}
         variant={phone ? "chips" : "fixed"}
         aria-label="Memory"
         items={TABS.map((t) => ({ value: t.value, label: t.label, icon: t.icon }))}
@@ -647,14 +768,42 @@ export function MemoryPage(props: MemoryPageProps) {
     </SheetBar>
   );
 
+  // Phone detail screens (the workshop's fixed .sbar): the way back, Try it and the Leda entry replace the frame's top bar; the tabs become icon-less chips under it.
+  const phoneDetail = phone && (phoneSheet || inDoc);
+  const phoneTop = phoneDetail ? (
+    <>
+      <button type="button" onClick={() => (inDoc ? closeDoc() : setPhoneSheet(false))} className={cn("-ml-3 inline-flex h-11 shrink-0 items-center gap-1 self-center rounded-control px-2 text-[14px] text-text", focusRing)}>
+        <CaretLeft size={16} aria-hidden />
+        <span>Memory</span>
+      </button>
+      <span className="flex-1" />
+      {tryBtn}
+      <AskLedaBar variant="bar" scope="memory" paused={tryShown} onOpen={() => openTry()} className="max-[640px]:[&_button]:!border-0 max-[640px]:[&_button]:!bg-transparent" />
+    </>
+  ) : undefined;
+  const phoneChips =
+    phone && phoneSheet && !inDoc ? (
+      <div className="sticky top-0 z-[5] flex gap-1.5 overflow-x-auto border-b border-rule bg-surface px-4 py-2 [scrollbar-width:none]">
+        <Tabs
+          keepInView={false}
+          variant="chips"
+          aria-label="Memory"
+          items={TABS.map((t) => ({ value: t.value, label: t.label }))}
+          value={tab}
+          onValueChange={goTab}
+          className="[&_[role=tablist]]:gap-1.5 [&_[role=tablist]]:py-0 [&_[role=tab]]:!h-9 [&_[role=tab]]:!rounded-[18px] [&_[role=tab]]:!bg-transparent [&_[role=tab]]:text-[13px] [&_[role=tab]]:font-normal [&_[role=tab]]:text-text [&_[role=tab][data-state=active]]:!border-accent [&_[role=tab][data-state=active]]:!text-accent"
+        />
+      </div>
+    ) : null;
+
   const bizFilter = (
-    <div className="w-[216px] min-w-0 shrink-0 max-[640px]:w-auto max-[640px]:flex-1 max-[640px]:basis-full">
+    <div className="w-[216px] min-w-0 shrink-0 max-[640px]:w-auto max-[640px]:flex-1 max-[640px]:basis-full [&_[role=combobox]]:pl-2.5 [&_[role=combobox]]:pr-2 [&_[role=combobox]]:text-[13px]">
       <Select
         size="sm"
         aria-label={`Business: ${folder ? srcName(folder) : "All businesses"}`}
         options={[
           { value: "", label: "All businesses", icon: <Books size={14} aria-hidden /> },
-          ...MEM_SOURCES.map((s) => ({ value: s, label: srcName(s), icon: <Logo src={s} size={14} /> })),
+          ...SRCS.map((s) => ({ value: s, label: srcName(s), icon: <Logo src={s} size={14} /> })),
         ]}
         value={folder}
         onValueChange={(v) => pickFolder(v as "" | MemSrc)}
@@ -694,7 +843,7 @@ export function MemoryPage(props: MemoryPageProps) {
     );
   const miniSw = (t: MemTopic) => (
     <span className="flex items-center justify-self-end gap-2 max-[640px]:min-h-11">
-      <Switch aria-label={`${t.title}: customers' Leda can use it`} checked={t.on} disabled={readOnly} onCheckedChange={(v) => setTopic(t, v)} />
+      <Switch look="workshop" aria-label={`${t.title}: customers' Leda can use it`} checked={t.on} disabled={readOnly} onCheckedChange={(v) => setTopic(t, v)} />
       <span aria-hidden className="min-w-[22px] text-[13px] leading-[18px] text-muted">{t.on ? "On" : "Off"}</span>
     </span>
   );
@@ -708,19 +857,17 @@ export function MemoryPage(props: MemoryPageProps) {
 
   const docHref = (t: MemTopic) => `?tab=topics&folder=${t.src}&topic=${encodeURIComponent(t.k)}`;
   const nw = canEdit ? (
-    <Button leftIcon={Plus} disabled={roomState === "full"} title={roomState === "full" ? "Memory is full" : undefined} onClick={() => newTopic()} className="max-[640px]:h-11 max-[640px]:flex-1">
+    <Button leftIcon={Plus} disabled={roomState === "full"} title={roomState === "full" ? "Memory is full" : undefined} onClick={() => newTopic()} className="max-[640px]:h-11">
       New topic
     </Button>
   ) : null;
-  const newTopic = (src: MemSrc = (folder || "company") as MemSrc) => {
-    const id = `new${Date.now()}`;
-    const t: MemTopic = { src, k: `c:${id}`, type: "custom", title: "New topic", text: "", on: true, ask: "What should I know about this?", qs: [], updated: "Thu 22 Oct" };
-    setAdded((a) => [...a, t]);
-    setOn((o) => ({ ...o, [keyOf(t)]: true }));
+  const newTopic = (src0?: MemSrc) => {
     setDir("in");
-    setFolder(src);
-    setDoc(keyOf(t));
-    setEdit({ t: "", c: "" });
+    pushRef.current = true;
+    setTab("topics");
+    setPhoneSheet(true);
+    setDoc(NEW_DOC);
+    setEdit({ t: "", c: "", src: src0 ?? ((folder || "company") as MemSrc), pick: !src0 && !folder });
   };
 
   const libraryBody = (() => {
@@ -732,15 +879,15 @@ export function MemoryPage(props: MemoryPageProps) {
     const withF = !f || !!q;
     const all = ts.length > 0 && onN === ts.length;
     const bulk = f && canEdit && ts.length ? (
-      <Button variant="secondary" leftIcon={all ? ToggleLeft : ToggleRight} onClick={() => setBulkAsk({ src: f, how: all ? "off" : "on" })} className="max-[640px]:h-11 max-[640px]:flex-1">
+      <Button variant="secondary" leftIcon={all ? ToggleLeft : ToggleRight} onClick={() => { setBulkSens(false); setBulkAsk({ src: f, how: all ? "off" : "on" }); }} className="max-[640px]:h-11">
         {all ? "Turn all off" : "Turn all on"}
       </Button>
     ) : null;
-    const sub = `${ts.length ? `${onN} of ${ts.length} on` : "No topics yet"} · ${f ? (f === "company" ? "Leda uses these for every business" : MEM_KIND[f]) : plural(MEM_SOURCES.length, "folder")}`;
+    const sub = `${ts.length ? `${onN} of ${ts.length} on` : "No topics yet"} · ${f ? (f === "company" ? "Leda uses these for every business" : MEM_KIND[f]) : plural(SRCS.length, "folder")}`;
     const title = f ? (
-      <span className="inline-flex items-center gap-2.5">
+      <span className="inline-flex items-center gap-2.5 max-[640px]:mb-[0.5px]">
         <Logo src={f} size={24} />
-        <span>{srcName(f)}</span>
+        <span className="max-[640px]:relative max-[640px]:top-[0.5px]">{srcName(f)}</span>
       </span>
     ) : (
       "All topics"
@@ -844,9 +991,9 @@ export function MemoryPage(props: MemoryPageProps) {
     }
     return (
       <>
-        <nav aria-label="Folder" className="mb-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] leading-[18px] max-[640px]:hidden">
-          <a href="#memory" onClick={(e) => { e.preventDefault(); pickFolder(""); }} className={crumbLink}>Memory</a>
-          <span aria-hidden className="text-faint">/</span>
+        <nav aria-label="Folder" className="mb-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] leading-[18px]">
+          <a href="#memory" onClick={(e) => { e.preventDefault(); pickFolder(""); }} className={cn(crumbLink, "max-[640px]:min-h-11")}>Memory</a>
+          <span aria-hidden className="text-control">/</span>
           <b className="inline-flex items-center gap-1.5 font-medium text-text">
             {f ? <Logo src={f} size={14} /> : null}
             <span>{f ? srcName(f) : "All topics"}</span>
@@ -871,7 +1018,7 @@ export function MemoryPage(props: MemoryPageProps) {
           <div className="flex min-w-0 items-center gap-3 max-[640px]:flex-[1_1_100%] max-[640px]:flex-wrap max-[640px]:gap-2">
             {bizFilter}
             {phone ? (
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0 flex-1 [&_[role=combobox]]:pl-2.5 [&_[role=combobox]]:pr-2 [&_[role=combobox]]:text-[13px]">
                 <Select
                   size="sm"
                   aria-label={`Show: ${FILTERS.find(([k]) => k === filter)![0] === "all" ? "Show all" : FILTERS.find(([k]) => k === filter)![1]}`}
@@ -921,7 +1068,7 @@ export function MemoryPage(props: MemoryPageProps) {
         {q && list.length ? (
           <p aria-live="polite" className="m-0 mt-3 flex items-center gap-2 text-[13px] leading-[18px] text-muted">
             {plural(list.length, "topic")} match “{q}”{f ? ", in every folder" : ""}.
-            <Button variant="text" onClick={() => setQ("")} className="!h-7 !px-1.5 !text-[13px]">Clear</Button>
+            <Button variant="text" onClick={() => setQ("")} className="!h-7 !border-0 !px-1.5 !text-[13px]">Clear</Button>
           </p>
         ) : null}
         <div id="lbres">{res}</div>
@@ -934,8 +1081,8 @@ export function MemoryPage(props: MemoryPageProps) {
     if (loading)
       return (
         <>
-          <Skeleton variant="text" lines={1} className="mb-2.5 w-[140px]" />
-          <Head h={hh} title="All topics" sub={<span className="inline-block h-[13px] w-[220px] rounded-[3px] bg-skeleton align-middle" />} />
+          <div className="mb-2.5 flex h-3"><span className="block h-3 w-[140px] rounded-[3px] bg-skeleton" /></div>
+          <Head h={hh} title="All topics" sub={<span className="inline-block h-[13px] w-[220px] rounded-[3px] bg-skeleton" />} />
           <div className="mt-5"><span className="block h-10 w-full rounded-[3px] bg-skeleton" /></div>
           <div className="mt-4">
             {[0, 1, 2, 3, 4, 5].map((i) => (
@@ -952,10 +1099,10 @@ export function MemoryPage(props: MemoryPageProps) {
       return (
         <>
           <Head h={hh} title="What customers' Leda knows" />
-          <div role="alert" className="mt-4 flex items-center gap-2.5 rounded-card border border-border bg-raised px-3.5 py-3 text-[14px] leading-5">
+          <div role="alert" className="mt-5 flex items-center gap-2.5 rounded-card border border-dashed border-control px-3.5 py-3 text-[14px] leading-5">
             <WarningCircle size={18} aria-hidden className="shrink-0 text-bad" />
-            <span className="min-w-0 flex-1">Couldn't load what Leda knows. Customers' Leda keeps using the last saved switches.</span>
-            <Button variant="secondary" onClick={() => toast.info("Memory loaded.")}>Try again</Button>
+            <span>Couldn't load what Leda knows. Customers' Leda keeps using the last saved switches.</span>
+            <Button variant="secondary" className="ml-auto" onClick={() => toast.info("Memory loaded.")}>Try again</Button>
           </div>
         </>
       );
@@ -965,8 +1112,8 @@ export function MemoryPage(props: MemoryPageProps) {
       return (
         <>
           <Head h={hh} title="All topics" sub="Nothing yet" />
-          <div className="mt-5 max-w-[600px] rounded-card bg-raised px-5 py-[18px]">
-            <h3 className="m-0 text-[15px] font-semibold leading-[21px]">Nothing for Leda to know yet</h3>
+          <div className="mt-5 rounded-card bg-raised px-5 pb-5 pt-[18px]">
+            <h3 className="m-0 text-base font-semibold leading-[22px]">Nothing for Leda to know yet</h3>
             <p className="m-0 mt-0.5 text-[14px] leading-5 text-muted">Add a platform and its data becomes topics Leda can answer from, like services and prices or opening hours. You can also write your own: payment options, warranty, how to find you.</p>
             <div className="mt-3.5 flex flex-wrap gap-2">
               {canEdit ? <Button leftIcon={Plus} onClick={() => newTopic("company")}>Add a company topic</Button> : null}
@@ -983,7 +1130,7 @@ export function MemoryPage(props: MemoryPageProps) {
     const f = folder;
     const list = f ? blockedAll.filter((b) => b.src === f) : blockedAll;
     const inherited = f && f !== "company" ? blockedAll.filter((b) => b.src === "company") : [];
-    const srcs = f ? [f] : MEM_SOURCES;
+    const srcs = f ? [f] : SRCS;
     const sub = `${plural(list.length, "question")} · ${f ? (f === "company" ? "for every business" : `at ${srcShort(f)}`) : "for the company and each platform"}`;
     const addBlocked = () => {
       const v = bqText.trim().replace(/^["“]|["”]$/g, "");
@@ -1004,15 +1151,15 @@ export function MemoryPage(props: MemoryPageProps) {
         <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2.5">{bizFilter}</div>
         <div className="mt-4 max-w-[720px]">
           <p className="m-0 text-[13px] leading-[18px] text-muted">Leda won't answer these, even when a topic could. It gives your reply instead.</p>
-          <div className="mt-3">
-            {srcs.map((src) => {
+          <div>
+            {srcs.map((src, si) => {
               const label = src === "company" ? (f ? "Leda replies" : "Leda replies, for the company and every business") : `At ${srcShort(src)}, Leda replies`;
               return refEdit?.src === src ? (
-                <div key={src} className="mt-2 first:mt-0">
-                  <label htmlFor="refT" className="mb-1 block text-[13px] font-medium leading-[18px]">{src === "company" ? "Leda's reply for the company and every business" : `Leda's reply at ${srcShort(src)}`}</label>
-                  <textarea id="refT" maxLength={400} rows={2} value={refEdit.v} onChange={(e) => setRefEdit({ src, v: e.target.value })} aria-invalid={refEdit.err ? true : undefined} className={cn("block w-full rounded-control border border-control bg-surface px-3 py-2 text-[14px] leading-5", focusRing)} />
-                  {refEdit.err ? <p className="m-0 mt-1 text-[13px] leading-[18px] text-bad">{refEdit.err}</p> : <p className="m-0 mt-1 text-[13px] leading-[18px] text-muted">Keep it polite and short. Customers see it as Leda's answer.</p>}
-                  <div className="mt-2 flex gap-2">
+                <div key={src} className={cn("rounded-card bg-raised px-4 pb-4 pt-3.5", si ? "mt-2" : "mt-4")}>
+                  <label htmlFor="refT" className="block text-[14px] font-medium leading-5">{src === "company" ? "Leda's reply for the company and every business" : `Leda's reply at ${srcShort(src)}`}</label>
+                  <textarea id="refT" autoFocus maxLength={400} rows={2} value={refEdit.v} onChange={(e) => setRefEdit({ src, v: e.target.value })} aria-invalid={refEdit.err ? true : undefined} className="mt-2 block min-h-[84px] w-full resize-y rounded-control border border-control bg-surface px-3 py-2 text-[14px] leading-5 text-text focus-visible:border-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[1px] focus-visible:outline-accent" />
+                  {refEdit.err ? <p className="m-0 mt-1.5 text-[12px] leading-4 text-bad">{refEdit.err}</p> : <p className="m-0 mt-1.5 text-[12px] leading-4 text-muted">Keep it polite and short. Customers see it as Leda's answer.</p>}
+                  <div className="mt-5 flex flex-wrap items-center gap-2">
                     <Button onClick={() => {
                       if (!refEdit.v.trim()) return setRefEdit({ ...refEdit, err: "Write the reply Leda should give." });
                       setReplies((r) => ({ ...r, [src]: refEdit.v.trim() }));
@@ -1023,26 +1170,24 @@ export function MemoryPage(props: MemoryPageProps) {
                   </div>
                 </div>
               ) : (
-                <div key={src} className="mt-2 flex items-center gap-4 rounded-card bg-raised px-4 py-3 first:mt-0">
-                  <div className="min-w-0 flex-1">
-                    <span className="block text-[13px] leading-[18px] text-muted">{label}</span>
-                    <p className="m-0 mt-1 text-[14px] leading-5">“{replies[src]}”</p>
-                  </div>
-                  {canEdit ? <Button variant="text" leftIcon={PencilSimple} onClick={() => setRefEdit({ src, v: replies[src] })}>Edit reply</Button> : null}
+                <div key={src} className={cn("grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 rounded-card bg-raised px-4 py-3", si ? "mt-2" : "mt-4")}>
+                  <span className="col-span-full text-[12px] leading-4 text-muted">{label}</span>
+                  <p className="m-0 text-[13px] leading-5">“{replies[src]}”</p>
+                  {canEdit ? <Button variant="text" className="!h-[30px] !border-0 !px-2 !leading-5 max-[640px]:!h-11" leftIcon={PencilSimple} onClick={() => setRefEdit({ src, v: replies[src] })}>Edit reply</Button> : null}
                 </div>
               );
             })}
           </div>
           {list.length ? (
-            <ul className="m-0 mt-3 list-none p-0">
+            <ul className="m-0 mt-2 list-none p-0">
               {list.map((b) => (
-                <li key={b.id} onMouseEnter={() => setHover(BUILDING[b.src])} onMouseLeave={() => setHover(null)} className="flex flex-wrap items-center gap-2 border-b border-rule py-[18px] max-[640px]:py-3.5">
+                <li key={`${b.src}|${b.id}`} onMouseEnter={() => setHover(BUILDING[b.src])} onMouseLeave={() => setHover(null)} className="flex items-center gap-1 border-t border-rule py-4 first:border-t-0 max-[640px]:flex-wrap">
                   <span className="min-w-0 flex-1 text-[14px] leading-5 max-[640px]:basis-full">“{b.q}”</span>
                   {f ? null : (
                     <span className="mr-1 inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap text-[12px] leading-4 text-muted"><Logo src={b.src} size={14} />{b.src === "company" ? "Every business" : srcShort(b.src)}</span>
                   )}
-                  <Button variant="text" aria-label={`Try it: ${b.q}`} onClick={() => openTry(undefined, `any#${b.src}|b:${b.id}`)}>Try</Button>
-                  {canEdit ? <Button variant="text" aria-label={`Remove blocked question: ${b.q}`} onClick={() => setRmAsk(b)}>Remove</Button> : null}
+                  <Button variant="text" className="!h-[30px] !border-0 !px-2 !leading-5 !text-[13px] !text-muted hover:!bg-raised hover:!text-text max-[640px]:!h-11" aria-label={`Try it: ${b.q}`} onClick={() => openTry(undefined, `any#${b.src}|b:${b.id}`)}>Try</Button>
+                  {canEdit ? <Button variant="text" className="!h-[30px] !border-0 !px-2 !leading-5 !text-[13px] !text-muted hover:!bg-raised hover:!text-bad max-[640px]:!h-11" aria-label={`Remove blocked question: ${b.q}`} onClick={() => setRmAsk(b)}>Remove</Button> : null}
                 </li>
               ))}
             </ul>
@@ -1053,7 +1198,7 @@ export function MemoryPage(props: MemoryPageProps) {
             <p className="m-0 mt-3 flex gap-1.5 text-[13px] leading-[18px] text-muted"><Buildings size={14} aria-hidden className="mt-0.5 shrink-0" /><span>Also blocked here, for every business: {andList(inherited.map((b) => `“${b.q}”`))}.</span></p>
           ) : null}
           {canEdit ? (
-            <div className="mt-4 flex flex-wrap items-start gap-3">
+            <div className="mt-4 flex flex-wrap items-start gap-2">
               <div className="min-w-0 flex-[1_1_260px]">
                 <label htmlFor="bqNew" className={sr}>A question to block</label>
                 <input id="bqNew" maxLength={160} value={bqText} onChange={(e) => { setBqText(e.target.value); setBqErr(null); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addBlocked(); } }} placeholder="A question to block, like “Who is your parts supplier?”" autoComplete="off" aria-invalid={bqErr ? true : undefined} aria-describedby={bqErr ? "bqE" : undefined} className={cn("block h-10 w-full rounded-control border bg-surface px-3 text-[14px] placeholder:text-muted", bqErr ? "border-bad" : "border-control", focusRing)} />
@@ -1095,27 +1240,25 @@ export function MemoryPage(props: MemoryPageProps) {
                 const x = requestsAll.filter((r) => r.src === pid);
                 if (!x.length) return null;
                 return (
-                  <section key={pid} aria-label={srcName(pid)} className={gi ? "mt-5" : "mt-3"} onMouseEnter={() => setHover(BUILDING[pid])} onMouseLeave={() => setHover(null)}>
+                  <section key={pid} aria-label={srcName(pid)} onMouseEnter={() => setHover(BUILDING[pid])} onMouseLeave={() => setHover(null)}>
                     {f ? null : (
-                      <div className="flex items-center gap-2 pb-1.5">
-                        <h2 className="m-0 inline-flex items-center gap-2 text-[14px] font-semibold leading-5"><Logo src={pid} />{srcName(pid)}</h2>
+                      <div className={cn("flex items-center gap-2", gi ? "mt-5" : "mt-6")}>
+                        <h2 className="m-0 inline-flex items-center gap-2 text-[13px] font-semibold leading-5"><Logo src={pid} size={16} />{srcName(pid)}</h2>
                         <span className="ml-auto text-[12px] text-muted">{x.filter((r) => r.on).length} of {x.length} on</span>
                       </div>
                     )}
-                    <ul className="m-0 list-none p-0">
+                    <ul className="m-0 mt-2 list-none p-0">
                       {x.map((r) => (
-                        <li key={r.key} className={cn("flex items-start gap-4 border-b border-rule py-3", !r.on && "opacity-100")}>
-                          <div className="min-w-0 flex-1">
-                            <b className="block text-[14px] font-medium leading-5">{r.name}</b>
-                            <p className="m-0 text-[13px] leading-[19px] text-muted">{r.about}</p>
-                            <button type="button" aria-label={`Try it: ${r.ask}`} onClick={() => openTry(undefined, `any#${r.src}|r:${r.key}`)} className={cn("mt-1.5 inline-flex items-center gap-1.5 rounded-[4px] text-[13px] leading-[18px] text-accent hover:underline", focusRing)}>
-                              <ChatCircle size={14} aria-hidden />
-                              <span>Try “{r.ask}”</span>
-                            </button>
-                          </div>
-                          <span className="flex shrink-0 items-center gap-2 pt-0.5">
-                            <Switch aria-label={`Can request: ${r.name}, ${srcName(r.src)}`} checked={r.on} disabled={readOnly} onCheckedChange={(v) => setRequest(r, v)} />
-                            <span aria-hidden className="text-[13px] leading-[18px] text-muted">Can request</span>
+                        <li key={r.key} className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-6 border-t border-rule py-4 first:border-t-0 @max-[520px]/sheet:grid-cols-1">
+                          <b className={cn("col-start-1 row-start-1 self-center text-[14px] font-medium leading-5", !r.on && "text-muted")}>{r.name}</b>
+                          <p className={cn("m-0 col-span-full mt-1 max-w-[640px] justify-self-start text-[13px] leading-5", r.on ? "text-text" : "text-muted")}>{r.about}</p>
+                          <button type="button" aria-label={`Try it: ${r.ask}`} onClick={() => openTry(undefined, `any#${r.src}|r:${r.key}`)} className={cn("col-span-full mt-2 -ml-2 inline-flex min-h-[26px] max-w-full items-center gap-1.5 justify-self-start rounded-chip px-2 py-0.5 text-left text-[12px] leading-[18px] text-muted hover:bg-raised hover:text-text max-[640px]:min-h-9", focusRing)}>
+                            <ChatCircle size={14} aria-hidden className="shrink-0" />
+                            <span className="[overflow-wrap:anywhere]">Try “{r.ask}”</span>
+                          </button>
+                          <span className="col-start-2 row-start-1 flex items-start gap-3 @max-[520px]/sheet:col-start-1 @max-[520px]/sheet:row-start-2 @max-[520px]/sheet:mb-1 @max-[520px]/sheet:mt-2">
+                            <Switch look="workshop" aria-label={`Can request: ${r.name}, ${srcName(r.src)}`} checked={r.on} disabled={readOnly} onCheckedChange={(v) => setRequest(r, v)} />
+                            <span aria-hidden className={cn("min-w-[184px] text-[13px] leading-5 @max-[520px]/sheet:min-w-0", !r.on && "text-muted")}>Can request</span>
                           </span>
                         </li>
                       ))}
@@ -1140,45 +1283,102 @@ export function MemoryPage(props: MemoryPageProps) {
           <div className="mt-3 flex gap-2"><Button variant="secondary" leftIcon={ArrowLeft} onClick={closeDoc}>Back to Memory</Button></div>
         </EmptyBox>
       );
+    const nw = isNew;
     const ed = !!edit && t.type === "custom";
     const room = Math.max(0, left);
-    const qs = [t.ask, ...t.qs].filter((x, i, a) => x && a.indexOf(x) === i).slice(0, 3);
+    const qs = nw ? [] : [t.ask, ...t.qs].filter((x, i, a) => x && a.indexOf(x) === i).slice(0, 3);
     const save = () => {
       if (!edit) return;
       const ti = edit.t.trim();
       const c = edit.c.trim();
       if (!ti) return setEdit({ ...edit, err: "A title is needed.", errAt: "t" });
       if (!c) return setEdit({ ...edit, err: "Write what Leda should know about it.", errAt: "c" });
-      if (allTopics.some((x) => x.title.toLowerCase() === ti.toLowerCase() && keyOf(x) !== keyOf(t))) return setEdit({ ...edit, err: "A topic with this title already exists in memory. Titles are unique across the company.", errAt: "t" });
+      if (allTopics.some((x) => x.title.toLowerCase() === ti.toLowerCase() && (nw || keyOf(x) !== keyOf(t)))) return setEdit({ ...edit, err: "A topic with this title already exists in memory. Titles are unique across the company.", errAt: "t" });
+      const used2 = used - (nw ? 0 : t.title.length + t.text.length);
+      if (used2 + ti.length + c.length > MEM_CAP) return setEdit({ ...edit, err: `The memory is full: this needs ${num(used2 + ti.length + c.length - MEM_CAP)} more characters. Shorten it, or delete other topics first.`, errAt: "c" });
+      if (nw) {
+        const id = `m${Date.now()}`;
+        const added1: MemTopic = { src: edit.src ?? "company", k: `c:${id}`, type: "custom", title: ti, text: c, on: true, ask: `What should I know about ${lower(ti)}?`, qs: [], updated: "Thu 22 Oct" };
+        setAdded((a) => [...a, added1]);
+        setOn((o) => ({ ...o, [keyOf(added1)]: true }));
+        setDoc(keyOf(added1));
+        setEdit({ t: ti, c });
+        toast.undo(`Topic added: ${ti}.`, () => {
+          setAdded((a) => a.filter((x) => x.k !== added1.k));
+          setDoc(null);
+          setEdit(null);
+        });
+        return;
+      }
+      const prev = custom[keyOf(t)];
       setCustom((m) => ({ ...m, [keyOf(t)]: { title: ti, text: c } }));
       setEdit({ t: ti, c });
-      toast.info(`Topic saved: ${ti}.`);
+      toast.undo(`Topic saved: ${ti}.`, () => {
+        setCustom((m) => {
+          const n = { ...m };
+          if (prev) n[keyOf(t)] = prev;
+          else delete n[keyOf(t)];
+          return n;
+        });
+        setEdit({ t: prev?.title ?? t.title, c: prev?.text ?? t.text });
+      });
+    };
+    const discard = () => {
+      if (nw) {
+        setEdit(null);
+        if (window.history.state?.mem) window.history.back();
+        else {
+          setDir("out");
+          setDoc(null);
+        }
+        return;
+      }
+      setEdit({ t: t.title, c: t.text });
     };
     return (
       <article aria-labelledby="docH" className="max-w-[680px]">
         <nav aria-label="Folder" className="-mt-3 mb-1 hidden items-center gap-2 text-[13px] max-[640px]:flex">
           <a href="#memory" onClick={(e) => { e.preventDefault(); closeDoc(); }} className={cn(crumbLink, "min-h-11")}>Memory</a>
-          <span aria-hidden className="text-faint">/</span>
+          <span aria-hidden className="text-control">/</span>
           <a href="#folder" onClick={(e) => { e.preventDefault(); pickFolder(t.src); }} className={cn(crumbLink, "min-h-11")}><Logo src={t.src} size={14} /><span>{srcName(t.src)}</span></a>
         </nav>
-        <p className="m-0 flex items-center gap-1.5 text-[13px] leading-[18px] text-muted">{srcLabel(t)}</p>
+        <p className="m-0 flex items-center gap-1.5 text-[13px] leading-[18px] text-muted">
+          {nw ? (
+            <>
+              <PencilSimpleLine size={14} aria-hidden className="shrink-0" />
+              <span>Custom · new topic</span>
+            </>
+          ) : (
+            srcLabel(t)
+          )}
+        </p>
+        {nw && edit?.pick ? (
+          <div className="mt-3 flex items-center gap-2.5">
+            <span id="docSL" className="m-0 text-[12px] leading-4 text-muted">Folder</span>
+            <div className="w-[240px] max-[640px]:w-auto max-[640px]:flex-1 [&_[role=combobox]]:pl-2.5 [&_[role=combobox]]:pr-2 [&_[role=combobox]]:text-[13px]">
+              <Select size="sm" aria-labelledby="docSL" options={SRCS.map((x) => ({ value: x, label: srcName(x) }))} value={edit.src ?? "company"} onValueChange={(v) => setEdit({ ...edit, src: v as MemSrc })} className="w-full min-w-0" />
+            </div>
+          </div>
+        ) : null}
         <div className="mt-2 flex items-start gap-6 max-[640px]:flex-col max-[640px]:gap-3">
           {ed ? (
             <>
-              <h1 id="docH" className={sr}>{edit!.t.trim() || t.title}</h1>
+              <h1 id="docH" className={sr}>{edit!.t.trim() || (nw ? "New topic" : t.title)}</h1>
               <label htmlFor="docT" className={sr}>Title</label>
-              <input id="docT" maxLength={100} value={edit!.t} onChange={(e) => setEdit({ ...edit!, t: e.target.value, err: undefined })} placeholder="A title, like “Senior citizen discount”" autoComplete="off" aria-invalid={edit!.err && edit!.errAt === "t" ? true : undefined} className={cn("-ml-[9px] block h-10 min-w-0 flex-1 rounded-control border border-transparent bg-transparent px-2 text-[24px] font-semibold leading-8 tracking-[-0.01em] text-text placeholder:font-medium placeholder:text-faint hover:border-border max-[640px]:text-[20px]", focusRing)} />
+              <input id="docT" autoFocus={nw} maxLength={100} value={edit!.t} onChange={(e) => setEdit({ ...edit!, t: e.target.value, err: undefined })} placeholder="A title, like “Senior citizen discount”" autoComplete="off" aria-invalid={edit!.err && edit!.errAt === "t" ? true : undefined} className={cn("-ml-[9px] block h-10 min-w-0 flex-1 rounded-control border border-transparent bg-transparent px-2 text-[24px] font-semibold leading-8 tracking-[-0.01em] text-text placeholder:font-medium placeholder:text-faint hover:border-border max-[640px]:text-[20px]", "focus-visible:border-transparent focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-accent forced-colors:focus-visible:outline-[Highlight]")} />
             </>
           ) : (
             <h1 id="docH" className="m-0 min-w-0 flex-1 text-[24px] font-semibold leading-8 tracking-[-0.01em] max-[640px]:text-[20px] max-[640px]:leading-7">{t.title}</h1>
           )}
-          <label className="mt-1.5 flex max-w-[240px] shrink-0 items-start gap-2.5 max-[640px]:min-h-11 max-[640px]:max-w-none">
-            <Switch aria-label={`Customers' Leda can use ${t.title}`} checked={t.on} disabled={readOnly} onCheckedChange={(v) => setTopic(t, v)} />
+          {nw ? null : (
+          <label className="mt-1.5 flex max-w-[240px] shrink-0 items-start gap-3 max-[640px]:min-h-11 max-[640px]:max-w-none">
+            <Switch look="workshop" aria-label={`Customers' Leda can use ${t.title}`} checked={t.on} disabled={readOnly} onCheckedChange={(v) => setTopic(t, v)} />
             <span className="text-[13px] font-medium leading-[18px]">
               {t.on ? "Customers' Leda can use this" : "Off for customers"}
-              <span className="block font-normal text-muted">{t.on ? "Saves as you switch it" : "Leda won't use it for customers"}</span>
+              <span className="block text-[12px] font-medium leading-4 text-muted">{t.on ? "Saves as you switch it" : "Leda won't use it for customers"}</span>
             </span>
           </label>
+          )}
         </div>
         {ed && edit!.err ? <p role="alert" className="m-0 mt-1.5 text-[13px] leading-[18px] text-bad">{edit!.err}</p> : null}
         {t.sensitive ? (
@@ -1187,14 +1387,14 @@ export function MemoryPage(props: MemoryPageProps) {
         {ed ? (
           <>
             <label htmlFor="docC" className={sr}>What Leda should know</label>
-            <textarea id="docC" maxLength={8000} rows={5} value={edit!.c} onChange={(e) => setEdit({ ...edit!, c: e.target.value, err: undefined })} placeholder="Write it as you would explain it to a customer, in full sentences. Leda answers from it in its own words." className={cn("-ml-[9px] mt-[18px] block min-h-[190px] w-[calc(100%+18px)] resize-none rounded-control border border-transparent bg-transparent px-2 py-1.5 text-[16px] leading-[27px] text-text placeholder:text-faint hover:border-border max-[640px]:text-[16px] max-[640px]:leading-[26px]", focusRing)} />
+            <textarea id="docC" maxLength={8000} rows={5} value={edit!.c} onChange={(e) => setEdit({ ...edit!, c: e.target.value, err: undefined })} placeholder="Write it as you would explain it to a customer, in full sentences. Leda answers from it in its own words." className={cn("-ml-[9px] mt-[18px] block min-h-[190px] w-[calc(100%+18px)] resize-none rounded-control border border-transparent bg-transparent px-2 py-1.5 text-[16px] leading-[27px] text-text placeholder:text-faint hover:border-border max-[640px]:text-[16px] max-[640px]:leading-[26px]", "focus-visible:border-transparent focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-accent forced-colors:focus-visible:outline-[Highlight]")} />
             <div className="mt-3.5 flex flex-wrap items-center gap-x-3.5 gap-y-2 border-t border-rule pt-3 text-[13px] leading-[18px] text-muted">
-              {dirty ? <span className="inline-flex items-center gap-1.5 text-warn"><PencilSimpleLine size={14} aria-hidden />Unsaved changes</span> : <span className="inline-flex items-center gap-1.5"><Check size={14} aria-hidden className="text-ok" />Saved</span>}
+              {dirty ? <span className="inline-flex items-center gap-1.5 text-warn"><PencilSimpleLine size={16} aria-hidden />Unsaved changes</span> : nw ? <span>Write a title and the paragraph</span> : <span className="inline-flex items-center gap-1.5"><Check size={16} aria-hidden className="text-ok" />Saved</span>}
               <span className="tabular-nums">{num(room)} characters left in memory</span>
               <span className="flex-1" />
-              <Button variant="text" leftIcon={Trash} onClick={() => setDelAsk(t)} className="max-[640px]:h-11">Delete</Button>
-              <Button variant="text" disabled={!dirty} onClick={() => { setEdit({ t: t.title, c: t.text }); }} className="max-[640px]:h-11">Discard</Button>
-              <Button disabled={!dirty} onClick={save} className="max-[640px]:h-11">Save</Button>
+              {nw ? null : <Button variant="text" leftIcon={Trash} onClick={() => setDelAsk(t)} className="!border-0 !px-2 [&_svg]:text-bad max-[640px]:h-11">Delete</Button>}
+              <Button variant="text" disabled={!dirty} onClick={discard} className="!border-0 !px-2 disabled:!opacity-50 max-[640px]:h-11">{nw ? "Cancel" : "Discard"}</Button>
+              <Button disabled={!dirty} onClick={save} className="disabled:!opacity-50 max-[640px]:h-11">{nw ? "Add topic" : "Save"}</Button>
             </div>
           </>
         ) : (
@@ -1227,32 +1427,22 @@ export function MemoryPage(props: MemoryPageProps) {
                 </li>
               ))}
             </ul>
-            <Button variant="text" leftIcon={ArrowRight} onClick={() => openTry(undefined, `any#${t.src}|t:${t.k}`)} className="-ml-2 mt-1.5 !h-8 !px-2 !text-[13px] max-[640px]:!h-11">
+            <Button variant="text" leftIcon={ArrowRight} onClick={() => openTry(undefined, `any#${t.src}|t:${t.k}`)} className="-ml-2 mt-1.5 !h-8 !border-0 !px-2 !text-[13px] max-[640px]:!h-11">
               See what Leda says to “{t.ask}”
             </Button>
           </section>
         ) : null}
-        <p className="m-0 mt-7 text-[12px] leading-4 text-muted">
+        {nw ? null : <p className="m-0 mt-7 text-[12px] leading-4 text-muted">
           {t.type === "custom" ? `Last edited ${t.updated}` : `Last changed ${t.updated}, when ${t.src === "company" ? "the company profile" : `${srcShort(t.src)} data`} changed`} · {srcName(t.src)}
-        </p>
+        </p>}
       </article>
     );
   })();
 
   const sheet = (
-    <div ref={bodyRef} className="px-6 pb-8 pt-5 max-[640px]:px-4 max-[640px]:pt-2">
-      {detailPhone && !inDoc ? (
-        <div className="mb-6">
-          <Tabs
-            variant="chips"
-            aria-label="Memory"
-            items={TABS.map((t) => ({ value: t.value, label: t.label }))}
-            value={tab}
-            onValueChange={goTab}
-          />
-        </div>
-      ) : null}
-      {inDoc ? docBody : renderPanel()}
+    <div ref={bodyRef} className="px-6 pb-8 pt-5 max-[640px]:px-0 max-[640px]:pt-0">
+      {phoneChips}
+      <div className="max-[640px]:px-4 max-[640px]:pb-[120px] max-[640px]:pt-4">{inDoc ? docBody : renderPanel()}</div>
     </div>
   );
 
@@ -1261,27 +1451,28 @@ export function MemoryPage(props: MemoryPageProps) {
       <PortalFrame
         current="memory"
         heading={null}
-        pageName="Memory"
+        pageName={loading || error || empty ? "Memory" : `${allTopics.filter((t) => t.on).length} topics on`}
         onAddPlatform={() => navGo({ to: "platforms", add: true })}
         onNavigate={(d: Dest) => (d.to === "memory" ? (inDoc ? closeDoc() : undefined) : navGo(d))}
-        leda={<AskLedaBar variant="bar" scope="memory" paused={tryShown} onOpen={() => openTry()} />}
         detail={inDoc || phoneSheet}
-        topBar={detailBar}
         placeLabel="Memory folders"
         place={placeBody}
         sheetLabel="Memory"
-        sheetBar={sheetBar}
-        account={{ name: "Ramon Dela Cruz", email: "ramon@delacruz.ph", role: "Owner" }}
+        sheetBar={phoneDetail ? undefined : sheetBar}
+        topBar={phoneTop}
+        hidePhoneNav={phoneDetail}
+        account={readOnly ? { name: "Arnel Cruz", email: "arnel@example.ph", role: "Member" } : { name: "Ramon Dela Cruz", email: "ramon@delacruz.ph", role: "Owner" }}
         status={
           <StatusBar
             ledaFirst
-            platforms={[
-              { id: "autoworks", name: "Auto Works", logoSrc: AUTO_LOGO },
-              { id: "stockroom", name: "Stockroom", color: "#6d48c6", initials: "PS" },
+            platforms={empty ? [] : [
+              { id: "autoworks", name: "Auto Works", logoSrc: AUTO_LOGO, onSelect: () => navGo({ to: "platform", id: "autoworks" }) },
+              { id: "stockroom", name: "Stockroom", color: "#6d48c6", initials: "PS", onSelect: () => navGo({ to: "platform", id: "stockroom" }) },
             ]}
-            people={{ count: 9 }}
-            leda={{ used: 1742, max: 2000, daysLeft: "7 days left" }}
+            people={{ count: 9, onSelect: () => navGo({ to: "team" }) }}
+            leda={{ used: 1742, max: 2000, daysLeft: "7 days left", onSelect: () => navGo({ to: "plan" }) }}
             plan="Starter"
+            onPlanSelect={() => navGo({ to: "plan" })}
             updatedAt="9:12 AM"
           />
         }
@@ -1298,30 +1489,50 @@ export function MemoryPage(props: MemoryPageProps) {
         question={tryQ}
         onQuestionChange={setTryQ}
         ask={askTry}
+        variant="workshop"
+        description="Ask as a customer and see what Leda says, and why."
+        footnote="As customers see it in your mobile app, with the switches as they are now."
+        note="Other customers' details, staff notes and pay are never used for customers. Your team's own use of Leda follows their role on Team."
       />
-      <ConfirmDialog
+      <DlgCard
         open={!!bulkAsk}
-        onOpenChange={(o) => !o && setBulkAsk(null)}
         title={bulkAsk ? `Turn ${bulkAsk.how} everything in ${srcName(bulkAsk.src)}?` : ""}
-        description={
-          bulkAsk
-            ? bulkAsk.how === "on"
-              ? `Customers' Leda can then use ${andList(topicsOf(bulkAsk.src).filter((t) => !t.on && !t.sensitive).map((t) => t.title)) || "nothing new"}.`
-              : `Customers' Leda won't answer any question about ${andList(topicsOf(bulkAsk.src).filter((t) => t.on).map((t) => t.title))}. Your team's own use of Leda doesn't change.`
-            : ""
-        }
-        confirmLabel={bulkAsk?.how === "on" ? "Turn on" : "Turn off"}
+        mark={bulkAsk ? <Logo src={bulkAsk.src} size={20} /> : null}
+        confirmLabel={bulkAsk?.how === "on" ? "Turn on" : bulkAsk ? `Turn off ${plural(bulkChange.length, "topic")}` : ""}
         tone={bulkAsk?.how === "on" ? "primary" : "danger"}
+        onCancel={() => setBulkAsk(null)}
         onConfirm={() => {
           if (!bulkAsk) return;
           const b = bulkAsk;
-          const before = on;
-          setOn((o) => ({ ...o, ...Object.fromEntries(topicsOf(b.src).filter((t) => (b.how === "on" ? !t.sensitive : true)).map((t) => [keyOf(t), b.how === "on"])) }));
+          const xs = b.how === "on" ? [...bulkPlain, ...(bulkSens ? bulkSensTopics : [])] : bulkChange;
           setBulkAsk(null);
-          toast.undo(`${srcShort(b.src)}: topics ${b.how} for customers.`, () => setOn(before));
+          if (!xs.length) return toast.info("Nothing to change.");
+          const before = on;
+          setOn((o) => ({ ...o, ...Object.fromEntries(xs.map((t) => [keyOf(t), b.how === "on"])) }));
+          toast.undo(`${srcShort(b.src)}: ${plural(xs.length, "topic")} ${b.how} for customers.`, () => setOn(before));
         }}
-        onCancel={() => setBulkAsk(null)}
-      />
+      >
+        {bulkAsk?.how === "on" ? (
+          <>
+            <p className="m-0 mt-2 text-[14px] leading-5 text-muted">
+              {bulkPlain.length ? <>Customers' Leda can then use <b className="font-medium text-text">{andList(bulkPlain.map((t) => t.title))}</b>.</> : "Everything that is safe to share is already on."}
+            </p>
+            {bulkSensTopics.length ? (
+              <div className="mt-4 flex items-start gap-3">
+                <Switch look="workshop" checked={bulkSens} onCheckedChange={setBulkSens} aria-labelledby="bulkSensL" />
+                <span className="flex flex-col text-[14px] leading-5" id="bulkSensL">
+                  Also turn on {andList(bulkSensTopics.map((t) => t.title))}
+                  <span className="text-[12px] leading-4 text-muted">Off by default. {[...new Set(bulkSensTopics.map((t) => t.sensitive))].join(" ")}</span>
+                </span>
+              </div>
+            ) : null}
+          </>
+        ) : bulkAsk ? (
+          <p className="m-0 mt-2 text-[14px] leading-5 text-muted">
+            Customers' Leda won't answer any question about <b className="font-medium text-text">{andList(bulkChange.map((t) => t.title))}</b> ({plural(bulkChange.length, "topic")}). Your team's own use of Leda doesn't change.
+          </p>
+        ) : null}
+      </DlgCard>
       <ConfirmDialog
         open={!!delAsk}
         onOpenChange={(o) => !o && setDelAsk(null)}
@@ -1352,28 +1563,31 @@ export function MemoryPage(props: MemoryPageProps) {
         onConfirm={() => {
           if (!rmAsk) return;
           const b = rmAsk;
-          setBlocked((x) => x.filter((y) => y.id !== b.id));
+          setBlocked((x) => x.filter((y) => !(y.id === b.id && y.src === b.src)));
           setRmAsk(null);
           toast.undo(`Unblocked: “${b.q}”`, () => setBlocked((x) => [...x, b]));
         }}
         onCancel={() => setRmAsk(null)}
       />
-      <ConfirmDialog
+      <DlgCard
         open={!!leaveAsk}
-        onOpenChange={(o) => !o && setLeaveAsk(null)}
         title="Discard your changes?"
-        description={`Your edits to “${curTopic?.title ?? ""}” aren't saved.`}
-        confirmLabel="Discard"
         cancelLabel="Keep editing"
+        confirmLabel="Discard"
         tone="danger"
+        focus="cancel"
+        onCancel={() => setLeaveAsk(null)}
         onConfirm={() => {
           const go = leaveAsk;
           setLeaveAsk(null);
           setEdit(null);
           go?.();
         }}
-        onCancel={() => setLeaveAsk(null)}
-      />
+      >
+        <p className="m-0 mt-2 text-[14px] leading-5 text-muted">
+          {isNew ? "This new topic isn't added yet." : `Your edits to “${curTopic?.title ?? ""}” aren't saved.`}
+        </p>
+      </DlgCard>
       <Toaster />
     </SubpageTransition>
   );

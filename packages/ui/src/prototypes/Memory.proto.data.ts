@@ -457,3 +457,17 @@ export const memReplies: Record<MemSrc, string> = {
  "autoworks": "Sorry, I can't help with that one. For anything else about Auto Works, just ask, or call 0917 555 0142.",
  "stockroom": "Sorry, I can't help with that one. For anything else about Stockroom, just ask, or call 0917 555 0188."
 };
+
+/** The "Price list by car model" company topic the workshop adds for ?state=full (memory.js priceList): as many models as fill the memory to about 93%. */
+export const PRICE_CARS: string[] = ['Toyota Vios', 'Toyota Innova', 'Toyota Fortuner', 'Toyota Hilux', 'Mitsubishi Mirage', 'Mitsubishi Montero Sport', 'Honda City', 'Honda Civic', 'Honda BR-V', 'Nissan Navara', 'Nissan Almera', 'Ford Ranger', 'Ford Everest', 'Hyundai Accent', 'Hyundai Stargazer', 'Suzuki Ertiga', 'Kia Soluto', 'Isuzu D-Max', 'Toyota Wigo', 'Toyota Raize', 'Geely Coolray', 'Chevrolet Trailblazer', 'Toyota Avanza', 'Toyota Rush', 'Toyota Corolla Altis', 'Mitsubishi Xpander', 'Mitsubishi Strada', 'Honda HR-V', 'Nissan Terra', 'Suzuki Swift', 'Suzuki Jimny', 'Hyundai Tucson', 'Kia Seltos', 'Mazda 3'];
+const JOBS: [string, number, number][] = [['10,000 km PMS', 3800, 2], ['20,000 km PMS', 5200, 3], ['oil change', 1650, 1], ['brake pads, front axle', 2400, 1.5], ['aircon cleaning', 2800, 2], ['wheel alignment', 950, 1], ['tune-up', 2200, 2], ['battery replacement', 5400, 0.5], ['clutch overhaul', 9800, 6], ['radiator flush', 1900, 1], ['spark plugs, all four', 2600, 1], ['CV joint, one side', 4300, 3]];
+export function priceListTopic(): MemTopic {
+  const lines = PRICE_CARS.map((c, i) => `${c}: ` + JOBS.map(([j, p, h]) => `${j} ₱${(p + i * 150).toLocaleString('en-PH')} (about ${h} ${h === 1 ? 'hour' : 'hours'})`).join(', ') + '.');
+  const want = MEM_CAP * 0.93 - MEM_USED - 24;
+  const out: string[] = [];
+  for (const l of lines) {
+    if (out.join(' ').length + l.length + 1 > want) break;
+    out.push(l);
+  }
+  return { src: 'company', k: 'c:mfull', type: 'custom', title: 'Price list by car model', text: out.join(' '), on: true, ask: 'How much is a PMS for a Ford Ranger?', qs: [], updated: 'Thu 22 Oct' };
+}

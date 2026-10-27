@@ -252,13 +252,14 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(function Select
         onClick={() => (open ? close(false) : openList())}
         onKeyDown={onKeyDown}
         className={cn(
-          'flex w-full items-center gap-2 rounded-control border bg-surface px-3 text-left text-body text-text transition-colors',
-          'hover:bg-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+          'flex w-full items-center gap-2 rounded-control border bg-surface pl-3 pr-2.5 text-left text-body text-text transition-colors',
+          'hover:border-muted focus-visible:border-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent',
           'disabled:cursor-not-allowed disabled:bg-raised disabled:text-faint',
           wrap
             ? cn('py-2', size === 'sm' ? 'min-h-[var(--ctl-dropdown-sm)]' : 'min-h-[var(--ctl-dropdown)]')
             : size === 'sm' ? 'h-[var(--ctl-dropdown-sm)]' : 'h-[var(--ctl-dropdown)]',
-          invalid ? 'border-bad' : 'border-control',
+          invalid ? 'border-bad focus-visible:border-bad' : 'border-control',
+          open && !invalid && 'border-accent hover:border-accent',
         )}
       >
         {lead ? <span className="inline-flex shrink-0 items-center text-muted">{lead}</span> : null}

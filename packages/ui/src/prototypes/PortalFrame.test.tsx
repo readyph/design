@@ -73,11 +73,11 @@ describe('PortalFrame', () => {
     expect(document.activeElement).toBe(tabs.getByRole('button', { name: 'More', hidden: true }));
   });
 
-  it('a page under More (Memory) marks More as current', () => {
+  it('Memory (under More) marks no phone tab as current, as in the workshop', () => {
     frame({ current: 'memory' });
     const tabs = within(screen.getAllByRole('navigation', { hidden: true })[1]!);
     expect(tabs.queryByRole('link', { current: 'page', hidden: true })).toBeNull();
-    expect(tabs.getByRole('button', { name: 'More', hidden: true }).getAttribute('aria-current')).toBe('page');
+    expect(tabs.getByRole('button', { name: 'More', hidden: true }).getAttribute('aria-current')).toBeNull();
   });
 
   it('onNavigate: rail, mark, phone tabs, More and account entries report their destination; modified clicks keep the href', async () => {
