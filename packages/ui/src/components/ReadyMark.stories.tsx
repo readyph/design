@@ -10,7 +10,7 @@ const meta: Meta<typeof ReadyMark> = {
     layout: 'padded',
     docs: {
       description: {
-        component: `The Ready brand (RDY-363, \`workshop/prototypes/ready-logo/decision.md\`): the diving falcon, pose A, flat triangles in three tones (lit, mid, deep), the horizontal lockup and the swoop-assemble animation. The brand name is exactly **Ready**. The tones are the \`--rd-*\` tokens (vermilion, a brand tone: never use it for status or alerts) and follow light and dark with the page. Pose B, the R-incorporated versions and the shine animation are not used. Trademark: **no search has been done yet** and decision.md says one is needed before public use. Leda has its own mark and is unchanged.`,
+        component: `The Ready brand (RDY-363, \`workshop/prototypes/ready-logo/decision.md\`): the diving falcon, pose A, flat triangles in three tones (lit, mid, deep), the horizontal lockup and the shine and swoop-assemble animations. The brand name is exactly **Ready**. The tones are the \`--rd-*\` tokens (vermilion, a brand tone: never use it for status or alerts) and follow light and dark with the page. Pose B and the R-incorporated versions are not used. The icon rail plays the shine (RDY-365); swoop-assemble stays available as \`effect="assemble"\`. Trademark: **no search has been done yet** and decision.md says one is needed before public use. Leda has its own mark and is unchanged.`,
       },
     },
   },
@@ -102,7 +102,7 @@ export const Lockup: Story = {
 export const Animation: Story = {
   name: 'Animation (swoop-assemble)',
   parameters: {
-    docs: { description: { story: 'Swoop-assemble: the facets fly in along the dive one by one, head first, 70 ms apart (1.32 s), then swap back to the static paths, so the rest frame is the static mark. It plays once, never loops. In the icon rail it plays on mount and on hover or keyboard focus. The designer found the facets look like confetti at 24 to 32px; it is the owner\'s choice for the rail. With `prefers-reduced-motion` it is a 400 ms fade.' } },
+    docs: { description: { story: 'Swoop-assemble: the facets fly in along the dive one by one, head first, 70 ms apart (1.32 s), then swap back to the static paths, so the rest frame is the static mark. It plays once, never loops. The icon rail no longer uses it (RDY-365: it uses the shine). The designer found the facets look like confetti at 24 to 32px; it is the owner\'s choice for the rail. With `prefers-reduced-motion` it is a 400 ms fade.' } },
   },
   render: () => {
     const [run, setRun] = useState(1);
@@ -119,6 +119,47 @@ export const Animation: Story = {
             <ReadyMark size={28} animate={run} />
             <ReadyMark scheme="dark" size={28} animate={run} />
             <ReadyMark size={64} animate={run} />
+          </Panel>
+        </div>
+      </div>
+    );
+  },
+};
+
+export const Shine: Story = {
+  name: 'Animation (shine, the rail)',
+  parameters: {
+    docs: { description: { story: 'Shine (`animate effect="shine"`): one light sweep along the 60 degree cut, 1.9 s, then rest. Two bands, clipped to the lit and mid planes, slide over the static paths and a pale eye flash crosses the head (visible on dark; on light the eye is already white). The silhouette never moves and the rest frame is the static mark. The icon rail plays it once on mount and again on hover or keyboard focus; it never loops. With `prefers-reduced-motion` it is one brightness step: a full lit and mid overlay at 0.9 that fades out over 900 ms. Rail mark: the full cut at 36px inside the 36px link (before: the small cut at 28px).' } },
+  },
+  render: () => {
+    const [run, setRun] = useState(1);
+    return (
+      <div className="flex flex-col gap-4 text-text">
+        <div className="flex items-center gap-3">
+          <Button onClick={() => setRun((n) => n + 1)}>Replay</Button>
+          <p className="m-0 text-small text-muted">Reduced motion: one brightness step that fades over 900 ms (set it in the operating system or the browser's rendering tools to see it).</p>
+        </div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <Panel title="256px, light" className="bg-white"><ReadyMark scheme="light" size={256} animate={run} effect="shine" /></Panel>
+          <Panel title="256px, dark" className="bg-[#16110F]"><ReadyMark scheme="dark" size={256} animate={run} effect="shine" /></Panel>
+          <Panel title="Rail mark: 36px full cut (light, dark), then 64px" className="bg-frame">
+            <ReadyMark size={36} cut="full" animate={run} effect="shine" />
+            <ReadyMark scheme="dark" size={36} cut="full" animate={run} effect="shine" />
+            <ReadyMark size={64} animate={run} effect="shine" />
+          </Panel>
+          <Panel title="Rail size before (28px small cut) and after (36px full cut), static" className="bg-frame">
+            <ReadyMark size={28} cut="small" />
+            <ReadyMark size={36} cut="full" />
+            <ReadyMark scheme="dark" size={28} cut="small" />
+            <ReadyMark scheme="dark" size={36} cut="full" />
+          </Panel>
+          <Panel title="Rest frame, shine (left) and static (right): identical at every size" className="bg-frame md:col-span-2">
+            {[16, 24, 32, 36, 64, 256].map((n) => (
+              <span key={n} className="flex items-end gap-1" data-rest={n}>
+                <ReadyMark size={n} animate={run} effect="shine" />
+                <ReadyMark size={n} />
+              </span>
+            ))}
           </Panel>
         </div>
       </div>

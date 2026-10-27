@@ -2,7 +2,7 @@ import { createContext, forwardRef, useContext, useRef, useState, type Ref, type
 import * as RadixTooltip from '@radix-ui/react-tooltip';
 import type { Icon as PhosphorIcon } from '@phosphor-icons/react';
 import { cn, focusRing } from '../utils/cn';
-import { ReadyMark, READY_ASSEMBLE_MS } from './ReadyMark';
+import { ReadyMark, READY_SHINE_MS } from './ReadyMark';
 
 const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
 
@@ -103,17 +103,20 @@ export const IconRail = forwardRef<HTMLElement, IconRailProps>(function IconRail
   );
 });
 
+/** The mark inside the 36px link (RDY-365): the full-detail cut, so the beak hook, eye and cheek facets read. */
+const RAIL_MARK_PX = 36;
+
 export interface IconRailMarkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'children'> {
   /** Accessible name. Default "Ready". */
   label?: string;
-  /** Play the swoop-assemble animation: once on mount, and again on hover or keyboard focus. Default true. */
+  /** Play the shine (one light sweep): once on mount, and again on hover or keyboard focus. Default true. */
   animate?: boolean;
 }
 
 /**
- * The Ready falcon (RDY-363): 28px mark in a 36px link (the workshop `.rail a` rule, RDY-364) to Home. Sits above the items with 12px of air.
- * Swoop-assemble plays once when the rail mounts (not on re-renders) and again on hover or keyboard focus, never in a loop, and only
- * after the last run has finished. `prefers-reduced-motion` turns it into a 400ms fade (see ReadyMark).
+ * The Ready falcon (RDY-363, RDY-365): the full-cut mark in a 36px link (the workshop `.rail a` rule, RDY-364) to Home. Sits above the items with 12px of air.
+ * The shine plays once when the rail mounts (not on re-renders) and again on hover or keyboard focus, never in a loop, and only
+ * after the last run has finished. `prefers-reduced-motion` turns it into one brightness step (see ReadyMark).
  */
 export const IconRailMark = forwardRef<HTMLAnchorElement, IconRailMarkProps>(function IconRailMark(
   { label = 'Ready', href = '/', animate = true, className, onMouseEnter, onFocus, ...rest },
@@ -122,7 +125,7 @@ export const IconRailMark = forwardRef<HTMLAnchorElement, IconRailMarkProps>(fun
   const [run, setRun] = useState(animate ? 1 : 0);
   const startedAt = useRef(animate ? now() : -Infinity);
   const replay = () => {
-    if (!animate || now() - startedAt.current < READY_ASSEMBLE_MS) return;
+    if (!animate || now() - startedAt.current < READY_SHINE_MS) return;
     startedAt.current = now();
     setRun((n) => n + 1);
   };
@@ -153,7 +156,7 @@ export const IconRailMark = forwardRef<HTMLAnchorElement, IconRailMarkProps>(fun
         className,
       )}
     >
-      <ReadyMark size={28} decorative animate={run} />
+      <ReadyMark size={RAIL_MARK_PX} cut="full" decorative animate={run} effect="shine" />
     </a>
   );
 });
