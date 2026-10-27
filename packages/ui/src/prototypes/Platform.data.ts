@@ -71,7 +71,7 @@ export const kinds: Record<KindKey, Kind> = {
       { id: 'viewer', name: 'Viewer', about: 'Can look, not change.' },
     ],
     provides: [],
-    reads: ['stock', 'catalog'],
+    reads: ['catalog'],
   },
   inventory: {
     key: 'inventory',
@@ -110,13 +110,13 @@ export const kinds: Record<KindKey, Kind> = {
     settings: platformDetail.settings._generic as SettingField[],
     roles: genericRoles,
     provides: [],
-    reads: ['catalog'],
+    reads: [],
   },
 };
 
 export const dataKinds: Record<DataKind, { name: string; shares: string }> = {
   stock: { name: 'Stock', shares: 'products, stock levels and movements' },
-  catalog: { name: 'Catalog', shares: 'product names, prices and photos' },
+  catalog: { name: 'Catalog', shares: 'product catalog and pricing' },
 };
 
 /* ---------- people and roles ---------- */

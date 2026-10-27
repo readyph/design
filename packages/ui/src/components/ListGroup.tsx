@@ -36,6 +36,7 @@ let warnedAuto = false;
 const headerHidden: Record<ListStackBelow, string> = {
   0: '',
   600: '@max-[600px]/list:hidden',
+  640: '@max-[640px]/list:hidden',
   760: '@max-[760px]/list:hidden',
   880: '@max-[880px]/list:hidden',
   sheet760: '@max-[760px]/sheet:hidden',
@@ -139,6 +140,10 @@ export interface ListGroupProps extends Omit<HTMLAttributes<HTMLDivElement>, 'ti
   onCollapsedChange?: (collapsed: boolean) => void;
   /** Shown instead of the list when the group has no rows. */
   empty?: ReactNode;
+  /** One quiet line under the title row ("Data Auto Works uses from your other platforms."). */
+  description?: ReactNode;
+  /** How `empty` looks: `ruled` (default, a ruled line of text), `box` (a dashed box) or `box-warn` (the same, in the warning colour). */
+  emptyVariant?: 'ruled' | 'box' | 'box-warn';
   /** Label for the list itself when the heading is not enough. Defaults to the title text via the group. */
   listLabel?: string;
   /** `ListRow`s. */
@@ -151,7 +156,7 @@ export interface ListGroupProps extends Omit<HTMLAttributes<HTMLDivElement>, 'ti
  * Use inside `ListGroups` (shared columns, shared cursor). Because the column header is its own grid, give shared columns fixed or fr widths, not `auto`, or header and rows drift apart. On its own it is a titled `List` with the same props.
  */
 export const ListGroup = forwardRef<HTMLDivElement, ListGroupProps>(function ListGroup(
-  { title, count, note, actions, level = 3, collapsible = false, collapsed, defaultCollapsed = false, onCollapsedChange, empty, listLabel, className, children, ...rest },
+  { title, count, note, actions, level = 3, collapsible = false, collapsed, defaultCollapsed = false, onCollapsedChange, empty, description, emptyVariant = 'ruled', listLabel, className, children, ...rest },
   ref,
 ) {
   const g = useContext(GroupsContext);
@@ -198,10 +203,17 @@ export const ListGroup = forwardRef<HTMLDivElement, ListGroupProps>(function Lis
             {actions}
           </div>
         ) : null}
+        {description ? <p className="m-0 basis-full text-[13px] leading-[18px] text-muted">{description}</p> : null}
       </div>
       <div id={bodyId} hidden={isCollapsed}>
         {isCollapsed ? null : empty0 ? (
-          empty ? <p className="m-0 border-t border-rule py-row-y text-ui text-muted">{empty}</p> : null
+          empty ? (
+            emptyVariant === 'ruled' ? (
+              <p className="m-0 border-t border-rule py-row-y text-ui text-muted">{empty}</p>
+            ) : (
+              <p className={cn('m-0 mt-2 rounded-card border border-dashed px-3.5 py-3 text-[13px] leading-[18px]', emptyVariant === 'box-warn' ? 'border-warn-dot text-warn' : 'border-control text-muted')}>{empty}</p>
+            )
+          ) : null
         ) : (
           <List
             as={g?.mode ?? 'list'}

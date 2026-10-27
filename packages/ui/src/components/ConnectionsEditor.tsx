@@ -98,6 +98,12 @@ export interface ConnectionsEditorProps extends Omit<HTMLAttributes<HTMLDivEleme
   ledaNote?: ReactNode;
   /** j / k / Enter for the rows. Default true; turn off when another list owns the page's shortcuts. */
   shortcuts?: boolean;
+  /** Quiet line under each group title. Without it the groups have none. */
+  groupDescriptions?: { reads?: ReactNode; shares?: ReactNode };
+  /** `box` draws the empty messages as dashed boxes (the warning colour for "Reads from" when `readsEmptyWarn`). Default `ruled`. */
+  emptyStyle?: 'ruled' | 'box';
+  /** With `emptyStyle="box"`: "Reads from" empty in the warning colour (the platform needs a source to start). */
+  readsEmptyWarn?: boolean;
   /** Names the dropdown for assistive tech. Default "Add a connection to {platformName}". */
   addLabel?: string;
 }
@@ -111,7 +117,7 @@ const wordsOf = (direction: ConnectionDirection, c: Connection) =>
   direction === 'reads' ? `Read ${lower(c.kind)} from ${c.platform.name}` : `Share ${lower(c.kind)} with ${c.platform.name}`;
 const andList = (xs: string[]) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`);
 
-const COLUMNS = 'minmax(0,1.25fr) minmax(0,1.5fr) minmax(0,1fr) 88px';
+const COLUMNS = '32px minmax(0,200fr) minmax(0,280fr) 168px auto';
 
 /** The Remove button of the row with this connection id (no selector escaping needed). */
 function removeOf(root: HTMLElement | null, id: string): HTMLElement | null {
@@ -158,6 +164,9 @@ export const ConnectionsEditor = forwardRef<HTMLDivElement, ConnectionsEditorPro
     ledaNote,
     shortcuts = true,
     addLabel,
+    groupDescriptions,
+    emptyStyle = 'ruled',
+    readsEmptyWarn = false,
     className,
     ...rest
   },
@@ -319,6 +328,7 @@ export const ConnectionsEditor = forwardRef<HTMLDivElement, ConnectionsEditorPro
     return (
       <ListRow
         key={c.id}
+        className="items-center"
         rowId={c.id}
         label={c.platform.name}
         flash={flashId === c.id}
@@ -330,10 +340,10 @@ export const ConnectionsEditor = forwardRef<HTMLDivElement, ConnectionsEditorPro
           if (!e.currentTarget.contains(e.relatedTarget as Node | null)) onHover?.(null, null);
         }}
       >
-        <ListCell kind="lead" className="flex items-start gap-3">
-          <PlatformLogo name={c.platform.name} src={c.platform.src} index={c.platform.index} color={c.platform.color} initials={c.platform.initials} size={32} decorative className="mt-0.5 shrink-0" />
+        <ListCell kind="lead" className="contents @max-[640px]/list:flex @max-[640px]/list:items-start @max-[640px]/list:gap-3">
+          <PlatformLogo name={c.platform.name} src={c.platform.src} index={c.platform.index} color={c.platform.color} initials={c.platform.initials} size={32} decorative className="shrink-0 @max-[640px]/list:mt-0.5" />
           <div className="min-w-0">
-            <p className="m-0 text-ui font-medium text-text">{c.platform.name}</p>
+            <p className="m-0 truncate text-ui font-medium text-text">{c.platform.name}</p>
             {c.platform.kind ? <p className="m-0 text-small text-muted">{c.platform.kind}</p> : null}
           </div>
         </ListCell>
@@ -342,7 +352,7 @@ export const ConnectionsEditor = forwardRef<HTMLDivElement, ConnectionsEditorPro
           <p className="m-0 text-small text-muted">{c.shares}</p>
         </ListCell>
         <ListCell>
-          <StatusDot status={STATUS_TONE[c.status]} label={words} className="items-start text-ui text-muted [&>span:first-child]:mt-[7px]" />
+          <StatusDot status={STATUS_TONE[c.status]} label={words} className={cn('items-center text-small', c.status === 'linked' ? 'text-ok' : c.status === 'pending' ? 'text-muted' : 'text-warn')} />
         </ListCell>
         <ListCell kind="actions">
           <Button
@@ -393,21 +403,21 @@ export const ConnectionsEditor = forwardRef<HTMLDivElement, ConnectionsEditorPro
         </div>
       ) : (
         <>
-          <ListGroups columns={COLUMNS} stackBelow={760} shortcuts={shortcuts}>
-            <ListGroup title="Reads from" level={3} count={reads.length} empty={readsNone}>
+          <ListGroups columns={COLUMNS} stackBelow={640} shortcuts={shortcuts}>
+            <ListGroup title="Reads from" level={3} count={reads.length || undefined} description={groupDescriptions?.reads} empty={readsNone} emptyVariant={emptyStyle === 'box' ? (readsEmptyWarn ? 'box-warn' : 'box') : 'ruled'}>
               {reads.map((c) => row(c, 'reads'))}
             </ListGroup>
             {multi ? (
-              <p className="m-0 flex items-start gap-2 border-t border-rule py-row-y text-ui text-muted">
-                <Info aria-hidden size={16} className="mt-0.5 shrink-0" />
+              <p className="m-0 mt-3 flex items-start gap-2 text-[13px] leading-[18px] text-muted">
+                <Info aria-hidden size={15} className="mt-px shrink-0" />
                 <span className="min-w-0">{multi}</span>
               </p>
             ) : null}
-            <ListGroup title="Shares with" level={3} count={shares.length} empty={sharesEmpty}>
+            <ListGroup title="Shares with" level={3} count={shares.length || undefined} description={groupDescriptions?.shares} empty={sharesEmpty} emptyVariant={emptyStyle === 'box' ? 'box' : 'ruled'}>
               {shares.map((c) => row(c, 'shares'))}
             </ListGroup>
           </ListGroups>
-          <div className="mt-6 border-t border-rule pt-4">
+          <div className="mt-[var(--group-y)]">
             {options.length ? (
               <div className="flex flex-wrap items-center gap-2">
                 <Select
@@ -426,7 +436,7 @@ export const ConnectionsEditor = forwardRef<HTMLDivElement, ConnectionsEditorPro
                 <span id={hintId} className="sr-only">Choose a connection first</span>
               </div>
             ) : (
-              <p className="m-0 text-ui text-muted">{reads.length + shares.length ? 'Everything it can connect to is connected.' : 'Nothing to connect to yet.'}</p>
+              reads.length + shares.length ? <p className="m-0 mt-6 text-[13px] text-muted">Everything it can connect to is connected.</p> : null
             )}
             {ledaNote ? <div className="mt-4">{ledaNote}</div> : null}
           </div>

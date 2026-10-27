@@ -287,7 +287,7 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
   const nameOf = (id: string) => details[id]?.label ?? platforms.find((x) => x.id === id)?.label ?? id;
   const connPlatform = (id: string): ConnectionPlatform => {
     const x = platforms.find((q) => q.id === id)!;
-    return { id, name: nameOf(id), kind: kinds[x.kind].name, index: x.index, src: details[id]?.logo };
+    return { id, name: nameOf(id), kind: kinds[x.kind].name, index: x.index, color: x.color as ConnectionPlatform['color'], initials: x.mono, src: details[id]?.logo ?? x.logo };
   };
   const toConn = (l: DataLink, dir: 'reads' | 'shares', otherId: string): Connection => ({
     id: `${dir}:${l.kind}:${otherId}`,
@@ -698,6 +698,27 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
         shares={shares}
         available={available}
         flashId={flashBlocked}
+        className="max-w-[760px]"
+        emptyStyle="box"
+        readsEmptyWarn={kind.reads.length > 0 && reads.length === 0}
+        groupDescriptions={{
+          reads: kind.reads.length ? `Data ${shortName(p)} uses from your other platforms.` : undefined,
+          shares: kind.provides.length ? `Platforms that read ${shortName(p)}'s data.` : undefined,
+        }}
+        readsEmpty={
+          !kind.reads.length
+            ? `${kind.name} doesn't read data from other platforms.`
+            : !available.some((o) => o.direction === 'reads')
+              ? `Nothing you have shares ${andList(kind.reads.map((k) => dataKinds[k].name.toLowerCase()))} yet.`
+              : `Nothing yet. ${shortName(p)} needs ${andList(kind.reads.map((k) => dataKinds[k].name.toLowerCase()))} from another platform to start. Add a connection below.`
+        }
+        sharesEmpty={
+          !kind.provides.length
+            ? `${kind.name} has no data to share.`
+            : available.some((o) => o.direction === 'shares')
+              ? `No one reads its ${andList(kind.provides.map((k) => dataKinds[k].name.toLowerCase()))} yet.`
+              : `No other kind of platform reads ${andList(kind.provides.map((k) => dataKinds[k].name.toLowerCase()))} yet.`
+        }
         shortcuts={false}
         sourceKinds={kind.reads.length ? platforms.filter((q) => kinds[q.kind].provides.some((k) => kind.reads.includes(k))).length ? undefined : ['Inventory'] : undefined}
         onHover={(c) => setHover(c ? [p.id, c.platform.id] : null)}
