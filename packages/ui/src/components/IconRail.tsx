@@ -6,8 +6,6 @@ import { ReadyMark, READY_SHINE_MS } from './ReadyMark';
 
 const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
 
-/** Focus ring for controls that sit on the frame colour (the ring gap is the frame, not the surface). */
-const frameRing = cn(focusRing, 'focus-visible:ring-offset-frame');
 
 /** Count text: counts above 99 read "99+". */
 export function formatCount(count: number): string {
@@ -152,7 +150,7 @@ export const IconRailMark = forwardRef<HTMLAnchorElement, IconRailMarkProps>(fun
       }}
       className={cn(
         'mb-3 grid size-9 shrink-0 place-items-center rounded-control transition-colors motion-reduce:transition-none hover:bg-frame-hover',
-        frameRing,
+        focusRing,
         className,
       )}
     >
@@ -174,7 +172,7 @@ export function IconRailFoot({ children, className }: { children: ReactNode; cla
   return (
     <div
       className={cn(
-        'flex shrink-0 [&>button]:transition-colors motion-reduce:[&>button]:transition-none [&>button:hover]:bg-frame-hover [&>button[data-state=open]]:bg-frame-active [&>button]:ring-offset-frame',
+        'flex shrink-0 [&>button]:transition-colors motion-reduce:[&>button]:transition-none [&>button:hover]:bg-frame-hover [&>button[data-state=open]]:bg-frame-active',
         className,
       )}
     >
@@ -222,7 +220,7 @@ export const IconRailItem = forwardRef<HTMLAnchorElement | HTMLButtonElement, Ic
   const classes = cn(
     itemClass,
     isCurrent ? 'bg-frame-active text-text' : 'text-muted hover:bg-frame-hover hover:text-text',
-    frameRing,
+    focusRing,
     className,
   );
   const inner = (

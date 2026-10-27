@@ -69,6 +69,13 @@ describe('Modal', () => {
     await userEvent.click(screen.getByText('Open'));
     expect(screen.getByLabelText('Name').parentElement?.getAttribute('tabindex')).toBe('0');
   });
+  it('body focus outline is drawn inside the dialog so overflow-hidden does not clip it', async () => {
+    render(<Demo />);
+    await userEvent.click(screen.getByText('Open'));
+    const cls = screen.getByLabelText('Name').parentElement?.className ?? '';
+    expect(cls).toContain('focus-visible:-outline-offset-2');
+    expect(cls).not.toContain('ring-inset');
+  });
   it('icon well uses raised surface and card radius, and holds the Leda mark', async () => {
     render(<Modal open title="Try it" iconNode={<LedaMark size={18} decorative />}>x</Modal>);
     const well = screen.getByRole('dialog').querySelector('span[aria-hidden]') as HTMLElement;

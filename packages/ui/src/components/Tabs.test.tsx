@@ -58,6 +58,17 @@ describe('Tabs', () => {
     expect(screen.getByText('Saved').className).toContain('text-muted');
   });
 
+  it('draws the workshop focus outline (2px, offset -2px) on vertical and fixed tabs, not an inset ring', () => {
+    for (const variant of ['vertical', 'fixed'] as const) {
+      render(<Tabs variant={variant} aria-label={variant} items={[{ value: 'a', label: 'A' }]} defaultValue="a" />);
+      const tab = screen.getByRole('tab');
+      expect(tab.className).toContain('focus-visible:-outline-offset-2');
+      expect(tab.className).toContain('focus-visible:outline-accent');
+      expect(tab.className).not.toContain('ring-inset');
+      cleanup();
+    }
+  });
+
   it('only sets aria-controls while the panel renders', () => {
     render(
       <Tabs items={items}>
