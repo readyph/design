@@ -764,7 +764,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
         onPick={(c: ChatChip) => ask(c.label)}
       />
       <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-        <h3 className="m-0 text-section text-text">Last 7 days</h3>
+        <h2 className="m-0 text-section text-text">Last 7 days</h2>
         <span className="text-ui leading-5 text-muted">{data.weekRange ?? 'Thu 15 – Wed 21 Oct'}</span>
       </div>
       <OverviewCharts

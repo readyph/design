@@ -4,9 +4,20 @@ import type { HomeSet } from './Home.data';
 import { logoAutoworks, logoCafe } from './Home.logos';
 
 const PESO = chartNumberFormat({ locale: 'en-PH', currency: 'PHP' });
-const PESOK = chartNumberFormat({ locale: 'en-PH', currency: 'PHP', compact: true });
+const PESOK = (v: number) => (v === 0 ? '0' : `₱${Math.round(v / 1000).toLocaleString('en-PH')}k`);
 
 export const fewLive = {
+ "owner": {
+  "name": "Bea Santos",
+  "short": "Bea",
+  "initials": "BS"
+ },
+ "suggestions": [
+  "Top sellers yesterday",
+  "Ilan ang orders kahapon?",
+  "Set oat milk reorder level to 24"
+ ],
+ "weekRange": "Thu 15 – Wed 21 Oct",
  "key": "few",
  "platforms": [
   {
@@ -534,6 +545,17 @@ export const fewLive = {
 } as unknown as HomeSet;
 
 export const fewQuiet = {
+ "owner": {
+  "name": "Bea Santos",
+  "short": "Bea",
+  "initials": "BS"
+ },
+ "suggestions": [
+  "Top sellers yesterday",
+  "Ilan ang orders kahapon?",
+  "Set oat milk reorder level to 24"
+ ],
+ "weekRange": "Thu 15 – Wed 21 Oct",
  "key": "few",
  "platforms": [
   {
@@ -951,6 +973,18 @@ export const fewQuiet = {
 } as unknown as HomeSet;
 
 export const manyLive = {
+ "owner": {
+  "name": "Ramon Dela Cruz",
+  "short": "Mon",
+  "initials": "RD"
+ },
+ "suggestions": [
+  "How did each branch do this week?",
+  "Top sellers yesterday",
+  "Raise oil filter reorder level to 30",
+  "Set oat milk reorder level to 24"
+ ],
+ "weekRange": "Thu 15 – Wed 21 Oct",
  "key": "many",
  "platforms": [
   {
@@ -2266,6 +2300,18 @@ export const manyLive = {
 } as unknown as HomeSet;
 
 export const manyQuiet = {
+ "owner": {
+  "name": "Ramon Dela Cruz",
+  "short": "Mon",
+  "initials": "RD"
+ },
+ "suggestions": [
+  "How did each branch do this week?",
+  "Top sellers yesterday",
+  "Raise oil filter reorder level to 30",
+  "Set oat milk reorder level to 24"
+ ],
+ "weekRange": "Thu 15 – Wed 21 Oct",
  "key": "many",
  "platforms": [
   {
@@ -3185,6 +3231,17 @@ export const manyQuiet = {
 } as unknown as HomeSet;
 
 export const duoLive = {
+ "owner": {
+  "name": "Ramon Dela Cruz",
+  "short": "Mon",
+  "initials": "RD"
+ },
+ "suggestions": [
+  "How did the shop do this week?",
+  "Anong parts ang pinakamaraming nagamit kahapon?",
+  "Raise oil filter reorder level to 30"
+ ],
+ "weekRange": "Thu 15 – Wed 21 Oct",
  "key": "live",
  "platforms": [
   {
@@ -3912,6 +3969,17 @@ export const duoLive = {
 } as unknown as HomeSet;
 
 export const duoQuiet = {
+ "owner": {
+  "name": "Ramon Dela Cruz",
+  "short": "Mon",
+  "initials": "RD"
+ },
+ "suggestions": [
+  "How did the shop do this week?",
+  "Anong parts ang pinakamaraming nagamit kahapon?",
+  "Raise oil filter reorder level to 30"
+ ],
+ "weekRange": "Thu 15 – Wed 21 Oct",
  "key": "live",
  "platforms": [
   {

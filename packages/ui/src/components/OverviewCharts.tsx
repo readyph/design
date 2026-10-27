@@ -440,7 +440,7 @@ export const OverviewCharts = forwardRef<HTMLDivElement, OverviewChartsProps>(fu
       <div ref={setRefs} role="region" aria-label={ariaLabel} className={cn('relative block w-full min-w-0 max-w-full', className)}>
         <span ref={probe} aria-hidden className="pointer-events-none invisible absolute left-0 top-0 h-0 w-4" />
         {many ? (
-          <div className="mt-3 flex flex-col">
+          <div className="-mt-1 flex flex-col">
             {platforms.map((p) => <HomeBlock key={p.id} p={p} layout={stacked ? 'stack-row' : 'row'} locale={locale} />)}
           </div>
         ) : (
