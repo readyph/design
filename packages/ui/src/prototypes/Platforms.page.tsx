@@ -1,8 +1,9 @@
-import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { ArrowRight, ArrowSquareOut, DotsThree, LinkBreak, PencilSimple, Plugs, Plus, PlusSquare, SquaresFour, Warning, WarningCircle } from '@phosphor-icons/react';
+import { useCallback, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { ArrowCounterClockwise, ArrowRight, ArrowSquareOut, CircleNotch, DotsThree, Graph, House, LinkBreak, PencilSimple, Plant, Plugs, Plus, PlusSquare, Prohibit, SquaresFour, Table, Warning, WarningCircle } from '@phosphor-icons/react';
 import { AskLedaBar } from '../components/AskLedaBar';
 import { Breadcrumbs } from '../components/Breadcrumbs';
 import { Button } from '../components/Button';
+import { Chat, ChatComposer, ChatEmpty, ChatHeader, ChatMessage, ChatThread, usePersistedChat, type ChatBlock, type ChatChip, type ChatMessageData } from '../components/Chat';
 import { CommandPalette, type CommandPaletteGroup } from '../components/CommandPalette';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { IconButton } from '../components/IconButton';
@@ -22,7 +23,7 @@ import { Toaster } from '../components/toast/Toaster';
 import { toast } from '../components/toast/toastStore';
 import { cn } from '../utils/cn';
 import { PortalFrame } from './PortalFrame';
-import { go } from './protoNav';
+import { go, goToStory } from './protoNav';
 import { focusIfLost } from '../utils/focusIfLost';
 import { useMatchMedia } from '../utils/useMatchMedia';
 import {
@@ -43,6 +44,7 @@ import {
   LAST_LOADED,
   lower,
   missing,
+  NOW,
   noFigures,
   OWNER,
   ordered,
@@ -113,7 +115,7 @@ const nav = (to: Parameters<typeof go>[0]) => (e: { preventDefault: () => void }
 function RowMenu({ p, onDisconnect }: { p: PlatformData; onDisconnect: (p: PlatformData) => void }) {
   return (
     <Menu
-      trigger={<IconButton icon={DotsThree} label={`More for ${p.name}`} />}
+      trigger={<IconButton icon={DotsThree} label={`More for ${p.name}`} className="size-[30px] text-muted max-[640px]:size-10" />}
       items={[
         { label: 'Edit details', icon: PencilSimple, onSelect: () => go({ to: 'platform', id: p.id, tab: 'general' }) },
         { label: 'Connect data', icon: Plugs, onSelect: () => go({ to: 'platform', id: p.id, tab: 'connections' }) },
@@ -155,12 +157,13 @@ function LinkLines({ set, p }: { set: PlatformSet; p: PlatformData }) {
   const by: Partial<Record<DataKind, string[]>> = {};
   sharesOf(set, p.id).forEach((l) => (by[l.kind] ??= []).push(l.to));
   const li = 'flex flex-wrap items-center gap-x-1.5 text-[13px] leading-5';
+  const B = ({ children }: { children: ReactNode }) => <b className="font-bold">{children}</b>;
   const lines: ReactNode[] = reads.map((k) => {
     const from = sourcesOf(set, p.id, k).map((s) => s.from);
     return from.length ? (
       <li key={`r-${k}`} className={li}>
         <V>Reads</V>
-        <b className="font-medium">{kname(k)}</b>
+        <B>{kname(k)}</B>
         <V>from</V>
         <Chips set={set} ids={from} />
       </li>
@@ -175,7 +178,7 @@ function LinkLines({ set, p }: { set: PlatformSet; p: PlatformData }) {
     lines.push(
       <li key={`s-${k}`} className={li}>
         <V>Shares</V>
-        <b className="font-medium">{kname(k)}</b>
+        <B>{kname(k)}</B>
         <V>with</V>
         <Chips set={set} ids={by[k]!} />
       </li>,
@@ -241,6 +244,7 @@ function PlatformList({ set, onFocusPlatform, onAdd, onDisconnect }: ListProps) 
       as="table"
       aria-label="All platforms"
       columns={COLUMNS}
+      stackBelow="sheet760"
       cursorId={cursor}
       onCursorChange={(id) => {
         setCursor(id);
@@ -260,7 +264,7 @@ function PlatformList({ set, onFocusPlatform, onAdd, onDisconnect }: ListProps) 
             onMouseEnter={() => onFocusPlatform([p.id])}
             onMouseLeave={() => onFocusPlatform(null)}
           >
-            <ListCell kind="lead" className="flex items-start gap-3">
+            <ListCell kind="lead" className="flex items-start gap-3 [overflow-wrap:normal]">
               <Logo p={p} size={32} className="mt-0.5" />
               <div className="flex min-w-0 flex-col">
                 <a
@@ -277,8 +281,8 @@ function PlatformList({ set, onFocusPlatform, onAdd, onDisconnect }: ListProps) 
                 <Hl h={h} className="mt-2" />
               </div>
             </ListCell>
-            <ListCell>
-              <ul className="m-0 list-none p-0">
+            <ListCell className="[overflow-wrap:normal]">
+              <ul className="m-0 list-none p-0 @max-[760px]/sheet:flex @max-[760px]/sheet:flex-wrap @max-[760px]/sheet:gap-x-3.5">
                 {p.kpis.length ? (
                   p.kpis.map(([v, l], i) => (
                     <li key={l} className={cn('text-[13px] leading-5', i > 0 && 'mt-1')}>
@@ -290,10 +294,10 @@ function PlatformList({ set, onFocusPlatform, onAdd, onDisconnect }: ListProps) 
                 )}
               </ul>
             </ListCell>
-            <ListCell>
+            <ListCell className="[overflow-wrap:normal]">
               <LinkLines set={set} p={p} />
             </ListCell>
-            <ListCell kind="actions">
+            <ListCell kind="actions" className="[overflow-wrap:normal]">
               {setupNeeded(set, p) ? (
                 <Button variant="primary" className="h-[30px] px-2.5 max-[640px]:h-9" onClick={() => go({ to: 'platform', id: p.id, tab: 'connections' })}>
                   Finish setup
@@ -303,7 +307,7 @@ function PlatformList({ set, onFocusPlatform, onAdd, onDisconnect }: ListProps) 
                   Open
                 </Button>
               ) : (
-                <span className="whitespace-nowrap px-1.5 text-small text-muted">No app yet</span>
+                <span className="whitespace-nowrap px-1.5 text-small leading-5 text-muted">No app yet</span>
               )}
               <RowMenu p={p} onDisconnect={onDisconnect} />
             </ListCell>
@@ -332,11 +336,11 @@ function LoadingList() {
       <p role="status" className="sr-only">
         Loading your platforms
       </p>
-      <List as="table" aria-hidden="true" columns={COLUMNS} shortcuts={false} className="mt-5">
+      <List as="table" aria-hidden="true" columns={COLUMNS} stackBelow="sheet760" shortcuts={false} className="mt-5">
         {header}
         {[0, 1].map((i) => (
           <ListRow key={i}>
-            <ListCell kind="lead" className="flex items-start gap-3">
+            <ListCell kind="lead" className="flex items-start gap-3 [overflow-wrap:normal]">
               <Skeleton variant="rect" className="size-8 shrink-0" />
               <div className="min-w-0 flex-1">
                 {sk('mt-[3px] h-[15px] w-[70%]')}
@@ -622,6 +626,87 @@ function LinkRow({ set, l, first, onFocusPlatform }: { set: PlatformSet; l: Data
   );
 }
 
+/* ---------- Leda: read-only answers about platforms (platforms-core.js ledaAsks / ledaCommands / ledaReply) ---------- */
+
+const ADD_CMD = 'Add a POS for the parts counter';
+const asks = (set: PlatformSet) => [
+  {
+    q: 'What shares data with what?',
+    run: () => {
+      const need = set.platforms.filter((p) => setupNeeded(set, p));
+      const idle = idleList(set);
+      const note = set.links.length
+        ? [need.length ? `${andList(need.map((p) => p.name))} still ${need.length === 1 ? 'needs' : 'need'} a source.` : '', idle.length ? `Not shared yet: ${andList(idle.slice(0, 2).map((x) => `${lower(kname(x.kind))} from ${x.platform.name}`))}.` : '']
+            .filter(Boolean)
+            .join(' ') || `${plural(set.links.length, 'data link')}, all in use.`
+        : null;
+      return {
+        caption: 'Data links',
+        columns: ['From', 'Shares', 'To'],
+        rows: set.links.map((l) => [byId(set, l.from).name, kname(l.kind), byId(set, l.to).name]),
+        empty: 'No data links yet.',
+        note,
+        next: ['Is everything running?'],
+      };
+    },
+  },
+  {
+    q: 'Is everything running?',
+    run: () => ({
+      caption: 'Platform status',
+      columns: ['Platform', 'Status', 'Last synced'],
+      rows: ordered(set).map((p) => [p.name, health(set, p).text, '—']),
+      empty: 'No platforms yet.',
+      note: set.platforms.length ? healthLine(set) : null,
+      next: ['What shares data with what?'],
+    }),
+  },
+];
+const commands = (set: PlatformSet) => {
+  const src = set.platforms.find((p) => sharesOf(set, p.id).length) ?? set.platforms[0];
+  return [
+    { q: ADD_CMD, meta: 'opens Add a platform, you confirm', refusal: false as boolean, pid: '' },
+    ...(src ? [{ q: `Disconnect ${src.name}`, meta: "Leda can't change platforms", refusal: true as boolean, pid: src.id }] : []),
+  ];
+};
+const suggestions = (set: PlatformSet) => [...asks(set).map((x) => x.q), ...commands(set).map((x) => x.q)];
+const matchQ = <T extends { q: string }>(list: T[], q: string) => {
+  const t = q.toLowerCase().trim();
+  return list.find((x) => x.q.toLowerCase() === t) ?? (t.length > 4 ? list.find((x) => x.q.toLowerCase().includes(t)) : undefined) ?? null;
+};
+const chipsOf = (qs: string[]): ChatChip[] => qs.map((q) => ({ id: q, label: q }));
+
+/** Leda's reply to `q` as chat blocks, and what to do once it has streamed in. */
+function ledaReply(set: PlatformSet, q: string): { blocks: ChatBlock[]; after?: 'add' } {
+  const a = matchQ(asks(set), q);
+  const c = a ? null : matchQ(commands(set), q);
+  if (c?.refusal) {
+    const p = byId(set, c.pid);
+    return {
+      blocks: [
+        { type: 'refusal', text: "I can't add, rename or disconnect platforms, or change data links. You can, on the platform's page.", actions: p ? [{ id: 'go', label: `Go to ${p.name}`, href: `#${p.id}` }] : undefined },
+      ],
+    };
+  }
+  if (c) return { blocks: [{ type: 'text', text: "I've opened Add a platform with a POS for the parts counter filled in. Check the name, then add it there. I can't add it for you.", stream: true }], after: 'add' };
+  if (!a) {
+    return { blocks: [{ type: 'text', text: "Sorry, I can't answer that in this prototype.", stream: true }, { type: 'text', text: 'These ones work here:' }, { type: 'chips', chips: chipsOf(suggestions(set)) }] };
+  }
+  const r = a.run();
+  const blocks: ChatBlock[] = [];
+  if (r.note) blocks.push({ type: 'text', text: r.note, stream: true });
+  blocks.push(
+    r.rows.length
+      ? { type: 'table', caption: r.caption, columns: r.columns.map((label, i) => ({ key: String(i), label })), rows: r.rows.map((row) => Object.fromEntries(row.map((v, i) => [String(i), v]))) }
+      : { type: 'text', text: r.empty },
+  );
+  blocks.push({ type: 'meta', text: 'Read from Platforms' });
+  if (r.next.length) blocks.push({ type: 'chips', chips: chipsOf(r.next) });
+  return { blocks };
+}
+
+let seq = 100;
+
 /** The Portal Platforms page (RDY-256, exact copy RDY-360) in the real PlatformShell. */
 export function PlatformsPage({ set: setKey = 'duo', state: initial = 'live', add = null }: PlatformsPageProps) {
   const [work, setWork] = useState<PlatformSet>(() => structuredClone(sets[setKey]));
@@ -632,6 +717,12 @@ export function PlatformsPage({ set: setKey = 'duo', state: initial = 'live', ad
   const [palette, setPalette] = useState(false);
   const [disconnecting, setDisconnectingState] = useState<PlatformData | null>(null);
   const [blocked, setBlocked] = useState<PlatformData | null>(null);
+  const [chat, setChat] = useState(false);
+  const [messages, setMessages] = usePersistedChat<ChatMessageData[]>([]);
+  const [text, setText] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [query, setQuery] = useState('');
+  const opener = useRef<HTMLElement | null>(null);
   const lastDisconnect = useRef('');
   const setDisconnecting = (p: PlatformData | null) => {
     if (p) lastDisconnect.current = p.name;
@@ -654,6 +745,36 @@ export function PlatformsPage({ set: setKey = 'duo', state: initial = 'live', ad
     if (state === 'error') return void toast({ description: "Your platforms didn't load. Try again first." });
     setMarket({ pick: pick ?? null, fromLeda: false });
   };
+  const openChat = () => {
+    opener.current = document.activeElement as HTMLElement | null;
+    setPalette(false);
+    setChat(true);
+  };
+  const send = useCallback(
+    (q: string) => {
+      if (busy) return;
+      const id = `m${++seq}`;
+      setText('');
+      setBusy(true);
+      setMessages((m) => [
+        ...m,
+        { id, from: 'owner', name: OWNER.name, time: NOW, scope: 'About your platforms', blocks: [{ type: 'text', text: q }] },
+        { id: `${id}l`, from: 'leda', name: 'Leda', time: NOW, thinking: true, blocks: [] },
+      ]);
+      window.setTimeout(() => {
+        const r = ledaReply(set, q);
+        setMessages((m) => m.map((x) => (x.id === `${id}l` ? { ...x, thinking: false, blocks: r.blocks } : x)));
+        setBusy(false);
+        if (r.after === 'add') window.setTimeout(() => setMarket({ pick: 'pos', fromLeda: true }), 900);
+      }, 1000);
+    },
+    [busy, set, setMessages],
+  );
+  const ask = (q: string) => {
+    if (!q.trim()) return;
+    openChat();
+    send(q);
+  };
   const live = state === 'live';
   const empty = live && set.platforms.length === 0;
   const retry = () => {
@@ -670,7 +791,7 @@ export function PlatformsPage({ set: setKey = 'duo', state: initial = 'live', ad
 
   const sheetHead = (title: string, sub: ReactNode, btn: boolean) => (
     <div className="flex items-start gap-4 max-[640px]:flex-col max-[640px]:gap-2.5">
-      <div className="min-w-0">
+      <div>
         <h2 ref={heading} tabIndex={-1} className="m-0 text-case text-text [outline-style:none] max-[640px]:text-header">
           {title}
         </h2>
@@ -727,36 +848,43 @@ export function PlatformsPage({ set: setKey = 'duo', state: initial = 'live', ad
     return { id: p.id, name: p.short, initials: p.mono, color: p.color, logoSrc: p.logo, health: h.st === 'ACTIVE' ? 'ok' : h.st === 'OFFLINE' ? 'bad' : h.st === 'NEW' ? 'accent' : 'warn', healthText: h.st === 'ACTIVE' ? undefined : h.word, href: href(p.id) };
   });
 
+  const askBar = <AskLedaBar variant="bar" scope="your platforms" paused={palette || chat} onOpen={() => { opener.current = document.activeElement as HTMLElement | null; setPalette(true); }} />;
+  const cmds = commands(set);
+  const noTouch = typeof window === 'undefined' || !window.matchMedia?.('(hover: none)').matches;
   const paletteGroups: CommandPaletteGroup[] = [
-    {
-      id: 'ask',
-      label: 'Ask Leda',
-      items: [
-        { id: 'q-shares', label: 'What shares data with what?', leda: true },
-        { id: 'q-running', label: 'Is everything running?', leda: true },
-      ],
-    },
+    { id: 'ask', label: 'Ask Leda', items: asks(set).map((x) => ({ id: `q:${x.q}`, label: x.q, icon: Table })) },
     {
       id: 'do',
       label: 'Tell Leda to do',
-      items: [
-        { id: 'add-pos', label: 'Add a POS for the parts counter', leda: true, meta: 'opens Add a platform, you confirm' },
-        ...(set.platforms[0] ? [{ id: 'no-disconnect', label: `Disconnect ${(set.platforms.find((p) => sharesOf(set, p.id).length) ?? set.platforms[0]).name}`, leda: true, meta: "Leda can't change platforms" }] : []),
-      ],
+      items: cmds.map((c) => ({ id: `q:${c.q}`, label: c.q, icon: c.refusal ? Prohibit : PencilSimple, meta: c.meta, keepOpen: false })),
     },
     {
       id: 'go',
       label: 'Go to',
       items: [
-        { id: 'all', label: 'All platforms', meta: plural(set.platforms.length, 'platform') },
-        ...set.platforms.map((p) => ({ id: p.id, label: p.name, leading: <Logo p={p} />, meta: `${kindName(p.kind)} · ${health(set, p).text}` })),
-        { id: 'add', label: 'Add a platform', meta: `${addableKinds().length} kinds` },
-        { id: 'home', label: 'Home', meta: 'Needs you' },
+        { id: 'all', label: 'All platforms', icon: SquaresFour, meta: plural(set.platforms.length, 'platform') },
+        ...set.platforms.map((p) => ({ id: p.id, label: p.name, icon: catalogItem(p.kind).icon, meta: `${kindName(p.kind)} · ${health(set, p).text}` })),
+        { id: 'add', label: 'Add a platform', icon: PlusSquare, meta: `${addableKinds().length} kinds` },
+        { id: 'home', label: 'Home', icon: House, meta: 'Needs you' },
       ],
     },
+    ...(phone || !noTouch
+      ? []
+      : [
+          {
+            id: 'states',
+            label: 'Prototype states',
+            items: [
+              { id: 's:prototypes-platforms--loading', label: 'Loading', icon: CircleNotch },
+              { id: 's:prototypes-platforms--error-state', label: "Platforms don't load", icon: WarningCircle },
+              { id: 's:prototypes-platforms--empty', label: 'No platforms yet', icon: Plant },
+              { id: 's:prototypes-platforms--many', label: '8 platforms (scale test)', icon: SquaresFour },
+              { id: 's:prototypes-platforms--default', label: 'Start over (forget changes)', icon: ArrowCounterClockwise },
+            ],
+          },
+        ]),
   ];
 
-  const ask = <AskLedaBar variant="bar" scope="your platforms" paused={palette} onOpen={() => setPalette(true)} />;
   const owned = (key: string) => set.platforms.filter((p) => p.kind === key).length;
 
   return (
@@ -773,7 +901,7 @@ export function PlatformsPage({ set: setKey = 'duo', state: initial = 'live', ad
         account={{ name: OWNER.name, email: 'mon@delacruz.ph', role: OWNER.role, initials: OWNER.initials }}
         place={<Place set={set} state={state} phone={phone} focusIds={focusIds} onFocusPlatform={setFocusIds} onAdd={addPlatform} onRetry={retry} onAsk={() => setPalette(true)} />}
         sheetBar={
-          <SheetBar actions={ask}>
+          <SheetBar actions={askBar} wrapChildren={false}>
             <Breadcrumbs variant="where" items={[{ label: 'All platforms', icon: SquaresFour }]} />
           </SheetBar>
         }
@@ -808,16 +936,39 @@ export function PlatformsPage({ set: setKey = 'duo', state: initial = 'live', ad
         open={palette}
         onOpenChange={setPalette}
         groups={paletteGroups}
-        onAsk={() => toast({ description: 'Leda is answering in the conversation panel.', leda: true })}
+        placeholder="Ask Leda about your platforms"
+        onAsk={ask}
+        query={query}
+        onQueryChange={setQuery}
+        conversationMessages={messages.length}
+        onOpenConversation={openChat}
+        returnFocusRef={opener}
         onSelect={(item) => {
-          if (item.id === 'add-pos') setMarket({ pick: 'pos', fromLeda: true });
+          if (item.id.startsWith('q:')) ask(item.id.slice(2));
+          else if (item.id.startsWith('s:')) goToStory(item.id.slice(2));
           else if (item.id === 'add') addPlatform();
           else if (item.id === 'home') go({ to: 'home' });
-          else if (item.id === 'all') setPalette(false);
-          else if (item.id.startsWith('q-') || item.id === 'no-disconnect') toast({ description: 'Leda is answering in the conversation panel.', leda: true });
+          else if (item.id === 'all') go({ to: 'platforms' });
           else go({ to: 'platform', id: item.id });
         }}
       />
+      {chat && (
+        <Chat onClose={() => setChat(false)} returnFocusTo={opener}>
+          <ChatHeader busy={busy} empty={messages.length === 0} onNewConversation={() => setMessages([])} onClose={() => setChat(false)} />
+          {messages.length === 0 ? (
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              <ChatEmpty scope="your platforms" chips={chipsOf(suggestions(set))} onPick={(c) => send(c.label)} />
+            </div>
+          ) : (
+            <ChatThread>
+              {messages.map((m) => (
+                <ChatMessage key={m.id} message={m} onChip={(c) => send(c.label)} onAction={(a) => { if (a.href) go(a.href === '#home' ? { to: 'home' } : { to: 'platform', id: a.href.replace(/^#/, ''), tab: 'general' }); }} />
+              ))}
+            </ChatThread>
+          )}
+          <ChatComposer value={text} onChange={setText} onSend={send} busy={busy} scope="About your platforms" />
+        </Chat>
+      )}
       <Marketplace
         open={!!market}
         onOpenChange={(o) => !o && setMarket(null)}
@@ -867,19 +1018,25 @@ function BlockedDisconnect({ set, p, onClose }: { set: PlatformSet; p: PlatformD
   const who = [...new Set(sh.map((l) => byId(set, l.to).name))];
   const what = [...new Set(sh.map((l) => kname(l.kind)))];
   return (
-    <Modal open={!!p} onOpenChange={(o) => !o && onClose()} title={p ? <span className="inline-flex items-center gap-2"><Logo p={p} size={20} />{p.name} still shares data</span> : ''} footer={null}>
+    <Modal open={!!p} onOpenChange={(o) => !o && onClose()} size="confirm" hideClose className="w-[min(440px,calc(100vw-32px))]">
       {p && (
-        <>
-          <p className="m-0 text-body">
-            <b className="font-semibold">{andList(who)}</b> {who.length === 1 ? 'reads' : 'read'} its {lower(andList(what))}. Remove {sh.length === 1 ? 'that link' : 'those links'} first, then disconnect it.
+        <div className="px-[22px] py-5">
+          <Modal.Header className="border-b-0 p-0" titleClassName="flex items-center gap-2.5 text-[16px] font-semibold leading-[22px]">
+            <Logo p={p} size={20} />
+            {p.name} still shares data
+          </Modal.Header>
+          <p className="m-0 mt-2 text-body text-muted">
+            <b className="font-medium text-text">{andList(who)}</b> {who.length === 1 ? 'reads' : 'read'} its {lower(andList(what))}. Remove {sh.length === 1 ? 'that link' : 'those links'} first, then disconnect it.
           </p>
-          <div className="mt-4 flex justify-end gap-2">
-            <Button variant="secondary" onClick={onClose}>
+          <div className="mt-5 flex flex-wrap justify-end gap-2">
+            <Button variant="secondary" actionBar className="max-[640px]:flex-auto" onClick={onClose}>
               Close
             </Button>
             <Button
               variant="primary"
-              leftIcon={Plugs}
+              leftIcon={Graph}
+              actionBar
+              className="max-[640px]:flex-auto"
               onClick={() => {
                 onClose();
                 go({ to: 'platform', id: sh[0].from, tab: 'connections' });
@@ -888,7 +1045,7 @@ function BlockedDisconnect({ set, p, onClose }: { set: PlatformSet; p: PlatformD
               View connections
             </Button>
           </div>
-        </>
+        </div>
       )}
     </Modal>
   );

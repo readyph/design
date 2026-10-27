@@ -112,7 +112,7 @@ const VARIANT = {
   bar: {
     outer: 'inline-flex w-auto max-w-full shrink-0 basis-auto',
     wrap: 'w-leda-w shrink-0 max-[640px]:w-[var(--ctl-touch)]',
-    bar: 'h-[var(--ctl-leda-bar)] max-[640px]:h-[var(--ctl-touch)] max-[640px]:justify-center max-[640px]:px-0',
+    bar: 'h-[var(--ctl-leda-bar)] gap-2.5 pl-2.5 pr-1.5 leading-5 max-[640px]:h-[var(--ctl-touch)] max-[640px]:justify-center max-[640px]:px-0',
     mark: 20,
   },
   overview: {
@@ -188,7 +188,7 @@ export const AskLedaBar = forwardRef<HTMLButtonElement, AskLedaBarProps>(functio
           <LedaMark key={pass} size={v.mark} effect="scan" active={scan} once decorative className={cn(variant === 'bar' && 'max-[640px]:h-6 max-[640px]:w-6')} />
         </span>
         <span className={cn('min-w-0 flex-1 truncate text-muted', variant === 'bar' && 'max-[640px]:hidden')} aria-hidden="true">{placeholder}</span>
-        <kbd aria-hidden="true" className={cn('shrink-0 rounded-[3px] border border-border px-1 font-sans text-tiny text-muted max-[640px]:hidden')}>{kbd}</kbd>
+        <kbd aria-hidden="true" className={cn('inline-block min-w-[18px] shrink-0 rounded-[3px] bg-raised-2 px-1 text-center font-sans text-tiny text-text max-[640px]:hidden')}>{kbd}</kbd>
       </button>
       {halo && (
         <span key={`r${pass}`} aria-hidden="true" data-halo="ring" className={cn('pointer-events-none absolute -inset-px z-[2] overflow-hidden rounded-control p-[2px] [mask-image:linear-gradient(#000_0_0),linear-gradient(#000_0_0)] [mask-clip:content-box,border-box] [mask-composite:exclude] dark:p-[1.5px] animate-halo-fade motion-reduce:animate-halo-fade-reduced ', variant !== 'field' && 'max-[640px]:hidden')}>

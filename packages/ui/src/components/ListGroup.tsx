@@ -37,6 +37,7 @@ const headerHidden: Record<ListStackBelow, string> = {
   600: '@max-[600px]/list:hidden',
   760: '@max-[760px]/list:hidden',
   880: '@max-[880px]/list:hidden',
+  sheet760: '@max-[760px]/sheet:hidden',
 };
 
 export interface ListGroupsProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onChange'> {

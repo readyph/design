@@ -101,8 +101,10 @@ const item =
 const interactive =
   'cursor-pointer hover:bg-frame-hover hover:text-text aria-pressed:bg-frame-active aria-[current=true]:bg-frame-active ' +
   'outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-frame forced-colors:outline-0 forced-colors:focus-visible:outline forced-colors:focus-visible:outline-2 forced-colors:focus-visible:outline-[Highlight]';
-const dropUpdated = '@max-[960px]/status:hidden';
-const dropPlan = '@max-[780px]/status:hidden';
+const dropUpdated = 'max-[1180px]:hidden';
+const dropPlan = 'max-[1180px]:hidden';
+/** The prototype's `hide-tab`: summary text and "7 days left" go at 960px and below. */
+const dropTab = 'max-[960px]:hidden';
 const dropInviteWord = '@max-[780px]/status:hidden';
 
 interface ItemProps {
@@ -191,7 +193,7 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
           <span className="tabular-nums">
             {leda.used.toLocaleString('en-US')} / {leda.max.toLocaleString('en-US')}
           </span>
-          {leda.daysLeft !== undefined && <span className={cn('tabular-nums', dropUpdated)}>{leda.daysLeft} days left</span>}
+          {leda.daysLeft !== undefined && <span className={cn('tabular-nums', dropTab)}>{leda.daysLeft} days left</span>}
         </Item>
       ) });
   };
@@ -204,7 +206,7 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
         <ul role="list" aria-label="Platforms" className="flex min-w-0 items-center gap-0.5 overflow-hidden">
           {summary ? (
             <li className="flex shrink-0">
-              <Item className={dropUpdated}>{summary}</Item>
+              <Item className={dropTab}>{summary}</Item>
             </li>
           ) : null}
           {shown.map((p, i) => {
@@ -222,12 +224,12 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
                   <PlatformLogo name={p.name} src={p.logoSrc} color={p.color} initials={p.initials} index={i + 1} decorative />
                   {bad ? (
                     <>
+                      <b className={cn('max-w-[16ch] truncate text-ui font-medium text-text', !namesAlways && 'max-[1180px]:hidden')}>{p.name}</b>
                       <span className={cn('size-[7px] shrink-0 rounded-full', dot[p.health!])} aria-hidden="true" />
-                      <span className="max-w-[16ch] truncate text-text">{p.name}</span>
                       <span>{words(p)}</span>
                     </>
                   ) : (
-                    namesAlways && <span className="max-w-[16ch] truncate">{p.name}</span>
+                    namesAlways && <b className="max-w-[16ch] truncate text-ui font-medium text-text">{p.name}</b>
                   )}
                 </Item>
               </li>

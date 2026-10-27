@@ -440,7 +440,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
                       sel && 'z-[3] shadow-[inset_0_0_0_1px_var(--accent)] forced-colors:border-[Highlight] forced-colors:border-2',
                       p.hq && 'border-dashed',
                       loading && 'cursor-default',
-                      'max-[640px]:px-1.5 max-[640px]:py-[3px]',
+                      '@max-[400px]/town:px-1.5 @max-[400px]/town:py-[3px] max-[640px]:px-1.5 max-[640px]:py-[3px]',
                     )}
                   >
                     <span className="flex items-center gap-[5px]">
@@ -457,7 +457,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
                       <span className={cn('max-w-[120px] truncate text-ui font-medium leading-4', dim ? 'text-muted' : 'text-text', many ? 'inline' : 'hidden @max-[400px]/town:inline')}>
                         {p.hq ? 'HQ' : short}
                       </span>
-                      {alert && !sel ? <StatusMark status={p.status} error={p.error} filled={!!p.sub} className="hidden @max-[400px]/town:inline-block" /> : null}
+                      {alert && !sel ? <StatusMark status={p.status} error={p.error} filled={!!p.sub} className="hidden @max-[400px]/town:inline-block max-[640px]:inline-block" /> : null}
                       {n ? (
                         <span className="ml-0.5 h-4 min-w-4 rounded-chip bg-text px-1 text-center text-tiny font-medium tabular-nums text-surface forced-colors:border forced-colors:border-[CanvasText]">
                           {n}
@@ -472,8 +472,8 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
                           sel
                             ? 'flex'
                             : alert || p.subAlways
-                              ? 'flex @max-[400px]/town:hidden'
-                              : 'hidden group-hover/lbl:flex group-focus-visible/lbl:flex @max-[400px]/town:hidden @max-[400px]/town:group-hover/lbl:hidden @max-[400px]/town:group-focus-visible/lbl:hidden',
+                              ? 'flex @max-[400px]/town:hidden max-[640px]:hidden'
+                              : 'hidden group-hover/lbl:flex group-focus-visible/lbl:flex @max-[400px]/town:hidden @max-[400px]/town:group-hover/lbl:hidden @max-[400px]/town:group-focus-visible/lbl:hidden max-[640px]:hidden max-[640px]:group-hover/lbl:hidden max-[640px]:group-focus-visible/lbl:hidden',
                         )}
                       >
                         {loading ? (

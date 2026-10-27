@@ -47,7 +47,7 @@ const sizes: Record<ModalSize, string> = {
   sm: 'max-w-sm max-h-[calc(100vh-48px)]',
   md: 'max-w-md max-h-[calc(100vh-48px)]',
   lg: 'max-w-lg max-h-[calc(100vh-48px)]',
-  confirm: 'w-[min(420px,calc(100vw-48px))] max-h-[calc(100vh-48px)]',
+  confirm: 'w-[min(420px,calc(100vw-32px))] max-h-[calc(100vh-48px)]',
   panel: 'h-[min(640px,calc(100vh-48px))] w-[min(720px,calc(100vw-48px))]',
   marketplace: 'h-[min(744px,calc(100vh-48px))] w-[min(904px,calc(100vw-48px))]',
 };

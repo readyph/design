@@ -105,7 +105,7 @@ export interface IconRailMarkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorE
   label?: string;
 }
 
-/** The ReadyPH "R" mark: 32px, links Home. Sits above the items with 12px of air. */
+/** The ReadyPH "R" mark: a 36px box (as the prototype's rail links), links Home. Sits above the items with 12px of air. */
 export const IconRailMark = forwardRef<HTMLAnchorElement, IconRailMarkProps>(function IconRailMark(
   { label = 'ReadyPH home', href = '/', className, ...rest },
   ref,
@@ -117,7 +117,7 @@ export const IconRailMark = forwardRef<HTMLAnchorElement, IconRailMarkProps>(fun
       aria-label={label}
       {...rest}
       className={cn(
-        'mb-3 grid size-8 shrink-0 place-items-center rounded-control text-[18px] font-semibold leading-none tracking-[-0.02em] text-text transition-colors motion-reduce:transition-none hover:bg-frame-hover',
+        'mb-3 grid size-9 shrink-0 place-items-center rounded-control text-[18px] font-semibold leading-none tracking-[-0.02em] text-text transition-colors motion-reduce:transition-none hover:bg-frame-hover',
         frameRing,
         className,
       )}
