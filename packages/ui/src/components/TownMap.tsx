@@ -93,6 +93,8 @@ export interface TownMapProps {
   onRetry?: () => void;
   /** Plain text above the map, e.g. "2 platforms + HQ". */
   caption?: ReactNode;
+  /** Draw the caption inside the map's `--map-h` box (the workshop's `.tcap`), so the whole block is that tall. Default false: the caption sits above the box. */
+  captionInside?: boolean;
   /** Accessible name of the whole map (a group of buttons, one per platform). */
   label?: string;
   /** Overrides the accessible name of a platform button. */
@@ -162,6 +164,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
     error = false,
     onRetry,
     caption,
+    captionInside = false,
     label = 'Platform map',
     platformLabel = defaultLabel,
     className,
@@ -313,6 +316,8 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
   const ctl =
     'inline-grid size-7 place-items-center rounded-chip text-muted transition-colors duration-hover hover:bg-raised hover:text-text';
 
+  const captionEl = <p className="m-0 flex h-5 flex-none items-center px-3 text-small leading-4 text-muted max-[640px]:hidden">{caption}</p>;
+
   return (
     <div
       role="group"
@@ -326,8 +331,9 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
         }
       }}
     >
-      {caption ? <p className="m-0 flex h-5 flex-none items-center px-3 text-small text-muted max-[640px]:hidden">{caption}</p> : null}
+      {caption && !captionInside ? captionEl : null}
       <div className="@container/town relative mt-1 flex h-map-h flex-none flex-col overflow-hidden rounded-card max-[640px]:mt-0 max-[640px]:rounded-none">
+        {caption && captionInside ? captionEl : null}
         <div ref={mountRef} className="relative min-h-0 flex-1 overflow-hidden">
           <svg
             ref={svgRef}

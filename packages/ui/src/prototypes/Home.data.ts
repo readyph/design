@@ -65,6 +65,8 @@ export interface HomeSet {
   next: string;
   yesterdayDate: string;
   plan: { used: number; max: number };
+  /** Place of each building on the map grid (workshop `mapOrder`): platform ids, `'hq'`, or `null` for an empty lot. Default: HQ then the platforms. */
+  mapOrder?: (string | null)[];
 }
 
 /** The words of each list's "View all" link, as in the workshop data.js (`viewAll`). */
@@ -267,6 +269,7 @@ export const live: HomeSet = {
   platforms: [autoworks, stockroom],
   hq: hqPlatform,
   links: [{ from: 'stockroom', to: 'autoworks', status: 'ok' }],
+  mapOrder: ['stockroom', 'autoworks', null, 'hq'],
   items: liveItems,
   watching,
   snoozed,
@@ -315,10 +318,15 @@ export const many: HomeSet = {
 
 export const sets: Record<HomeSetKey, HomeSet> = { live, few, many };
 
-export const mapSlots = (s: HomeSet): TownMapSlot[] => [s.hq, ...s.platforms].map((p) => {
-  const { ledaCanAct: _a, facts: _f, lists: _l, week: _w, yesterday: _y, ...rest } = p;
-  return rest;
-});
+export const mapSlots = (s: HomeSet): TownMapSlot[] => {
+  const all = [s.hq, ...s.platforms];
+  const slots = s.mapOrder ? s.mapOrder.map((id) => (id ? all.find((p) => p.id === id) ?? null : null)) : all;
+  return slots.map((p) => {
+    if (!p) return null;
+    const { ledaCanAct: _a, facts: _f, lists: _l, week: _w, yesterday: _y, ...rest } = p;
+    return rest;
+  });
+};
 
 export const queuePlatforms = (s: HomeSet): QueuePlatform[] => [
   ...s.platforms.map((p) => ({ id: p.id, name: p.name, index: p.index })),

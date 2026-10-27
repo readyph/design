@@ -140,6 +140,8 @@ export interface ListGroupProps extends Omit<HTMLAttributes<HTMLDivElement>, 'ti
   empty?: ReactNode;
   /** Label for the list itself when the heading is not enough. Defaults to the title text via the group. */
   listLabel?: string;
+  /** Extra classes for the rows' list (the ruled `List` under the title), e.g. `border-t-0` when the rows draw their own top rule. */
+  listClassName?: string;
   /** `ListRow`s. */
   children?: ReactNode;
 }
@@ -150,7 +152,7 @@ export interface ListGroupProps extends Omit<HTMLAttributes<HTMLDivElement>, 'ti
  * Use inside `ListGroups` (shared columns, shared cursor). Because the column header is its own grid, give shared columns fixed or fr widths, not `auto`, or header and rows drift apart. On its own it is a titled `List` with the same props.
  */
 export const ListGroup = forwardRef<HTMLDivElement, ListGroupProps>(function ListGroup(
-  { title, count, note, actions, level = 3, collapsible = false, collapsed, defaultCollapsed = false, onCollapsedChange, empty, listLabel, className, children, ...rest },
+  { title, count, note, actions, level = 3, collapsible = false, collapsed, defaultCollapsed = false, onCollapsedChange, empty, listLabel, className, listClassName, children, ...rest },
   ref,
 ) {
   const g = useContext(GroupsContext);
@@ -211,7 +213,7 @@ export const ListGroup = forwardRef<HTMLDivElement, ListGroupProps>(function Lis
             shortcuts={g ? false : undefined}
             aria-label={listLabel}
             aria-labelledby={listLabel ? undefined : titleId}
-            className="border-t border-rule"
+            className={cn('border-t border-rule', listClassName)}
           >
             {g?.mode === 'table' && g.header ? (
               <ListHeader className="sr-only">{g.header}</ListHeader>

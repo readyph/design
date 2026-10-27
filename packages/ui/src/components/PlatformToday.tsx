@@ -296,6 +296,7 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
               title={l.title}
               count={l.total}
               level={listLevel}
+              listClassName="border-t-0"
               className="[&>div:first-child]:gap-x-[7.25px] [&>div:first-child]:pb-1 [&>div:first-child]:pt-3.5 [&>div:first-child>*]:leading-5 [&>div:first-child>span]:text-ui"
             >
               {rows.map((it) => (
@@ -310,7 +311,7 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
                 aria-label={`${l.viewAllLabel ?? 'View all'} ${l.total} in ${l.title}`}
                 className="-ml-1.5 mt-1.5 !h-7 !gap-1.5 !px-1.5 !text-ui !font-medium text-accent hover:bg-raised"
               >
-                {l.viewAllLabel ?? 'View all'} <span className="tabular-nums">{l.total}</span>
+                {l.viewAllLabel ?? 'View all'}<span className="tabular-nums">{l.total}</span>
               </Button>
             ) : null}
           </div>
