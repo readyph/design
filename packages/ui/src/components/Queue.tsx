@@ -9,11 +9,10 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { CaretDown, CaretRight, Check, CheckCircle, X } from '@phosphor-icons/react';
+import { CaretDown, CaretRight, Check, CheckCircle, WarningCircle, X } from '@phosphor-icons/react';
 import { cn, focusRing } from '../utils/cn';
 import { Button } from './Button';
 import { EmptyState } from './EmptyState';
-import { ErrorBlock } from './ErrorBlock';
 import { LedaMark } from './Leda';
 import { useListCursor } from './List';
 import { Menu, type MenuItem } from './Menu';
@@ -547,9 +546,23 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
           )}
         >
           {vErrors.length ? (
-            <div className="mb-2 flex flex-col gap-2 px-3">
+            <div className="flex flex-col">
               {vErrors.map((e) => (
-                <ErrorBlock key={e.platform.id} thing={`${e.platform.name} items`} lastLoaded={e.lastLoaded} retrying={e.retrying} retryLabel={retryLabel} onRetry={onRetry ? () => onRetry(e.platform.id) : undefined} />
+                <p
+                  key={e.platform.id}
+                  role="alert"
+                  className="m-0 mb-2.5 ml-3 mr-1 flex items-center gap-2 rounded-card bg-surface px-2.5 py-2 text-small leading-4 text-text max-[640px]:mx-4 max-[640px]:bg-raised"
+                >
+                  <WarningCircle size={14} aria-hidden className="shrink-0 text-bad" />
+                  <span className="min-w-0">
+                    {e.platform.name} didn’t load{e.lastLoaded ? ` · last good ${e.lastLoaded}` : ''}
+                  </span>
+                  {onRetry ? (
+                    <button type="button" disabled={e.retrying} onClick={() => onRetry(e.platform.id)} className={cn('ml-auto shrink-0 rounded-chip font-medium text-text underline', focusRing)}>
+                      {retryLabel ?? 'Try again'}
+                    </button>
+                  ) : null}
+                </p>
               ))}
             </div>
           ) : null}
