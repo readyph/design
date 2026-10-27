@@ -92,7 +92,9 @@ export function PlatformShell({
   const hasStatus = status != null;
   const hasRail = rail != null;
   const hasTop = topBar != null;
+  // Workshop shell.css `body.detail .pnav { display: none }`: a phone detail screen has no bottom nav (its own back bar leads out).
   const hasPhoneNav = phoneNav != null;
+  const phoneNavShown = hasPhoneNav && !detail;
 
   // Class lookups are literal strings so Tailwind can see every utility.
   const cols = hasRail
@@ -100,8 +102,8 @@ export function PlatformShell({
     : hasPlace ? 'grid-cols-[var(--place)_minmax(0,1fr)]' : 'grid-cols-[minmax(0,1fr)]';
   const rows = hasStatus ? 'grid-rows-[minmax(0,1fr)_var(--status)]' : 'grid-rows-[minmax(0,1fr)]';
   const phoneRows = hasTop
-    ? hasPhoneNav ? 'max-[640px]:grid-rows-[var(--sheet-bar)_minmax(0,1fr)_calc(60px+env(safe-area-inset-bottom,0px))]' : 'max-[640px]:grid-rows-[var(--sheet-bar)_minmax(0,1fr)]'
-    : hasPhoneNav ? 'max-[640px]:grid-rows-[minmax(0,1fr)_calc(60px+env(safe-area-inset-bottom,0px))]' : 'max-[640px]:grid-rows-[minmax(0,1fr)]';
+    ? phoneNavShown ? 'max-[640px]:grid-rows-[var(--sheet-bar)_minmax(0,1fr)_calc(60px+env(safe-area-inset-bottom,0px))]' : 'max-[640px]:grid-rows-[var(--sheet-bar)_minmax(0,1fr)]'
+    : phoneNavShown ? 'max-[640px]:grid-rows-[minmax(0,1fr)_calc(60px+env(safe-area-inset-bottom,0px))]' : 'max-[640px]:grid-rows-[minmax(0,1fr)]';
   const placeCol = hasRail ? 'col-start-2' : 'col-start-1';
   const sheetCol = hasRail ? (hasPlace ? 'col-start-3' : 'col-start-2') : hasPlace ? 'col-start-2' : 'col-start-1';
   const phoneRegionRow = hasTop ? 'max-[640px]:row-start-2' : 'max-[640px]:row-start-1';
@@ -209,7 +211,7 @@ export function PlatformShell({
         </footer>
       )}
 
-      {hasPhoneNav && (
+      {phoneNavShown && (
         <nav
           data-shell="phone-nav"
           aria-label={phoneNavLabel}

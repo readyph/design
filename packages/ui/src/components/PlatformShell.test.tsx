@@ -45,6 +45,13 @@ describe('PlatformShell', () => {
     expect(screen.getByRole('region').className).toContain('max-[640px]:hidden');
     expect(screen.getByRole('button', { name: 'Save', hidden: true })).toBeTruthy();
   });
+  it('phone detail drops the bottom nav (workshop body.detail .pnav) and its grid row', () => {
+    const { container, rerender } = render(<PlatformShell {...slots}>Body</PlatformShell>);
+    expect(container.querySelector('[data-shell="phone-nav"]')).toBeTruthy();
+    rerender(<PlatformShell {...slots} detail>Body</PlatformShell>);
+    expect(container.querySelector('[data-shell="phone-nav"]')).toBeNull();
+    expect(container.firstElementChild!.className).not.toContain('60px');
+  });
   it('without a place column the sheet takes the column and stays visible on phone', () => {
     render(<PlatformShell {...slots} place={undefined}>Body</PlatformShell>);
     expect(screen.queryByRole('region')).toBeNull();
