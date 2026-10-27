@@ -73,4 +73,51 @@ describe('Select', () => {
     expect(label.className).toContain('overflow-wrap:anywhere');
     expect(screen.getByRole('listbox').className).toContain('w-max');
   });
+
+  it('marks the highlighted option with a Highlight outline in forced-colors', async () => {
+    render(<Select aria-label="x" options={options} defaultValue="c" />);
+    screen.getByRole('combobox').focus();
+    await userEvent.keyboard('{ArrowDown}');
+    const active = screen.getByRole('option', { name: 'Charlie' });
+    expect(active.className).toContain('forced-colors:outline-[Highlight]');
+    expect(active.querySelector('svg')).not.toBeNull();
+  });
+
+  describe('edge clearance', () => {
+    const rect = (left: number, width: number) =>
+      ({ left, width, right: left + width, top: 0, bottom: 0, height: 0, x: left, y: 0, toJSON: () => ({}) }) as DOMRect;
+
+    const openAt = async (rootLeft: number, listWidth: number, vw: number) => {
+      Object.defineProperty(window, 'innerWidth', { configurable: true, value: vw });
+      const spy = vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
+        return this.getAttribute('role') === 'listbox' ? rect(0, listWidth) : rect(rootLeft, 100);
+      });
+      render(<Select aria-label="x" options={options} />);
+      screen.getByRole('combobox').focus();
+      await userEvent.keyboard('{ArrowDown}');
+      spy.mockRestore();
+      return screen.getByRole('listbox');
+    };
+
+    it('shifts right when the trigger is at the left edge', async () => {
+      const ul = await openAt(2, 200, 375);
+      expect(ul.style.left).toBe('6px');
+    });
+
+    it('shifts left so the right edge keeps 8px', async () => {
+      const ul = await openAt(300, 200, 375);
+      expect(ul.style.left).toBe(`${375 - 8 - 200 - 300}px`);
+    });
+
+    it('narrows a list wider than the screen to viewport minus 16px', async () => {
+      const ul = await openAt(40, 400, 320);
+      expect(ul.style.maxWidth).toBe('304px');
+      expect(ul.style.left).toBe('-32px');
+    });
+
+    it('leaves a list that already fits alone', async () => {
+      const ul = await openAt(20, 150, 375);
+      expect(ul.style.left).toBe('');
+    });
+  });
 });
