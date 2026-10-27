@@ -2,6 +2,7 @@
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { cleanup, render, screen, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import axe from 'axe-core';
 import { clearToasts } from '../components/toast/toastStore';
 import { PlatformPage, type PlatformPageProps } from './Platform.page';
 
@@ -18,7 +19,7 @@ const tabOf = (name: RegExp) => screen.getByRole('tab', { name });
 describe('Platform map', () => {
   it('shows platforms and data links only, with no HQ building', () => {
     setup({ platformId: 'autoworks' });
-    expect(screen.getAllByText(/\d platforms? · (\d+ data links?|no data links)/).length).toBeGreaterThan(0);
+    expect(document.body.textContent).toMatch(/\d platforms? ·\s*(\d+ data links?|no data links)/);
     expect(screen.queryByText(/\+ HQ/)).toBeNull();
     expect(screen.queryByText('HQ')).toBeNull();
   });
@@ -67,11 +68,11 @@ describe('Platform page focus', () => {
   it('after taking someone off the team, focus lands on a remaining row (not body)', async () => {
     const u = userEvent.setup();
     setup({ platformId: 'autoworks', tab: 'team' });
-    await u.click(screen.getByRole('button', { name: /Take Ana Cruz off/ }));
+    await u.click(screen.getByRole('button', { name: /Take Grace Lumbao off/ }));
     const dlg = await screen.findByRole('alertdialog');
     await u.click(within(dlg).getByRole('button', { name: 'Take off' }));
     await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull());
-    expect(screen.queryByText('Ana Cruz')).toBeNull();
+    expect(screen.queryByText('Grace Lumbao')).toBeNull();
     expect(document.activeElement).not.toBe(document.body);
     expect(document.activeElement?.closest('[data-person]')).not.toBeNull();
     expect(tabOf(/Team/).textContent).toContain('Unsaved');
@@ -171,5 +172,27 @@ describe('Onboarding', () => {
   it('Leda prefilled says nothing is added until the person presses the button', () => {
     setup({ onboard: { kind: 'pos', byLeda: 'Add a POS for the parts counter', label: 'Parts Counter' } });
     expect(screen.getByText(/Nothing is added until you press Add and continue/)).toBeTruthy();
+  });
+});
+
+describe('Platform page tabs: axe and real focus (RDY-361 stage 5)', () => {
+  const violations = async () => (await axe.run(document.body, { rules: { 'color-contrast': { enabled: false }, region: { enabled: false } } })).violations;
+  it.each([['general'], ['system'], ['team']] as const)('%s tab has no axe violations', async (tab) => {
+    setup({ platformId: 'autoworks', tab });
+    expect(await violations()).toEqual([]);
+  });
+  it('the stockroom own-hours editor has no axe violations', async () => {
+    setup({ platformId: 'stockroom', tab: 'system' });
+    expect(await violations()).toEqual([]);
+  });
+  it('a holiday checkbox takes real keyboard focus and toggles with Space', async () => {
+    const u = userEvent.setup();
+    setup({ platformId: 'autoworks', tab: 'system' });
+    const box = screen.getByRole('checkbox', { name: /All Saints/ }) as HTMLInputElement;
+    box.focus();
+    expect(document.activeElement).toBe(box);
+    await u.keyboard(' ');
+    expect(box.checked).toBe(false);
+    expect(document.activeElement).toBe(box);
   });
 });

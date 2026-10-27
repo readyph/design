@@ -99,11 +99,11 @@ describe('OpeningHours', () => {
     const spy = vi.fn();
     render(<H initial={ownValue} spy={spy} />);
     const list = screen.getByRole('list', { name: 'Next public holidays' });
-    expect(within(list).getAllByRole('switch')).toHaveLength(5);
+    expect(within(list).getAllByRole('checkbox')).toHaveLength(5);
     expect(within(list).queryByText(/Past holiday/)).toBeNull();
-    fireEvent.click(within(list).getByRole('switch', { name: /All Saints/ }));
+    fireEvent.click(within(list).getByRole('checkbox', { name: /All Saints/ }));
     expect(spy.mock.calls[0][0].holidays.openOn).toContain('2026-11-01');
-    expect(within(list).getByRole('switch', { name: /Bonifacio/ }).getAttribute('aria-checked')).toBe('false');
+    expect((within(list).getByRole('checkbox', { name: /Bonifacio/ }) as HTMLInputElement).checked).toBe(false);
   });
   it('hides the holiday list when closed-on-holidays is off', () => {
     render(<H initial={{ ...ownValue, holidays: { closed: false, openOn: [] } }} />);

@@ -14,7 +14,7 @@ const meta: Meta<typeof Breadcrumbs> = {
           '',
           '- `trail` (default): plain crumbs, 12/16 muted, optional `logo` per crumb.',
           '- `sheet`: sheet bar. Bordered link-style back control ("← Team") then "/ {item}" in text colour, 600.',
-          '- `phone`: top bar. Plain "‹ Team" back link.',
+          '- `phone`: top bar. Plain caret + "Team" back link.',
           '',
           'Back links are plain text, never filled or pill. Back, Esc and browser Back return with the slide out (wired by the page). Long labels truncate; full text is in the tooltip.',
           '',

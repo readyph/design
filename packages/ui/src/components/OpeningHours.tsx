@@ -69,6 +69,8 @@ export interface OpeningHoursProps {
   publicHolidays?: PublicHoliday[];
   /** "YYYY-MM-DD": the first day a closure can be added, and where the holiday list starts. Never read from the clock. */
   today?: string;
+  /** Replaces the generated "Mon-Sat ..." line in the "Company hours: ..." hint. */
+  companyLabel?: string;
   /** Name used in labels and the Leda line, e.g. "Auto Works". */
   platformName?: string;
   /** BCP 47 locale for day names, dates and times. Default en-US. */
@@ -134,6 +136,13 @@ const dateText = (locale: string, iso: string, long = false) => {
   return new Intl.DateTimeFormat(locale, { weekday: 'short', day: 'numeric', month: 'short', ...(long ? { year: 'numeric' } : {}), timeZone: 'UTC' }).format(new Date(Date.UTC(y, m - 1, d)));
 };
 
+/** "Sun 1 Nov": the holiday list's date.*/
+const holidayDate = (locale: string, iso: string) => {
+  const [y, m, d] = iso.split('-').map(Number);
+  const f = (o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(locale, { ...o, timeZone: 'UTC' }).format(new Date(Date.UTC(y, m - 1, d)));
+  return `${f({ weekday: 'short' })} ${d} ${f({ month: 'short' })}`;
+};
+
 /** "Mon-Sat 8:00 AM-6:00 PM · Sun closed": runs of days with the same hours. */
 export function weekSummary(week: Record<DayKey, DayHours>, fmt: (s: string) => string, shortDay: (i: number) => string, closedWord = 'closed') {
   const key = (k: DayKey) => (week[k].open ? `${week[k].from}-${week[k].to}` : 'x');
@@ -167,8 +176,8 @@ export function openingHoursDirty(a: OpeningHoursValue, b: OpeningHoursValue): b
 const inputCls =
   'h-[var(--ctl-dropdown)] w-full min-w-0 rounded-control border border-control bg-surface px-3 text-body text-text placeholder:text-muted hover:bg-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent';
 
-const sectionTitle = 'm-0 text-ui font-semibold text-text';
-const sectionHint = 'm-0 text-small text-muted';
+const sectionTitle = 'm-0 text-[13px] font-semibold leading-5 text-text';
+const sectionHint = 'm-0 text-[12px] leading-4 text-muted';
 
 export const OpeningHours = forwardRef<HTMLDivElement, OpeningHoursProps>(function OpeningHours(
   {
@@ -178,6 +187,7 @@ export const OpeningHours = forwardRef<HTMLDivElement, OpeningHoursProps>(functi
     publicHolidays = [],
     today,
     platformName = 'This platform',
+    companyLabel,
     locale = 'en-US',
     hour12 = true,
     formatTime,
@@ -352,13 +362,13 @@ export const OpeningHours = forwardRef<HTMLDivElement, OpeningHoursProps>(functi
   const mondayOpen = week.mon.open;
 
   return (
-    <div ref={ref} className={cn('@container/hours flex min-w-0 flex-col gap-6 [overflow-wrap:anywhere]', className)}>
+    <div ref={ref} className={cn('@container/hours flex min-w-0 max-w-[720px] flex-col gap-8 [overflow-wrap:anywhere]', className)}>
       <p role="status" aria-live="polite" className="sr-only">
         {announce}
       </p>
 
       <section className="flex min-w-0 flex-col gap-4">
-        <div className="flex flex-col gap-0.5">
+        <div className="flex flex-col">
           <H ref={heading} tabIndex={-1} className={cn(sectionTitle, 'outline-0 focus-visible:underline')}>
             Opening hours
           </H>
@@ -372,11 +382,11 @@ export const OpeningHours = forwardRef<HTMLDivElement, OpeningHoursProps>(functi
           onCheckedChange={toggleSame}
           disabled={off}
           label="Same as company hours"
-          description={value.sameAsCompany ? 'The company hours are set in Settings.' : `Company hours: ${weekSummary(companyWeek, fmt, short)}.`}
+          description={value.sameAsCompany ? 'The company hours are set in Settings.' : `Company hours: ${companyLabel ?? weekSummary(companyWeek, fmt, short)}.`}
         />
 
         {value.sameAsCompany ? (
-          <p className="m-0 text-body text-text @min-[600px]/hours:pl-[46px]" data-testid="week-summary">
+          <p className="m-0 -mt-2 text-[13px] leading-[19px] text-text @min-[600px]/hours:pl-[46px]" data-testid="week-summary">
             {weekSummary(companyWeek, fmt, short)}
           </p>
         ) : (
@@ -451,7 +461,7 @@ export const OpeningHours = forwardRef<HTMLDivElement, OpeningHoursProps>(functi
       </section>
 
       <section className="flex min-w-0 flex-col gap-4" aria-labelledby={groupLabel}>
-        <div className="flex flex-col gap-0.5">
+        <div className="flex flex-col">
           <H id={groupLabel} className={sectionTitle}>
             Closed days
           </H>
@@ -463,7 +473,7 @@ export const OpeningHours = forwardRef<HTMLDivElement, OpeningHoursProps>(functi
           onCheckedChange={(closed) => set({ holidays: { ...value.holidays, closed } })}
           disabled={off}
           label="Closed on public holidays"
-          description="Switch a holiday off below to open that day anyway."
+          description="Untick a holiday below to open that day anyway."
         />
 
         {value.holidays.closed ? (
@@ -473,19 +483,20 @@ export const OpeningHours = forwardRef<HTMLDivElement, OpeningHoursProps>(functi
                 const isOpen = value.holidays.openOn.includes(h.date);
                 return (
                   <li key={h.date} className="border-t border-rule py-3 last:border-b">
-                    <Switch
-                      checked={!isOpen}
-                      disabled={off}
-                      onCheckedChange={(closed) =>
-                        set({ holidays: { ...value.holidays, openOn: closed ? value.holidays.openOn.filter((x) => x !== h.date) : [...value.holidays.openOn, h.date] } })
-                      }
-                      label={
-                        <>
-                          <span className="tabular-nums text-muted">{dateText(locale, h.date)}</span> <span>{h.name}</span>
-                        </>
-                      }
-                      description={isOpen ? 'Open anyway' : 'Closed'}
-                    />
+                    <label className="grid cursor-pointer grid-cols-[16px_96px_minmax(0,1fr)_auto] items-center gap-[10px] text-[13px] leading-[19px]">
+                      <input
+                        type="checkbox"
+                        checked={!isOpen}
+                        disabled={off}
+                        onChange={(e) =>
+                          set({ holidays: { ...value.holidays, openOn: e.target.checked ? value.holidays.openOn.filter((x) => x !== h.date) : [...value.holidays.openOn, h.date] } })
+                        }
+                        className={cn('m-0 size-4 accent-accent', focusRing)}
+                      />
+                      <span className="tabular-nums text-muted">{holidayDate(locale, h.date)}</span>
+                      <span>{h.name}</span>
+                      <span className="text-[12px] text-muted">{isOpen ? 'Open' : 'Closed'}</span>
+                    </label>
                   </li>
                 );
               })}

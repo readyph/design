@@ -2,6 +2,9 @@ import type { BlockedQuestionItem } from '../components/BlockedQuestions';
 import type { DayHours, DayKey, OpeningHoursValue, PublicHoliday } from '../components/OpeningHours';
 import type { RoleOption } from '../components/RolePicker';
 import type { TryItAbout, TryItQuestion } from '../components/TryIt';
+import { instances, platformDetail, teamData } from './Platform.detail.generated';
+import { initialDb, people as teamPeople } from './Team.data';
+import { sets, USAGE } from './Platforms.data';
 
 /** Sample data for the Platform page prototype (RDY-257). Not exported from the package. */
 
@@ -35,12 +38,7 @@ export interface Kind {
 }
 
 export type BasicKey = 'address' | 'phone' | 'email' | 'contact';
-export const basicLabels: Record<BasicKey, [string, string]> = {
-  address: ['Address', 'Where customers find it.'],
-  phone: ['Phone', 'Shown to customers in your mobile app.'],
-  email: ['Email', 'Where customers write to.'],
-  contact: ['Contact person', 'Who staff ask for here.'],
-};
+export const basicLabels = platformDetail.basicLabels as Record<BasicKey, [string, string]>;
 
 export const SECTIONS: { id: SectionId; name: string; optional: boolean; save?: string }[] = [
   { id: 'general', name: 'General info', optional: false, save: 'general info' },
@@ -64,13 +62,8 @@ export const kinds: Record<KindKey, Kind> = {
     lower: 'repair shop',
     mapType: 'service',
     hasApp: true,
-    basics: ['address', 'phone', 'email'],
-    settings: [
-      { key: 'prefix', label: 'Job number prefix', type: 'text', hint: 'Starts every job number, like JOB-1042.', def: 'JOB' },
-      { key: 'warranty', label: 'Default warranty', type: 'number', unit: 'days', hint: 'Used when a job does not set its own.', def: 30 },
-      { key: 'labour', label: 'Labour rate', type: 'number', unit: '₱ per hour', def: 650 },
-      { key: 'bays', label: 'Service bays', type: 'number', hint: 'How many jobs can run at once.', def: 4 },
-    ],
+    basics: platformDetail.basics.repair_shop,
+    settings: platformDetail.settings.repair_shop as SettingField[],
     roles: [
       { id: 'manager', name: 'Manager', about: 'Runs the shop and changes its settings.' },
       { id: 'advisor', name: 'Service advisor', about: 'Writes up jobs and talks to customers.' },
@@ -86,12 +79,8 @@ export const kinds: Record<KindKey, Kind> = {
     lower: 'inventory',
     mapType: 'warehouse',
     hasApp: true,
-    basics: ['address', 'contact', 'phone'],
-    settings: [
-      { key: 'reorder', label: 'Default reorder level', type: 'number', hint: 'Low-stock alerts start below this.', def: 5 },
-      { key: 'unit', label: 'Default unit', type: 'select', options: ['Piece', 'Box', 'Litre', 'Kilogram'], def: 'Piece' },
-      { key: 'alerts', label: 'Low-stock alerts', type: 'toggle', hint: 'Tell the manager when an item runs low.', def: true },
-    ],
+    basics: platformDetail.basics.inventory,
+    settings: platformDetail.settings.inventory as SettingField[],
     roles: [
       { id: 'manager', name: 'Manager', about: 'Runs the stockroom and changes its settings.' },
       { id: 'clerk', name: 'Stock clerk', about: 'Receives, counts and moves stock.' },
@@ -106,12 +95,8 @@ export const kinds: Record<KindKey, Kind> = {
     lower: 'point of sale',
     mapType: 'store',
     hasApp: true,
-    basics: ['address', 'phone'],
-    settings: [
-      { key: 'footer', label: 'Receipt footer', type: 'text', hint: 'Printed at the bottom of every receipt.', def: 'Thank you! Come again.' },
-      { key: 'vat', label: 'Prices include VAT', type: 'toggle', def: true },
-      { key: 'terminals', label: 'Terminals', type: 'number', hint: 'Tills that can take payment at once.', def: 2 },
-    ],
+    basics: platformDetail.basics.pos,
+    settings: platformDetail.settings.pos as SettingField[],
     roles: genericRoles,
     provides: ['catalog'],
     reads: ['stock'],
@@ -121,11 +106,8 @@ export const kinds: Record<KindKey, Kind> = {
     name: 'Loyalty',
     lower: 'loyalty program',
     hasApp: false,
-    basics: ['address', 'phone'],
-    settings: [
-      { key: 'summary', label: 'Daily summary', type: 'toggle', hint: 'Email the team a summary each evening.', def: false },
-      { key: 'note', label: 'Note for the team', type: 'text', hint: 'Shown at the top of this platform for staff.', def: '' },
-    ],
+    basics: platformDetail.basics._generic,
+    settings: platformDetail.settings._generic as SettingField[],
     roles: genericRoles,
     provides: [],
     reads: ['catalog'],
@@ -146,14 +128,9 @@ export interface Person {
   title: string;
   access: 'owner' | 'admin' | 'member';
 }
-export const people: Person[] = [
-  { id: 'maria', name: 'Maria Santos', initials: 'MS', title: 'Owner', access: 'owner' },
-  { id: 'jun', name: 'Jun Reyes', initials: 'JR', title: 'Admin', access: 'admin' },
-  { id: 'ana', name: 'Ana Cruz', initials: 'AC', title: 'Service advisor', access: 'member' },
-  { id: 'ben', name: 'Ben Lim', initials: 'BL', title: 'Stock clerk', access: 'member' },
-  { id: 'carla', name: 'Carla Diaz', initials: 'CD', title: 'Mechanic', access: 'member' },
-  { id: 'dan', name: 'Dan Ocampo', initials: 'DO', title: 'Cashier', access: 'member' },
-];
+const teamDb = initialDb('live', 'live');
+/** The people of the Team page (same sample), with their Portal access. */
+export const people: Person[] = teamPeople.map((x) => ({ id: x.id, name: x.name, initials: x.initials, title: x.title, access: teamDb.members[x.id]?.company ?? 'member' }));
 export const person = (id: string) => people.find((p) => p.id === id)!;
 export interface Invite {
   id: string;
@@ -161,15 +138,14 @@ export interface Invite {
   platformId: string;
   roleId: string;
   sent: boolean;
+  expired: boolean;
 }
-export const invites: Invite[] = [{ id: 'eli', name: 'Eli Tan', platformId: 'autoworks', roleId: 'mechanic', sent: true }];
+export const invites: Invite[] = teamDb.invites
+  .filter((v) => v.status === 'PENDING' || v.status === 'EXPIRED')
+  .flatMap((v) => Object.entries(v.roles).map(([platformId, roleId]) => ({ id: v.id, name: v.name, platformId, roleId, sent: !!v.sent, expired: v.status === 'EXPIRED' })));
 
 /** Role of each person on each platform, as the Team page holds it. */
-export const teamRoles: Record<string, Record<string, string>> = {
-  autoworks: { maria: 'manager', jun: 'manager', ana: 'advisor', carla: 'mechanic' },
-  stockroom: { maria: 'manager', ben: 'clerk' },
-  cafe: { dan: 'staff' },
-};
+export const teamRoles: Record<string, Record<string, string>> = { autoworks: { ...teamDb.roles.autoworks }, stockroom: { ...teamDb.roles.stockroom } };
 
 /* ---------- platforms ---------- */
 export type Health = 'ok' | 'slow' | 'offline' | 'setup' | 'setting-up';
@@ -183,16 +159,29 @@ export interface PlatformRec {
   version?: string;
   synced?: string;
   connected: string;
+  short?: string;
+  color?: string;
+  mono?: string;
+  logo?: string;
   /** Created in onboarding and not finished yet. */
   isNew?: boolean;
   index: number;
 }
-export const platformsStart: PlatformRec[] = [
-  { id: 'autoworks', label: 'Dela Cruz Auto Works', kind: 'repair', place: 'Quezon City', health: 'ok', version: '2.4.1', synced: '9:12 AM', connected: '3 Aug 2026', index: 1 },
-  { id: 'stockroom', label: 'Parts Stockroom', kind: 'inventory', place: 'Manila', health: 'ok', version: '2.4.1', synced: '9:12 AM', connected: '3 Aug 2026', index: 2 },
-  { id: 'cafe', label: 'Café POS', kind: 'pos', place: 'Makati', health: 'slow', note: 'Slow since 7:40', version: '2.3.9', synced: '9:10 AM', connected: '17 Aug 2026', index: 3 },
-];
-export const shortName = (p: { label: string }) => p.label.replace(/^Dela Cruz /, '').replace(/^Parts /, '').replace(/ POS$/, '');
+const kindKeyOf = (k: string): KindKey => (k === 'repair_shop' ? 'repair' : (k as KindKey));
+const hm = (s: string) => {
+  const m = /^(\d\d):(\d\d)$/.exec(s);
+  if (!m) return s;
+  const h = Number(m[1]);
+  return `${h % 12 || 12}:${m[2]} ${h < 12 ? 'AM' : 'PM'}`;
+};
+/** The workshop's default set (duo), with each platform's version, last sync and connected date from data-ext.js. */
+export const platformsStart: PlatformRec[] = sets.duo.platforms.map((x, i) => ({
+  id: x.id, label: x.name, short: x.short, kind: kindKeyOf(x.kind), place: x.place, health: 'ok' as const, color: x.color, mono: x.mono, logo: x.logo,
+  version: instances[x.id].version, synced: hm(instances[x.id].synced), connected: instances[x.id].connected, index: i + 1,
+}));
+export const sampleSet = sets.duo;
+export const usage = USAGE;
+export const shortName = (p: { label: string; short?: string }) => p.short ?? p.label.replace(/^Dela Cruz /, '').replace(/^Parts /, '').replace(/ POS$/, '');
 
 /** `to` reads `kind` from `from`. */
 export interface DataLink {
@@ -201,10 +190,7 @@ export interface DataLink {
   kind: DataKind;
   status: 'linked' | 'slow' | 'pending';
 }
-export const linksStart: DataLink[] = [
-  { from: 'stockroom', to: 'autoworks', kind: 'catalog', status: 'linked' },
-  { from: 'stockroom', to: 'cafe', kind: 'stock', status: 'slow' },
-];
+export const linksStart: DataLink[] = sets.duo.links.map((l) => ({ from: l.from, to: l.to, kind: l.kind as DataKind, status: 'linked' as const }));
 
 /* ---------- opening hours ---------- */
 const day = (from: string, to: string, open = true): DayHours => ({ open, from, to });
@@ -217,20 +203,19 @@ export const companyWeek: Record<DayKey, DayHours> = {
   sat: day('08:00', '18:00'),
   sun: day('08:00', '18:00', false),
 };
+/** Workshop wording of the company hours, shown in the "Company hours: ..." hint. */
+export const companyHoursLabel: string = (platformDetail as any).companyHours.label;
 export const hoursSame: OpeningHoursValue = { sameAsCompany: true, week: { ...companyWeek }, holidays: { closed: true, openOn: [] }, closures: [] };
+const pd = platformDetail as any;
+const hv = pd.hoursValues.stockroom as { days: Record<string, [string, string] | null>; holidays: boolean; closed: { date: string; why: string }[]; open: string[] };
+/** The stockroom keeps its own week (workshop data): earlier mornings, half a day on Saturday. */
 export const hoursOwn: OpeningHoursValue = {
   sameAsCompany: false,
-  week: { ...companyWeek, sat: day('09:00', '14:00') },
-  holidays: { closed: true, openOn: [] },
-  closures: [{ id: 'c1', date: '2026-11-02', reason: 'Stock count' }],
+  week: Object.fromEntries(Object.entries(hv.days).map(([k, v]) => [k, v ? day(v[0], v[1]) : day('08:00', '18:00', false)])) as Record<DayKey, DayHours>,
+  holidays: { closed: hv.holidays, openOn: [...hv.open] },
+  closures: hv.closed.map((c, i) => ({ id: `c${i + 1}`, date: c.date, reason: c.why })),
 };
-export const publicHolidays: PublicHoliday[] = [
-  { date: '2026-11-01', name: 'All Saints’ Day' },
-  { date: '2026-11-02', name: 'All Souls’ Day' },
-  { date: '2026-11-30', name: 'Bonifacio Day' },
-  { date: '2026-12-08', name: 'Feast of the Immaculate Conception' },
-  { date: '2026-12-25', name: 'Christmas Day' },
-];
+export const publicHolidays: PublicHoliday[] = (pd.holidays as [string, string, string][]).map(([date, , name]) => ({ date, name }));
 export const today = '2026-10-22';
 export const nowSample = { day: 'thu' as DayKey, minutes: 552, date: today };
 
@@ -343,32 +328,37 @@ export const settingsDefaults = (kind: KindKey): Record<string, string | number 
 export const detailsStart = (): Record<string, Detail> => ({
   autoworks: {
     label: 'Dela Cruz Auto Works',
-    basics: { address: '14 Aurora Blvd, Quezon City', phone: '0917 555 0142', email: 'shop@delacruzauto.ph' },
+    basics: platformDetail.basicValues.autoworks,
     settings: { ...settingsDefaults('repair'), warranty: 30 },
-    hours: hoursOwn,
+    hours: hoursSame,
     team: { ...teamRoles.autoworks },
     leda: ledaAutoworks(),
     skipped: [],
   },
   stockroom: {
     label: 'Parts Stockroom',
-    basics: { address: '88 Recto Ave, Manila', contact: 'Ben Lim', phone: '0917 555 0188' },
+    basics: platformDetail.basicValues.stockroom,
     settings: settingsDefaults('inventory'),
-    hours: hoursSame,
+    hours: hoursOwn,
     team: { ...teamRoles.stockroom },
     leda: ledaStart('inventory', 'Parts Stockroom'),
-    skipped: [],
-  },
-  cafe: {
-    label: 'Café POS',
-    basics: { address: '5 Jupiter St, Makati', phone: '0917 555 0105' },
-    settings: settingsDefaults('pos'),
-    hours: hoursSame,
-    team: { ...teamRoles.cafe },
-    leda: ledaStart('pos', 'Café POS'),
     skipped: [],
   },
 });
 
 export const plural = (n: number, one: string, many?: string) => `${n} ${n === 1 ? one : (many ?? `${one}s`)}`;
 export const andList = (xs: string[]) => (xs.length <= 1 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`);
+
+/** Tab-list facts straight from the workshop data (RDY-361): people with a role, own hours, topics on of all (kind topics plus remembered ones), blocked questions. */
+export const tabFacts = (id: string, kind: KindKey) => {
+  const pd = platformDetail as any;
+  const topics = (pd.customer[kind === 'repair' ? 'repair_shop' : kind]?.topics ?? []) as { on: boolean }[];
+  const mem = (pd.memory as { platform: string }[]).filter((m) => m.platform === id).length;
+  return {
+    people: Object.keys((teamData as any).assign[id] ?? {}).length,
+    ownHours: pd.hoursValues[id]?.same === false,
+    topicsOn: topics.filter((t) => t.on).length + mem,
+    topicsAll: topics.length + mem,
+    blocked: (pd.blocked[id] ?? []).length,
+  };
+};

@@ -40,7 +40,7 @@ describe('Breadcrumbs', () => {
   it('phone: plain back link only', () => {
     render(<Breadcrumbs variant="phone" items={items} />);
     const back = screen.getByRole('link');
-    expect(back.textContent).toBe('‹Team');
+    expect(back.textContent).toBe('Team');
     expect(back.className).not.toMatch(/\bbg-(?!transparent)|border /);
     expect(screen.queryByText('Ana Reyes')).toBeNull();
   });

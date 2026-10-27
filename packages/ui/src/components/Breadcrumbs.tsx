@@ -1,5 +1,5 @@
 import { forwardRef, Fragment, type MouseEventHandler, type ReactNode } from 'react';
-import type { Icon as PhosphorIcon } from '@phosphor-icons/react';
+import { CaretLeft, type Icon as PhosphorIcon } from '@phosphor-icons/react';
 import { cn, focusRing } from '../utils/cn';
 
 export interface Crumb {
@@ -12,6 +12,10 @@ export interface Crumb {
   logo?: ReactNode;
   /** Leading Phosphor icon (`where` variant). */
   icon?: PhosphorIcon;
+  /** Leading logo (`where` variant), e.g. a 16px `<PlatformLogo decorative />` on the current place. */
+  leading?: ReactNode;
+  /** `where` variant: the way back, plain 500-weight text with no tint, padding or underline (the prototype's `.wback`). */
+  plain?: boolean;
 }
 
 export type BreadcrumbsVariant = 'trail' | 'sheet' | 'phone' | 'where';
@@ -74,11 +78,11 @@ export const Breadcrumbs = forwardRef<HTMLElement, BreadcrumbsProps>(function Br
         crumb={back}
         className={cn(
           link,
-          'inline-flex max-w-full items-center gap-1 text-ui font-medium text-muted hover:text-text max-sm:min-h-11 max-sm:min-w-11',
+          'inline-flex max-w-full items-center gap-1 text-[14px] leading-[18px] text-text max-sm:min-h-11 max-sm:min-w-11',
           focusRing,
         )}
       >
-        <span aria-hidden className="text-header leading-none">‹</span>
+        <CaretLeft aria-hidden size={12} className="shrink-0" />
         <span className="truncate">{back.label}</span>
       </Action>
     );
@@ -91,7 +95,8 @@ export const Breadcrumbs = forwardRef<HTMLElement, BreadcrumbsProps>(function Br
           const Icon = item.icon;
           const inner = (
             <>
-              {Icon && <Icon size={16} aria-hidden />}
+              {Icon && <Icon size={item.plain ? 14 : 16} aria-hidden />}
+              {item.leading}
               <span className="min-w-0 truncate">{item.label}</span>
             </>
           );
@@ -103,7 +108,7 @@ export const Breadcrumbs = forwardRef<HTMLElement, BreadcrumbsProps>(function Br
                     {inner}
                   </b>
                 ) : (
-                  <Action crumb={item} className={cn('-ml-1.5 inline-flex h-7 items-center gap-1.5 whitespace-nowrap rounded-control px-1.5 text-muted transition-colors duration-hover hover:bg-raised hover:text-text', focusRing)}>
+                  <Action crumb={item} className={cn('inline-flex h-7 items-center gap-1.5 whitespace-nowrap text-muted', item.plain ? 'rounded-[2px] font-medium transition-colors duration-hover hover:text-text' : '-ml-1.5 rounded-control px-1.5 transition-colors duration-hover hover:bg-raised hover:text-text', focusRing)}>
                     {inner}
                   </Action>
                 )}

@@ -21,7 +21,7 @@ const TABLET_FLAT = 'min-[641px]:max-[1100px]:contents min-[641px]:max-[1100px]:
 export function SheetBar({ children, actions, wrapChildren = true, className }: SheetBarProps) {
   return (
     <div className={cn('flex h-[calc(var(--sheet-bar)-1px)] items-stretch gap-4 bg-surface px-pad', W, className)}>
-      <div className={cn('flex min-w-0 flex-1 items-center [&_[role=tablist]]:border-b-0', actions && wrapChildren && 'min-[641px]:max-[1100px]:order-last min-[641px]:max-[1100px]:h-10 min-[641px]:max-[1100px]:basis-full')}>{children}</div>
+      <div className={cn('flex min-w-0 flex-1 items-center [&_[role=tablist]]:border-b-0', actions && wrapChildren && 'min-[641px]:max-[1100px]:order-last min-[641px]:max-[1100px]:h-10 min-[641px]:max-[1100px]:basis-full', actions && !wrapChildren && 'min-[641px]:max-[1100px]:flex-initial')}>{children}</div>
       {actions && <div className={cn('flex shrink-0 items-center gap-4 [&>*+*]:ml-2', TABLET_FLAT)}>{actions}</div>}
     </div>
   );

@@ -1,19 +1,18 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import {
-  ArrowRight, ArrowSquareOut, Brain, Buildings, ChatCircle, IdentificationCard, LinkBreak, Plugs, SlidersHorizontal, ListChecks, LockSimple, Plus,
+  ArrowLeft, ArrowRight, ArrowSquareOut, Brain, Buildings, ChatCircle, IdentificationCard, LinkBreak, Plugs, SlidersHorizontal, ListChecks, LockSimple, Plus,
   ShieldCheck, UploadSimple, UserPlus, Users, X,
 } from '@phosphor-icons/react';
-import { AccountMenu } from '../components/AccountMenu';
 import { AskLedaBar } from '../components/AskLedaBar';
-import { Badge } from '../components/Badge';
 import { BlockedQuestions, type BlockedQuestionItem } from '../components/BlockedQuestions';
 import { Breadcrumbs } from '../components/Breadcrumbs';
 import { Button } from '../components/Button';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { ConnectionsEditor, type Connection, type ConnectionOption, type ConnectionPlatform } from '../components/ConnectionsEditor';
-import { DataList } from '../components/DataList';
 import { ErrorBlock } from '../components/ErrorBlock';
 import { Fact, FactsLine } from '../components/FactsLine';
+import { TextField } from '../components/TextField';
+import { FactsTable } from '../components/FactsTable';
 import { IconButton } from '../components/IconButton';
 import { LedaMark } from '../components/Leda';
 import { LedaNote } from '../components/LedaNote';
@@ -34,13 +33,14 @@ import { Toaster } from '../components/toast/Toaster';
 import { toast } from '../components/toast/toastStore';
 import { cn } from '../utils/cn';
 import { PortalFrame } from './PortalFrame';
+import { catalogItem } from './Platforms.data';
 import { go, useHandoff } from './protoNav';
 import { focusIfLost } from '../utils/focusIfLost';
 import { useMatchMedia } from '../utils/useMatchMedia';
 import {
-  SECTIONS, andList, basicLabels, companyWeek, dataKinds, dataTopics, detailsStart, everyBusinessBlocked, invites, kinds, ledaStart, linksStart,
+  SECTIONS, tabFacts, andList, basicLabels, companyWeek, dataKinds, dataTopics, companyHoursLabel, detailsStart, everyBusinessBlocked, invites, kinds, ledaStart, linksStart,
   memoryCap, neverShared, nowSample, people, person, plural, platformsStart, publicHolidays, requestDefs, sectionName, settingsDefaults, shortName,
-  today, tryQuestions, type BasicKey, type CustomTopic, type DataLink, type DataKind, type Detail, type Health, type KindKey, type LedaState, type PlatformRec,
+  sampleSet, today, tryQuestions, usage, type BasicKey, type CustomTopic, type DataLink, type DataKind, type Detail, type KindKey, type LedaState, type PlatformRec,
   type SectionId, type SettingField,
 } from './Platform.data';
 
@@ -85,47 +85,27 @@ const field =
   'block w-full min-w-0 rounded-control border bg-surface px-3 text-body text-text placeholder:text-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent focus-visible:border-accent';
 const link = 'text-accent underline underline-offset-2 hover:text-accent-hover';
 
-const healthTone: Record<Health, StatusTone> = { ok: 'ok', slow: 'warn', offline: 'bad', setup: 'neutral', 'setting-up': 'accent' };
 
 /* ---------- small pieces ---------- */
-function Field({ id, label, value, onChange, hint, error, unit, type = 'text', required, wide, max = 120, className }: {
-  id: string; label: string; value: string | number; onChange: (v: string) => void; hint?: string; error?: string; unit?: string; type?: 'text' | 'tel' | 'number'; required?: boolean; wide?: boolean; max?: number; className?: string;
-}) {
-  const d = hint || error ? `${id}-d` : undefined;
-  const box = (
-    <input
-      id={id}
-      type={type}
-      inputMode={type === 'number' ? 'numeric' : undefined}
-      min={type === 'number' ? 0 : undefined}
-      maxLength={type === 'number' ? undefined : max}
-      value={value}
-      required={required}
-      autoComplete="off"
-      aria-invalid={error ? true : undefined}
-      aria-describedby={d}
-      onChange={(e) => onChange(e.target.value)}
-      className={cn(field, 'h-[var(--ctl-dropdown)]', error ? 'border-bad' : 'border-control', unit && 'rounded-r-none')}
-    />
-  );
-  return (
-    <div className={cn('min-w-0', wide && 'sm:col-span-2', className)}>
-      <label htmlFor={id} className="mb-1 block text-ui font-medium text-text">{label}</label>
-      {unit ? (
-        <div className="flex">
-          {box}
-          <span className="grid shrink-0 place-items-center rounded-r-control border border-l-0 border-control bg-raised px-3 text-ui text-muted">{unit}</span>
-        </div>
-      ) : box}
-      {error ? <p id={d} className="mt-1 text-small text-bad-ink">{error}</p> : hint ? <p id={d} className="mt-1 text-small text-muted">{hint}</p> : null}
-    </div>
-  );
+const KIND_CATALOG: Record<string, string> = { repair: 'repair_shop' };
+function KindIcon({ kind, size = 16 }: { kind: string; size?: number }) {
+  const Icon = catalogItem(KIND_CATALOG[kind] ?? kind)?.icon;
+  return Icon ? <Icon size={size} aria-hidden /> : null;
+}
+/** The workshop `.hl`: dot and word at 12/16 in the health colour. */
+function Health({ tone, word }: { tone: StatusTone; word: string }) {
+  return <StatusDot status={tone} label={word} className={cn('leading-4', tone === 'ok' && 'text-ok', tone === 'warn' && 'text-warn', tone === 'bad' && 'text-bad')} />;
+}
+/** One platform's identity: its uploaded logo or default monogram on its colour (as in the Platforms page). */
+function Logo({ x, size = 32, src }: { x: PlatformRec; size?: 14 | 16 | 20 | 24 | 32 | 40; src?: string }) {
+  return <PlatformLogo name={x.label} size={size} decorative color={x.color} src={src ?? x.logo} initials={x.mono} />;
 }
 
 function SwitchField({ label, hint, checked, onChange }: { label: string; hint?: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
-    <div className="min-w-0 self-end pb-2">
-      <Switch label={label} description={hint} checked={checked} onCheckedChange={onChange} />
+    <div className="min-w-0">
+      <span aria-hidden className="block text-[14px] font-medium leading-5">&nbsp;</span>
+      <div className="mt-2"><Switch label={label} description={hint} checked={checked} onCheckedChange={onChange} /></div>
     </div>
   );
 }
@@ -142,10 +122,10 @@ function Heading({ id, level = 3, children, aside }: { id: string; level?: 3 | 4
 
 function FormFoot({ dirty, saveLabel, onDiscard, saveRef }: { dirty: boolean; saveLabel: string; onDiscard: () => void; saveRef?: React.Ref<HTMLButtonElement> }) {
   return (
-    <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-border pt-4">
-      <Button ref={saveRef} type="submit" variant="primary" disabled={!dirty} keepFocus>{saveLabel}</Button>
-      <Button type="button" variant="text" disabled={!dirty} keepFocus onClick={onDiscard}>Discard</Button>
-      <span role="status" className="text-small text-warn-ink">{dirty ? 'Unsaved changes' : ''}</span>
+    <div className="mt-8 flex flex-wrap items-center gap-2">
+      <Button ref={saveRef} type="submit" variant="primary" disabled={!dirty} keepFocus className="aria-disabled:opacity-50">{saveLabel}</Button>
+      <Button type="button" variant="text" disabled={!dirty} keepFocus className="aria-disabled:opacity-50" onClick={onDiscard}>Discard</Button>
+      <span role="status" className="ml-1 text-small text-muted">{dirty ? 'Unsaved changes' : ''}</span>
     </div>
   );
 }
@@ -342,15 +322,14 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
   };
   const sameLink = (a: DataLink, b: DataLink) => a.from === b.from && a.to === b.to && a.kind === b.kind;
 
-  const mapPlatforms: TownMapSlot[] = [
-    ...platforms.map((x): TownMapSlot => {
-      const h = healthOf(x);
-      const k = kinds[x.kind];
-      return { id: x.id, name: nameOf(x.id), shortName: shortName({ label: nameOf(x.id) }), kind: k.name, mapType: k.mapType, status: h.tone === 'bad' ? 'OFFLINE' : h.tone === 'warn' ? 'DEGRADED' : 'ACTIVE', index: x.index, logo: details[x.id]?.logo };
-    }),
-  ];
+  const mapPlatforms: TownMapSlot[] = sampleSet.slots.map((id): TownMapSlot => {
+    const x = id ? platforms.find((q) => q.id === id) : undefined;
+    if (!x) return null;
+    const h = healthOf(x);
+    const k = kinds[x.kind];
+    return { id: x.id, name: nameOf(x.id), shortName: shortName(x), kind: k.name, mapType: k.mapType, status: h.tone === 'bad' ? 'OFFLINE' : h.tone === 'warn' ? 'DEGRADED' : 'ACTIVE', sub: `${k.name} · ${h.word.toLowerCase()}`, color: x.color, logo: details[x.id]?.logo ?? x.logo, initials: x.mono, index: x.index };
+  });
   const mapLinks: TownMapLink[] = links.map((l) => ({ from: l.from, to: l.to, status: l.status === 'slow' ? 'slow' : 'ok' }));
-  const statusLabel = (x: PlatformRec) => healthOf(x).word;
 
   /* ----- section status words (tab list) ----- */
   const secStatus = (sec: SectionId, x: PlatformRec): [string, 'warn' | 'muted'] => {
@@ -360,18 +339,17 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
     if (sec === 'general') return dd.basics.address ? ['Address set', 'muted'] : ['No address yet', 'warn'];
     if (sec === 'system') {
       const n = kinds[x.kind].settings.filter((f) => dd.settings[f.key] !== f.def).length;
-      return [`${dd.hours.sameAsCompany ? 'Company hours' : 'Own hours'}${n ? ` · ${plural(n, 'change')}` : ''}`, 'muted'];
+      return [`${tabFacts(x.id, x.kind).ownHours ? 'Own hours' : 'Company hours'}${n ? ` · ${plural(n, 'change')}` : ''}`, 'muted'];
     }
-    if (sec === 'team') { const n = Object.keys(dd.team).length; return n ? [plural(n, 'person', 'people'), 'muted'] : ['Nobody yet', 'warn']; }
+    if (sec === 'team') { const n = tabFacts(x.id, x.kind).people; return n ? [plural(n, 'person', 'people'), 'muted'] : ['Nobody yet', 'warn']; }
     if (sec === 'connections') {
       if (needsLink(x)) return ['Setup needed', 'warn'];
       const n = links.filter((l) => l.to === x.id || l.from === x.id).length;
       return [n ? plural(n, 'link') : 'No links', 'muted'];
     }
-    const keys = Object.keys(dd.leda.data);
-    const on = keys.filter((k) => dd.leda.data[k]).length;
-    const b = dd.leda.blocked.filter((q) => q.scope === x.id).length;
-    return [`${on} of ${keys.length} topics on${b ? ` · ${b} blocked` : ''}`, 'muted'];
+    const tf = tabFacts(x.id, x.kind);
+    const b = tf.blocked;
+    return [`${tf.topicsOn} of ${tf.topicsAll} topics on${b ? ` · ${b} blocked` : ''}`, 'muted'];
   };
 
   /* ----- saving ----- */
@@ -547,26 +525,26 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
 
   /* =============== section bodies =============== */
   const generalBody = () => {
-    const customLogo = !!general.logo;
+    const customLogo = general.logo ? true : general.logo === '' ? false : !!p?.logo;
     return (
       <>
-        <div className="grid gap-x-4 gap-y-4 sm:grid-cols-2">
-          <Field id={`${uid}-name`} label="Name" value={general.label} required hint="Give this a clear name, like a branch name." error={genErr || undefined} onChange={(v) => { setGenErr(''); setDraft('general', { ...general, label: v }); }} />
+        <div className="grid max-w-[720px] gap-x-6 gap-y-6 @min-[641px]/sheet:grid-cols-2">
+          <TextField id={`${uid}-name`} label="Name" value={general.label} required hint="Give this a clear name, like a branch name." error={genErr || undefined} onChange={(v) => { setGenErr(''); setDraft('general', { ...general, label: v }); }} />
           <div className="min-w-0">
-            <span id={`${uid}-logo`} className="mb-1 block text-ui font-medium text-text">Logo</span>
-            <div role="group" aria-labelledby={`${uid}-logo`} className="flex flex-wrap items-center gap-3">
-              <PlatformLogo name={general.label || kind.name} src={general.logo ?? undefined} index={p?.index ?? platforms.length + 1} size={32} decorative />
+            <span id={`${uid}-logo`} className="block text-body font-medium text-text">Logo</span>
+            <div role="group" aria-labelledby={`${uid}-logo`} className="mt-2 flex items-center gap-3">
+              {p ? <Logo x={p} src={general.logo ?? undefined} size={40} /> : <PlatformLogo name={general.label || kind.name} src={general.logo ?? undefined} index={platforms.length + 1} size={40} decorative />}
               <input ref={logoInput} type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" className="sr-only" tabIndex={-1} aria-hidden onChange={(e) => { readLogo(e.target.files?.[0]); e.target.value = ''; }} />
               <Button ref={uploadBtn} type="button" variant="secondary" leftIcon={UploadSimple} onClick={() => logoInput.current?.click()}>Upload</Button>
               {customLogo ? (
-                <Button type="button" variant="text" onClick={() => { setDraft('general', { ...general, logo: null }); refocus('upload'); }}>Use the default</Button>
+                <Button type="button" variant="text" onClick={() => { setDraft('general', { ...general, logo: '' }); refocus('upload'); }}>Use the default</Button>
               ) : (
-                <span className="text-small text-muted">Default: initials on a colour. PNG, JPG or SVG.</span>
+                <span className="text-small text-muted">Default: initials on a colour.<br />PNG, JPG or SVG.</span>
               )}
             </div>
           </div>
           {kind.basics.map((b) => (
-            <Field key={b} id={`${uid}-b-${b}`} label={basicLabels[b][0]} hint={basicLabels[b][1]} type={b === 'phone' ? 'tel' : 'text'} wide={b === 'address'} value={general.basics[b] ?? ''} onChange={(v) => setDraft('general', { ...general, basics: { ...general.basics, [b]: v } })} />
+            <TextField key={b} id={`${uid}-b-${b}`} label={basicLabels[b][0]} hint={basicLabels[b][1]} type={b === 'phone' ? 'tel' : 'text'} className={b === 'address' ? '@min-[641px]/sheet:col-span-2' : undefined} value={general.basics[b] ?? ''} onChange={(v) => setDraft('general', { ...general, basics: { ...general.basics, [b]: v } })} />
           ))}
         </div>
       </>
@@ -577,27 +555,27 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
     const h = healthOf(p);
     return (
       <>
-        <DataList
+        <FactsTable
           className="mt-8"
           items={[
-            { label: 'Kind', value: kind.name },
-            { label: 'Status', value: <StatusDot status={h.tone} label={h.word} /> },
+            { label: 'Kind', value: <><KindIcon kind={p.kind} />{kind.name}</> },
+            { label: 'Status', value: <Health tone={h.tone} word={h.word} /> },
             { label: 'Version', value: p.version ?? 'Not reported yet' },
-            { label: 'Last synced', value: p.synced ?? 'Not yet' },
+            { label: 'Last synced', value: p.synced ?? 'Not synced yet' },
             { label: 'Connected', value: p.connected },
-            { label: 'App', value: kind.hasApp ? <Button type="button" variant="secondary" leftIcon={ArrowSquareOut} onClick={() => toast({ description: `Opening ${shortName({ label: nameOf(p.id) })}.` })}>Open {shortName({ label: nameOf(p.id) })}</Button> : <span className="text-muted">No app yet. It works through its data links.</span> },
+            { label: 'App', value: kind.hasApp ? <Button type="button" variant="secondary" className="h-7" leftIcon={ArrowSquareOut} onClick={() => toast({ description: `Opening ${shortName({ label: nameOf(p.id) })}.` })}>Open {shortName({ label: nameOf(p.id) })}</Button> : <span className="text-muted">No app yet. It works through its data links.</span> },
           ]}
         />
-        <section aria-labelledby={`${uid}-dz`} className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-card border border-border p-4">
-          <div className="min-w-0 flex-1 basis-64">
-            <h3 id={`${uid}-dz`} className="m-0 text-ui font-semibold text-text">Disconnect</h3>
-            <p className="m-0 mt-0.5 text-ui text-muted">
+        <section aria-labelledby={`${uid}-dz`} className="mt-8 flex max-w-[720px] items-start gap-4 rounded-card border border-border p-4 max-[640px]:flex-col max-[640px]:gap-2.5">
+          <div className="min-w-0">
+            <h3 id={`${uid}-dz`} className="m-0 text-ui font-semibold leading-5 text-text">Disconnect</h3>
+            <p className="m-0 mt-0.5 text-ui leading-[19px] text-muted">
               {sharing.length
                 ? `${andList([...new Set(sharing.map((l) => nameOf(l.to)))])} ${sharing.length === 1 ? 'reads' : 'read'} its ${andList([...new Set(sharing.map((l) => dataKinds[l.kind].name.toLowerCase()))])}. Remove ${sharing.length === 1 ? 'that link' : 'those links'} first.`
                 : 'Removes it and its data links. This can’t be undone.'}
             </p>
           </div>
-          <Button type="button" variant="danger" leftIcon={LinkBreak} onClick={startDisconnect}>Disconnect</Button>
+          <Button type="button" variant="secondary" leftIcon={LinkBreak} onClick={startDisconnect} className="ml-auto shrink-0 text-bad hover:border-bad max-[640px]:ml-0 max-[640px]:h-[var(--ctl-touch)]">Disconnect</Button>
         </section>
       </>
     );
@@ -611,21 +589,22 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
     if (f.type === 'select')
       return (
         <div key={f.key} className="min-w-0">
-          <span id={`${id}-l`} className="mb-1 block text-ui font-medium text-text">{f.label}</span>
-          <Select aria-labelledby={`${id}-l`} value={String(v)} onValueChange={set} options={f.options!.map((o) => ({ value: o, label: o }))} />
-          {f.hint ? <p className="mt-1 text-small text-muted">{f.hint}</p> : null}
+          <span id={`${id}-l`} className="block text-body font-medium text-text">{f.label}</span>
+          <div className="mt-2"><Select aria-labelledby={`${id}-l`} value={String(v)} onValueChange={set} options={f.options!.map((o) => ({ value: o, label: o }))} /></div>
+          {f.hint ? <p className="m-0 mt-1.5 text-small text-muted">{f.hint}</p> : null}
         </div>
       );
-    return <Field key={f.key} id={id} label={f.label} unit={f.unit} hint={f.hint} type={f.type === 'number' ? 'number' : 'text'} value={String(v ?? '')} onChange={(nv) => set(f.type === 'number' ? (nv === '' ? '' : Number(nv)) : nv)} />;
+    return <TextField key={f.key} id={id} label={f.label} unit={f.unit} hint={f.hint} type={f.type === 'number' ? 'number' : 'text'} value={String(v ?? '')} onChange={(nv) => set(f.type === 'number' ? (nv === '' ? '' : Number(nv)) : nv)} />;
   };
   const systemBody = () => (
     <>
-      <div className="grid gap-x-4 gap-y-4 sm:grid-cols-2">{kind.settings.map(settingField)}</div>
-      <div className="mt-8">
+      <div className="grid max-w-[720px] gap-x-6 gap-y-6 @min-[641px]/sheet:grid-cols-2">{kind.settings.map(settingField)}</div>
+      <div className="mt-8 max-w-[720px] border-t border-rule pt-8">
         <OpeningHours
           value={system.hours}
           onChange={(hours) => setDraft('system', { ...system, hours })}
           companyWeek={companyWeek}
+          companyLabel={companyHoursLabel}
           publicHolidays={publicHolidays}
           today={today}
           now={nowSample}
@@ -640,65 +619,70 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
     if (!p) return null;
     const rs = kind.roles;
     const rank = (id: string) => rs.findIndex((r) => r.id === team[id]);
-    const ids = Object.keys(team).sort((a, b) => rank(a) - rank(b));
+    const ids = Object.keys(team).filter((id) => person(id)).sort((a, b) => rank(a) - rank(b) || people.findIndex((x) => x.id === a) - people.findIndex((x) => x.id === b));
     const others = people.filter((x) => !team[x.id]);
     const elsewhere = (id: string) => {
       const o = platforms.filter((q) => q.id !== p.id && details[q.id]?.team[id]).map((q) => `${kinds[q.kind].roles.find((r) => r.id === details[q.id].team[id])?.name} at ${shortName({ label: nameOf(q.id) })}`);
       return o.length ? ` · also ${andList(o)}` : '';
     };
+    const coTag = (x: (typeof people)[number]) => { const n = x.access === 'owner' ? 'Owner' : x.access === 'admin' ? 'Admin' : ''; return n && n !== x.title ? ` · ${n}` : ''; };
     const pending = invites.filter((v) => v.platformId === p.id);
+    const row = 'grid grid-cols-[32px_minmax(0,1fr)_180px_36px] items-center gap-3 border-t border-rule py-4 text-ui last:border-b @max-[600px]/sheet:grid-cols-[32px_minmax(0,1fr)_36px]';
+    const avatar = 'grid size-8 shrink-0 place-items-center rounded-full bg-[var(--avatar-bg)] text-[12px] font-semibold text-[var(--avatar-text)]';
+    const avatarInv = 'grid size-8 shrink-0 place-items-center rounded-full border-[1.5px] border-dashed border-control text-[12px] font-semibold text-muted';
     return (
       <>
-        {ids.length ? (
-          <ul className="m-0 list-none divide-y divide-rule p-0">
+        {ids.length || pending.length ? (
+          <div className="max-w-[720px]">
             {ids.map((id) => {
               const x = person(id);
               return (
-                <li key={id} data-person={id} className="flex flex-wrap items-center gap-x-3 gap-y-2 py-3">
-                  <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-full bg-raised text-small font-semibold text-muted">{x.initials}</span>
-                  <span className="min-w-0 flex-1 basis-40">
-                    <a href="#team" onClick={(e) => { e.preventDefault(); go({ to: 'team' }); }} className={cn(link, 'text-body font-medium no-underline hover:underline')}>{x.name}</a>
-                    <span className="block text-small text-muted">
-                      {x.access === 'member' ? x.title : <Badge tone="neutral">{x.access === 'owner' ? 'Admin · Owner' : 'Admin'}</Badge>}{elsewhere(id)}
-                    </span>
+                <div key={id} data-person={id} className={row}>
+                  <span aria-hidden className={avatar}>{x.initials}</span>
+                  <span className="flex min-w-0 flex-col">
+                    <a href="#team" onClick={(e) => { e.preventDefault(); go({ to: 'team' }); }} className={cn(link, 'w-fit text-[14px] leading-5 font-medium text-text no-underline hover:underline hover:underline-offset-[3px]')}>{x.name}</a>
+                    <span className="text-[13px] leading-[18px] text-muted">{x.title}{coTag(x)}{elsewhere(id)}</span>
                   </span>
-                  <Select
-                    size="sm"
-                    className="w-44"
-                    aria-label={`${x.name}’s role at ${nameOf(p.id)}`}
-                    value={team[id]}
-                    onValueChange={(v) => setDraft('team', { ...team, [id]: v })}
-                    options={rs.map((r) => ({ value: r.id, label: r.name }))}
-                  />
-                  <IconButton icon={X} label={`Take ${x.name} off ${nameOf(p.id)}`} onClick={() => setUnteam(id)} />
-                </li>
+                  <span className="@max-[600px]/sheet:col-start-2 @max-[600px]/sheet:row-start-2">
+                    <Select
+                      size="sm"
+                      className="w-full"
+                      aria-label={`${x.name}’s role at ${nameOf(p.id)}`}
+                      value={team[id]}
+                      onValueChange={(v) => setDraft('team', { ...team, [id]: v })}
+                      options={rs.map((r) => ({ value: r.id, label: r.name }))}
+                    />
+                  </span>
+                  <IconButton icon={X} label={`Take ${x.name} off ${nameOf(p.id)}`} onClick={() => setUnteam(id)} actionBar className="size-8 @max-[600px]/sheet:col-start-3 @max-[600px]/sheet:row-start-1" />
+                </div>
               );
             })}
             {pending.map((v) => (
-              <li key={v.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-3">
-                <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-full border border-dashed border-control bg-surface text-small font-semibold text-muted">{v.name.split(' ').map((w) => w[0]).join('')}</span>
-                <span className="min-w-0 flex-1 basis-40">
-                  <a href="#team" onClick={(e) => { e.preventDefault(); go({ to: 'team' }); }} className={cn(link, 'text-body font-medium no-underline hover:underline')}>{v.name}</a>
-                  <span className="block text-small text-muted">{v.sent ? 'Invited, not joined yet' : 'Invite not sent yet'}</span>
+              <div key={v.id} className={row}>
+                <span aria-hidden className={avatarInv}>{v.name.split(' ').map((w) => w[0]).join('')}</span>
+                <span className="flex min-w-0 flex-col">
+                  <a href="#team" onClick={(e) => { e.preventDefault(); go({ to: 'team' }); }} className={cn(link, 'w-fit text-[14px] leading-5 font-medium text-text no-underline hover:underline hover:underline-offset-[3px]')}>{v.name}</a>
+                  <span className="text-[13px] leading-[18px] text-muted">{v.expired ? 'Invite expired' : v.sent ? 'Invited, not joined yet' : 'Invite not sent yet'}</span>
                 </span>
-                <span className="text-ui text-muted">{rs.find((r) => r.id === v.roleId)?.name} when they join</span>
-              </li>
+                <span className="text-[13px] leading-[18px] text-muted @max-[600px]/sheet:col-start-2 @max-[600px]/sheet:row-start-2">{rs.find((r) => r.id === v.roleId)?.name} when they join</span>
+                <span />
+              </div>
             ))}
-          </ul>
+          </div>
         ) : (
-          <p className="m-0 text-ui text-muted">Nobody works here yet. Add the people who run {nameOf(p.id)}.</p>
+          <p className="m-0 mt-3 text-ui text-muted">Nobody works here yet. Add the people who run {nameOf(p.id)}.</p>
         )}
         {others.length ? (
-          <div ref={teamAddRef} className="mt-4 flex flex-wrap items-center gap-2">
-            <Select size="sm" className="w-64" aria-label={`Add a person to ${nameOf(p.id)}`} placeholder="Choose a person…" value={teamPick} onValueChange={setTeamPick} options={others.map((x) => ({ value: x.id, label: x.name, meta: x.title }))} />
+          <div ref={teamAddRef} className="mt-6 flex max-w-[720px] flex-wrap items-center gap-2 min-[641px]:flex-nowrap">
+            <Select size="sm" className="w-full min-[641px]:w-[260px]" aria-label={`Add a person to ${nameOf(p.id)}`} placeholder="Choose a person…" value={teamPick} onValueChange={setTeamPick} options={others.map((x) => ({ value: x.id, label: x.name, meta: x.title }))} />
             <Button type="button" variant="secondary" leftIcon={UserPlus} disabled={!teamPick} keepFocus onClick={() => { setDraft('team', { ...team, [teamPick]: (rs[1] ?? rs[0]).id }); setTeamPick(''); refocus('team-add'); }}>Add to {shortName({ label: nameOf(p.id) })}</Button>
           </div>
         ) : null}
-        <dl className="m-0 mt-6 grid gap-1 text-small text-muted">
-          {rs.map((r) => <div key={r.id}><dt className="inline font-semibold text-text">{r.name}</dt> <dd className="m-0 inline">{(r.about ?? '').replace(/\.$/, '').replace(/^./, (c) => c.toLowerCase())}</dd></div>)}
-        </dl>
-        <p className="m-0 mt-2 text-small text-muted">The roles of {kind.lower}. Someone can hold a different role on each platform.</p>
-        <p className="m-0 mt-3 text-ui"><a href="#team" onClick={(e) => { e.preventDefault(); go({ to: 'team' }); }} className={cn(link, 'inline-flex items-center gap-1.5')}><Users aria-hidden size={16} />Roles, invites and everyone on Team</a></p>
+        <p className="m-0 mt-4 flex max-w-[720px] flex-wrap gap-x-[18px] gap-y-1 text-small text-muted">
+          {rs.map((r) => <span key={r.id}><b className="font-medium text-text">{r.name}</b> {(r.about ?? '').replace(/\.$/, '').replace(/^./, (c) => c.toLowerCase())}</span>)}
+        </p>
+        <p className="m-0 mt-4 max-w-[720px] text-small text-muted">The roles of {kind.lower}. Someone can hold a different role on each platform.</p>
+        <p className="m-0 mt-4 max-w-[720px] text-small"><a href="#team" onClick={(e) => { e.preventDefault(); go({ to: 'team' }); }} className={cn(link, 'inline-flex items-center gap-1.5 hover:underline hover:underline-offset-[3px]')}><Users aria-hidden size={16} />Portal access, invites and everyone on Team</a></p>
       </>
     );
   };
@@ -880,25 +864,28 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
 
   const section = (sec: SectionId) => {
     const dirty = editable(sec) && isDirty(sec);
-    const inner = body(sec);
+    const foot = <FormFoot dirty={dirty} saveLabel={`Save ${lowerName(saveName(sec))}`} onDiscard={() => { clearDraft(sec); setGenErr(''); }} />;
+    const inner = sec === 'general' && !ob ? <>{generalBody()}{foot}{factsAndDanger()}</> : body(sec);
     const head = (
-      <header className="mb-4">
-        <h2 id={`${uid}-h-${sec}`} className="m-0 flex items-center gap-2 text-header font-semibold text-text">
+      <header className="flex flex-wrap items-baseline gap-x-2.5 gap-y-2.5">
+        <h2 id={`${uid}-h-${sec}`} className="m-0 flex items-center gap-2 text-dialog font-semibold text-text">
           {sec === 'leda' ? <LedaMark size={20} decorative /> : null}{sectionNames[sec]}
         </h2>
-        <p className="m-0 mt-1 text-ui text-muted">{subs[sec]}</p>
+        <p className="m-0 text-ui leading-[18px] text-muted">{subs[sec]}</p>
       </header>
     );
     return (
-      <section ref={panelRef} role={ob ? undefined : 'tabpanel'} aria-labelledby={ob ? `${uid}-h-${sec}` : tabId} tabIndex={-1} className="outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent">
+      <section ref={panelRef} role={ob ? undefined : 'tabpanel'} aria-labelledby={ob ? `${uid}-h-${sec}` : tabId} tabIndex={-1} className={cn('outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent', !ob && 'mt-5 border-t border-rule pb-2 pt-7')}>
         {head}
         {editable(sec) && !ob ? (
-          <form onSubmit={(e) => { e.preventDefault(); submit(sec); }} noValidate>
+          <form onSubmit={(e) => { e.preventDefault(); submit(sec); }} noValidate className="mt-6">
             {inner}
-            <FormFoot dirty={dirty} saveLabel={`Save ${lowerName(saveName(sec))}`} onDiscard={() => { clearDraft(sec); setGenErr(''); }} />
+            {sec === 'general' ? null : foot}
           </form>
-        ) : (
+        ) : ob ? (
           inner
+        ) : (
+          <div className="mt-6">{inner}</div>
         )}
       </section>
     );
@@ -914,21 +901,28 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
     : [];
   const kindAny = kind;
   const header = p && !ob ? (
-    <div className="mb-6">
-      <div className="flex flex-wrap items-center gap-3">
-        <PlatformLogo name={nameOf(p.id)} src={details[p.id].logo} index={p.index} size={32} decorative />
-        <h1 className="m-0 min-w-0 flex-1 basis-48 text-title font-semibold text-text [overflow-wrap:anywhere]">{nameOf(p.id)}</h1>
-        {needsLink(p) ? (
-          <Button variant="primary" leftIcon={ArrowRight} onClick={() => { setTab('connections'); setFlashId(null); refocus('panel'); }}>Finish setup</Button>
-        ) : kindAny.hasApp ? (
-          <Button variant="primary" leftIcon={ArrowSquareOut} onClick={() => toast({ description: `Opening ${shortName({ label: nameOf(p.id) })}.` })}>Open {shortName({ label: nameOf(p.id) })}</Button>
-        ) : (
-          <span className="text-ui text-muted">No app yet</span>
-        )}
+    <div className={phone ? 'mt-4' : undefined}>
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-small text-muted">
+        <a href="#platforms" onClick={(e) => { e.preventDefault(); go({ to: 'platforms' }); }} className="rounded-[2px] hover:text-text">All platforms</a>
+        <span aria-hidden className="text-control">/</span>
+        <span className="inline-flex items-center gap-1.5"><KindIcon kind={p.kind} size={14} />{kind.name}</span>
+      </div>
+      <div className={`mt-2 flex gap-3 ${phone ? 'flex-wrap items-start' : 'items-center'}`}>
+        <Logo x={p} src={details[p.id].logo} />
+        <h1 className={`m-0 font-semibold text-text ${phone ? 'text-[18px] leading-[25px]' : 'text-case'}`}>{nameOf(p.id)}</h1>
+        <div className={phone ? 'flex basis-full gap-2 [&>*]:h-11 [&>*]:flex-1' : 'ml-auto flex shrink-0 gap-2'}>
+          {needsLink(p) ? (
+            <Button variant="primary" leftIcon={ArrowRight} onClick={() => { setTab('connections'); setFlashId(null); refocus('panel'); }}>Finish setup</Button>
+          ) : kindAny.hasApp ? (
+            <Button variant="primary" leftIcon={ArrowSquareOut} onClick={() => toast({ description: `Opening ${shortName({ label: nameOf(p.id) })}.` })}>Open {shortName({ label: nameOf(p.id) })}</Button>
+          ) : (
+            <span className="text-ui text-muted">No app yet</span>
+          )}
+        </div>
       </div>
       <FactsLine className="mt-2" aria-label="Facts">
-        <Fact><StatusDot status={healthOf(p).tone} label={healthOf(p).word} /></Fact>
-        <Fact>Synced {p.synced ?? 'not yet'}</Fact>
+        <Fact><Health tone={healthOf(p).tone} word={healthOf(p).word} /></Fact>
+        <Fact>{p.synced ? `Synced ${p.synced}` : 'Not synced yet'}</Fact>
         {p.version ? <Fact>{p.version}</Fact> : null}
         <Fact>Connected {p.connected}</Fact>
       </FactsLine>
@@ -943,6 +937,7 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
 
   const place = (
     <div className="flex min-h-0 flex-col gap-4 px-2 pb-4">
+      <div className="-mx-2">
       <TownMap
         ref={mapRef}
         platforms={mapPlatforms}
@@ -952,19 +947,20 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
         highlight={hover}
         dimOthers
         loading={state === 'loading'}
-        caption={`${plural(platforms.length, 'platform')} · ${links.length ? plural(links.length, 'data link') : 'no data links'}`}
+        caption={<><b className="font-semibold text-text">{plural(platforms.length, 'platform')}</b> · {links.length ? plural(links.length, 'data link') : 'no data links'}</>}
         label="This platform on your map"
         onSelect={(id) => { if (id && id !== p?.id && !ob) { setPid(id); setDrafts({}); setTab('general'); setMemEdit(null); } }}
         onHover={(id) => setHover(id ? [id] : null)}
       />
+      </div>
       <div className="px-1">
         <div className="mt-0.5 flex items-center gap-2.5">
-          <PlatformLogo name={p ? nameOf(p.id) : general.label || kind.name} src={p ? details[p.id].logo : general.logo ?? undefined} index={p?.index ?? platforms.length + 1} size={32} decorative />
+          {p ? <Logo x={p} src={details[p.id].logo} /> : <PlatformLogo name={general.label || kind.name} src={general.logo ?? undefined} index={platforms.length + 1} size={32} decorative />}
           <p className="m-0 min-w-0 flex-1 truncate text-title font-semibold tracking-[-0.01em] text-text">{p ? nameOf(p.id) : general.label || kind.name}</p>
         </div>
         <p className="m-0 mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px] leading-5 text-muted">
-          <span>{kind.name}{p?.place ? ` · ${p.place}` : ''}</span>
-          {p ? <StatusDot status={healthOf(p).tone} label={healthOf(p).word} /> : <span>Not added yet</span>}
+          <span className="inline-flex items-center gap-[3px]">{p ? <KindIcon kind={p.kind} /> : null}{kind.name}{p?.place ? ` · ${p.place}` : ''}</span>
+          {p ? <Health tone={healthOf(p).tone} word={healthOf(p).word} /> : <span>Not added yet</span>}
         </p>
       </div>
       {p && !ob ? (
@@ -975,8 +971,10 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
     </div>
   );
 
-  const ask = <AskLedaBar variant="bar" scope={p ? shortName({ label: nameOf(p.id) }) : 'your platforms'} onOpen={() => toast({ description: 'Leda is ready.', leda: true })} />;
+  const ask = <AskLedaBar variant="bar" scope="your platforms" onOpen={() => toast({ description: 'Leda is ready.', leda: true })} />;
   const crumbs = [{ label: 'All platforms', href: '#platforms', onClick: (e: MouseEvent) => { e.preventDefault(); go({ to: 'platforms' }); } }, ...(ob ? [{ label: 'Add a platform' }] : []), { label: p ? nameOf(p.id) : ob ? general.label || kind.name : 'Platform' }];
+
+  const whereCrumbs = [{ label: 'All platforms', icon: ArrowLeft, plain: true, href: '#platforms', onClick: (e: MouseEvent) => { e.preventDefault(); go({ to: 'platforms' }); } }, ...(ob ? [{ label: 'Add a platform' }] : []), { label: p ? nameOf(p.id) : ob ? general.label || kind.name : 'Platform', ...(p ? { leading: <Logo x={p} src={details[p.id].logo} size={16} /> } : {}) }];
 
   const obTitle = p ? `Set up ${nameOf(p.id)}` : `Add ${/^[AEIOU]/.test(kind.name) ? 'an' : 'a'} ${kind.name}`;
   const lastStep = ob ? ob.step === SECTIONS.length - 1 : false;
@@ -1025,10 +1023,10 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
       );
     }
     return (
-      <div ref={sheetRef} className="p-pad">
-        <div className="max-w-[760px]">
+      <div ref={sheetRef} className="p-pad pb-8 pt-5 max-[640px]:pt-4">
+        <div>
           {phone && p ? (
-            <div ref={tabsRef} className="mb-4">
+            <div ref={tabsRef} className="sticky top-0 z-[5] -mx-4 -mt-4 border-b border-rule bg-surface px-4 py-2">
               <Tabs variant="chips" aria-label={nameOf(p.id)} items={tabItems.map((t) => ({ ...t, status: undefined }))} value={tab} onValueChange={(v) => { setTab(v as SectionId); setFlashId(null); }} />
             </div>
           ) : null}
@@ -1045,7 +1043,7 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
         current="platforms"
         pageName="Platform"
         heading={null}
-        account={{ name: 'Maria Santos', email: 'maria@santosauto.ph', role: 'Owner' }}
+        account={{ name: sampleSet.owner.name, email: sampleSet.owner.email, role: sampleSet.owner.role, initials: sampleSet.owner.initials }}
         onAddPlatform={() => go({ to: 'platforms', add: true })}
         onNavigate={go}
         placeLabel="This platform on your map"
@@ -1055,13 +1053,12 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
         topBar={
           <>
             <Breadcrumbs variant="phone" aria-label="Back" items={crumbs} />
-            <span className="min-w-0 flex-1 truncate font-semibold">{p ? nameOf(p.id) : 'Add a platform'}</span>
+            <span className="min-w-0 flex-1" />
             <AskLedaBar variant="bar" scope="your platforms" shortcuts={false} onOpen={() => toast({ description: 'Leda is ready.', leda: true })} />
-            <AccountMenu name="Maria Santos" email="maria@santosauto.ph" role="Owner" applyToDocument={false} />
           </>
         }
-        sheetBar={phone ? undefined : <SheetBar actions={ask}><Breadcrumbs variant="sheet" aria-label="You are here" items={crumbs} /></SheetBar>}
-        status={<StatusBar platforms={platforms.map((x) => ({ id: x.id, name: shortName({ label: nameOf(x.id) }), health: healthTone[x.isNew ? (needsLink(x) ? 'setup' : 'setting-up') : x.health] === 'ok' ? 'ok' : (healthTone[x.isNew ? (needsLink(x) ? 'setup' : 'setting-up') : x.health] as 'warn'), healthText: x.isNew || x.health !== 'ok' ? statusLabel(x).split(' since')[0].toLowerCase() : undefined, selected: x.id === p?.id, href: `#${x.id}` }))} people={{ count: 14 }} leda={{ used: 412, max: 1000 }} plan="Business" updatedAt="9:12 AM" />}
+        sheetBar={phone ? undefined : <SheetBar actions={ask} wrapChildren={false}><Breadcrumbs variant="where" aria-label="You are here" items={whereCrumbs} /></SheetBar>}
+        status={<StatusBar ledaFirst platforms={platforms.map((x) => { const h = healthOf(x); return { id: x.id, name: shortName(x), initials: x.mono, color: x.color, logoSrc: x.logo, health: h.tone === 'ok' ? 'ok' as const : h.tone === 'bad' ? 'bad' as const : h.tone === 'accent' ? 'accent' as const : 'warn' as const, healthText: x.isNew || x.health !== 'ok' ? h.word.split(' since')[0].toLowerCase() : undefined, href: `#${x.id}` }; })} summary={<><span className="tabular-nums">{plural(platforms.length, 'platform')}</span>{platforms.every((x) => !x.isNew && x.health === 'ok') ? <span>· all running</span> : null}</>} people={{ count: sampleSet.people }} leda={{ used: sampleSet.usedRequests, max: usage.limit, daysLeft: `${usage.daysLeft} days left` }} plan={sampleSet.plan} updatedAt="9:12 AM" />}
       >
         {content}
       </PortalFrame>

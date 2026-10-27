@@ -436,6 +436,8 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
                       'focus-visible:z-[3] hover:z-[3]',
                       sel || hl ? 'border-accent after:bg-accent' : dimFocus ? 'border-border data-[placed]:opacity-55 data-[placed]:hover:opacity-100 hover:border-control' : dim ? 'border-rule' : 'border-border hover:border-control',
                       sel && 'z-[3] shadow-[inset_0_0_0_1px_var(--accent)] forced-colors:border-[Highlight] forced-colors:border-2',
+                      // the workshop's `.hl` health-line rule also lands on the highlighted label (inline-flex, centred, 6px gap)
+                      hl && 'items-center gap-1.5',
                       p.hq && 'border-dashed',
                       loading && 'cursor-default',
                       '@max-[400px]/town:px-1.5 @max-[400px]/town:py-[3px] max-[640px]:px-1.5 max-[640px]:py-[3px]',
