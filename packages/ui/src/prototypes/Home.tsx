@@ -598,7 +598,7 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
     );
   };
 
-  const dur = (m: number) => (m >= 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m} min`);
+  const dur = (m: number) => (m >= 60 ? `${Math.floor(m / 60)} h ${m % 60} min` : `${m} min`);
   const propOf = (pid: string) => Object.values(data.cases).find((x) => x.proposal?.id === pid)?.proposal;
   const linesOf = (pid: string): DraftLine[] => [...(propOf(pid)?.lines ?? []), ...(extraLines[pid] ?? []).map((l) => ({ ...l, added: true }))];
   const caseView = (id: string) => {
@@ -708,20 +708,20 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
                 onDiscard={() => discard(id)}
               />
             ) : c.open ? (
-              <div id="prop" ref={proposalEl} className="rounded-card bg-raised px-[18px] pb-[18px] pt-4 max-[640px]:px-4 max-[640px]:pb-4">
+              <div id="prop" ref={proposalEl} className="rounded-card bg-raised px-[18px] pb-[18px] pt-4 max-[640px]:px-4 max-[640px]:pb-4 max-[640px]:pt-3.5">
                 <div className="flex items-center gap-2 text-small leading-5 text-muted"><LedaMark size={16} decorative /><span>No draft</span><span aria-hidden>·</span><span>{platformById(c.open.platformId)?.kind}</span></div>
                 <h3 className="m-0 mt-2 text-[16px] font-semibold leading-[22px] text-text">{c.open.label}</h3>
-                <div className="mt-[18px] flex flex-wrap items-center gap-2"><Button variant={c.open.primary ? 'primary' : 'secondary'} leftIcon={ArrowSquareOut} onClick={() => go({ to: 'platform', id: c.open!.platformId })}>Open {platformById(c.open.platformId)?.name}</Button></div>
+                <div className="mt-[18px] flex flex-wrap items-center gap-2 max-[640px]:[&_button]:h-11"><Button className={c.open.primary ? 'max-[640px]:flex-[1_1_100%]' : undefined} variant={c.open.primary ? 'primary' : 'secondary'} leftIcon={ArrowSquareOut} onClick={() => go({ to: 'platform', id: c.open!.platformId })}>Open {platformById(c.open.platformId)?.name}</Button></div>
               </div>
             ) : c.plan ? (
-              <div id="prop" ref={proposalEl} className="rounded-card bg-raised px-[18px] pb-[18px] pt-4 max-[640px]:px-4 max-[640px]:pb-4">
+              <div id="prop" ref={proposalEl} className="rounded-card bg-raised px-[18px] pb-[18px] pt-4 max-[640px]:px-4 max-[640px]:pb-4 max-[640px]:pt-3.5">
                 <div className="flex items-center gap-2 text-small leading-5 text-muted"><LedaMark size={16} decorative /><span>{data.plan.name ?? 'Starter'} plan</span><span aria-hidden>·</span><span className="tabular-nums">{data.plan.cycleStart} to {data.plan.cycleEnd}</span></div>
                 <h3 className="m-0 mt-2 text-[16px] font-semibold leading-[22px] tabular-nums text-text">{data.plan.used.toLocaleString('en-PH')} of {data.plan.max.toLocaleString('en-PH')} requests</h3>
                 <div className="mt-3">
                   <div className="relative h-2 overflow-hidden rounded bg-raised-2"><span className={cn('absolute inset-y-0 left-0 rounded', Math.round((data.plan.used / data.plan.max) * 100) >= 80 ? 'bg-warn-dot' : 'bg-accent')} style={{ width: `${Math.round((data.plan.used / data.plan.max) * 100)}%` }} /></div>
                   <div className="mt-1.5 flex justify-between text-small text-muted"><span className="tabular-nums">0</span><span><b className="font-medium tabular-nums text-text">{Math.round((data.plan.used / data.plan.max) * 100)}%</b> used</span><span className="tabular-nums">{data.plan.max.toLocaleString('en-PH')}</span></div>
                 </div>
-                <div className="mt-[18px] flex flex-wrap items-center gap-2"><Button variant="secondary" onClick={() => go({ to: 'plan' })}>See plan</Button></div>
+                <div className="mt-[18px] flex flex-wrap items-center gap-2 max-[640px]:[&_button]:h-11"><Button variant="secondary" onClick={() => go({ to: 'plan' })}>See plan</Button></div>
               </div>
             ) : null}
           </div>

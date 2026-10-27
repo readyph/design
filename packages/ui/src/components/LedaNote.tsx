@@ -26,7 +26,7 @@ export const LedaNote = forwardRef<HTMLDivElement, LedaNoteProps>(function LedaN
   ref,
 ) {
   return (
-    <div ref={ref} role="note" aria-label={label} {...rest} className={cn(className, box, 'flex items-start gap-2')}>
+    <div ref={ref} role="note" aria-label={label} {...rest} className={cn(className, box, 'flex items-start gap-2.5')}>
       <span aria-hidden className="mt-0.5 shrink-0">
         <LedaMark size={16} tile decorative />
       </span>
