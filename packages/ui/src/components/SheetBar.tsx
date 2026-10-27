@@ -18,7 +18,7 @@ const W = 'min-[641px]:max-[1100px]:h-auto min-[641px]:max-[1100px]:flex-wrap mi
 export function SheetBar({ children, actions, wrapChildren = true, className }: SheetBarProps) {
   return (
     <div className={cn('flex h-[calc(var(--sheet-bar)-1px)] items-stretch gap-4 bg-surface px-pad', W, className)}>
-      <div className={cn('flex min-w-0 flex-1 items-center [&_[role=tablist]]:border-b-0', actions && wrapChildren && 'min-[641px]:max-[1100px]:order-last min-[641px]:max-[1100px]:basis-full')}>{children}</div>
+      <div className={cn('flex min-w-0 flex-1 items-center [&_[role=tablist]]:border-b-0', actions && wrapChildren && 'min-[641px]:max-[1100px]:order-last min-[641px]:max-[1100px]:h-10 min-[641px]:max-[1100px]:basis-full')}>{children}</div>
       {actions && <div className="flex shrink-0 items-center gap-2 min-[641px]:max-[1100px]:order-first">{actions}</div>}
     </div>
   );

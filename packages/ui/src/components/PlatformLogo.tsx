@@ -25,7 +25,7 @@ export interface PlatformLogoProps {
 }
 
 const sizeClass: Record<PlatformLogoSize, string> = {
-  14: 'size-[14px] text-[7px]',
+  14: 'size-3.5 text-[7px]',
   16: 'size-4 text-[8px]',
   20: 'size-5 text-[10px]',
   24: 'size-6 text-[12px]',

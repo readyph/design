@@ -48,7 +48,7 @@ export function placeLabels(boxes: readonly LabelBox[], width: number, height: n
   for (const b of order) {
     const x0 = fitX(b.ax - b.w / 2, b.w);
     const y0 = b.ay - b.h - 12;
-    // the prototype's search (map.js placeLabels), so labels land where the workshop page puts them
+    // the workshop's search (map.js placeLabels): up first, then sideways
     const dys = [0, -0.5, -1, -1.5, -2, -3, 0.5, 1, 1.5, 2].map((k) => k * (b.h + GAP));
     const dxs = [0, -0.3, 0.3, -0.55, 0.55, -0.8, 0.8, -1.1, 1.1, -1.5, 1.5].map((k) => k * b.w);
     let best: { x: number; y: number; cost: number; o: number } | null = null;

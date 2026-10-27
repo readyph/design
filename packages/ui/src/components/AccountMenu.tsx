@@ -2,7 +2,6 @@ import { forwardRef, useCallback, useEffect, useId, useRef, useState, type Compo
 import * as RadixMenu from '@radix-ui/react-dropdown-menu';
 import { CircleHalf, Desktop, Moon, SignOut, Sun, UserGear } from '@phosphor-icons/react';
 import { SegmentedControl } from './SegmentedControl';
-import { menuItemBase } from './Menu';
 import { cn, focusRing } from '../utils/cn';
 
 export type ThemeChoice = 'light' | 'dark' | 'system';
@@ -45,7 +44,7 @@ export const AccountButton = forwardRef<HTMLButtonElement, ComponentPropsWithout
       >
         <span
           aria-hidden
-          className="grid size-7 place-items-center rounded-full bg-accent-tint text-small font-semibold text-accent"
+          className="grid size-7 place-items-center rounded-full bg-avatar-bg text-[11px] font-semibold text-avatar-text"
         >
           {initials ?? initialsOf(name)}
         </span>
@@ -59,7 +58,7 @@ export interface AccountMenuProps {
   email: string;
   /** Role chip text, e.g. "Owner". */
   role: string;
-  /** Avatar initials when they are not the first and last word of `name` ("RD" for Ramon Dela Cruz). */
+  /** Initials in the avatar. Default: first and last name initial. */
   initials?: string;
   /** Controlled theme choice. */
   theme?: ThemeChoice;
@@ -74,6 +73,9 @@ export interface AccountMenuProps {
   onLogout?: () => void;
   className?: string;
 }
+
+const acctRow =
+  'flex h-8 w-full cursor-pointer items-center gap-2.5 rounded-chip px-2.5 text-left text-text outline-none data-[highlighted]:bg-frame-hover focus-visible:outline focus-visible:outline-[1.5px] focus-visible:-outline-offset-[1.5px] focus-visible:outline-accent max-sm:h-11';
 
 const itemSelector = '[role="menuitem"]:not([data-disabled]),[role="menuitemradio"][aria-checked="true"]';
 
@@ -175,8 +177,7 @@ export function AccountMenu({
     target?.focus();
   };
 
-  // The prototype's account menu rows (.ai): 32px, 10px gap, text colour, a muted 16px icon, tinted on hover or keyboard focus.
-  const row = cn(menuItemBase, 'h-8 gap-2.5 px-2.5 py-0 text-text hover:bg-frame-hover focus-visible:bg-frame-hover max-sm:h-11');
+  const row = acctRow;
   const settingsContent = (
     <>
       <UserGear size={16} aria-hidden className="text-muted" />
@@ -199,22 +200,22 @@ export function AccountMenu({
           loop
           onKeyDownCapture={onKeyDownCapture}
           className={cn(
-            'z-50 w-[304px] rounded-card border border-border bg-overlay p-1 shadow-float backdrop-blur-[14px] focus:outline-none max-sm:w-[calc(100vw-16px)]',
+            'z-50 w-[304px] rounded-card border border-border bg-overlay p-1 text-[13px] leading-[18px] text-text shadow-float backdrop-blur-[14px] backdrop-saturate-[1.2] focus:outline-none max-sm:w-[calc(100vw-16px)]',
             className,
           )}
         >
           <div className="flex items-center gap-2.5 px-2.5 pb-2.5 pt-2">
             <span
               aria-hidden
-              className="grid size-8 shrink-0 place-items-center rounded-full bg-avatar-bg text-small font-semibold text-avatar-text"
+              className="grid size-8 shrink-0 place-items-center rounded-full bg-avatar-bg text-[12px] font-semibold text-avatar-text"
             >
               {initials ?? initialsOf(name)}
             </span>
             <div className="flex min-w-0 flex-col">
-              <div className="truncate text-ui font-semibold">{name}</div>
-              <div className="truncate text-small text-muted">{email}</div>
+              <div className="truncate text-[13px] font-semibold leading-[18px]">{name}</div>
+              <div className="truncate text-small leading-4 text-muted">{email}</div>
             </div>
-            <span className="ml-auto h-[18px] shrink-0 self-start rounded-chip border border-border px-1.5 text-tiny font-medium leading-4 text-muted">{role}</span>
+            <span className="ml-auto h-[18px] shrink-0 self-start rounded-chip border border-border px-1.5 text-[11px] font-medium leading-4 text-muted">{role}</span>
           </div>
           <RadixMenu.Separator className="-mx-1 my-1 h-px bg-border" />
           {settingsHref !== undefined ? (
@@ -230,11 +231,12 @@ export function AccountMenu({
           )}
           <div className="flex items-center gap-2.5 py-1 pl-2.5 pr-1">
             <CircleHalf size={16} aria-hidden className="shrink-0 text-muted" />
-            <span id={labelId} className="flex-1">
+            <span id={labelId} className="flex-1 text-text">
               Theme
             </span>
             <SegmentedControl
               semantics="menu"
+              size="menu"
               aria-labelledby={labelId}
               options={THEMES}
               value={current}
@@ -243,7 +245,7 @@ export function AccountMenu({
             />
           </div>
           <RadixMenu.Separator className="-mx-1 my-1 h-px bg-border" />
-          <RadixMenu.Item onSelect={onLogout} className={row}>
+          <RadixMenu.Item onSelect={onLogout} className={acctRow}>
             <SignOut size={16} aria-hidden className="text-muted" />
             <span>Log out</span>
           </RadixMenu.Item>

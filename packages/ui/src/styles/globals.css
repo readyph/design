@@ -30,7 +30,7 @@
     --accent-tint-2: #2c3657;
     --hatch: #4b4d50;
     --scrim: rgba(0,0,0,.5);
-    --overlay: rgba(43,44,45,.90);
+    --overlay: rgba(43,44,45,.86);
     --skeleton: #2b2c2d;
     --avatar-bg: #233152;
     --avatar-text: #c4d3f7;
@@ -110,7 +110,7 @@
   --accent-tint-2: #2c3657;
   --hatch: #4b4d50;
   --scrim: rgba(0,0,0,.5);
-  --overlay: rgba(43,44,45,.90);
+  --overlay: rgba(43,44,45,.86);
   --skeleton: #2b2c2d;
   --avatar-bg: #233152;
   --avatar-text: #c4d3f7;

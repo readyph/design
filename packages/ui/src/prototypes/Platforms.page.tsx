@@ -426,7 +426,6 @@ function Place({ set, state, phone, focusIds, onFocusPlatform, onAdd, onAsk }: P
           };
         });
   const links: TownMapLink[] = live ? set.links.map((l) => ({ from: l.from, to: l.to, status: l.road })) : [];
-  const byRoad = { ok: links.filter((l) => l.status === 'ok').length, slow: links.filter((l) => l.status === 'slow').length };
   const cap =
     state === 'loading' ? (
       <span aria-hidden className="inline-block h-3 w-[150px] rounded-[3px] bg-skeleton align-middle" />
@@ -471,7 +470,6 @@ function Place({ set, state, phone, focusIds, onFocusPlatform, onAdd, onAsk }: P
         loading={state === 'loading'}
         error={state === 'error'}
         caption={cap}
-        captionInside
         errorNotice={false}
         platformLabel={(p) => {
           const q = byId(set, p.id);
@@ -481,14 +479,7 @@ function Place({ set, state, phone, focusIds, onFocusPlatform, onAdd, onAsk }: P
         dimOthers={false}
         focus={live && ids?.length === 1 ? ids[0] : null}
         highlight={live && ids && ids.length > 1 ? ids : null}
-        legend={byRoad}
-        controlsEnd={
-          state === 'live' ? (
-            <Button variant="text" leftIcon={PlusSquare} aria-label="Add a platform" className="h-7 gap-1.5 px-1.5 text-small font-normal text-muted hover:text-text max-[960px]:[&>span>span]:hidden @max-[400px]/town:[&>span>span]:hidden" onClick={() => onAdd()}>
-              Add platform
-            </Button>
-          ) : null
-        }
+        onAddPlatform={state === 'live' ? () => onAdd() : undefined}
         onSelect={(id) => {
           if (live && id) go({ to: 'platform', id });
         }}
@@ -949,10 +940,10 @@ export function PlatformsPage({ set: setKey = 'duo', state: initial = 'live', ad
                   <span className="tabular-nums">{plural(set.platforms.length, 'platform')}</span>
                   {set.platforms.every((p) => health(set, p).st === 'ACTIVE') ? <span>· all running</span> : null}
                 </>
-              ) : undefined
+              ) : null
             }
             people={{ count: set.people }}
-            leda={{ used: set.usedRequests, max: USAGE.limit, daysLeft: USAGE.daysLeft }}
+            leda={{ used: set.usedRequests, max: USAGE.limit, daysLeft: `${USAGE.daysLeft} days left` }}
             plan={set.plan}
             updatedAt={set.platforms.length <= 3 ? '9:12 AM' : undefined}
           />

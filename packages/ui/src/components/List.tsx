@@ -14,9 +14,8 @@ import {
 } from 'react';
 import { cn } from '../utils/cn';
 
-/** Width of the LIST (its container, not the viewport) below which a row stacks. */
 /** Container width under which rows stack. `'sheet760'` measures the PlatformShell sheet (the prototype's `@container sheet (max-width: 760px)`) instead of the list. */
-export type ListStackBelow = 600 | 760 | 880 | 'sheet760';
+export type ListStackBelow = 0 | 600 | 760 | 880 | 'sheet760';
 
 type Mode = 'list' | 'table';
 
@@ -33,6 +32,8 @@ const ListContext = createContext<ListContextValue>({ mode: 'list', stack: 760, 
  * the nearest ancestor named "list" (the List root), so stacking follows the list's own width.
  */
 const stackClasses: Record<ListStackBelow, { header: string; row: string; lead: string; actions: string; body: string; flush: string; hide: string; only: string }> = {
+  /* 0: never stack. The caller sets `--list-cols` itself (`PlatformToday` does, to follow the sheet's width). */
+  0: { header: '', row: '', lead: '', actions: '', body: '', flush: '', hide: '', only: 'hidden' },
   600: {
     header: '@max-[600px]/list:hidden',
     row: '@max-[600px]/list:grid-cols-[minmax(0,1fr)_auto] @max-[600px]/list:gap-y-2',

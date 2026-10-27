@@ -14,18 +14,43 @@ describe('StatusBar', () => {
     expect(screen.getByRole('contentinfo', { name: 'Status' })).toBeTruthy();
   });
   it('shows plan, updated time, people and invite counts with full names', () => {
-    render(<StatusBar platforms={p(2)} people={{ count: 12 }} invites={{ count: 2 }} plan="Starter" updatedAt="9:12 AM" />);
+    render(<StatusBar ledaFirst={false} platforms={p(2)} people={{ count: 12 }} invites={{ count: 2 }} plan="Starter" updatedAt="9:12 AM" />);
     expect(screen.getByText('Starter plan')).toBeTruthy();
     expect(screen.getByText('Updated 9:12 AM')).toBeTruthy();
     expect(screen.getByLabelText('12 people')).toBeTruthy();
     expect(screen.getByLabelText('2 invites waiting')).toBeTruthy();
   });
-  it('hides invites at 0 and drops plan and updated at 1180px like the prototype', () => {
-    const { container } = render(<StatusBar invites={{ count: 0 }} plan="Pro" updatedAt="1:00 PM" />);
+  it('hides invites at 0 and drops text at narrow widths via container classes', () => {
+    const { container } = render(<StatusBar ledaFirst={false} invites={{ count: 0 }} plan="Pro" updatedAt="1:00 PM" />);
     expect(screen.queryByLabelText(/invite/)).toBeNull();
-    expect(screen.getByText('Updated 1:00 PM').closest('li')!.className).toContain('max-[1180px]:hidden');
-    expect(screen.getByText('Pro plan').closest('li')!.className).toContain('max-[1180px]:hidden');
+    expect(screen.getByText('Updated 1:00 PM').closest('li')!.className).toContain('@max-[960px]/status:hidden');
+    expect(screen.getByText('Pro plan').closest('li')!.className).toContain('@max-[780px]/status:hidden');
     expect(container.querySelectorAll('footer')).toHaveLength(0);
+  });
+  it('workshop order (default): Leda first, "N platforms · all running", people with invites pending folded in, plan', () => {
+    const { container } = render(
+      <StatusBar platforms={p(2)} people={{ count: 9 }} invites={{ count: 1 }} leda={{ used: 1742, max: 2000, daysLeft: '7 days left' }} plan="Starter" updatedAt="9:12 AM" />,
+    );
+    const text = container.textContent ?? '';
+    expect(text.indexOf('Leda')).toBeLessThan(text.indexOf('2 platforms'));
+    expect(text.indexOf('2 platforms')).toBeLessThan(text.indexOf('9 people'));
+    expect(text.indexOf('9 people')).toBeLessThan(text.indexOf('Starter plan'));
+    expect(screen.getByText('· all running')).toBeTruthy();
+    expect(screen.getByText('· 1 invite pending')).toBeTruthy();
+    expect(screen.getByLabelText('9 people, 1 invite pending')).toBeTruthy();
+    expect(screen.queryByLabelText(/invite waiting/)).toBeNull();
+    // shell.css breakpoints: days left and the summary go at 960, invites, plan and Updated at 1180
+    expect(screen.getByText('7 days left').className).toContain('max-[960px]:hidden');
+    expect(screen.getByText('· 1 invite pending').className).toContain('max-[1180px]:hidden');
+    expect(screen.getByText('Starter plan').closest('li')!.className).toContain('max-[1180px]:hidden');
+    expect(screen.getByText('Updated 9:12 AM').closest('li')!.className).toContain('max-[1180px]:hidden');
+  });
+  it('workshop spacing: 2px between items, divider margins 6 and 8, items 26px with 9px padding on a 20px line', () => {
+    const { container } = render(<StatusBar platforms={p(2)} people={{ count: 3 }} />);
+    expect(container.querySelector('ul')!.className).toContain('gap-0.5');
+    expect(container.querySelector('li > span[aria-hidden]')!.className).toContain('ml-1.5 mr-2');
+    const item = screen.getByLabelText('3 people');
+    expect(item.className).toMatch(/h-\[26px\].*px-\[9px\].*leading-5/);
   });
   it('non-running platform shows a plain word, is named and announced', () => {
     render(<StatusBar platforms={[{ id: 'a', name: 'Books', health: 'bad' }, { id: 'b', name: 'Stock' }]} />);
@@ -49,7 +74,7 @@ describe('StatusBar', () => {
     expect(screen.getByRole('status').textContent).toBe('');
   });
   it('4+ platforms: running are logo-only with a title; a non-running keeps name and word; All running summary', () => {
-    const { rerender } = render(<StatusBar platforms={p(4)} />);
+    const { rerender } = render(<StatusBar ledaFirst={false} platforms={p(4)} />);
     expect(screen.getByText('All running')).toBeTruthy();
     expect(screen.queryByText('Plat 0')).toBeNull();
     expect(screen.getByLabelText('Plat 0').getAttribute('title')).toBe('Plat 0: running');
@@ -96,3 +121,13 @@ describe('StatusBar', () => {
     expect((container.firstElementChild as HTMLElement).className).toContain('w-full');
   });
 });
+
+describe('StatusBar forced colors (RDY-364)', () => {
+  it('the Leda minibar keeps an outline and a Highlight fill when backgrounds are forced', () => {
+    render(<StatusBar leda={{ used: 10, max: 100 }} />);
+    const bar = screen.getByRole('progressbar');
+    expect(bar.className).toContain('forced-colors:outline-[CanvasText]');
+    expect(bar.firstElementChild!.className).toContain('forced-colors:bg-[Highlight]');
+  });
+});
+
