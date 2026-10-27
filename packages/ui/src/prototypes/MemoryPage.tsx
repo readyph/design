@@ -233,7 +233,7 @@ export function MemoryPage(props: MemoryPageProps) {
   const [removed, setRemoved] = useState<string[]>([]);
   const [doc, setDoc] = useState<string | null>(doc0 ? keyOf(doc0) : null);
   const [dir, setDir] = useState<SubpageDirection>("in");
-  const [phoneSheet, setPhoneSheet] = useState(!!props.startDetail || !!doc0 || tab0 !== "topics" || !!folder0);
+  const [phoneSheet, setPhoneSheet] = useState(!!props.startDetail || !!props.tryOpen || !!doc0 || tab0 !== "topics" || !!folder0);
   const [tryShown, setTryShown] = useState(props.tryOpen ?? url.get("tab") === "try");
   const [tryAbout, setTryAbout] = useState<string | undefined>();
   const [tryQ, setTryQ] = useState<string | undefined>();
@@ -476,7 +476,7 @@ export function MemoryPage(props: MemoryPageProps) {
   const curFolder: "" | MemSrc | undefined = phone && !phoneSheet ? undefined : doc && curTopic ? curTopic.src : folder;
   const lrow = (on0: boolean) =>
     cn(
-      "flex w-full items-center rounded-[6px] border px-3 py-[9px] text-left max-[640px]:min-h-11 max-[640px]:rounded-none max-[640px]:border-0 max-[640px]:px-4 max-[640px]:py-3 max-[640px]:[button+&]:mt-0.5 max-[640px]:[button+&]:border-t max-[640px]:[button+&]:border-rule",
+      "flex w-full items-center rounded-[6px] border px-3 py-[9px] text-left max-[640px]:min-h-11 max-[640px]:rounded-none max-[640px]:border-0 max-[640px]:px-4 max-[640px]:py-3 max-[640px]:[button+&]:mt-0.5 max-[640px]:[button+&]:border-t max-[640px]:[button+&]:border-rule max-[640px]:[div+div_&]:border-t max-[640px]:[div+div_&]:border-rule",
       on0 ? "border-border bg-surface" : "border-transparent hover:bg-frame-hover",
       focusRing,
     );
@@ -546,7 +546,7 @@ export function MemoryPage(props: MemoryPageProps) {
           {ghead("Folders", "Where Leda's knowledge comes from")}
           <div role="list" aria-label="Folders" className="pb-1 max-[640px]:px-0">
             {folderRows.map((f) => (
-              <div role="listitem" key={f.id || "all"} className={cn(f.id && "mt-0.5", "max-[640px]:[div+&]:border-t max-[640px]:[div+&]:border-rule")}>
+              <div role="listitem" key={f.id || "all"} className={(f.id ? "mt-0.5" : "")}>
                 <button
                   type="button"
                   aria-pressed={curFolder === f.id}
@@ -765,7 +765,7 @@ export function MemoryPage(props: MemoryPageProps) {
     ) : null;
     const sub = `${ts.length ? `${onN} of ${ts.length} on` : "No topics yet"} · ${f ? (f === "company" ? "Leda uses these for every business" : MEM_KIND[f]) : plural(SRCS.length, "folder")}`;
     const title = f ? (
-      <span className="inline-flex items-center gap-2.5">
+      <span className="inline-flex items-center gap-2.5 max-[640px]:mb-[0.5px]">
         <Logo src={f} size={24} />
         <span>{srcName(f)}</span>
       </span>
@@ -898,7 +898,7 @@ export function MemoryPage(props: MemoryPageProps) {
           <div className="flex min-w-0 items-center gap-3 max-[640px]:flex-[1_1_100%] max-[640px]:flex-wrap max-[640px]:gap-2">
             {bizFilter}
             {phone ? (
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0 flex-1 [&_[role=combobox]]:pl-2.5 [&_[role=combobox]]:pr-2 [&_[role=combobox]]:text-[13px]">
                 <Select
                   size="sm"
                   aria-label={`Show: ${FILTERS.find(([k]) => k === filter)![0] === "all" ? "Show all" : FILTERS.find(([k]) => k === filter)![1]}`}

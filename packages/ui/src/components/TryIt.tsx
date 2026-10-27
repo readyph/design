@@ -169,8 +169,8 @@ export function TryIt({
         initialFocus={questionRef as RefObject<HTMLElement | null>}
         onCloseAutoFocus={onCloseAutoFocus}
       >
-        <Modal.Header iconNode={<LedaMark size={18} decorative effect="aurora" active={thinking} />} description={description} className="!border-border !pb-3.5 !pl-[22px] !pr-4 !pt-4 max-sm:!pl-4 max-sm:!pr-2 max-sm:!py-3">{title}</Modal.Header>
-        <Modal.Body className="!px-[22px] !pb-6 !pt-5 max-sm:!px-4">
+        <Modal.Header iconNode={<LedaMark size={18} decorative effect="aurora" active={thinking} />} description={description} className="!border-border !pb-3.5 !pl-[22px] !pr-4 !pt-4 max-[640px]:!pl-4 max-[640px]:!pr-2 max-[640px]:!py-3">{title}</Modal.Header>
+        <Modal.Body className="!px-[22px] !pb-6 !pt-5 max-[640px]:!px-4 max-[640px]:!pt-4 [&_[role=combobox]]:max-[640px]:!min-h-10">
         <div>
           <h3 className="m-0 text-[13px] font-semibold leading-5">A customer asks</h3>
           <p id={`${uid}-about`} className={cn(wl, 'mt-2')}>About</p>
