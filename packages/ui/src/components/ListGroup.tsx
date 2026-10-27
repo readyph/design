@@ -34,6 +34,7 @@ let warnedAuto = false;
 
 /* Written out in full so Tailwind sees them: the visual column header hides once the rows stack. */
 const headerHidden: Record<ListStackBelow, string> = {
+  0: '',
   600: '@max-[600px]/list:hidden',
   760: '@max-[760px]/list:hidden',
   880: '@max-[880px]/list:hidden',

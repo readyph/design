@@ -117,7 +117,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
   const [pstate, setPstate] = useState<Record<string, LedaProposalState>>({});
   const [choice, setChoice] = useState<Record<string, string>>({});
   const [flash, setFlash] = useState(0);
-  const [flashBlock, setFlashBlock] = useState<{ id: string; n: number } | null>(null);
+  const [flashRow, setFlashRow] = useState<{ pid: string; ref: string; n: number } | null>(null);
   const [showMore, setShowMore] = useState<Record<string, boolean>>({});
 
   // Leda
@@ -333,7 +333,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
             key={idKey(p)}
             id={`today-${p.id}`}
             tabIndex={-1}
-            className={flashBlock?.id === p.id ? 'animate-row-flash rounded-card outline-none' : 'rounded-card outline-none'}
+            className="rounded-card outline-none"
             onMouseEnter={() => setHover(p.id)}
             onMouseLeave={() => setHover(null)}
           >
@@ -345,6 +345,8 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
               facts={p.facts}
               leda={ledaMode(p)}
               maxRows={maxRows}
+              rowLayout={phone ? 'phone' : bodyW <= 720 ? 'narrow' : 'wide'}
+              flashRow={flashRow?.pid === p.id ? flashRow : null}
               loading={loading}
               error={failed === p.id}
               lastLoaded="9:10 AM"
@@ -366,8 +368,11 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
                           ref: it.linkRef,
                           text: it.linkText ?? '',
                           onSelect: () => {
-                            setFlashBlock((f) => ({ id: to.id, n: (f?.n ?? 0) + 1 }));
-                            document.getElementById(`today-${to.id}`)?.focus();
+                            const ref = it.linkRef ?? '';
+                            const row = document.querySelector<HTMLElement>(`#today-${to.id} [data-ref="${ref}"]`);
+                            if (!row) { go(to.hq ? { to: 'team' } : { to: 'platform', id: to.id }); return; }
+                            row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                            setFlashRow((f) => ({ pid: to.id, ref, n: (f?.n ?? 0) + 1 }));
                           },
                         },
                       }
