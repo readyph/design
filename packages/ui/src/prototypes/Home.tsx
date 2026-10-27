@@ -29,6 +29,7 @@ import { toast } from '../components/toast/toastStore';
 import { PortalFrame } from './PortalFrame';
 import { destFromHash, go } from './protoNav';
 import { focusIfLost } from '../utils/focusIfLost';
+import { cn, focusRing } from '../utils/cn';
 import { useMatchMedia } from '../utils/useMatchMedia';
 import { ledaMode, mapSlots, queuePlatforms, sets, suggestions, type HomeCase, type HomePlatform, type HomeSetKey, type HomeState } from './Home.data';
 
@@ -324,7 +325,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
   const todayView = (
     <div className="px-pad pb-10 pt-6">
       <div className="mb-6 flex flex-wrap items-baseline gap-x-4 gap-y-1">
-        <h2 ref={headingRef} tabIndex={-1} className="m-0 text-title text-text outline-none focus-visible:ring-2 focus-visible:ring-accent">Today</h2>
+        <h2 ref={headingRef} tabIndex={-1} className={cn('m-0 text-title text-text', focusRing)}>Today</h2>
         <p className="m-0 text-ui text-muted">{shown.length} {filter === 'hq' ? 'block' : shown.length === 1 ? 'platform' : 'platforms'}{set === 'live' && !filter ? ' · Stockroom → Auto Works, parts for jobs' : ''} · {clock()}</p>
       </div>
       <div className="grid grid-cols-1 gap-x-10 gap-y-12 @min-[720px]/sheet:grid-cols-2 @min-[720px]/sheet:gap-x-14">
@@ -419,7 +420,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
           {kind === 'watching' ? <Badge tone="accent">Watching</Badge> : null}
         </div>
         <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
-          <h2 ref={headingRef} tabIndex={-1} className="m-0 min-w-0 text-title text-text outline-none focus-visible:ring-2 focus-visible:ring-accent">{item.title}</h2>
+          <h2 ref={headingRef} tabIndex={-1} className={cn('m-0 min-w-0 text-title text-text', focusRing)}>{item.title}</h2>
           <div className="flex shrink-0 items-center gap-2">
             <Button variant="secondary" rightIcon={ArrowSquareOut} onClick={() => go({ to: 'platform', id: p.id })}>Open {p.shortName ?? p.name}</Button>
             {isOpen ? (
@@ -492,7 +493,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
   const hero = (
     <div className="mx-auto flex max-w-[640px] flex-col items-center px-pad pb-8 pt-12 text-center max-[640px]:pt-6">
       <LedaMark size={88} effect={loading ? 'aurora' : 'glint'} active={loading} once={!loading} decorative />
-      <h2 ref={headingRef} tabIndex={-1} className="m-0 mt-4 text-title text-text outline-none focus-visible:ring-2 focus-visible:ring-accent">Good {dayPart}, {owner.short}</h2>
+      <h2 ref={headingRef} tabIndex={-1} className={cn('m-0 mt-4 text-title text-text', focusRing)}>Good {dayPart}, {owner.short}</h2>
       <p className="m-0 mt-1 text-body text-muted">{run}</p>
       <div className="mt-5 w-full max-[640px]:hidden">{askBar('overview', true)}</div>
       <ChatChips

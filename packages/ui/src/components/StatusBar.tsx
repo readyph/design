@@ -3,7 +3,7 @@ import { EnvelopeSimple, Users } from '@phosphor-icons/react';
 import { LedaMark } from './Leda';
 import { PlatformLogo, type PlatformLogoProps } from './PlatformLogo';
 import { ProgressBar } from './ProgressBar';
-import { cn } from '../utils/cn';
+import { cn, focusRing } from '../utils/cn';
 
 export type StatusBarHealth = 'ok' | 'warn' | 'bad' | 'err' | 'neutral' | 'accent';
 
@@ -104,7 +104,7 @@ const item =
   'inline-flex h-[26px] min-w-0 items-center gap-2 whitespace-nowrap rounded-chip px-[9px] text-small leading-5 text-muted';
 const interactive =
   'cursor-pointer hover:bg-frame-hover hover:text-text aria-pressed:bg-frame-active aria-[current=true]:bg-frame-active ' +
-  'outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-frame forced-colors:outline-0 forced-colors:focus-visible:outline forced-colors:focus-visible:outline-2 forced-colors:focus-visible:outline-[Highlight]';
+  focusRing;
 const dropUpdated = '@max-[960px]/status:hidden';
 const dropPlan = '@max-[780px]/status:hidden';
 const dropInviteWord = '@max-[780px]/status:hidden';
