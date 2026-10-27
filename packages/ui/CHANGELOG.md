@@ -1,5 +1,13 @@
 # @readyph/ui
 
+## 0.9.0
+
+### Minor Changes
+
+- 8bb3961: `TownMap` (RDY-317): add a Reset view control and `TownMapHandle.reset()`; `onAdd` shows the add "+" (alias of `onAddPlatform`); with focus in the map, arrow keys rotate and `+` / `-` zoom (not while typing in another widget); controls are 44px targets on touch devices.
+- 479ff7b: RolePicker: new `mode="by-role"` for one platform's people (the platform Team tab). A row per person with the role dropdown and the chosen role's line under it; Admin and Owner as a tag; people who have not joined shown read only ("Mechanic when they join"); "Not assigned" asks first with the `removeConfirm` words and applies on Save. `value` is `Record<personId, roleId | null>`. A host with its own Save bar passes `hideActions` and `onRemovePerson` (an X per row), and `roleLines={false}` for a compact list. The default person-by-platform mode is unchanged; `RolePickerRemoveConfirm` is now generic (`<T = RolePickerPlatform>`). For Leonardo: RDY-258/Portal Team can drop its Team tab composition for this mode.
+- 0ed6a3a: OnboardingStepper: new `StepList` (step list and progress bar, with a one-line `variant="header"` for phones) and `StepFooter` exports, and `list={false}` / `stepListRef` on `OnboardingStepper` so a page can put the list in the place column. Locked steps are now out of the Tab order (`tabIndex=-1`). The Platform onboarding prototype uses the split.
+
 ## 0.8.0
 
 ### Minor Changes
