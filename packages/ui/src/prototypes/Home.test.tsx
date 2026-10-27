@@ -41,7 +41,7 @@ describe('Home', () => {
     vi.useFakeTimers();
     render(<Home />);
     fireEvent.click(screen.getByRole('button', { name: 'Order alternator' }));
-    const confirm = screen.getAllByRole('button', { name: 'Order alternator' }).find((b) => b.closest('[data-state]'))!;
+    const confirm = screen.getByRole('button', { name: /^Confirm rush PO/ });
     expect(document.activeElement).toBe(confirm);
     expect(queue().getAllByRole('listitem')).toHaveLength(4);
     fireEvent.click(confirm);

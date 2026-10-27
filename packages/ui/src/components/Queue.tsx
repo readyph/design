@@ -487,10 +487,10 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
       {/* Layout lives on this inner box so a caller's className cannot change the column. */}
       <div className="flex h-full min-h-0 min-w-0 flex-col text-text">
         <header className="shrink-0 pb-2.5 pl-3 pr-1 pt-3 max-[640px]:px-4 max-[640px]:pb-3 max-[640px]:pt-4">
-          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2">
-            <Title className="m-0 text-title text-text">{title}</Title>
+          <div className="flex items-center gap-x-2.5">
+            <Title className="m-0 min-w-0 text-title text-text">{title}</Title>
             {!loading && count > 0 ? (
-              <span className="inline-flex h-6 min-w-[26px] items-center justify-center rounded-control bg-accent px-[7px] text-body font-semibold tabular-nums text-accent-ink">
+              <span className="inline-flex h-6 min-w-[26px] shrink-0 items-center justify-center rounded-control bg-accent px-[7px] text-body font-semibold tabular-nums text-accent-ink">
                 {count}
                 <span className="sr-only"> open</span>
               </span>

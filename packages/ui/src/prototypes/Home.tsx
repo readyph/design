@@ -178,6 +178,19 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
     io.observe(last);
     return () => io.disconnect();
   }, [phone, phoneDetail, caseTab, sub.n]);
+  // Enter confirms the open draft (the workshop's keyboard rule) unless focus is on a control that takes Enter itself.
+  const enterRef = useRef<() => void>(() => {});
+  enterRef.current = () => { if (caseTab && caseOf(caseTab).proposal && !phone) void confirm(caseTab); };
+  useLayoutEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Enter' || e.defaultPrevented || e.metaKey || e.ctrlKey) return;
+      const t = e.target as HTMLElement | null;
+      if (t && t.closest('button,a,[role="tab"],label,input,textarea,[role="dialog"],[role="menu"],[role="combobox"]')) return;
+      enterRef.current();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
   const openCase = useCallback((id: string, focus: 'confirm' | 'heading') => {
     setTabs((t) => [id, ...t.filter((x) => x === 'today' || x.startsWith('plat:'))]);
     setTab(id);

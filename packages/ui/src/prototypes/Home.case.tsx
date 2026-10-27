@@ -28,6 +28,7 @@ export function DayLine({ open, close, now, window: win, marks, className }: Day
     if (!el) return;
     const read = () => setW(el.clientWidth);
     read();
+    if (typeof ResizeObserver === 'undefined') return;
     const ro = new ResizeObserver(read);
     ro.observe(el);
     return () => ro.disconnect();
