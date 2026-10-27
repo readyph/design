@@ -593,13 +593,18 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
     const conns = data.links.filter((c) => c.from === pid || c.to === pid);
     const n = open.filter((o) => o.platform.id === pid).length;
     const err = failed === pid;
+    const sep = <span aria-hidden className="text-control">/</span>;
     return (
       <div className="px-pad pb-10 pt-5">
-        <p className="m-0 text-small text-muted">{[p.kind, p.place ?? '', n ? `${n} in Needs you` : ''].filter(Boolean).map((t, i) => <span key={t}>{i ? <span aria-hidden className="mx-2 text-faint">/</span> : null}{t}</span>)}</p>
-        <div className="mt-2 flex items-center gap-3">
-          <PlatformLogo name={p.name} src={p.logo} index={p.index} size={24} decorative />
-          <h2 ref={headingEl} tabIndex={-1} className={cn('m-0 min-w-0 text-title text-text', focusRing)}>{p.name}</h2>
-          <Button variant="primary" leftIcon={ArrowSquareOut} className="ml-auto shrink-0" onClick={() => go({ to: 'platform', id: p.id })}>Open {p.name}</Button>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-small text-muted">
+          {[p.kind, p.place ?? '', n ? `${n} in Needs you` : ''].filter(Boolean).map((t, i) => <Fragment key={t}>{i ? sep : null}<span className="inline-flex items-center gap-1.5">{t}</span></Fragment>)}
+        </div>
+        <div className="mt-2 flex items-center gap-3 max-[640px]:flex-col max-[640px]:items-start max-[640px]:gap-2.5">
+          <PlatformLogo name={p.name} src={p.logo} index={p.index} size={28} decorative />
+          <h2 ref={headingEl} tabIndex={-1} className={cn('m-0 text-case text-text', focusRing)}>{p.name}</h2>
+          <div className="ml-auto flex flex-none gap-2 max-[640px]:ml-0">
+            <Button variant="primary" leftIcon={ArrowSquareOut} onClick={() => go({ to: 'platform', id: p.id })}>Open {p.name}</Button>
+          </div>
         </div>
         <FactsLine aria-label={`${p.name} facts`} className="mt-2">
           <Fact valueFirst value={<Badge tone={p.status === 'ACTIVE' ? 'ok' : p.status === 'DEGRADED' ? 'warn' : 'bad'}>{p.status === 'ACTIVE' ? 'ACTIVE' : p.status}</Badge>}>{p.statusSince ? `since ${p.statusSince}` : null}</Fact>
@@ -692,7 +697,7 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
           {crumbs.map((x, i) => <Fragment key={i}>{i ? sep : null}{x}</Fragment>)}
         </div>
         <div className="mt-2 flex items-start gap-4 max-[640px]:flex-col max-[640px]:gap-2.5">
-          <h2 ref={headingEl} tabIndex={-1} className={cn('m-0 min-w-0 text-case text-text', focusRing)}>{item.title}</h2>
+          <h2 ref={headingEl} tabIndex={-1} className={cn('m-0 text-case text-text', focusRing)}>{item.title}</h2>
           <div className="ml-auto flex flex-none gap-2 max-[640px]:ml-0">
             {p && !c.open ? <Button variant="secondary" leftIcon={ArrowSquareOut} className="@max-[680px]/sheet:hidden" onClick={() => go(p.hq ? { to: 'team' } : { to: 'platform', id: p.id })}>Open {p.name}</Button> : null}
             {!phone ? <Menu trigger={<Button variant="secondary" leftIcon={Clock} rightIcon={CaretDown}>Snooze</Button>} items={snoozeItems(id)} align="end" /> : null}
@@ -936,7 +941,7 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
 
   const stripPlat = phone && filter ? shown[0] : undefined;
   const platStrip = stripPlat ? (
-    <p className="m-0 mt-2.5 flex items-center gap-2 text-small leading-[19px] text-muted">
+    <p className="m-0 mt-2.5 flex items-center gap-2 text-[13px] leading-[19px] text-muted">
       <PlatformLogo name={stripPlat.name} src={stripPlat.logo} index={stripPlat.index} hq={stripPlat.hq} size={20} decorative />
       <span className="min-w-0 flex-1">
         <b className="font-semibold text-text">{stripPlat.name}</b> · <span className={stripPlat.status === 'DEGRADED' ? 'text-warn' : stripPlat.status === 'OFFLINE' ? 'text-bad' : undefined}>{statusText(stripPlat)}</span>

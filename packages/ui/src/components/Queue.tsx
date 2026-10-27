@@ -488,7 +488,7 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
       <div className="flex h-full min-h-0 min-w-0 flex-col text-text">
         <header className="shrink-0 pb-2.5 pl-3 pr-1 pt-3 max-[640px]:px-4 max-[640px]:pb-3 max-[640px]:pt-4">
           <div className="flex items-center gap-x-2.5">
-            <Title className="m-0 min-w-0 text-title text-text">{title}</Title>
+            <Title className="m-0 text-title text-text">{title}</Title>
             {!loading && count > 0 ? (
               <span className="inline-flex h-6 min-w-[26px] shrink-0 items-center justify-center rounded-control bg-accent px-[7px] text-body font-semibold tabular-nums text-accent-ink">
                 {count}
@@ -553,7 +553,7 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
           className={cn(
             // While loading the skeletons are not focusable, so the box must not scroll (axe scrollable-region-focusable).
             'min-h-0 flex-initial overscroll-contain scroll-pb-8 px-0 pt-0',
-            hideEmpty && isEmpty ? 'pb-3' : tightGroups && hasPinned ? 'pb-1.5' : 'pb-3',
+            hideEmpty && isEmpty ? 'pb-3' : tightGroups ? (hasPinned ? 'pb-1.5' : 'pb-0') : 'pb-3',
             loading ? 'overflow-hidden' : 'overflow-y-auto',
             'data-[more=true]:[mask-image:linear-gradient(to_bottom,#000_calc(100%-28px),transparent)]',
           )}

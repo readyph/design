@@ -2,7 +2,7 @@ import { forwardRef, useEffect, useState } from 'react';
 import { identity } from '../tokens/colors';
 import { cn } from '../utils/cn';
 
-export type PlatformLogoSize = 14 | 16 | 18 | 20 | 24 | 32;
+export type PlatformLogoSize = 14 | 16 | 18 | 20 | 24 | 28 | 32;
 
 export interface PlatformLogoProps {
   /** Platform name. Used for the alt text and to derive the monogram. */
@@ -30,6 +30,7 @@ const sizeClass: Record<PlatformLogoSize, string> = {
   18: 'size-[18px] text-[9px]',
   20: 'size-5 text-[10px]',
   24: 'size-6 text-[12px]',
+  28: 'size-7 text-[14px]',
   32: 'size-8 text-[16px]',
 };
 
