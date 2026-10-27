@@ -5,6 +5,7 @@ export * from './components/Badge';
 export * from './components/PlatformLogo';
 export * from './components/SegmentedControl';
 export * from './components/StatusDot';
+export * from './components/Avatar';
 export * from './components/Select';
 export * from './components/Modal';
 export * from './components/ConfirmDialog';
