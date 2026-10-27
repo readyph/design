@@ -1,5 +1,5 @@
-import { forwardRef, useCallback, useEffect, useId, useImperativeHandle, useLayoutEffect, useMemo, useRef } from 'react';
-import { ArrowClockwise, ArrowCounterClockwise, MagnifyingGlassMinus, MagnifyingGlassPlus } from '@phosphor-icons/react';
+import { forwardRef, type ReactNode, useCallback, useEffect, useId, useImperativeHandle, useLayoutEffect, useMemo, useRef } from 'react';
+import { ArrowClockwise, ArrowCounterClockwise, Minus, Plus, PlusSquare } from '@phosphor-icons/react';
 import { identity } from '../tokens/colors';
 import { cn, focusRing } from '../utils/cn';
 import { PlatformLogo } from './PlatformLogo';
@@ -92,7 +92,9 @@ export interface TownMapProps {
   error?: boolean;
   onRetry?: () => void;
   /** Plain text above the map, e.g. "2 platforms + HQ". */
-  caption?: string;
+  caption?: ReactNode;
+  /** Adds the workshop's "Add platform" button to the map controls (label hidden at 960px and below, and on a narrow map). */
+  onAddPlatform?: () => void;
   /** Accessible name of the whole map (a group of buttons, one per platform). */
   label?: string;
   /** Overrides the accessible name of a platform button. */
@@ -162,6 +164,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
     error = false,
     onRetry,
     caption,
+    onAddPlatform,
     label = 'Platform map',
     platformLabel = defaultLabel,
     className,
@@ -311,14 +314,14 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
   );
 
   const ctl =
-    'inline-grid size-7 place-items-center rounded-chip text-muted transition-colors duration-hover hover:bg-raised hover:text-text';
+    'inline-flex h-7 min-w-7 items-center justify-center gap-1.5 rounded-chip px-1.5 text-small text-muted transition-colors duration-hover hover:bg-raised hover:text-text';
 
   return (
     <div
       role="group"
       aria-label={label}
       aria-busy={loading || undefined}
-      className={cn('group/town flex min-w-0 flex-col', className)}
+      className={cn(className, 'group/town mt-1 flex h-map-h min-w-0 flex-col max-[640px]:mt-0')}
       onKeyDown={(e) => {
         if (e.key === 'Escape' && selected !== null && !loading) {
           e.stopPropagation();
@@ -326,8 +329,8 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
         }
       }}
     >
-      {caption ? <p className="m-0 flex h-5 flex-none items-center px-3 text-small text-muted max-[640px]:hidden">{caption}</p> : null}
-      <div className="@container/town relative mt-1 flex h-map-h flex-none flex-col overflow-hidden rounded-card max-[640px]:mt-0 max-[640px]:rounded-none">
+      {caption ? <p className="m-0 flex h-5 flex-none items-center px-3 text-small text-muted max-[640px]:hidden"><span>{caption}</span></p> : null}
+      <div className="@container/town relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-card max-[640px]:rounded-none">
         <div ref={mountRef} className="relative min-h-0 flex-1 overflow-hidden">
           <svg
             ref={svgRef}
@@ -399,7 +402,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
                     onFocus={() => onHover?.(p.id)}
                     onBlur={() => onHover?.(null)}
                     className={cn(
-                      'group/lbl pointer-events-auto absolute left-0 top-0 z-[1] flex max-w-[calc(100%-16px)] flex-col gap-px whitespace-nowrap rounded-control border bg-surface px-1.5 py-0.5 text-left opacity-0 transition-colors duration-hover [transform:translate(var(--lx,0px),var(--ly,0px))_translateY(-100%)] will-change-transform data-[placed]:opacity-100',
+                      'group/lbl pointer-events-auto absolute left-0 top-0 z-[1] flex max-w-[calc(100%-16px)] flex-col gap-px whitespace-nowrap rounded-control border bg-surface py-0.5 pl-[5px] pr-1.5 text-left opacity-0 transition-colors duration-hover [transform:translate(var(--lx,0px),var(--ly,0px))_translateY(-100%)] will-change-transform data-[placed]:opacity-100',
                       'after:pointer-events-none after:absolute after:left-[var(--stem-x,50%)] after:top-full after:h-[var(--stem,10px)] after:w-px after:bg-control after:content-[""] forced-colors:after:hidden',
                       focusRing,
                       'focus-visible:z-[3] hover:z-[3]',
@@ -414,19 +417,19 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
                       <PlatformLogo name={p.name} src={p.logo} index={p.index} color={p.color} initials={p.initials} hq={p.hq} decorative size={16} />
                       <span
                         className={cn(
-                          'max-w-[190px] truncate text-ui font-medium',
+                          'max-w-[190px] truncate text-ui font-medium leading-4',
                           dim ? 'text-muted' : 'text-text',
                           many ? 'hidden' : '@max-[400px]/town:hidden',
                         )}
                       >
                         {p.name}
                       </span>
-                      <span className={cn('max-w-[120px] truncate text-ui font-medium', dim ? 'text-muted' : 'text-text', many ? 'inline' : 'hidden @max-[400px]/town:inline')}>
+                      <span className={cn('max-w-[120px] truncate text-ui font-medium leading-4', dim ? 'text-muted' : 'text-text', many ? 'inline' : 'hidden @max-[400px]/town:inline')}>
                         {p.hq ? 'HQ' : short}
                       </span>
                       {alert && !sel ? <StatusMark status={p.status} error={p.error} className="hidden @max-[400px]/town:inline-block" /> : null}
                       {n ? (
-                        <span className="ml-0.5 h-4 min-w-4 rounded-chip bg-text px-1 text-center text-tiny font-medium tabular-nums text-surface forced-colors:border forced-colors:border-[CanvasText]">
+                        <span className="ml-0.5 h-4 min-w-4 rounded-[3px] bg-text px-1 text-center text-tiny font-medium tabular-nums text-surface forced-colors:border forced-colors:border-[CanvasText]">
                           {n}
                         </span>
                       ) : null}
@@ -434,7 +437,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
                     {!p.hq ? (
                       <span
                         className={cn(
-                          'items-center gap-[5px] text-tiny',
+                          'items-center gap-[5px] text-tiny leading-[14px]',
                           p.error ? 'text-muted' : p.status === 'DEGRADED' ? 'text-warn' : p.status === 'OFFLINE' ? 'text-bad' : 'text-muted',
                           sel
                             ? 'flex'
@@ -486,11 +489,20 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
             </button>
             <span aria-hidden="true" className="mx-0.5 h-4 w-px bg-border" />
             <button type="button" aria-label="Zoom out" title="Zoom out" onClick={() => sceneRef.current?.zoom(-1)} className={cn(ctl, focusRing)}>
-              <MagnifyingGlassMinus size={16} aria-hidden />
+              <Minus size={16} aria-hidden />
             </button>
             <button type="button" aria-label="Zoom in" title="Zoom in" onClick={() => sceneRef.current?.zoom(1)} className={cn(ctl, focusRing)}>
-              <MagnifyingGlassPlus size={16} aria-hidden />
+              <Plus size={16} aria-hidden />
             </button>
+            {onAddPlatform ? (
+              <>
+                <span aria-hidden="true" className="mx-0.5 h-4 w-px bg-border" />
+                <button type="button" aria-label="Add a platform" title="Add a platform" onClick={onAddPlatform} className={cn(ctl, focusRing)}>
+                  <PlusSquare size={16} aria-hidden />
+                  <span className="leading-5 max-[960px]:hidden @max-[400px]/town:hidden">Add platform</span>
+                </button>
+              </>
+            ) : null}
           </div>
         ) : null}
         {links.length && !loading ? (
@@ -498,23 +510,22 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
             aria-hidden="true"
             className="absolute bottom-2 right-2 flex gap-2.5 rounded-control border border-border bg-surface px-2 py-1.5 text-tiny text-muted opacity-0 transition-opacity duration-hover group-hover/town:opacity-100 group-focus-within/town:opacity-100 max-[960px]:hidden @max-[400px]/town:hidden"
           >
-            {(['ok', 'slow', 'broken'] as const).map((s) => (
-              <span key={s} className="inline-flex items-center gap-1.5 whitespace-nowrap">
-                <svg width="22" height="6" viewBox="0 0 22 6" className="flex-none" aria-hidden="true">
-                  <line
-                    x1="2"
-                    y1="3"
-                    x2="20"
-                    y2="3"
-                    strokeWidth={s === 'broken' ? 3 : 4}
-                    strokeLinecap="round"
-                    strokeDasharray={s === 'slow' ? '8 3' : s === 'broken' ? '1 5' : undefined}
-                    className={s === 'ok' ? 'stroke-accent' : s === 'slow' ? 'stroke-warn-dot' : 'stroke-bad-dot'}
+            {(['ok', 'slow', 'broken'] as const)
+              .filter((k) => links.some((l) => l.status === k))
+              .map((k) => (
+                <span key={k} className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                  <i
+                    aria-hidden="true"
+                    className={cn(
+                      'block w-3.5 flex-none',
+                      k === 'ok' && 'h-1 rounded-sm bg-accent',
+                      k === 'slow' && 'h-1 rounded-sm bg-warn-dot',
+                      k === 'broken' && 'h-0 border-t-[3px] border-dashed border-bad-dot',
+                    )}
                   />
-                </svg>
-                {s === 'ok' ? 'Working' : s === 'slow' ? 'Slow' : 'Broken'}
-              </span>
-            ))}
+                  {k === 'ok' ? 'Linked' : k === 'slow' ? 'Slow' : 'Broken'} <span className="tabular-nums">{links.filter((l) => l.status === k).length}</span>
+                </span>
+              ))}
           </div>
         ) : null}
       </div>

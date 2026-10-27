@@ -1,777 +1,1255 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
-  Books,
+  ArrowLeft,
+  ArrowRight,
+  Buildings,
+  Check,
+  ChatCircle,
+  Database,
+  FileX,
+  FolderOpen,
+  Funnel,
+  HandWaving,
+  ListBullets,
   LockSimple,
+  MagnifyingGlass,
+  PencilSimple,
+  PencilSimpleLine,
   Plus,
+  PlusSquare,
+  Prohibit,
+  SquaresFour,
+  ToggleLeft,
+  ToggleRight,
+  Trash,
+  WarningCircle,
+  X,
+  Books,
+  type Icon,
 } from "@phosphor-icons/react";
 import { AskLedaBar } from "../components/AskLedaBar";
-import { Breadcrumbs } from "../components/Breadcrumbs";
 import { Button } from "../components/Button";
-import { EmptyState } from "../components/EmptyState";
-import { ErrorBlock } from "../components/ErrorBlock";
-import { List, ListCell, ListRow } from "../components/List";
-import { ListGroup, ListGroups } from "../components/ListGroup";
+import { ConfirmDialog } from "../components/ConfirmDialog";
+import { LedaMark } from "../components/Leda";
 import { PlatformLogo } from "../components/PlatformLogo";
 import { PortalFrame } from "./PortalFrame";
 import { go as navGo, type Dest } from "./protoNav";
 import { StatusBar } from "../components/StatusBar";
-import { ProgressBar } from "../components/ProgressBar";
 import { SheetBar } from "../components/SheetBar";
+import { Select } from "../components/Select";
 import { Skeleton } from "../components/Skeleton";
-import {
-  SubpageLane,
-  SubpageTransition,
-  type SubpageDirection,
-} from "../components/SubpageTransition";
+import { SubpageLane, SubpageTransition, type SubpageDirection } from "../components/SubpageTransition";
 import { Switch } from "../components/Switch";
 import { Tabs } from "../components/Tabs";
 import { TownMap, type TownMapSlot } from "../components/TownMap";
-import { autoWorks, cafe, hq, stockroom } from "../components/TownMap.data";
-import { TryIt } from "../components/TryIt";
-import {
-  defaultSwitches,
-  sampleAbouts,
-  sampleAsk,
-  sampleQuestions,
-} from "../components/TryIt.sample";
-import { TopicDocument } from "../components/TopicDocument";
-import {
-  UnsavedLeaveDialog,
-  useUnsavedGuard,
-} from "../components/TopicDocument";
+import { TryIt, type TryItAnswer } from "../components/TryIt";
 import { Toaster } from "../components/toast/Toaster";
 import { toast } from "../components/toast/toastStore";
-import {
-  FOLDER_NAMES,
-  TopicLibraryPage,
-  businessOptions,
-  sampleTopics,
-} from "../components/TopicLibrary.sample";
-import { BlockedQuestions } from "../components/BlockedQuestions";
-import {
-  items as blockedSeed,
-  replies as blockedRepliesSeed,
-  scopes as blockedScopes,
-} from "../components/BlockedQuestions.data";
-import { Select } from "../components/Select";
-import { focusRing } from "../utils/cn";
-import type { TopicItem } from "../components/TopicLibrary";
+import { cn, focusRing } from "../utils/cn";
 import { useMatchMedia } from "../utils/useMatchMedia";
+import {
+  MEM_CAP,
+  MEM_NAME,
+  MEM_PHONE,
+  MEM_SHORT,
+  MEM_SOURCES,
+  MEM_KIND,
+  memBlocked,
+  memReplies,
+  memRequests,
+  memTopics,
+  type MemBlocked,
+  type MemRequest,
+  type MemSrc,
+  type MemTopic,
+} from "./Memory.proto.data";
 
-/** RDY-259. Prototype only: not exported from the package. Memory (handover 2.5) composed from @readyph/ui parts in the real PlatformShell. */
+/**
+ * RDY-258/259/358. Prototype only: not exported from the package. Memory (handover 2.5) as an exact copy of the workshop's
+ * memory.html (round-2/final), composed from @readyph/ui parts in the real PlatformShell. Data: Memory.proto.data.ts, taken from
+ * the prototype itself. Deep links as in the prototype: ?tab=topics|blocked|requests|try  &folder=company|autoworks|stockroom
+ * &topic=<key>  &state=loading|error|empty|full  &as=arnel (read only).
+ */
 
 export type MemoryState = "live" | "loading" | "error" | "empty" | "full";
 
-const ROOM_MAX = 16000;
-const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
-/** Folder id to the map building it opens. */
-const BUILDING: Record<string, string> = {
-  company: "hq",
-  autoworks: "autoworks",
-  cafe: "cafe",
-  stockroom: "stockroom",
-};
-/** Folder id to the Try it "about" value (cafe has no sample yet). */
-const TRY_ABOUT: Record<string, string> = {
-  company: "company",
-  autoworks: "auto",
-  stockroom: "parts",
-};
-const map: TownMapSlot[] = [stockroom, autoWorks, cafe, hq];
-const mapOf = (id: string) =>
-  Object.keys(BUILDING).find((k) => BUILDING[k] === id) ?? "";
-const folderKey = (t: TopicItem) =>
-  Object.keys(FOLDER_NAMES).find((k) => FOLDER_NAMES[k] === t.folder?.label) ??
-  "";
+const AUTO_SVG =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#c2471f"/><path d="M0 46h64v18H0z" fill="#9e3615"/><circle cx="32" cy="29" r="15" fill="none" stroke="#fff3e3" stroke-width="7" stroke-dasharray="5.2 3.2"/><circle cx="32" cy="29" r="7" fill="#fff3e3"/><path d="M14 52 L44 22" stroke="#fff3e3" stroke-width="6" stroke-linecap="round"/><circle cx="46" cy="20" r="7" fill="#fff3e3"/><path d="M47 13 l5 5 -4 4 -5 -5z" fill="#c2471f"/></svg>';
+const AUTO_LOGO = `data:image/svg+xml;utf8,${encodeURIComponent(AUTO_SVG)}`;
 
-const tabs = [
-  { value: "topics", label: "Topics" },
-  { value: "blocked", label: "Blocked questions" },
-  { value: "requests", label: "Customer requests" },
-];
-
-interface Request {
-  id: string;
-  folder: string;
-  name: string;
-  about: string;
-  on: boolean;
+function Logo({ src, size = 16 }: { src: MemSrc; size?: 14 | 16 | 20 | 24 }) {
+  if (src === "company") return <PlatformLogo name="Company" hq size={size} decorative />;
+  if (src === "autoworks") return <PlatformLogo name={MEM_NAME[src]} src={AUTO_LOGO} size={size} decorative />;
+  return <PlatformLogo name={MEM_NAME[src]} initials="PS" color="#6d48c6" size={size} decorative />;
 }
-const requestsSeed: Request[] = [
-  {
-    id: "r1",
-    folder: "autoworks",
-    name: "Book a service",
-    about: "A customer asks for a date. Staff accept or suggest another.",
-    on: true,
-  },
-  {
-    id: "r2",
-    folder: "autoworks",
-    name: "Ask for a quote",
-    about: "Sent to the front desk with the car and the work wanted.",
-    on: true,
-  },
-  {
-    id: "r3",
-    folder: "autoworks",
-    name: "Ask for a call back",
-    about: "Staff phone the customer back.",
-    on: false,
-  },
-  {
-    id: "r4",
-    folder: "cafe",
-    name: "Reserve a table",
-    about: "For a day, a time and a number of people.",
-    on: true,
-  },
-  {
-    id: "r5",
-    folder: "cafe",
-    name: "Pre-order for pick-up",
-    about: "The order goes to the counter to accept.",
-    on: false,
-  },
-  {
-    id: "r6",
-    folder: "stockroom",
-    name: "Hold a part",
-    about: "Staff hold the part for a day.",
-    on: false,
-  },
+
+const BUILDING: Record<string, string> = { company: "hq", autoworks: "autoworks", stockroom: "stockroom" };
+const mapOf = (id: string): MemSrc | "" => (MEM_SOURCES.find((k) => BUILDING[k] === id) as MemSrc) ?? "";
+const mapSlots: TownMapSlot[] = [
+  { id: "stockroom", name: "Parts Stockroom", shortName: "Stockroom", kind: "Inventory", mapType: "warehouse", status: "ACTIVE", initials: "PS", color: "#6d48c6" },
+  { id: "autoworks", name: "Dela Cruz Auto Works", shortName: "Auto Works", kind: "Repair shop", mapType: "service", status: "ACTIVE", logo: AUTO_LOGO },
+  null,
+  { id: "hq", name: "Company", kind: "HQ", status: "ACTIVE", hq: true },
 ];
 
-const wrap = "mx-auto w-full max-w-[760px] px-4 py-6 sm:px-6";
-const noteClass = "mb-4 flex items-start gap-2 text-ui text-muted";
+const TABS: { value: "topics" | "blocked" | "requests"; label: string; icon: Icon }[] = [
+  { value: "topics", label: "Topics", icon: Books },
+  { value: "blocked", label: "Blocked questions", icon: Prohibit },
+  { value: "requests", label: "Customer requests", icon: HandWaving },
+];
+const FILTERS = [
+  ["all", "All"],
+  ["on", "On"],
+  ["off", "Off"],
+  ["custom", "Custom"],
+  ["data", "From data"],
+] as const;
+type Filter = (typeof FILTERS)[number][0];
+const FWORD: Record<Filter, string> = { all: "all", on: "on", off: "off", custom: "custom", data: "from data" };
+const LAYOUT_KEY = "rph-mem-layout";
+const num = (n: number) => n.toLocaleString("en-PH");
+const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;
+const lower = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
+const andList = (xs: string[]) => (xs.length < 2 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`);
+const norm = (q: string) => q.toLowerCase().replace(/[^a-z0-9₱ ]+/g, "").replace(/\s+/g, " ").trim();
+const sentences = (t: string, n: number) => ((t.match(/[^.!?]+[.!?]+/g) || [t]).slice(0, n).join("")).trim();
+const srcName = (s: MemSrc) => MEM_NAME[s];
+const srcShort = (s: MemSrc) => MEM_SHORT[s];
+const keyOf = (t: { src: MemSrc; k: string }) => `${t.src}|${t.k}`;
 
-function RequestsTab({
-  requests,
-  setRequests,
-  folder,
-  readOnly,
-}: {
-  requests: Request[];
-  setRequests: (r: Request[]) => void;
-  folder: string;
-  readOnly: boolean;
-}) {
-  if (folder === "company")
-    return (
-      <p className="text-ui text-muted">
-        Requests are made at a platform. Choose a platform in the filter to see
-        its requests.
-      </p>
-    );
-  const groups = Object.keys(FOLDER_NAMES).filter(
-    (k) => k !== "company" && (!folder || folder === k)
-  );
+function params(): URLSearchParams {
+  try {
+    return new URLSearchParams(window.location.search);
+  } catch {
+    return new URLSearchParams();
+  }
+}
+
+const sr = "sr-only";
+const crumbLink = cn("inline-flex items-center gap-1.5 rounded-[2px] text-muted hover:text-text hover:underline hover:underline-offset-2", focusRing);
+
+/** Segmented control (shell.css .seg). */
+function Seg({ label, className, children }: { label: string; className?: string; children: ReactNode }) {
   return (
-    <>
-      <p className="mb-3 text-ui text-muted">
-        Each request goes to staff to accept. Leda never accepts one on its own.
-        Switches save as you change them.
-      </p>
-      <ListGroups
-        as="list"
-        aria-label="Customer requests"
-        columns="minmax(0,1fr) auto"
-        stackBelow={600}
-        shortcuts={false}
-      >
-        {groups.map((k) => {
-          const rs = requests.filter((r) => r.folder === k);
-          return (
-            <ListGroup
-              key={k}
-              title={FOLDER_NAMES[k]}
-              count={rs.length}
-              note={`${rs.filter((r) => r.on).length} of ${rs.length} on`}
-              level={2}
-            >
-              {rs.map((r) => (
-                <ListRow key={r.id} rowId={r.id} label={r.name}>
-                  <ListCell kind="lead">
-                    <div className="font-medium">{r.name}</div>
-                    <div className="text-ui text-muted">{r.about}</div>
-                  </ListCell>
-                  <ListCell kind="actions">
-                    <Switch
-                      aria-label={`Can request: ${r.name}, ${FOLDER_NAMES[k]}`}
-                      checked={r.on}
-                      disabled={readOnly}
-                      onCheckedChange={(on) => {
-                        setRequests(
-                          requests.map((x) =>
-                            x.id === r.id ? { ...x, on } : x
-                          )
-                        );
-                        toast.undo(
-                          `${r.name} is ${on ? "on" : "off"} for customers.`,
-                          () => setRequests(requests)
-                        );
-                      }}
-                    />
-                  </ListCell>
-                </ListRow>
-              ))}
-            </ListGroup>
-          );
-        })}
-      </ListGroups>
-    </>
+    <div role="group" aria-label={label} className={cn("flex h-8 items-center gap-0.5 rounded-[5px] bg-raised-2 p-0.5", className)}>
+      {children}
+    </div>
   );
 }
+function SegBtn({ pressed, onClick, label, children, className }: { pressed: boolean; onClick: () => void; label?: string; children: ReactNode; className?: string }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={pressed}
+      aria-label={label}
+      title={label}
+      onClick={onClick}
+      className={cn(
+        "flex h-7 items-center whitespace-nowrap rounded-[4px] border text-[13px] font-medium leading-5",
+        pressed ? "border-border bg-surface text-text" : "border-transparent text-muted hover:text-text",
+        focusRing,
+        className,
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+/** A page head: title, sub and the actions on the right (.ahead). */
+function Head({ title, sub, extra, h = "h2" }: { title: ReactNode; sub?: ReactNode; extra?: ReactNode; h?: "h1" | "h2" }) {
+  const H = h;
+  return (
+    <div className="flex flex-wrap items-start gap-4 max-[640px]:flex-wrap">
+      <div className="min-w-0">
+        <H className="m-0 text-[20px] font-semibold leading-7 tracking-[-0.01em] max-[640px]:text-[18px] max-[640px]:leading-[25px]">{title}</H>
+        {sub ? <p className="m-0 mt-0.5 text-[14px] leading-5 text-muted">{sub}</p> : null}
+      </div>
+      {extra}
+    </div>
+  );
+}
+
+const roNoteClass = "mt-4 flex items-start gap-2 rounded-card border border-dashed border-control px-3 py-2.5 text-[13px] leading-[18px] text-muted";
 
 export interface MemoryPageProps {
   state?: MemoryState;
   readOnly?: boolean;
   initialTab?: "topics" | "blocked" | "requests";
-  /** Start on the first topic's page. */
-  openTopic?: boolean;
+  /** Start on a topic's page (prototype key, e.g. "c:m5"). `true` opens the first custom company topic. */
+  openTopic?: boolean | string;
   /** Start with Try it open. */
   tryOpen?: boolean;
+  /** Start in this folder. */
+  initialFolder?: "" | MemSrc;
   /** Phone: start on the sheet, not the folder list. */
   startDetail?: boolean;
+  /** Start with the grid layout. */
+  initialLayout?: "list" | "grid";
+  /** Start with this search text. */
+  initialQuery?: string;
+  /** Start with this filter. */
+  initialFilter?: Filter;
 }
 
-export function MemoryPage({
-  state = "live",
-  readOnly = false,
-  initialTab = "topics",
-  openTopic = false,
-  tryOpen = false,
-  startDetail = false,
-}: MemoryPageProps) {
+export function MemoryPage(props: MemoryPageProps) {
+  const url = useMemo(params, []);
+  const stateQ = url.get("state");
+  const state: MemoryState = props.state ?? (["loading", "error", "empty", "full"].includes(stateQ ?? "") ? (stateQ as MemoryState) : "live");
+  const readOnly = props.readOnly ?? url.get("as") === "arnel";
   const phone = useMatchMedia("(max-width: 640px)");
-  const [tab, setTab] = useState(initialTab);
-  const [folder, setFolder] = useState("");
-  const store = useState<TopicItem[]>(state === "empty" ? [] : sampleTopics);
-  const [topics, setTopics] = store;
-  const [requests, setRequests] = useState(requestsSeed);
-  const [blockedItems, setBlockedItems] = useState(blockedSeed);
-  const [blockedReplies, setBlockedReplies] = useState(blockedRepliesSeed);
-  const [view, setView] = useState(openTopic ? sampleTopics[3].id : "list");
-  const [dir, setDir] = useState<SubpageDirection>("in");
-  const [phoneSheet, setPhoneSheet] = useState(startDetail || openTopic);
-  const [tryAbout, setTryAbout] = useState<string | undefined>();
-  const [tryQuestion, setTryQuestion] = useState<string | undefined>();
-  const [tryShown, setTryShown] = useState(tryOpen);
-  const [dirty, setDirty] = useState(false);
-  const [leaving, setLeaving] = useState(false);
-  useUnsavedGuard(dirty);
+  const q0 = url.get("tab");
+  const tab0 = props.initialTab ?? (q0 === "blocked" || q0 === "requests" ? q0 : "topics");
+  const folder0 = (props.initialFolder ?? (MEM_SOURCES.includes(url.get("folder") as MemSrc) ? (url.get("folder") as MemSrc) : "")) as "" | MemSrc;
+  const topicQ = url.get("topic");
+  const docKey = typeof props.openTopic === "string" ? props.openTopic : props.openTopic ? "c:m5" : topicQ;
+  const doc0 = docKey ? memTopics.find((t) => t.k === docKey && (!folder0 || t.src === folder0)) : undefined;
 
   const loading = state === "loading";
   const error = state === "error";
-  const inTopic = view !== "list";
-  const topic = topics.find((t) => t.id === view);
+  const empty = state === "empty";
 
-  const used = state === "full" ? 14880 : 3120;
-  const on = topics.filter((t) => t.on);
-  const off = topics.filter((t) => !t.on);
-  const finding = loading
+  const [tab, setTab] = useState<"topics" | "blocked" | "requests">(tab0);
+  const [folder, setFolder] = useState<"" | MemSrc>(doc0 ? doc0.src : folder0);
+  const [q, setQ] = useState(props.initialQuery ?? "");
+  const [filter, setFilter] = useState<Filter>(props.initialFilter ?? "all");
+  const [layout, setLayout] = useState<"list" | "grid">(() => {
+    if (props.initialLayout) return props.initialLayout;
+    try {
+      const v = localStorage.getItem(LAYOUT_KEY);
+      return v === "grid" ? "grid" : "list";
+    } catch {
+      return "list";
+    }
+  });
+  const [on, setOn] = useState<Record<string, boolean>>(() => Object.fromEntries(memTopics.map((t) => [keyOf(t), t.on])));
+  const [reqOn, setReqOn] = useState<Record<string, boolean>>(() => Object.fromEntries(memRequests.map((r) => [`${r.src}|${r.key}`, r.on])));
+  const [blocked, setBlocked] = useState<MemBlocked[]>(memBlocked);
+  const [replies, setReplies] = useState(memReplies);
+  const [custom, setCustom] = useState<Record<string, { title: string; text: string }>>({});
+  const [added, setAdded] = useState<MemTopic[]>([]);
+  const [removed, setRemoved] = useState<string[]>([]);
+  const [doc, setDoc] = useState<string | null>(doc0 ? keyOf(doc0) : null);
+  const [dir, setDir] = useState<SubpageDirection>("in");
+  const [phoneSheet, setPhoneSheet] = useState(!!props.startDetail || !!doc0 || tab0 !== "topics" || !!folder0);
+  const [tryShown, setTryShown] = useState(props.tryOpen ?? url.get("tab") === "try");
+  const [tryAbout, setTryAbout] = useState<string | undefined>();
+  const [tryQ, setTryQ] = useState<string | undefined>();
+  const [hover, setHover] = useState<string | null>(null);
+  const [bulkAsk, setBulkAsk] = useState<{ src: MemSrc; how: "on" | "off" } | null>(null);
+  const [delAsk, setDelAsk] = useState<MemTopic | null>(null);
+  const [edit, setEdit] = useState<{ t: string; c: string; err?: string; errAt?: "t" | "c" } | null>(doc0 && doc0.type === "custom" && !readOnly ? { t: doc0.title, c: doc0.text } : null);
+  const [leaveAsk, setLeaveAsk] = useState<(() => void) | null>(null);
+  const [refEdit, setRefEdit] = useState<{ src: MemSrc; v: string; err?: string } | null>(null);
+  const [bqText, setBqText] = useState("");
+  const [bqScope, setBqScope] = useState<MemSrc>("company");
+  const [bqErr, setBqErr] = useState<string | null>(null);
+  const [rmAsk, setRmAsk] = useState<MemBlocked | null>(null);
+  const bodyRef = useRef<HTMLDivElement | null>(null);
+  const first = useRef(true);
+
+  const hh: "h1" | "h2" = phone && phoneSheet ? "h1" : "h2";
+  const canEdit = !readOnly;
+  const inDoc = doc !== null;
+  const allTopics: MemTopic[] = useMemo(
+    () =>
+      empty
+        ? []
+        : [...memTopics, ...added]
+            .filter((t) => !removed.includes(keyOf(t)))
+            .map((t) => (custom[keyOf(t)] ? { ...t, ...custom[keyOf(t)] } : t))
+            .map((t) => ({ ...t, on: on[keyOf(t)] ?? t.on })),
+    [empty, added, removed, custom, on],
+  );
+  const topicsOf = (src: MemSrc | "") => (src ? allTopics.filter((t) => t.src === src) : allTopics);
+  const onCount = (src: MemSrc | "") => topicsOf(src).filter((t) => t.on).length;
+  const blockedAll = empty ? [] : blocked;
+  const requestsAll: MemRequest[] = memRequests.map((r) => ({ ...r, on: reqOn[`${r.src}|${r.key}`] }));
+  const used = state === "full" ? Math.round(MEM_CAP * 0.93) : 2201 + added.reduce((n, t) => n + t.title.length + t.text.length, 0) - removed.reduce((n) => n, 0);
+  const left = MEM_CAP - used;
+  const roomState: "ok" | "near" | "full" = used / MEM_CAP >= 1 ? "full" : used / MEM_CAP >= 0.85 ? "near" : "ok";
+  const curTopic = doc ? allTopics.find((t) => keyOf(t) === doc) : undefined;
+
+  // fade a tab or folder switch: 120ms ease-out (shell: no slide for these), never under reduced motion
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    const el = bodyRef.current;
+    if (!el || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches || !el.animate) return;
+    el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 120, easing: "ease-out" });
+  }, [tab, folder]);
+
+  // address: ?tab= ?folder= ?topic= follow the page (replace, the way the prototype does outside a topic page)
+  useEffect(() => {
+    try {
+      const u = new URL(window.location.href);
+      ["view", "tab", "folder", "topic"].forEach((k) => u.searchParams.delete(k));
+      if (doc && curTopic) {
+        u.searchParams.set("tab", "topics");
+        u.searchParams.set("folder", curTopic.src);
+        u.searchParams.set("topic", curTopic.k);
+      } else if (!phone || phoneSheet) {
+        if (tab !== "topics" || folder || phone) u.searchParams.set("tab", tab);
+        if (folder) u.searchParams.set("folder", folder);
+      }
+      window.history.replaceState(window.history.state, "", u.toString());
+    } catch {
+      /* ignore */
+    }
+  }, [tab, folder, doc, curTopic, phone, phoneSheet]);
+
+  const headline = loading
     ? null
     : error
     ? "Couldn't load what Leda knows."
-    : !topics.length
+    : !allTopics.length
     ? "Nothing for Leda to know yet."
-    : state === "full"
-    ? `Customers' Leda can use ${on.length} of ${
-        topics.length
-      } topics. Memory is nearly full: ${(ROOM_MAX - used).toLocaleString(
-        "en-US"
-      )} characters left.`
-    : `Customers' Leda can use ${on.length} of ${topics.length} topics. ${
-        off.length === 1
-          ? `${off[0].title} stays off.`
-          : `${off.length} stay off: ${off
-              .slice(0, 4)
-              .map((t) => t.title)
-              .join(", ")}.`
-      }`;
+    : (() => {
+        const ons = allTopics.filter((t) => t.on);
+        const offs = allTopics.filter((t) => !t.on);
+        const room = roomState !== "ok" ? ` Memory is ${roomState === "full" ? "full" : "nearly full"}: ${num(Math.max(0, left))} characters left.` : "";
+        const offsT =
+          offs.length === 1
+            ? ` ${offs[0].title} stays off.`
+            : offs.length
+            ? ` ${offs.length} stay off: ${offs.slice(0, 4).map((t) => t.title).join(", ")}${offs.length > 4 ? ` and ${offs.length - 4} more` : ""}.`
+            : " Everything is on.";
+        return `Customers' Leda can use ${ons.length} of ${allTopics.length} topics.${room || offsT}`;
+      })();
 
-  const switches = useMemo(
-    () => ({
-      ...defaultSwitches,
-      prices: !!topics.find((t) => t.id === "t1")?.on,
-      hours: !!topics.find((t) => t.id === "t2")?.on,
-      stock: !!topics.find((t) => t.id === "t9")?.on,
-      book: !!requests.find((r) => r.id === "r1")?.on,
-    }),
-    [topics, requests]
+  const shown = doc && curTopic ? curTopic.src : folder || null;
+  const caption = loading ? (
+    <span className="inline-block h-3 w-[150px] rounded-[3px] bg-skeleton align-middle" />
+  ) : error ? (
+    <span>No data</span>
+  ) : shown ? (
+    <span>
+      <b className="font-semibold text-text">{srcName(shown)}</b> · {onCount(shown)} of {topicsOf(shown).length} topics on
+    </span>
+  ) : (
+    <span>
+      <b className="font-semibold text-text">2 platforms and the company</b> · pick one to see its topics
+    </span>
   );
 
-  const go = (next: string, direction: SubpageDirection) => {
-    setDir(direction);
-    setView(next);
+  // ----- moves -----
+  const guardLeave = (go: () => void) => {
+    if (edit && dirty) setLeaveAsk(() => go);
+    else go();
   };
-  const pickFolder = (id: string) => {
-    setFolder((f) => (f === id && id !== "" ? "" : id));
+  const dirty = (() => {
+    if (!edit || !curTopic) return false;
+    return edit.t !== curTopic.title || edit.c !== curTopic.text;
+  })();
+  const pickFolder = (id: "" | MemSrc) => {
+    guardLeave(() => {
+      setQ("");
+      setDoc(null);
+      setEdit(null);
+      setDir("out");
+      if (phone) setTab("topics");
+      setPhoneSheet(true);
+      setFolder((f) => (!phone && f === id && id ? "" : id));
+    });
+  };
+  const openDoc = (t: MemTopic) => {
+    setDir("in");
+    setFolder(t.src);
+    setTab("topics");
+    setDoc(keyOf(t));
     setPhoneSheet(true);
+    setEdit(t.type === "custom" && canEdit ? { t: t.title, c: t.text } : null);
   };
+  const closeDoc = () =>
+    guardLeave(() => {
+      setDir("out");
+      setDoc(null);
+      setEdit(null);
+    });
+  const goTab = (v: string) =>
+    guardLeave(() => {
+      setDoc(null);
+      setEdit(null);
+      setTab(v as typeof tab);
+      setPhoneSheet(true);
+    });
   const openTry = (about?: string, question?: string) => {
     setTryAbout(about);
-    setTryQuestion(question);
+    setTryQ(question);
     setTryShown(true);
   };
-  const back = () => (dirty ? setLeaving(true) : go("list", "out"));
-  const setTabAndList = (t: string) => {
-    setTab(t as typeof tab);
-    setPhoneSheet(true);
+  const guard = () => {
+    if (canEdit) return false;
+    toast.info("Only owners, admins and managers can change what Leda knows.");
+    return true;
   };
-  const counts = (k: string) => {
-    const ts = topics.filter((t) => folderKey(t) === k);
-    return `${ts.filter((t) => t.on).length} of ${ts.length} on`;
+  const setTopic = (t: MemTopic, next: boolean) => {
+    if (guard()) return;
+    const k = keyOf(t);
+    const prev = on[k] ?? t.on;
+    setOn((o) => ({ ...o, [k]: next }));
+    toast.undo(`${t.title} (${srcShort(t.src)}): ${next ? "customers' Leda can use it" : "off for customers"}.`, () => setOn((o) => ({ ...o, [k]: prev })));
+  };
+  const setRequest = (r: MemRequest, next: boolean) => {
+    if (guard()) return;
+    const k = `${r.src}|${r.key}`;
+    setReqOn((o) => ({ ...o, [k]: next }));
+    toast.undo(`${r.name} at ${srcShort(r.src)}: ${next ? "customers can ask for it" : "off"}.`, () => setReqOn((o) => ({ ...o, [k]: !next })));
   };
 
-  const rulesRows = [
-    {
-      tab: "blocked",
-      name: "Blocked questions",
-      count: String(blockedItems.length),
-    },
-    {
-      tab: "requests",
-      name: "Customer requests",
-      count: `${requests.filter((r) => r.on).length} of ${requests.length} on`,
-    },
+  // ----- Try it (answerOf in memory.js) -----
+  const pvItems = (scope: string) => {
+    const srcs = scope === "any" ? MEM_SOURCES : [scope as MemSrc];
+    const tag = (s: MemSrc) => (scope === "any" ? srcShort(s) : "");
+    const out: { v: string; q: string; kind: "topic" | "req" | "blocked"; t?: MemTopic; r?: MemRequest; b?: MemBlocked; src: MemSrc; meta: string }[] = [];
+    srcs.forEach((src) => {
+      topicsOf(src).forEach((t) => out.push({ v: `${src}|t:${t.k}`, q: t.ask, kind: "topic", t, src, meta: tag(src) }));
+      requestsAll.filter((r) => r.src === src).forEach((r) => out.push({ v: `${src}|r:${r.key}`, q: r.ask, kind: "req", r, src, meta: tag(src) }));
+      blockedAll.filter((b) => b.src === src).forEach((b) => out.push({ v: `${src}|b:${b.id}`, q: b.q, kind: "blocked", b, src, meta: scope === "any" ? `Blocked · ${srcShort(src)}` : "Blocked" }));
+    });
+    if (scope !== "any" && scope !== "company") blockedAll.filter((b) => b.src === "company").forEach((b) => out.push({ v: `company|b:${b.id}`, q: b.q, kind: "blocked", b, src: "company", meta: "Blocked · every business" }));
+    return out;
+  };
+  const tryAbouts = [
+    { value: "any", label: "Any business" },
+    { value: "company", label: "The company", icon: <Logo src="company" /> },
+    { value: "autoworks", label: srcName("autoworks"), icon: <Logo src="autoworks" /> },
+    { value: "stockroom", label: srcName("stockroom"), icon: <Logo src="stockroom" /> },
   ];
+  const tryQuestions = ["any", "company", "autoworks", "stockroom"].flatMap((sc) =>
+    pvItems(sc).map((i) => ({ value: `${sc}#${i.v}`, label: i.q, about: [sc] })),
+  );
+  const askTry = (about: string, qv: string): TryItAnswer => {
+    const it = pvItems(about).find((x) => `${about}#${x.v}` === qv) ?? pvItems(about)[0];
+    const nm = srcShort(it.src);
+    const coBlocked = blockedAll.some((b) => b.src === "company" && norm(b.q) === norm(it.q));
+    const ownBlocked = it.src !== "company" && blockedAll.some((b) => b.src === it.src && norm(b.q) === norm(it.q));
+    if (it.kind === "blocked" || coBlocked || ownBlocked) {
+      const reply = it.src === "company" || (coBlocked && !ownBlocked) ? replies.company : replies[it.src];
+      return { answer: reply, reason: `This is a blocked question ${coBlocked ? "for every business" : `for ${nm}`}, so Leda gives your reply.`, tone: "no" };
+    }
+    if (it.kind === "topic" && it.t) {
+      const t = it.t;
+      if (t.type === "data")
+        return t.on
+          ? { answer: t.yes ?? "", reason: `Used the topic “${t.title}”, from ${it.src === "company" ? "company" : nm} data.`, tone: "ok" }
+          : { answer: t.no ?? "", reason: `“${t.title}” is off, so Leda can't answer this.`, tone: "no" };
+      const off = it.src === "company" ? `I can't help with that here. Please call ${MEM_PHONE.company}.` : `I can't help with that here. Please call ${nm} at ${MEM_PHONE[it.src]}.`;
+      const whyOff = t.staff && !t.on ? `“${t.title}” is for your team only, so customers' Leda doesn't use it.` : `“${t.title}” is off, so Leda can't answer this.`;
+      return t.on
+        ? { answer: sentences(t.text, 2), reason: `Used your topic “${t.title}” (${it.src === "company" ? "company" : nm}).`, tone: "ok" }
+        : { answer: off, reason: whyOff, tone: "no" };
+    }
+    const r = it.r!;
+    return r.on
+      ? { answer: r.yes, reason: `“${r.name}” is on at ${nm}. The request goes to staff to accept.`, tone: "ok" }
+      : { answer: r.no, reason: `“${r.name}” is off at ${nm}, so Leda doesn't take this request.`, tone: "no" };
+  };
 
-  const folderRows: Array<{ id: string; name: string; note: string }> = [
-    { id: "", name: "All topics", note: `${on.length} of ${topics.length} on` },
-    ...Object.keys(FOLDER_NAMES).map((k) => ({
-      id: k,
-      name: FOLDER_NAMES[k],
-      note: counts(k),
-    })),
+  // ----- the left column -----
+  const folderRows: { id: "" | MemSrc; name: string; note: string }[] = [
+    { id: "", name: "All topics", note: allTopics.length ? `${onCount("")} of ${allTopics.length} on` : "None yet" },
+    ...MEM_SOURCES.map((s) => ({ id: s as MemSrc, name: srcName(s), note: topicsOf(s).length ? `${onCount(s)} of ${topicsOf(s).length} on` : "None yet" })),
   ];
-
-  const place = (
-    <div className="flex h-full min-h-0 flex-col gap-3 overflow-y-auto pb-4">
-      <div className="min-h-[220px]">
+  const curFolder: "" | MemSrc | undefined = phone && !phoneSheet ? undefined : doc && curTopic ? curTopic.src : folder;
+  const lrow = (on0: boolean) =>
+    cn(
+      "flex w-full items-center rounded-[6px] border px-3 py-[9px] text-left max-[640px]:min-h-11 max-[640px]:px-4 max-[640px]:py-3",
+      on0 ? "border-border bg-surface" : "border-transparent hover:bg-frame-hover",
+      focusRing,
+    );
+  const ghead = (b: string, span?: string, mt = false) => (
+    <div className={cn("flex items-center gap-2 px-3 pb-1.5 pt-2 text-[12px] leading-5 text-muted", mt && "mt-2.5")}>
+      <b className="text-[13px] font-semibold leading-5 text-text">{b}</b>
+      {span ? <span className="ml-auto">{span}</span> : null}
+    </div>
+  );
+  const tabRow = (id: "blocked" | "requests", words: string, icon: Icon) => {
+    const I = icon;
+    return (
+      <button key={id} type="button" className={cn(lrow(false), "gap-1.5")} onClick={() => goTab(id)}>
+        <I size={14} aria-hidden className="shrink-0 text-muted" />
+        <span className="min-w-0 truncate text-[13px] font-medium leading-[18px]">{id === "blocked" ? "Blocked questions" : "Customer requests"}</span>
+        <span className="ml-auto shrink-0 pl-2 text-[13px] leading-[18px] text-muted">{words}</span>
+      </button>
+    );
+  };
+  const placeBody = (
+    <div className="flex h-full min-h-0 flex-col overflow-y-auto pb-4">
+      <div className="min-h-[220px] shrink-0">
         <TownMap
-          platforms={map}
-          caption="3 platforms + HQ"
+          platforms={mapSlots}
+          caption={caption}
           loading={loading}
           error={error}
-          onRetry={() => toast.info("Trying again.")}
-          selected={folder ? BUILDING[folder] : null}
-          onSelect={(id) => (id ? pickFolder(mapOf(id)) : setFolder(""))}
+          onRetry={() => toast.info("Memory loaded.")}
+          selected={shown ? BUILDING[shown] : null}
+          highlight={hover ? [hover] : null}
+          onSelect={(id) => (id ? pickFolder(mapOf(id) as MemSrc) : pickFolder(""))}
         />
       </div>
-      <div className="px-pad max-[640px]:pt-3">
-        {phone && !phoneSheet && !inTopic ? (
-          <h1 className="m-0 text-ui font-semibold">Memory</h1>
-        ) : (
-          <h2 className="m-0 text-ui font-semibold">Memory</h2>
-        )}
-        {loading ? (
-          <Skeleton variant="text" lines={2} className="mt-2" />
-        ) : (
-          <p className="mb-0 mt-1 text-ui text-muted">{finding}</p>
-        )}
+      <div className="px-3 pb-2 pr-1 pt-3 max-[640px]:px-4">
+        <div className="flex items-center gap-2.5">
+          {phone && phoneSheet ? null : <LedaMark size={20} decorative />}
+          {phone && phoneSheet ? (
+            <p className="m-0 text-[22px] font-semibold leading-7 tracking-[-0.01em]">Memory</p>
+          ) : (
+            <h1 className="m-0 text-[22px] font-semibold leading-7 tracking-[-0.01em]">Memory</h1>
+          )}
+        </div>
+        <p className="m-0 mt-1.5 flex gap-2 text-[14px] leading-5">
+          <LedaMark size={16} decorative className="mt-0.5" />
+          {loading ? <span className="mt-[3px] block h-[13px] w-[88%] rounded-[3px] bg-skeleton" /> : <span>{headline}</span>}
+        </p>
         {phone && !loading ? (
           <div className="mt-3">
-            <AskLedaBar
-              variant="overview"
-              scope="Memory"
-              shortcuts={false}
-              paused={tryShown}
-            />
+            <AskLedaBar variant="overview" scope="memory" shortcuts={false} paused={tryShown} />
           </div>
         ) : null}
       </div>
-      {!loading && !error && topics.length ? (
-        <div className="px-3 sm:px-0">
-          <List as="list" aria-label="Folders" shortcuts={false}>
+      {loading ? (
+        <>
+          {ghead("Folders")}
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} aria-hidden="true" className="flex px-3 py-[9px]">
+              <span className="block h-[13px] w-[70%] rounded-[3px] bg-skeleton" />
+            </div>
+          ))}
+        </>
+      ) : error ? (
+        <>
+          {ghead("Folders")}
+          <p className="m-0 px-3 py-2 text-[13px] leading-[18px] text-muted">No data. Try again in the main panel.</p>
+        </>
+      ) : (
+        <>
+          {ghead("Folders", "Where Leda's knowledge comes from")}
+          <div role="list" aria-label="Folders" className="pb-1 max-[640px]:px-0">
             {folderRows.map((f) => (
-              <ListRow
-                key={f.id || "all"}
-                rowId={f.id || "all"}
-                label={f.name}
-                current={folder === f.id}
-                onActivate={() => pickFolder(f.id)}
-              >
-                <ListCell kind="lead" className="flex items-center gap-3">
-                  {f.id ? (
-                    <PlatformLogo name={f.name} size={24} decorative />
-                  ) : (
-                    <Books
-                      size={20}
-                      aria-hidden="true"
-                      className="shrink-0 text-muted"
-                    />
-                  )}
-                  <span className="min-w-0 flex-1 truncate font-medium">
-                    {f.name}
-                  </span>
-                  <span className="shrink-0 text-ui text-muted">{f.note}</span>
-                </ListCell>
-              </ListRow>
-            ))}
-          </List>
-        </div>
-      ) : null}
-      {phone && !loading && !error ? (
-        <div className="px-pad">
-          <h2 className="m-0 mb-1 text-ui font-semibold">Rules</h2>
-          <ul className="m-0 list-none p-0">
-            {rulesRows.map((x) => (
-              <li key={x.tab}>
+              <div role="listitem" key={f.id || "all"} className={f.id ? "mt-0.5" : ""}>
                 <button
                   type="button"
-                  className={`flex min-h-11 w-full items-center justify-between gap-3 text-left text-body hover:text-accent ${focusRing}`}
-                  onClick={() => setTabAndList(x.tab)}
+                  aria-pressed={curFolder === f.id}
+                  onClick={() => pickFolder(f.id)}
+                  onMouseEnter={() => setHover(f.id ? BUILDING[f.id] : null)}
+                  onMouseLeave={() => setHover(null)}
+                  className={cn(lrow(curFolder === f.id), "gap-1.5")}
                 >
-                  <span>{x.name}</span>
-                  <span className="text-ui text-muted">{x.count}</span>
+                  {f.id ? <Logo src={f.id} /> : <Books size={14} aria-hidden className={cn("shrink-0", curFolder === f.id ? "text-accent" : "text-muted")} />}
+                  <span className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-medium leading-[18px]">{f.name}</span>
+                  <span className="ml-auto shrink-0 pl-2 text-[13px] leading-[18px] text-muted">{f.note}</span>
                 </button>
-              </li>
+              </div>
             ))}
-            <li>
-              <button
-                type="button"
-                className={`flex min-h-11 w-full items-center justify-between gap-3 text-left text-body hover:text-accent ${focusRing}`}
-                onClick={() => openTry()}
-              >
-                <span>Try it</span>
-                <span className="text-ui text-muted">Ask as a customer</span>
+          </div>
+          {phone ? (
+            <>
+              {ghead("Rules", "For customers", true)}
+              {tabRow("blocked", String(blockedAll.length), Prohibit)}
+              {tabRow("requests", `${requestsAll.filter((r) => r.on).length} of ${requestsAll.length} on`, HandWaving)}
+              <button type="button" className={cn(lrow(false), "gap-1.5")} onClick={() => openTry()}>
+                <ChatCircle size={14} aria-hidden className="shrink-0 text-muted" />
+                <span className="min-w-0 truncate text-[13px] font-medium leading-[18px]">Try it</span>
+                <span className="ml-auto shrink-0 pl-2 text-[13px] leading-[18px] text-muted">Ask as a customer</span>
               </button>
-            </li>
-          </ul>
-        </div>
-      ) : null}
+            </>
+          ) : null}
+          {ghead("Memory room", "Topics you write", true)}
+          <div className="mx-3 pt-1 text-[13px] leading-[18px]">
+            <div className="flex items-center gap-2.5 font-medium">
+              <span className="tabular-nums">
+                {num(used)} of {num(MEM_CAP)} characters
+              </span>
+              <span aria-hidden="true" className="h-1 w-24 overflow-hidden rounded-full bg-raised-2">
+                <i className={cn("block h-full rounded-full", roomState === "full" ? "bg-bad-dot" : roomState === "near" ? "bg-warn-dot" : "bg-muted")} style={{ width: `${Math.min(100, Math.round((used / MEM_CAP) * 100))}%` }} />
+              </span>
+            </div>
+            <p className="m-0 mt-1 text-muted">
+              {roomState === "full"
+                ? "Memory is full. Shorten or delete topics before you add more."
+                : roomState === "near"
+                ? `${num(left)} left. Shorten or delete topics before you add long ones.`
+                : `${num(left)} left. Topics from your platforms' data don't use any.`}
+            </p>
+          </div>
+          <p className="m-0 mx-3 mt-2 text-[12px] leading-4 text-muted">Off means Leda never uses it for customers. Your team's own use of Leda follows their role on Team.</p>
+        </>
+      )}
     </div>
   );
 
+  // ----- sheet parts -----
   const tryBtn =
     loading || error ? null : (
-      <Button
-        variant="secondary"
-        onClick={() =>
-          openTry(
-            folder ? TRY_ABOUT[folder] : undefined
-          )
-        }
-      >
+      <Button variant="secondary" leftIcon={ChatCircle} aria-haspopup="dialog" onClick={() => openTry(folder || undefined)} className="max-[640px]:h-10">
         Try it
       </Button>
     );
-
-  const sheetBar = inTopic ? (
-    <SheetBar
-      actions={
-        <>
-          {tryBtn}
-          <AskLedaBar scope="Memory" paused={tryShown} />
-        </>
-      }
-    >
-      <Breadcrumbs
-        variant="sheet"
-        aria-label="Memory"
-        items={[
-          {
-            label: "Memory",
-            href: "#memory",
-            onClick: (e: { preventDefault: () => void }) => {
-              e.preventDefault();
-              back();
-            },
-          },
-          { label: topic?.folder?.label ?? "All", href: "#folder" },
-          { label: topic?.title ?? "Topic" },
-        ]}
-      />
+  const actions = (
+    <>
+      {tryBtn}
+      <AskLedaBar scope="memory" paused={tryShown} />
+    </>
+  );
+  const sheetBar = inDoc ? (
+    <SheetBar actions={actions}>
+      <nav aria-label="You are here" className="flex min-w-0 items-center gap-2 text-[13px] leading-5">
+        <button type="button" title="Back to Memory (Esc)" onClick={closeDoc} className={cn("inline-flex shrink-0 items-center gap-1.5 rounded-[4px] px-1 py-1 text-muted hover:text-text", focusRing)}>
+          <ArrowLeft size={14} aria-hidden />
+          Memory
+        </button>
+        <span aria-hidden className="text-faint">/</span>
+        {curTopic ? (
+          <button type="button" onClick={() => pickFolder(curTopic.src)} className={cn("inline-flex min-w-0 items-center gap-1.5 rounded-[4px] px-1 py-1 text-muted hover:text-text", focusRing)}>
+            <Logo src={curTopic.src} size={14} />
+            <span className="truncate">{srcName(curTopic.src)}</span>
+          </button>
+        ) : null}
+        <span aria-hidden className="text-faint">/</span>
+        <b className="min-w-0 truncate font-medium text-text" aria-current="page">{curTopic?.title ?? "Topic"}</b>
+      </nav>
     </SheetBar>
   ) : (
-    <SheetBar
-      actions={
-        <>
-          {tryBtn}
-          <AskLedaBar scope="Memory" paused={tryShown} />
-        </>
-      }
-    >
-      <button
-        type="button"
-        className="mr-3 shrink-0 text-ui text-muted hover:text-text sm:hidden"
-        onClick={() => setPhoneSheet(false)}
-      >
-        &larr; Memory
+    <SheetBar actions={actions}>
+      <button type="button" className="mr-3 inline-flex shrink-0 items-center gap-1 text-[14px] text-muted hover:text-text sm:hidden" onClick={() => setPhoneSheet(false)}>
+        <ArrowLeft size={14} aria-hidden /> Memory
       </button>
-      {tab === "topics" && !phone ? (
-        <Breadcrumbs
-          variant="sheet"
-          aria-label="Memory location"
-          className="mr-4 max-[1499px]:hidden"
-          items={[
-            {
-              label: "Memory",
-              href: "#memory",
-              onClick: (e: { preventDefault: () => void }) => {
-                e.preventDefault();
-                setFolder("");
-              },
-            },
-            { label: folder ? FOLDER_NAMES[folder] : "All topics" },
-          ]}
-        />
-      ) : null}
+      <div className="flex min-w-0 flex-1 items-stretch [&_[role=tab]]:text-[13px] [&_[role=tab]_svg]:size-[14px]">
       <Tabs
         variant={phone ? "chips" : "fixed"}
         aria-label="Memory"
-        items={tabs}
+        items={TABS.map((t) => ({ value: t.value, label: t.label, icon: t.icon }))}
         value={tab}
-        onValueChange={(v) => setTab(v as typeof tab)}
+        onValueChange={goTab}
       />
+      </div>
     </SheetBar>
   );
 
-  const businessFilter = (
-    <div className="mb-4 max-w-[260px]">
+  const bizFilter = (
+    <div className="w-[216px] min-w-0 shrink-0 max-[640px]:w-auto max-[640px]:flex-1 max-[640px]:basis-full">
       <Select
         size="sm"
-        aria-label="Business"
-        options={businessOptions}
+        aria-label={`Business: ${folder ? srcName(folder) : "All businesses"}`}
+        options={[
+          { value: "", label: "All businesses", icon: <Books size={14} aria-hidden /> },
+          ...MEM_SOURCES.map((s) => ({ value: s, label: srcName(s), icon: <Logo src={s} size={14} /> })),
+        ]}
         value={folder}
-        onValueChange={(v) => setFolder(v)}
+        onValueChange={(v) => pickFolder(v as "" | MemSrc)}
         className="w-full min-w-0"
       />
     </div>
   );
-
   const roNote = readOnly ? (
-    <p className={noteClass}>
-      <LockSimple size={16} aria-hidden="true" className="mt-0.5 shrink-0" />
-      <span>
-        You can see what customers&rsquo; Leda knows. Only owners, admins and
-        managers can change it.
-      </span>
+    <p className={roNoteClass}>
+      <LockSimple size={15} aria-hidden className="mt-px shrink-0" />
+      <span>You can see what customers' Leda knows. Only owners, admins and managers can change it.</span>
     </p>
   ) : null;
 
-  let body;
-  if (error) {
-    body = (
+  const hit = (ts: MemTopic[]) => {
+    if (!q) return ts;
+    const s = q.toLowerCase();
+    return ts.filter((t) => t.title.toLowerCase().includes(s) || t.text.toLowerCase().includes(s));
+  };
+  const passes = (t: MemTopic, k: Filter) => k === "all" || (k === "on" ? t.on : k === "off" ? !t.on : k === "custom" ? t.type === "custom" : t.type === "data");
+  const mark = (s: string): ReactNode => {
+    if (!q) return s;
+    const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
+    return s.split(re).map((p, i) => (i % 2 ? <mark key={i} className="rounded-[2px] bg-warn-bg px-px text-inherit">{p}</mark> : p));
+  };
+  const srcLabel = (t: MemTopic) =>
+    t.type === "data" ? (
       <>
-        <h1 className="mb-4 text-header">What customers&rsquo; Leda knows</h1>
-        <ErrorBlock
-          thing="what Leda knows"
-          onRetry={() => toast.info("Trying again.")}
-        >
-          Customers&rsquo; Leda keeps using the last saved switches.
-        </ErrorBlock>
+        <Database size={14} aria-hidden className="shrink-0" />
+        <span className="min-w-0 truncate">From {t.src === "company" ? "company" : srcShort(t.src)} data</span>
+      </>
+    ) : (
+      <>
+        <PencilSimpleLine size={14} aria-hidden className="shrink-0" />
+        <span>Custom</span>
       </>
     );
-  } else if (tab === "topics") {
-    body = (
+  const miniSw = (t: MemTopic) => (
+    <span className="flex items-center justify-self-end gap-2 max-[640px]:min-h-11">
+      <Switch aria-label={`${t.title}: customers' Leda can use it`} checked={t.on} disabled={readOnly} onCheckedChange={(v) => setTopic(t, v)} />
+      <span aria-hidden className="min-w-[22px] text-[13px] leading-[18px] text-muted">{t.on ? "On" : "Off"}</span>
+    </span>
+  );
+  const lockIc = (t: MemTopic) =>
+    t.sensitive ? (
+      <span className="inline-flex shrink-0 text-warn" title={`Off by default. ${t.sensitive}`}>
+        <LockSimple size={13} aria-hidden />
+        <span className={sr}>, off by default</span>
+      </span>
+    ) : null;
+
+  const docHref = (t: MemTopic) => `?tab=topics&folder=${t.src}&topic=${encodeURIComponent(t.k)}`;
+  const nw = canEdit ? (
+    <Button leftIcon={Plus} disabled={roomState === "full"} title={roomState === "full" ? "Memory is full" : undefined} onClick={() => newTopic()} className="max-[640px]:h-11 max-[640px]:flex-1">
+      New topic
+    </Button>
+  ) : null;
+  const newTopic = (src: MemSrc = (folder || "company") as MemSrc) => {
+    const id = `new${Date.now()}`;
+    const t: MemTopic = { src, k: `c:${id}`, type: "custom", title: "New topic", text: "", on: true, ask: "What should I know about this?", qs: [], updated: "Thu 22 Oct" };
+    setAdded((a) => [...a, t]);
+    setOn((o) => ({ ...o, [keyOf(t)]: true }));
+    setDir("in");
+    setFolder(src);
+    setDoc(keyOf(t));
+    setEdit({ t: "", c: "" });
+  };
+
+  const libraryBody = (() => {
+    const f = folder;
+    const ts = topicsOf(f);
+    const onN = ts.filter((t) => t.on).length;
+    const base = hit(q ? allTopics : ts);
+    const list = base.filter((t) => passes(t, filter));
+    const withF = !f || !!q;
+    const all = ts.length > 0 && onN === ts.length;
+    const bulk = f && canEdit && ts.length ? (
+      <Button variant="secondary" leftIcon={all ? ToggleLeft : ToggleRight} onClick={() => setBulkAsk({ src: f, how: all ? "off" : "on" })} className="max-[640px]:h-11 max-[640px]:flex-1">
+        {all ? "Turn all off" : "Turn all on"}
+      </Button>
+    ) : null;
+    const sub = `${ts.length ? `${onN} of ${ts.length} on` : "No topics yet"} · ${f ? (f === "company" ? "Leda uses these for every business" : MEM_KIND[f]) : plural(MEM_SOURCES.length, "folder")}`;
+    const title = f ? (
+      <span className="inline-flex items-center gap-2.5">
+        <Logo src={f} size={24} />
+        <span>{srcName(f)}</span>
+      </span>
+    ) : (
+      "All topics"
+    );
+    const cnt = Object.fromEntries(FILTERS.map(([k]) => [k, base.filter((t) => passes(t, k)).length])) as Record<Filter, number>;
+    const fname = f ? srcName(f) : "any folder";
+    let res: ReactNode;
+    if (!ts.length && !q)
+      res = (
+        <EmptyBox icon={FolderOpen} title={`No topics in ${fname} yet`}>
+          {f === "company" ? "Write what every business should be able to answer, like payment options or holiday hours." : "Write what customers often ask, like the warranty or where to park."}
+          {nw ? <div className="mt-3 flex gap-2">{nw}</div> : null}
+        </EmptyBox>
+      );
+    else if (!list.length && q)
+      res = (
+        <EmptyBox icon={MagnifyingGlass} title={`No topics match “${q}”${filter !== "all" ? ` in ${FWORD[filter]}` : ""}`}>
+          Search looks at the titles and paragraphs in every folder. Try a shorter word, or write it as a new topic.
+          <div className="mt-3 flex gap-2">
+            <Button variant="secondary" leftIcon={X} onClick={() => setQ("")}>Clear search</Button>
+            {filter !== "all" ? <Button variant="text" onClick={() => setFilter("all")}>Show all</Button> : null}
+          </div>
+        </EmptyBox>
+      );
+    else if (!list.length)
+      res = (
+        <EmptyBox icon={Funnel} title={filter === "on" ? `Nothing is on in ${fname}` : filter === "off" ? `Nothing is off in ${fname}` : filter === "custom" ? `No custom topics in ${fname}` : `No topics from data in ${fname}`}>
+          {filter === "off" ? "Customers' Leda can use every topic here." : filter === "on" ? "Customers' Leda answers nothing from here." : filter === "custom" ? "Topics you write show here." : "Topics written from a platform's data show here."}
+          <div className="mt-3 flex gap-2">
+            <Button variant="secondary" onClick={() => setFilter("all")}>Show all</Button>
+            {filter === "custom" && canEdit ? <Button variant="text" leftIcon={Plus} onClick={() => newTopic()}>New topic</Button> : null}
+          </div>
+        </EmptyBox>
+      );
+    else if (layout === "grid")
+      res = (
+        <ul className="m-0 mt-4 grid list-none grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-3 p-0 max-[640px]:grid-cols-1">
+          {list.map((t) => (
+            <li key={keyOf(t)} onMouseEnter={() => setHover(BUILDING[t.src])} onMouseLeave={() => setHover(null)} className="flex min-h-[176px] min-w-0 flex-col rounded-card bg-raised transition-colors hover:bg-raised-2 max-[640px]:min-h-0">
+              <a href={docHref(t)} onClick={(e) => { e.preventDefault(); openDoc(t); }} className={cn("flex min-w-0 flex-1 flex-col gap-1.5 rounded-t-card px-3.5 pb-2.5 pt-3.5 text-text", focusRing)}>
+                <span className="inline-flex min-w-0 items-center gap-1.5 text-[12px] leading-4 text-muted">{srcLabel(t)}</span>
+                <span className={cn("flex min-w-0 items-center gap-1.5 text-[14px] font-medium leading-5", !t.on && "text-muted")}>
+                  <span className="min-w-0 truncate">{mark(t.title)}</span>
+                  {lockIc(t)}
+                </span>
+                <span className="line-clamp-3 overflow-hidden text-[13px] leading-[19px] text-muted">{mark(t.text)}</span>
+              </a>
+              <div className="flex min-w-0 items-center gap-2 px-3.5 pb-3 pt-2">
+                {withF ? (
+                  <span className="inline-flex min-w-0 items-center gap-1.5 text-[13px] leading-[18px] text-muted">
+                    <Logo src={t.src} size={14} />
+                    <span className="truncate">{srcShort(t.src)}</span>
+                  </span>
+                ) : null}
+                <span className="ml-auto">{miniSw(t)}</span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      );
+    else {
+      const cols = withF ? "grid-cols-[minmax(0,1fr)_120px_156px_80px] @max-[760px]/sheet:grid-cols-[minmax(0,1fr)_140px_80px]" : "grid-cols-[minmax(0,1fr)_156px_80px]";
+      res = (
+        <div className="mt-4">
+          <div aria-hidden className={cn("grid items-center gap-x-6 border-b border-border px-2 pb-2 text-[12px] leading-4 text-muted max-[640px]:hidden", cols)}>
+            <span>Topic</span>
+            {withF ? <span>Folder</span> : null}
+            <span className={withF ? "@max-[760px]/sheet:hidden" : ""}>Source</span>
+            <span className="justify-self-end">For customers</span>
+          </div>
+          <ul className="m-0 list-none p-0">
+            {list.map((t) => (
+              <li
+                key={keyOf(t)}
+                onMouseEnter={() => setHover(BUILDING[t.src])}
+                onMouseLeave={() => setHover(null)}
+                className={cn("grid items-center gap-x-6 border-b border-rule px-2 py-3 transition-colors hover:bg-raised max-[640px]:grid-cols-[minmax(0,1fr)_auto] max-[640px]:gap-y-2 max-[640px]:px-0 max-[640px]:py-3.5 max-[640px]:hover:bg-transparent", cols)}
+              >
+                <a href={docHref(t)} onClick={(e) => { e.preventDefault(); openDoc(t); }} className={cn("group block min-w-0 rounded-[2px] text-text max-[640px]:col-span-full", focusRing)}>
+                  <span className={cn("flex min-w-0 items-center gap-1.5 text-[14px] font-medium leading-5", !t.on && "text-muted")}>
+                    <span className="min-w-0 truncate group-hover:underline group-hover:underline-offset-[3px]">{mark(t.title)}</span>
+                    {lockIc(t)}
+                  </span>
+                  <span className="mt-0.5 line-clamp-2 overflow-hidden text-[13px] leading-[19px] text-muted">{mark(t.text)}</span>
+                </a>
+                <span className="contents max-[640px]:flex max-[640px]:flex-row max-[640px]:flex-wrap max-[640px]:items-center max-[640px]:gap-x-3 max-[640px]:gap-y-1 @max-[760px]/sheet:flex @max-[760px]/sheet:flex-col @max-[760px]/sheet:items-start @max-[760px]/sheet:gap-0.5">
+                  {withF ? (
+                    <span className="inline-flex min-w-0 items-center gap-1.5 text-[13px] leading-[18px] text-muted">
+                      <Logo src={t.src} size={14} />
+                      <span className="min-w-0 truncate">{srcShort(t.src)}</span>
+                    </span>
+                  ) : null}
+                  <span className="inline-flex min-w-0 items-center gap-1.5 text-[13px] leading-[18px] text-muted">{srcLabel(t)}</span>
+                </span>
+                {miniSw(t)}
+              </li>
+            ))}
+          </ul>
+        </div>
+      );
+    }
+    return (
       <>
-        {!phone ? (
-          <Breadcrumbs
-            aria-label="Folder"
-            className="mb-2 min-[1500px]:hidden"
-            items={[
-              {
-                label: "Memory",
-                href: "#memory",
-                onClick: (e: { preventDefault: () => void }) => {
-                  e.preventDefault();
-                  setFolder("");
-                },
-              },
-              { label: folder ? FOLDER_NAMES[folder] : "All topics" },
-            ]}
-          />
-        ) : null}
-        <h1 className="text-header">What customers&rsquo; Leda knows</h1>
-        {loading ? null : (
-          <p className="mb-4 mt-1 text-ui text-muted">
-            {topics.length
-              ? `${on.length} of ${topics.length} topics are on. `
-              : ""}
-            Off means Leda never uses it for customers.
-          </p>
-        )}
+        <nav aria-label="Folder" className="mb-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] leading-[18px] max-[640px]:hidden">
+          <a href="#memory" onClick={(e) => { e.preventDefault(); pickFolder(""); }} className={crumbLink}>Memory</a>
+          <span aria-hidden className="text-faint">/</span>
+          <b className="inline-flex items-center gap-1.5 font-medium text-text">
+            {f ? <Logo src={f} size={14} /> : null}
+            <span>{f ? srcName(f) : "All topics"}</span>
+          </b>
+        </nav>
+        <Head h={hh} title={title} sub={sub} extra={<div className="ml-auto flex shrink-0 gap-2 max-[640px]:ml-0 max-[640px]:flex-[1_1_100%]">{bulk}{nw}</div>} />
         {roNote}
-        {!loading && !topics.length ? (
-          <EmptyState
-            icon={Books}
-            title="Nothing for Leda to know yet"
-            description="Add a platform and its data becomes topics Leda can answer from, like services and prices or opening hours. You can also write your own: payment options, warranty, how to find you."
-            action={
-              <>
-                <Button
-                  leftIcon={Plus}
-                  onClick={() => toast.info("A new company topic opens.")}
-                >
-                  Add a company topic
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={() => toast.info("Add a platform opens.")}
-                >
-                  Add a platform
-                </Button>
-              </>
-            }
-            align="start"
-            headingLevel={2}
-          />
-        ) : (
-          <>
-            {!loading ? (
-              <div className="mb-4">
-                <ProgressBar
-                  layout="full"
-                  value={used}
-                  max={ROOM_MAX}
-                  label={`Memory room: ${used.toLocaleString(
-                    "en-US"
-                  )} of ${ROOM_MAX.toLocaleString("en-US")} characters`}
-                  actionHref="#plan"
+        <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2.5 max-[640px]:mt-4">
+          <div className="relative min-w-0 flex-[1_1_260px]">
+            <label htmlFor="mq" className={sr}>Search every folder</label>
+            <MagnifyingGlass size={16} aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+            <input
+              id="mq"
+              type="search"
+              autoComplete="off"
+              placeholder="Search every folder, like “warranty” or “GCash”"
+              value={q}
+              onChange={(e) => setQ(e.target.value.trimStart())}
+              className={cn("block h-9 w-full rounded-[5px] border border-control bg-surface pl-9 pr-3 text-[14px] text-text placeholder:text-muted max-[640px]:h-11 focus-visible:border-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent")}
+            />
+          </div>
+          <div className="flex min-w-0 items-center gap-3 max-[640px]:flex-[1_1_100%] max-[640px]:flex-wrap max-[640px]:gap-2">
+            {bizFilter}
+            {phone ? (
+              <div className="min-w-0 flex-1">
+                <Select
+                  size="sm"
+                  aria-label={`Show: ${FILTERS.find(([k]) => k === filter)![0] === "all" ? "Show all" : FILTERS.find(([k]) => k === filter)![1]}`}
+                  options={FILTERS.map(([k, l]) => ({ value: k, label: k === "all" ? "Show all" : l, meta: String(cnt[k]) }))}
+                  value={filter}
+                  onValueChange={(v) => setFilter(v as Filter)}
+                  className="w-full min-w-0"
                 />
               </div>
-            ) : null}
-            <TopicLibraryPage
-              store={store}
-              business={folder}
-              onBusiness={(v) => setFolder(v)}
-              loading={loading}
-              readOnly={readOnly}
-              readOnlyNote={null}
-              emptyHeadingLevel={2}
-              onOpen={(t) => go(t.id, "in")}
-              onNew={() => toast.info("A new topic opens.")}
-            />
-          </>
-        )}
+            ) : (
+              <Seg label="Show">
+                {FILTERS.map(([k, l]) => (
+                  <SegBtn key={k} pressed={filter === k} onClick={() => setFilter(k)} className="px-2.5">
+                    {l}
+                    <span className="ml-1.5 text-[12px] font-normal text-muted">{cnt[k]}</span>
+                  </SegBtn>
+                ))}
+              </Seg>
+            )}
+            <Seg label="View as">
+              {(
+                [
+                  ["list", "List", ListBullets],
+                  ["grid", "Grid", SquaresFour],
+                ] as const
+              ).map(([k, l, I]) => (
+                <SegBtn
+                  key={k}
+                  pressed={layout === k}
+                  label={l}
+                  onClick={() => {
+                    setLayout(k);
+                    try {
+                      localStorage.setItem(LAYOUT_KEY, k);
+                    } catch {
+                      /* ignore */
+                    }
+                  }}
+                  className="w-8 justify-center max-[640px]:w-10"
+                >
+                  <I size={16} aria-hidden />
+                </SegBtn>
+              ))}
+            </Seg>
+          </div>
+        </div>
+        {q && list.length ? (
+          <p aria-live="polite" className="m-0 mt-3 flex items-center gap-2 text-[13px] leading-[18px] text-muted">
+            {plural(list.length, "topic")} match “{q}”{f ? ", in every folder" : ""}.
+            <Button variant="text" onClick={() => setQ("")} className="!h-7 !px-1.5 !text-[13px]">Clear</Button>
+          </p>
+        ) : null}
+        <div id="lbres">{res}</div>
       </>
     );
-  } else if (tab === "blocked") {
-    body = (
+  })();
+
+
+  const renderPanel = () => {
+    if (loading)
+      return (
+        <>
+          <Skeleton variant="text" lines={1} className="mb-2.5 w-[140px]" />
+          <Head h={hh} title="All topics" sub={<span className="inline-block h-[13px] w-[220px] rounded-[3px] bg-skeleton align-middle" />} />
+          <div className="mt-5"><span className="block h-10 w-full rounded-[3px] bg-skeleton" /></div>
+          <div className="mt-4">
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <div key={i} aria-hidden="true" className="grid grid-cols-[minmax(0,1fr)_156px_80px] items-center gap-x-6 border-b border-rule px-2 py-3">
+                <span className="block"><span className="block h-3.5 w-2/5 rounded-[3px] bg-skeleton" /><span className="mt-2 block h-3 w-[85%] rounded-[3px] bg-skeleton" /></span>
+                <span className="block h-3 w-[90px] rounded-[3px] bg-skeleton" />
+                <span className="block h-5 w-10 rounded-[3px] bg-skeleton" />
+              </div>
+            ))}
+          </div>
+        </>
+      );
+    if (error)
+      return (
+        <>
+          <Head h={hh} title="What customers' Leda knows" />
+          <div role="alert" className="mt-4 flex items-center gap-2.5 rounded-card border border-border bg-raised px-3.5 py-3 text-[14px] leading-5">
+            <WarningCircle size={18} aria-hidden className="shrink-0 text-bad" />
+            <span className="min-w-0 flex-1">Couldn't load what Leda knows. Customers' Leda keeps using the last saved switches.</span>
+            <Button variant="secondary" onClick={() => toast.info("Memory loaded.")}>Try again</Button>
+          </div>
+        </>
+      );
+    if (tab === "blocked") return blockedPanel;
+    if (tab === "requests") return requestsPanel;
+    if (!allTopics.length)
+      return (
+        <>
+          <Head h={hh} title="All topics" sub="Nothing yet" />
+          <div className="mt-5 max-w-[600px] rounded-card bg-raised px-5 py-[18px]">
+            <h3 className="m-0 text-[15px] font-semibold leading-[21px]">Nothing for Leda to know yet</h3>
+            <p className="m-0 mt-0.5 text-[14px] leading-5 text-muted">Add a platform and its data becomes topics Leda can answer from, like services and prices or opening hours. You can also write your own: payment options, warranty, how to find you.</p>
+            <div className="mt-3.5 flex flex-wrap gap-2">
+              {canEdit ? <Button leftIcon={Plus} onClick={() => newTopic("company")}>Add a company topic</Button> : null}
+              <Button variant="secondary" leftIcon={PlusSquare} onClick={() => navGo({ to: "platforms", add: true })}>Add a platform</Button>
+            </div>
+          </div>
+        </>
+      );
+    return libraryBody;
+  };
+
+  // ----- blocked questions -----
+  const blockedPanel = (() => {
+    const f = folder;
+    const list = f ? blockedAll.filter((b) => b.src === f) : blockedAll;
+    const inherited = f && f !== "company" ? blockedAll.filter((b) => b.src === "company") : [];
+    const srcs = f ? [f] : MEM_SOURCES;
+    const sub = `${plural(list.length, "question")} · ${f ? (f === "company" ? "for every business" : `at ${srcShort(f)}`) : "for the company and each platform"}`;
+    const addBlocked = () => {
+      const v = bqText.trim().replace(/^["“]|["”]$/g, "");
+      const src = f || bqScope;
+      if (!v) return setBqErr("Type the question as a customer would ask it.");
+      const dup = blockedAll.find((b) => norm(b.q) === norm(v) && (b.src === src || b.src === "company"));
+      if (dup) return setBqErr(`That question is already blocked${dup.src === "company" ? " for every business" : ` at ${srcShort(dup.src)}`}.`);
+      const item = { src, id: `n${Date.now()}`, q: /[?]$/.test(v) ? v : `${v}?` };
+      setBlocked((x) => [...x, item]);
+      setBqText("");
+      setBqErr(null);
+      toast.undo(`Blocked ${src === "company" ? "for every business" : `at ${srcShort(src)}`}.`, () => setBlocked((x) => x.filter((y) => y.id !== item.id)));
+    };
+    return (
       <>
-        <h1 className="text-header">Blocked questions</h1>
+        <Head h={hh} title="Blocked questions" sub={sub} />
         {roNote}
-        {businessFilter}
-        <div className="mt-2">
-          <BlockedQuestions
-            items={blockedItems}
-            scopes={blockedScopes}
-            replies={blockedReplies}
-            scope={folder || undefined}
-            readOnly={readOnly}
-            status={loading ? "loading" : "ready"}
-            onBlock={async (i) => {
-              await wait(150);
-              setBlockedItems((x) => [...x, { id: `n${Date.now()}`, ...i }]);
-            }}
-            onRemove={async (item, { undo }) => {
-              await wait(150);
-              setBlockedItems((x) =>
-                undo ? [item, ...x] : x.filter((y) => y.id !== item.id)
+        <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2.5">{bizFilter}</div>
+        <div className="mt-4 max-w-[720px]">
+          <p className="m-0 text-[13px] leading-[18px] text-muted">Leda won't answer these, even when a topic could. It gives your reply instead.</p>
+          <div className="mt-3">
+            {srcs.map((src) => {
+              const label = src === "company" ? (f ? "Leda replies" : "Leda replies, for the company and every business") : `At ${srcShort(src)}, Leda replies`;
+              return refEdit?.src === src ? (
+                <div key={src} className="mt-2 first:mt-0">
+                  <label htmlFor="refT" className="mb-1 block text-[13px] font-medium leading-[18px]">{src === "company" ? "Leda's reply for the company and every business" : `Leda's reply at ${srcShort(src)}`}</label>
+                  <textarea id="refT" maxLength={400} rows={2} value={refEdit.v} onChange={(e) => setRefEdit({ src, v: e.target.value })} aria-invalid={refEdit.err ? true : undefined} className={cn("block w-full rounded-control border border-control bg-surface px-3 py-2 text-[14px] leading-5", focusRing)} />
+                  {refEdit.err ? <p className="m-0 mt-1 text-[13px] leading-[18px] text-bad">{refEdit.err}</p> : <p className="m-0 mt-1 text-[13px] leading-[18px] text-muted">Keep it polite and short. Customers see it as Leda's answer.</p>}
+                  <div className="mt-2 flex gap-2">
+                    <Button onClick={() => {
+                      if (!refEdit.v.trim()) return setRefEdit({ ...refEdit, err: "Write the reply Leda should give." });
+                      setReplies((r) => ({ ...r, [src]: refEdit.v.trim() }));
+                      setRefEdit(null);
+                      toast.undo(src === "company" ? "Reply saved, for the company and every business." : `Reply saved for ${srcShort(src)}.`, () => setReplies(memReplies));
+                    }}>Save reply</Button>
+                    <Button variant="text" onClick={() => setRefEdit(null)}>Cancel</Button>
+                  </div>
+                </div>
+              ) : (
+                <div key={src} className="mt-2 flex items-center gap-4 rounded-card bg-raised px-4 py-3 first:mt-0">
+                  <div className="min-w-0 flex-1">
+                    <span className="block text-[13px] leading-[18px] text-muted">{label}</span>
+                    <p className="m-0 mt-1 text-[14px] leading-5">“{replies[src]}”</p>
+                  </div>
+                  {canEdit ? <Button variant="text" leftIcon={PencilSimple} onClick={() => setRefEdit({ src, v: replies[src] })}>Edit reply</Button> : null}
+                </div>
               );
-            }}
-            onEditReply={async (sc, t) => {
-              await wait(150);
-              setBlockedReplies((x) => ({ ...x, [sc]: t }));
-            }}
-            onTry={(i) => openTry(undefined, i.question)}
-          />
+            })}
+          </div>
+          {list.length ? (
+            <ul className="m-0 mt-3 list-none p-0">
+              {list.map((b) => (
+                <li key={b.id} onMouseEnter={() => setHover(BUILDING[b.src])} onMouseLeave={() => setHover(null)} className="flex flex-wrap items-center gap-2 border-b border-rule py-[18px] max-[640px]:py-3.5">
+                  <span className="min-w-0 flex-1 text-[14px] leading-5 max-[640px]:basis-full">“{b.q}”</span>
+                  {f ? null : (
+                    <span className="mr-1 inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap text-[12px] leading-4 text-muted"><Logo src={b.src} size={14} />{b.src === "company" ? "Every business" : srcShort(b.src)}</span>
+                  )}
+                  <Button variant="text" aria-label={`Try it: ${b.q}`} onClick={() => openTry(undefined, `any#${b.src}|b:${b.id}`)}>Try</Button>
+                  {canEdit ? <Button variant="text" aria-label={`Remove blocked question: ${b.q}`} onClick={() => setRmAsk(b)}>Remove</Button> : null}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="m-0 mt-3 text-[14px] leading-5 text-muted">No blocked questions. Leda answers anything its topics cover.</p>
+          )}
+          {inherited.length ? (
+            <p className="m-0 mt-3 flex gap-1.5 text-[13px] leading-[18px] text-muted"><Buildings size={14} aria-hidden className="mt-0.5 shrink-0" /><span>Also blocked here, for every business: {andList(inherited.map((b) => `“${b.q}”`))}.</span></p>
+          ) : null}
+          {canEdit ? (
+            <div className="mt-4 flex flex-wrap items-start gap-3">
+              <div className="min-w-0 flex-[1_1_260px]">
+                <label htmlFor="bqNew" className={sr}>A question to block</label>
+                <input id="bqNew" maxLength={160} value={bqText} onChange={(e) => { setBqText(e.target.value); setBqErr(null); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addBlocked(); } }} placeholder="A question to block, like “Who is your parts supplier?”" autoComplete="off" aria-invalid={bqErr ? true : undefined} aria-describedby={bqErr ? "bqE" : undefined} className={cn("block h-10 w-full rounded-control border bg-surface px-3 text-[14px] placeholder:text-muted", bqErr ? "border-bad" : "border-control", focusRing)} />
+                {bqErr ? <p id="bqE" className="m-0 mt-1 text-[13px] leading-[18px] text-bad">{bqErr}</p> : null}
+              </div>
+              {f ? null : (
+                <div className="basis-[196px] max-[640px]:basis-full">
+                  <Select aria-label={`Blocked for: ${bqScope === "company" ? "Every business" : `${srcName(bqScope)} only`}`} options={[{ value: "company", label: "Every business" }, ...(["autoworks", "stockroom"] as MemSrc[]).map((s) => ({ value: s, label: `${srcName(s)} only` }))]} value={bqScope} onValueChange={(v) => setBqScope(v as MemSrc)} className="w-full min-w-0" />
+                </div>
+              )}
+              <Button variant="secondary" leftIcon={Prohibit} onClick={addBlocked} className="h-10">Block question</Button>
+            </div>
+          ) : null}
         </div>
       </>
     );
-  } else {
-    body = (
+  })();
+
+  // ----- customer requests -----
+  const requestsPanel = (() => {
+    const f = folder;
+    const rq = f ? (f === "company" ? [] : requestsAll.filter((r) => r.src === f)) : requestsAll;
+    const ps = (f ? [f] : (["autoworks", "stockroom"] as MemSrc[])).filter((p) => p !== "company");
+    const sub = rq.length ? `${rq.filter((r) => r.on).length} of ${rq.length} on · ${f ? srcShort(f) : "grouped by platform"}` : "None yet";
+    return (
       <>
-        <h1 className="mb-1 text-header">Customer requests</h1>
+        <Head h={hh} title="Customer requests" sub={sub} />
         {roNote}
-        {businessFilter}
-        {loading ? (
-          <Skeleton variant="text" lines={5} />
-        ) : (
-          <RequestsTab
-            requests={requests}
-            setRequests={setRequests}
-            folder={folder}
-            readOnly={readOnly}
-          />
-        )}
+        <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2.5">{bizFilter}</div>
+        <div className="mt-4 max-w-[720px]">
+          {f === "company" ? (
+            <p className="m-0 text-[14px] leading-5 text-muted">Requests are made at a platform, like booking a service, so the company has none. Pick a platform, or All businesses.</p>
+          ) : !rq.length ? (
+            <p className="m-0 text-[14px] leading-5 text-muted">None of your platforms takes requests yet.</p>
+          ) : (
+            <>
+              <p className="m-0 text-[13px] leading-[18px] text-muted">Each request goes to staff to accept. Leda never accepts one on its own. Switches save as you change them.</p>
+              {ps.map((pid, gi) => {
+                const x = requestsAll.filter((r) => r.src === pid);
+                if (!x.length) return null;
+                return (
+                  <section key={pid} aria-label={srcName(pid)} className={gi ? "mt-5" : "mt-3"} onMouseEnter={() => setHover(BUILDING[pid])} onMouseLeave={() => setHover(null)}>
+                    {f ? null : (
+                      <div className="flex items-center gap-2 pb-1.5">
+                        <h2 className="m-0 inline-flex items-center gap-2 text-[14px] font-semibold leading-5"><Logo src={pid} />{srcName(pid)}</h2>
+                        <span className="ml-auto text-[12px] text-muted">{x.filter((r) => r.on).length} of {x.length} on</span>
+                      </div>
+                    )}
+                    <ul className="m-0 list-none p-0">
+                      {x.map((r) => (
+                        <li key={r.key} className={cn("flex items-start gap-4 border-b border-rule py-3", !r.on && "opacity-100")}>
+                          <div className="min-w-0 flex-1">
+                            <b className="block text-[14px] font-medium leading-5">{r.name}</b>
+                            <p className="m-0 text-[13px] leading-[19px] text-muted">{r.about}</p>
+                            <button type="button" aria-label={`Try it: ${r.ask}`} onClick={() => openTry(undefined, `any#${r.src}|r:${r.key}`)} className={cn("mt-1.5 inline-flex items-center gap-1.5 rounded-[4px] text-[13px] leading-[18px] text-accent hover:underline", focusRing)}>
+                              <ChatCircle size={14} aria-hidden />
+                              <span>Try “{r.ask}”</span>
+                            </button>
+                          </div>
+                          <span className="flex shrink-0 items-center gap-2 pt-0.5">
+                            <Switch aria-label={`Can request: ${r.name}, ${srcName(r.src)}`} checked={r.on} disabled={readOnly} onCheckedChange={(v) => setRequest(r, v)} />
+                            <span aria-hidden className="text-[13px] leading-[18px] text-muted">Can request</span>
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                );
+              })}
+            </>
+          )}
+        </div>
       </>
     );
-  }
+  })();
 
-  const sheet = inTopic ? (
-    <div className={wrap}>
-      <TopicDocument
-        topic={
-          topic
-            ? {
-                id: topic.id,
-                title: topic.title,
-                body: topic.lines,
-                source: topic.source,
-                sourceKind: topic.sourceKind,
-                on: topic.on,
-                locked: topic.locked,
-                lockNote: topic.lockNote,
-                questions: ["Is there a warranty on repairs?"],
-                lastChanged: "Last edited Tue 20 Oct",
-              }
-            : undefined
-        }
-        missing={!topic}
-        readOnly={readOnly}
-        readOnlyNote="Written by your team. Only owners, admins and managers can change it."
-        room={{ max: ROOM_MAX, others: used }}
-        headingLevel={1}
-        onBack={back}
-        onDirtyChange={setDirty}
-        onToggle={(next) => {
-          if (!topic) return;
-          setTopics((ts) =>
-            ts.map((t) => (t.id === topic.id ? { ...t, on: next } : t))
-          );
-          toast.undo(
-            `${topic.title} is ${next ? "on" : "off"} for customers.`,
-            () =>
-              setTopics((ts) =>
-                ts.map((t) => (t.id === topic.id ? { ...t, on: !next } : t))
-              )
-          );
-        }}
-        onTry={(q) => openTry(undefined, q)}
-        onSave={() => {}}
-      />
+  // ----- a topic's page -----
+  const docBody = (() => {
+    const t = curTopic;
+    if (!t)
+      return (
+        <EmptyBox icon={FileX} title="This topic is gone">
+          It was deleted, or the link is old.
+          <div className="mt-3 flex gap-2"><Button variant="secondary" leftIcon={ArrowLeft} onClick={closeDoc}>Back to Memory</Button></div>
+        </EmptyBox>
+      );
+    const ed = !!edit && t.type === "custom";
+    const room = Math.max(0, left);
+    const qs = [t.ask, ...t.qs].filter((x, i, a) => x && a.indexOf(x) === i).slice(0, 3);
+    const save = () => {
+      if (!edit) return;
+      const ti = edit.t.trim();
+      const c = edit.c.trim();
+      if (!ti) return setEdit({ ...edit, err: "A title is needed.", errAt: "t" });
+      if (!c) return setEdit({ ...edit, err: "Write what Leda should know about it.", errAt: "c" });
+      if (allTopics.some((x) => x.title.toLowerCase() === ti.toLowerCase() && keyOf(x) !== keyOf(t))) return setEdit({ ...edit, err: "A topic with this title already exists in memory. Titles are unique across the company.", errAt: "t" });
+      setCustom((m) => ({ ...m, [keyOf(t)]: { title: ti, text: c } }));
+      setEdit({ t: ti, c });
+      toast.info(`Topic saved: ${ti}.`);
+    };
+    return (
+      <article aria-labelledby="docH" className="max-w-[680px]">
+        <nav aria-label="Folder" className="-mt-3 mb-1 hidden items-center gap-2 text-[13px] max-[640px]:flex">
+          <a href="#memory" onClick={(e) => { e.preventDefault(); closeDoc(); }} className={cn(crumbLink, "min-h-11")}>Memory</a>
+          <span aria-hidden className="text-faint">/</span>
+          <a href="#folder" onClick={(e) => { e.preventDefault(); pickFolder(t.src); }} className={cn(crumbLink, "min-h-11")}><Logo src={t.src} size={14} /><span>{srcName(t.src)}</span></a>
+        </nav>
+        <p className="m-0 flex items-center gap-1.5 text-[13px] leading-[18px] text-muted">{srcLabel(t)}</p>
+        <div className="mt-2 flex items-start gap-6 max-[640px]:flex-col max-[640px]:gap-3">
+          {ed ? (
+            <>
+              <h1 id="docH" className={sr}>{edit!.t.trim() || t.title}</h1>
+              <label htmlFor="docT" className={sr}>Title</label>
+              <input id="docT" maxLength={100} value={edit!.t} onChange={(e) => setEdit({ ...edit!, t: e.target.value, err: undefined })} placeholder="A title, like “Senior citizen discount”" autoComplete="off" aria-invalid={edit!.err && edit!.errAt === "t" ? true : undefined} className={cn("-ml-[9px] block h-10 min-w-0 flex-1 rounded-control border border-transparent bg-transparent px-2 text-[24px] font-semibold leading-8 tracking-[-0.01em] text-text placeholder:font-medium placeholder:text-faint hover:border-border max-[640px]:text-[20px]", focusRing)} />
+            </>
+          ) : (
+            <h1 id="docH" className="m-0 min-w-0 flex-1 text-[24px] font-semibold leading-8 tracking-[-0.01em] max-[640px]:text-[20px] max-[640px]:leading-7">{t.title}</h1>
+          )}
+          <label className="mt-1.5 flex max-w-[240px] shrink-0 items-start gap-2.5 max-[640px]:min-h-11 max-[640px]:max-w-none">
+            <Switch aria-label={`Customers' Leda can use ${t.title}`} checked={t.on} disabled={readOnly} onCheckedChange={(v) => setTopic(t, v)} />
+            <span className="text-[13px] font-medium leading-[18px]">
+              {t.on ? "Customers' Leda can use this" : "Off for customers"}
+              <span className="block font-normal text-muted">{t.on ? "Saves as you switch it" : "Leda won't use it for customers"}</span>
+            </span>
+          </label>
+        </div>
+        {ed && edit!.err ? <p role="alert" className="m-0 mt-1.5 text-[13px] leading-[18px] text-bad">{edit!.err}</p> : null}
+        {t.sensitive ? (
+          <p className="m-0 mt-2.5 flex items-start gap-1.5 text-[13px] leading-[18px] text-warn"><LockSimple size={14} aria-hidden className="mt-0.5 shrink-0" /><span>Off by default. {t.sensitive}{t.staff ? " Your team's Leda uses it either way." : ""}</span></p>
+        ) : null}
+        {ed ? (
+          <>
+            <label htmlFor="docC" className={sr}>What Leda should know</label>
+            <textarea id="docC" maxLength={8000} rows={5} value={edit!.c} onChange={(e) => setEdit({ ...edit!, c: e.target.value, err: undefined })} placeholder="Write it as you would explain it to a customer, in full sentences. Leda answers from it in its own words." className={cn("-ml-[9px] mt-[18px] block min-h-[190px] w-[calc(100%+18px)] resize-none rounded-control border border-transparent bg-transparent px-2 py-1.5 text-[16px] leading-[27px] text-text placeholder:text-faint hover:border-border max-[640px]:text-[16px] max-[640px]:leading-[26px]", focusRing)} />
+            <div className="mt-3.5 flex flex-wrap items-center gap-x-3.5 gap-y-2 border-t border-rule pt-3 text-[13px] leading-[18px] text-muted">
+              {dirty ? <span className="inline-flex items-center gap-1.5 text-warn"><PencilSimpleLine size={14} aria-hidden />Unsaved changes</span> : <span className="inline-flex items-center gap-1.5"><Check size={14} aria-hidden className="text-ok" />Saved</span>}
+              <span className="tabular-nums">{num(room)} characters left in memory</span>
+              <span className="flex-1" />
+              <Button variant="text" leftIcon={Trash} onClick={() => setDelAsk(t)} className="max-[640px]:h-11">Delete</Button>
+              <Button variant="text" disabled={!dirty} onClick={() => { setEdit({ t: t.title, c: t.text }); }} className="max-[640px]:h-11">Discard</Button>
+              <Button disabled={!dirty} onClick={save} className="max-[640px]:h-11">Save</Button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="mt-[18px] block w-full text-[16px] leading-[27px] text-text max-[640px]:leading-[26px]"><p className="m-0 whitespace-pre-line">{t.text}</p></div>
+            <p className="m-0 mt-4 flex items-start gap-2 border-t border-rule pt-3 text-[13px] leading-[18px] text-muted">
+              {t.type === "data" ? <Database size={14} aria-hidden className="mt-0.5 shrink-0" /> : <LockSimple size={14} aria-hidden className="mt-0.5 shrink-0" />}
+              <span>
+                {t.type === "data" ? (
+                  <>
+                    Comes from {t.src === "company" ? "company" : srcShort(t.src)} data ·{" "}
+                    <a href={t.src === "company" ? "#settings" : `#${t.src}`} className="text-accent underline underline-offset-2">edit it in {t.src === "company" ? "Settings" : srcShort(t.src)}</a>
+                    {t.edit?.[0] === "app" ? <span className="text-muted"> ({lower(t.edit[1])})</span> : null}
+                  </>
+                ) : (
+                  "Written by your team. Only owners, admins and managers can change it."
+                )}
+              </span>
+            </p>
+          </>
+        )}
+        {qs.length ? (
+          <section aria-labelledby="docQ" className="mt-8">
+            <h2 id="docQ" className="m-0 text-[13px] font-semibold leading-[18px]">Questions this helps answer</h2>
+            <ul className="m-0 mt-1.5 list-none p-0">
+              {qs.map((x, i) => (
+                <li key={x} className={cn("flex gap-2.5 py-[9px] text-[14px] leading-5", i && "border-t border-rule")}>
+                  <ChatCircle size={14} aria-hidden className="mt-[3px] shrink-0 text-muted" />
+                  <span>“{x}”</span>
+                </li>
+              ))}
+            </ul>
+            <Button variant="text" leftIcon={ArrowRight} onClick={() => openTry(undefined, `any#${t.src}|t:${t.k}`)} className="-ml-2 mt-1.5 !h-8 !px-2 !text-[13px] max-[640px]:!h-11">
+              See what Leda says to “{t.ask}”
+            </Button>
+          </section>
+        ) : null}
+        <p className="m-0 mt-7 text-[12px] leading-4 text-muted">
+          {t.type === "custom" ? `Last edited ${t.updated}` : `Last changed ${t.updated}, when ${t.src === "company" ? "the company profile" : `${srcShort(t.src)} data`} changed`} · {srcName(t.src)}
+        </p>
+      </article>
+    );
+  })();
+
+  const sheet = (
+    <div ref={bodyRef} className="px-6 pb-8 pt-5 max-[640px]:px-4">
+      {inDoc ? docBody : renderPanel()}
     </div>
-  ) : (
-    <div className={wrap}>{body}</div>
   );
 
   return (
-    <SubpageTransition paneKey={view} direction={dir}>
+    <SubpageTransition paneKey={doc ?? "list"} direction={dir}>
       <PortalFrame
         current="memory"
         heading={null}
         pageName="Memory"
-        teamCount={3}
         onAddPlatform={() => navGo({ to: "platforms", add: true })}
-        onNavigate={(d: Dest) => (d.to === "memory" ? (inTopic ? back() : undefined) : navGo(d))}
-        leda={<AskLedaBar variant="bar" scope="Memory" paused={tryShown} onOpen={() => openTry()} />}
-        detail={inTopic || phoneSheet}
+        onNavigate={(d: Dest) => (d.to === "memory" ? (inDoc ? closeDoc() : undefined) : navGo(d))}
+        leda={<AskLedaBar variant="bar" scope="memory" paused={tryShown} onOpen={() => openTry()} />}
+        detail={inDoc || phoneSheet}
         placeLabel="Memory folders"
-        place={place}
+        place={placeBody}
         sheetLabel="Memory"
         sheetBar={sheetBar}
+        account={{ name: "Ramon Dela Cruz", email: "ramon@delacruz.ph", role: "Owner" }}
         status={
           <StatusBar
+            ledaFirst
             platforms={[
-              { id: "autoworks", name: "Auto Works", color: 1 },
-              { id: "cafe", name: "Café POS", color: 2 },
-              { id: "stockroom", name: "Main Stockroom", color: 3 },
+              { id: "autoworks", name: "Auto Works", logoSrc: AUTO_LOGO },
+              { id: "stockroom", name: "Stockroom", color: "#6d48c6", initials: "PS" },
             ]}
             people={{ count: 9 }}
-            leda={{ used: 1742, max: 2000 }}
+            leda={{ used: 1742, max: 2000, daysLeft: "7 days left" }}
             plan="Starter"
             updatedAt="9:12 AM"
           />
@@ -782,24 +1260,103 @@ export function MemoryPage({
       <TryIt
         open={tryShown}
         onOpenChange={setTryShown}
-        abouts={sampleAbouts}
+        abouts={tryAbouts}
         about={tryAbout}
         onAboutChange={setTryAbout}
-        questions={sampleQuestions}
-        question={tryQuestion}
-        onQuestionChange={setTryQuestion}
-        ask={(a, q) => sampleAsk(a, q, switches)}
+        questions={tryQuestions}
+        question={tryQ}
+        onQuestionChange={setTryQ}
+        ask={askTry}
       />
-      <UnsavedLeaveDialog
-        open={leaving}
-        onStay={() => setLeaving(false)}
-        onLeave={() => {
-          setLeaving(false);
-          setDirty(false);
-          go("list", "out");
+      <ConfirmDialog
+        open={!!bulkAsk}
+        onOpenChange={(o) => !o && setBulkAsk(null)}
+        title={bulkAsk ? `Turn ${bulkAsk.how} everything in ${srcName(bulkAsk.src)}?` : ""}
+        description={
+          bulkAsk
+            ? bulkAsk.how === "on"
+              ? `Customers' Leda can then use ${andList(topicsOf(bulkAsk.src).filter((t) => !t.on && !t.sensitive).map((t) => t.title)) || "nothing new"}.`
+              : `Customers' Leda won't answer any question about ${andList(topicsOf(bulkAsk.src).filter((t) => t.on).map((t) => t.title))}. Your team's own use of Leda doesn't change.`
+            : ""
+        }
+        confirmLabel={bulkAsk?.how === "on" ? "Turn on" : "Turn off"}
+        tone={bulkAsk?.how === "on" ? "primary" : "danger"}
+        onConfirm={() => {
+          if (!bulkAsk) return;
+          const b = bulkAsk;
+          const before = on;
+          setOn((o) => ({ ...o, ...Object.fromEntries(topicsOf(b.src).filter((t) => (b.how === "on" ? !t.sensitive : true)).map((t) => [keyOf(t), b.how === "on"])) }));
+          setBulkAsk(null);
+          toast.undo(`${srcShort(b.src)}: topics ${b.how} for customers.`, () => setOn(before));
         }}
+        onCancel={() => setBulkAsk(null)}
+      />
+      <ConfirmDialog
+        open={!!delAsk}
+        onOpenChange={(o) => !o && setDelAsk(null)}
+        title="Delete this topic?"
+        name={delAsk?.title}
+        description={delAsk ? `Customers' Leda stops using it right away${delAsk.src === "company" ? ", at every business" : ` at ${srcShort(delAsk.src)}`}, and its ${num(delAsk.title.length + delAsk.text.length)} characters go back to the memory room.` : ""}
+        confirmLabel="Delete"
+        tone="danger"
+        onConfirm={() => {
+          if (!delAsk) return;
+          const t = delAsk;
+          setRemoved((r) => [...r, keyOf(t)]);
+          setDelAsk(null);
+          setEdit(null);
+          setDoc(null);
+          toast.undo(`Deleted: ${t.title}.`, () => setRemoved((r) => r.filter((x) => x !== keyOf(t))));
+        }}
+        onCancel={() => setDelAsk(null)}
+      />
+      <ConfirmDialog
+        open={!!rmAsk}
+        onOpenChange={(o) => !o && setRmAsk(null)}
+        title="Remove this blocked question?"
+        name={rmAsk ? `“${rmAsk.q}”` : undefined}
+        description={rmAsk ? `Leda can answer it again ${rmAsk.src === "company" ? "at every business" : `at ${srcShort(rmAsk.src)}`} when a topic that is on covers it.` : ""}
+        confirmLabel="Remove"
+        tone="danger"
+        onConfirm={() => {
+          if (!rmAsk) return;
+          const b = rmAsk;
+          setBlocked((x) => x.filter((y) => y.id !== b.id));
+          setRmAsk(null);
+          toast.undo(`Unblocked: “${b.q}”`, () => setBlocked((x) => [...x, b]));
+        }}
+        onCancel={() => setRmAsk(null)}
+      />
+      <ConfirmDialog
+        open={!!leaveAsk}
+        onOpenChange={(o) => !o && setLeaveAsk(null)}
+        title="Discard your changes?"
+        description={`Your edits to “${curTopic?.title ?? ""}” aren't saved.`}
+        confirmLabel="Discard"
+        cancelLabel="Keep editing"
+        tone="danger"
+        onConfirm={() => {
+          const go = leaveAsk;
+          setLeaveAsk(null);
+          setEdit(null);
+          go?.();
+        }}
+        onCancel={() => setLeaveAsk(null)}
       />
       <Toaster />
     </SubpageTransition>
+  );
+}
+
+function EmptyBox({ icon, title, children }: { icon: Icon; title: string; children: ReactNode }) {
+  const I = icon;
+  return (
+    <div className="mt-4 flex max-w-[600px] items-start gap-3.5 rounded-card bg-raised px-5 py-[18px] max-[640px]:flex-col max-[640px]:gap-2">
+      <I size={22} aria-hidden className="mt-px shrink-0 text-muted" />
+      <div>
+        <h3 className="m-0 text-[15px] font-semibold leading-[21px]">{title}</h3>
+        <div className="m-0 mt-0.5 text-[14px] leading-5 text-muted">{children}</div>
+      </div>
+    </div>
   );
 }

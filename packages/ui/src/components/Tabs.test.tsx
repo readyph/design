@@ -128,9 +128,41 @@ describe('SheetBar', () => {
   it('is 48px with side padding and a bottom border', () => {
     render(<SheetBar actions={<button>Invite</button>}>left</SheetBar>);
     const bar = screen.getByText('left').parentElement!;
-    expect(bar.className).toContain('h-sheet-bar');
+    expect(bar.className).toContain('h-[calc(var(--sheet-bar)-1px)]');
     expect(bar.className).toContain('px-pad');
-    expect(bar.className).toContain('border-b');
+    expect(bar.className).not.toContain('border-b');
     expect(screen.getByText('Invite')).toBeTruthy();
   });
 });
+
+describe('Tabs editor, workshop tab (RDY-364)', () => {
+  it('13px tab, 8px padding, 7px gap, 4px between tabs, underline inset 8px at -1px; the close X sits in the tab, faint', () => {
+    const { container } = render(<Tabs items={items} variant="editor" onClose={() => {}} aria-label="Open" />);
+    expect(screen.getByRole('tablist').className).toContain('gap-1');
+    const tab = screen.getAllByRole('tab')[1]!;
+    expect(tab.className).toMatch(/px-2/);
+    expect(tab.className).toContain('gap-[7px]');
+    expect(tab.className).toContain('text-[13px]');
+    expect(tab.className).toContain('after:inset-x-2');
+    expect(tab.className).toContain('after:-bottom-px');
+    const x = tab.querySelector('[data-close]')!;
+    expect(x.className).toContain('size-[18px]');
+    expect(x.className).toContain('text-faint');
+    expect(x.className).not.toContain('absolute');
+    expect(container.querySelectorAll('[data-close]')).toHaveLength(2);
+  });
+});
+describe('Tabs vertical, workshop .snav (RDY-364)', () => {
+  it('grid 20px / 1fr / auto, 10px 12px padding, card radius; selected is a surface with a border; ok status is green', () => {
+    render(<Tabs variant="vertical" aria-label="Sections" value="a" items={[{ value: 'a', label: 'Setup', status: 'Done', statusTone: 'ok' }, { value: 'b', label: 'Hours', status: 'Unsaved', statusTone: 'warn' }]} />);
+    const [a] = screen.getAllByRole('tab');
+    expect(a!.className).toContain('grid-cols-[20px_minmax(0,1fr)_auto]');
+    expect(a!.className).toContain('px-3 py-2.5');
+    expect(a!.className).toContain('rounded-card');
+    expect(a!.className).toContain('data-[state=active]:bg-surface');
+    expect(a!.className).toContain('data-[state=active]:border-border');
+    expect(screen.getByText('Done').className).toContain('text-ok');
+    expect(screen.getByRole('tablist').className).toContain('gap-1');
+  });
+});
+

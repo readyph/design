@@ -50,7 +50,7 @@ const RailFrame = ({ children, busy = false }: { children: ReactNode; busy?: boo
     <div className="flex w-[52px] shrink-0 flex-col items-center justify-end border-r border-border bg-surface pb-2">{children}</div>
     {busy ? (
       <div className="grid flex-1 grid-cols-4 grid-rows-4" aria-hidden>
-        {['bg-accent', 'bg-bad-dot', 'bg-ok-dot', 'bg-warn-dot', 'bg-text', 'bg-accent-tint', 'bg-raised-2', 'bg-surface'].flatMap((c, i) => [c, i % 2 ? 'bg-accent' : 'bg-bad-dot']).map((c, i) => (
+        {['bg-accent', 'bg-bad-dot', 'bg-ok-dot', 'bg-warn-dot', 'bg-faint', 'bg-accent-tint', 'bg-raised-2', 'bg-surface'].flatMap((c, i) => [c, i % 2 ? 'bg-accent' : 'bg-bad-dot']).map((c, i) => (
           <div key={i} className={c} />
         ))}
       </div>

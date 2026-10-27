@@ -100,9 +100,12 @@ describe('TownMap', () => {
 
   it('a caller className cannot change the map height or overflow', () => {
     const { container } = render(<TownMap platforms={three} className="h-4 overflow-visible" />);
-    const inner = container.querySelector('.h-map-h')!;
-    expect(inner.className).toContain('overflow-hidden');
+    const frame = container.querySelector('.h-map-h')!;
+    expect(frame.className).toContain('h-map-h');
+    const inner = container.querySelector('.overflow-hidden')!;
+    expect(inner).toBeTruthy();
     expect(inner.className).not.toContain('h-4');
+    expect(inner.className).not.toContain('overflow-visible');
   });
 
   it('long names are truncated in the label, full in the accessible name', () => {
@@ -138,5 +141,30 @@ describe('placeLabels (collision pass)', () => {
     expect(p.every((l) => l.x >= 8 && l.x + l.w <= 375 - 8)).toBe(true);
     const first = p.find((l) => l.id === 'p0')!;
     expect(first.overlap).toBe(0);
+  });
+});
+
+describe('TownMap workshop chrome (RDY-364)', () => {
+  it('legend lists only the link states present, each with a count (shell map.css .tleg)', () => {
+    const { container } = render(<TownMap platforms={three} links={[{ from: 'a', to: 'b', status: 'ok' }, { from: 'b', to: 'c', status: 'ok' }, { from: 'c', to: 'a', status: 'broken' }]} />);
+    const leg = container.querySelector('[aria-hidden="true"].bottom-2.right-2')!;
+    expect(leg.textContent).toBe('Linked 2Broken 1');
+    expect(leg.textContent).not.toContain('Slow');
+  });
+  it('map controls: rotate, zoom with minus and plus; "Add platform" only when onAddPlatform is given', () => {
+    const add = vi.fn();
+    const { rerender } = render(<TownMap platforms={three} />);
+    expect(screen.queryByRole('button', { name: 'Add a platform', hidden: true })).toBeNull();
+    rerender(<TownMap platforms={three} onAddPlatform={add} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Add a platform', hidden: true }));
+    expect(add).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('Add platform').className).toContain('max-[960px]:hidden');
+  });
+  it('caption keeps the space between its parts and labels are 22px: 16px lines, 5px left padding', () => {
+    render(<TownMap platforms={three} caption={<><b>3 platforms</b> + HQ</>} />);
+    expect(screen.getByText('3 platforms').parentElement!.textContent).toBe('3 platforms + HQ');
+    const label = screen.getByRole('button', { name: 'HQ, your team and plan, 1 need you' });
+    expect(label.className).toContain('pl-[5px]');
+    expect(label.className).toContain('pr-1.5');
   });
 });

@@ -10,6 +10,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   cleanup();
+  window.history.replaceState(null, '', '/');
   vi.unstubAllGlobals();
 });
 
@@ -23,7 +24,7 @@ describe('Memory page', () => {
     const blocked = screen.getByRole('tab', { name: 'Blocked questions' });
     expect(document.activeElement).toBe(blocked);
     expect(blocked.getAttribute('aria-selected')).toBe('true');
-    expect(screen.getByRole('heading', { level: 1, name: 'Blocked questions' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 2, name: 'Blocked questions' })).toBeTruthy();
   });
 
   it('Try it opens as a dialog, and Escape returns focus to the button that opened it', async () => {
@@ -45,6 +46,22 @@ describe('Memory page', () => {
     sw.forEach((s) => expect((s as HTMLButtonElement).disabled || s.getAttribute('aria-disabled') === 'true').toBe(true));
   });
 
+  it('exact data: the prototype\'s topics, three folders and the 18 of 22 headline', () => {
+    render(<MemoryPage />);
+    expect(screen.getAllByText(/Customers' Leda can use 18 of 22 topics\. 4 stay off: Supplier lead times, Costs and margins, Suppliers, Stock counts and value\./).length).toBe(1);
+    const folders = screen.getByRole('list', { name: 'Folders' });
+    expect(within(folders).getAllByRole('listitem').length).toBe(4);
+    expect(screen.getByText('Company profile')).toBeTruthy();
+  });
+
+  it('deep link state: the Memory room is in the left column and Try it opens per request', async () => {
+    const user = userEvent.setup();
+    render(<MemoryPage initialTab="requests" />);
+    expect(screen.getByText(/2,201 of 16,000 characters/)).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: /Try it: Can I bring my car in on Saturday morning/ }));
+    expect(screen.getByRole('dialog')).toBeTruthy();
+  });
+
   it('error: says the last saved switches stay in use and hides Try it', () => {
     render(<MemoryPage state="error" />);
     expect(screen.getByText(/keeps using the last saved switches/)).toBeTruthy();
@@ -59,15 +76,15 @@ describe('Memory page', () => {
   it('folder pick filters Blocked questions and the breadcrumb names the folder', async () => {
     const user = userEvent.setup();
     render(<MemoryPage />);
-    expect(screen.getByRole('navigation', { name: 'Memory location' }).textContent).toContain('All topics');
+    expect(screen.getByRole('navigation', { name: 'Folder' }).textContent).toContain('All topics');
     const folders = screen.getByRole('list', { name: 'Folders' });
-    await user.click(within(folders).getByText('Main Stockroom'));
-    expect(screen.getByRole('navigation', { name: 'Memory location' }).textContent).toContain('Main Stockroom');
+    await user.click(within(folders).getByText('Parts Stockroom'));
+    expect(screen.getByRole('navigation', { name: 'Folder' }).textContent).toContain('Parts Stockroom');
     await user.click(screen.getByRole('tab', { name: 'Blocked questions' }));
     const main = screen.getByRole('main');
-    expect(within(main).getByText(/stock do you have left/)).toBeTruthy();
+    expect(within(main).getByText(/Which shops do you supply/)).toBeTruthy();
     expect(within(main).queryByText(/parts supplier/)).toBeNull();
-    expect(within(main).getByRole('combobox', { name: 'Business' }).textContent).toContain('Main Stockroom');
+    expect(within(main).getByRole('combobox', { name: /^Business/ }).textContent).toContain('Parts Stockroom');
   });
 
   it('Blocked tab business filter changes the list and keeps focus on the filter', async () => {
@@ -75,11 +92,11 @@ describe('Memory page', () => {
     render(<MemoryPage initialTab="blocked" />);
     const main = screen.getByRole('main');
     expect(within(main).getByText(/parts supplier/)).toBeTruthy();
-    const filter = within(main).getByRole('combobox', { name: 'Business' });
+    const filter = within(main).getByRole('combobox', { name: /^Business/ });
     await user.click(filter);
-    await user.click(screen.getByRole('option', { name: /Main Stockroom/ }));
+    await user.click(screen.getByRole('option', { name: /Parts Stockroom/ }));
     expect(within(main).queryByText(/parts supplier/)).toBeNull();
-    expect(within(main).getByText(/stock do you have left/)).toBeTruthy();
+    expect(within(main).getByText(/Which shops do you supply/)).toBeTruthy();
     await waitFor(() => expect(document.activeElement).toBe(filter));
   });
 
