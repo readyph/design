@@ -141,6 +141,12 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const opener = useRef<HTMLElement | null>(null);
+  const askBarEl = useRef<HTMLButtonElement | null>(null);
+  // where focus returns when Leda closes: the control that opened it, or the Ask bar trigger when the opener was body (a keyboard shortcut)
+  const captureOpener = () => {
+    const a = document.activeElement as HTMLElement | null;
+    opener.current = a && a !== document.body ? a : askBarEl.current;
+  };
   const paletteReturn = useRef<HTMLElement | null>(null);
 
   const mapRef = useRef<TownMapHandle>(null);
@@ -353,7 +359,7 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
 
   // Leda
   const openChat = () => {
-    if (!palette) opener.current = document.activeElement as HTMLElement | null;
+    if (!palette) captureOpener();
     setPalette(false);
     setChat(true);
   };
@@ -361,7 +367,7 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
   // While the panel is open the palette returns focus to the composer instead (a phone focuses the panel itself); the panel returns
   // to the element that opened the palette or the chat.
   useEffect(() => {
-    paletteReturn.current = chat && !phone ? document.querySelector<HTMLElement>('[data-chat-composer]') : null;
+    paletteReturn.current = chat && !phone ? document.querySelector<HTMLElement>('[data-chat-composer]') : palette ? opener.current : null;
   }, [chat, palette, phone]);
   const numFmt = (n: number) => Number(n).toLocaleString('en-PH');
   const ledaSuggest = [...(data.leda?.answers ?? []).map((a) => a.q), ...(data.leda?.commands ?? []).map((c) => c.q)];
@@ -467,7 +473,7 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
 
 
   const askBar = (variant: 'bar' | 'overview' | 'field', shortcuts: boolean) => (
-    <AskLedaBar variant={variant} scope={filter ? scopeName : undefined} paused={palette || chat} shortcuts={shortcuts} onOpen={() => { opener.current = document.activeElement as HTMLElement | null; setPalette(true); }} />
+    <AskLedaBar variant={variant} scope={filter ? scopeName : undefined} paused={palette || chat} shortcuts={shortcuts} ref={askBarEl} onOpen={() => { captureOpener(); setPalette(true); }} />
   );
 
   // ---- the sheet
@@ -490,7 +496,8 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
     p.lists.map((l) => ({
                 ...l,
                 onViewAll: () => toast(`All ${l.total} in ${p.shortName ?? p.name}…`),
-                items: l.items.map((it) => {
+                items: l.items.map((it0) => {
+                  const it = p.hq ? { ...it0, hideRefNarrow: true } : it0;
                   const to = it.linkTo ? platformById(it.linkTo) : undefined;
                   return to
                     ? {
@@ -513,7 +520,7 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
               }));
 
   const hqGo = filter === 'hq' ? (
-    <p className="m-0 mt-4 flex flex-wrap gap-2">
+    <p className="m-0 mt-7 flex gap-2">
       <Button variant="secondary" leftIcon={Users} onClick={() => go({ to: 'team' })}>Open Team</Button>
       <Button variant="secondary" leftIcon={Gauge} onClick={() => go({ to: 'plan' })}>Open Plan</Button>
     </p>

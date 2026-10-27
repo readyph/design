@@ -34,6 +34,8 @@ export interface TodayItem {
   ref?: string;
   /** Draw the reference in the text font, not monospace (a date such as "Wed 21 Oct"). */
   refPlain?: boolean;
+  /** Narrow layout only: leave the reference out of the title line (the Home team pane, where the workshop hides it). */
+  hideRefNarrow?: boolean;
   title: ReactNode;
   /** One quiet line under the title. Wraps. */
   detail?: ReactNode;
@@ -202,7 +204,7 @@ function Row({ item, platform, label, layout, flash }: { item: TodayItem; platfo
       {wide ? <span className={cn('overflow-hidden text-ellipsis whitespace-nowrap pt-px text-small text-muted', !item.refPlain && 'font-mono')}>{item.ref}</span> : null}
       <div className="flex min-w-0 flex-col">
         <div>
-          {!wide && layout !== 'phone' && item.ref ? <span className="mr-1.5 whitespace-nowrap font-mono text-small text-muted">{item.ref}</span> : null}
+          {!wide && layout !== 'phone' && item.ref && !item.hideRefNarrow ? <span className="mr-1.5 whitespace-nowrap font-mono text-small text-muted">{item.ref}</span> : null}
           {item.onActivate ? (
             <button
               type="button"

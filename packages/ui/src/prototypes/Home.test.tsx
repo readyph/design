@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Home } from './Home';
 import { clearToasts } from '../components/toast/toastStore';
@@ -110,5 +110,16 @@ describe('Home', () => {
     cleanup();
     render(<Home set="many" />);
     expect(screen.getAllByRole('heading', { level: 3 }).length).toBeGreaterThanOrEqual(8);
+  });
+
+  it('Escape from Leda returns focus to the Ask bar when the opener was body, not to body', async () => {
+    render(<Home />);
+    (document.activeElement as HTMLElement | null)?.blur();
+    const bar = screen.getAllByRole('button').find((b) => /^Ask Leda/.test(b.textContent ?? '')) as HTMLElement;
+    fireEvent.click(bar);
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.keyDown(dialog, { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await waitFor(() => expect(document.activeElement).toBe(bar));
   });
 });
