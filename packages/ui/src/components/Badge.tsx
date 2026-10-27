@@ -24,7 +24,7 @@ const legacy: Record<LegacyBadgeTone, BadgeTone> = {
 };
 
 const tones: Record<BadgeTone, string> = {
-  neutral: 'bg-raised-2 text-muted',
+  neutral: 'bg-raised-2 text-text',
   ok: 'bg-ok-bg text-ok-ink',
   warn: 'bg-warn-bg text-warn-ink',
   bad: 'bg-bad-bg text-bad-ink',

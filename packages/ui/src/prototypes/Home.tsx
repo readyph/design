@@ -46,7 +46,7 @@ export interface HomeProps {
 const NOW = 9 * 60 + 12;
 const PHONE = '(max-width: 640px)';
 const CHAT_KEY = 'rph-home-prototype-chat';
-const owner = { name: 'Maria Santos', short: 'Mon', email: 'mon@delacruz.ph' };
+const owner = { name: 'Ramon Dela Cruz', short: 'Mon', email: 'mon@delacruzauto.ph' };
 const healthOf = (p: HomePlatform): StatusBarHealth => (p.status === 'ACTIVE' ? 'ok' : p.status === 'DEGRADED' ? 'warn' : 'bad');
 const dayPart = NOW < 12 * 60 ? 'morning' : NOW < 18 * 60 ? 'afternoon' : 'evening';
 const clock = () => new Date(2026, 9, 26, 9, 12).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
@@ -117,7 +117,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
   const [pstate, setPstate] = useState<Record<string, LedaProposalState>>({});
   const [choice, setChoice] = useState<Record<string, string>>({});
   const [flash, setFlash] = useState(0);
-  const [flashBlock, setFlashBlock] = useState<{ id: string; n: number } | null>(null);
+  const [flashRow, setFlashRow] = useState<{ pid: string; ref: string; n: number } | null>(null);
   const [showMore, setShowMore] = useState<Record<string, boolean>>({});
 
   // Leda
@@ -278,7 +278,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
       {
         id: 'needs',
         label: 'Needs you',
-        items: open.map((i) => ({ id: `case:${i.id}`, label: i.title, leading: <PlatformLogo name={i.platform.name} index={i.platform.index} hq={i.platform.hq} size={16} decorative />, meta: i.platform.hq ? 'HQ' : (platformById(i.platform.id)?.shortName ?? '') })),
+        items: open.map((i) => ({ id: `case:${i.id}`, label: i.title, leading: <PlatformLogo name={i.platform.name} src={i.platform.src} index={i.platform.index} hq={i.platform.hq} size={16} decorative />, meta: i.platform.hq ? 'HQ' : (platformById(i.platform.id)?.shortName ?? '') })),
       },
       {
         id: 'go',
@@ -286,7 +286,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
         items: [
           { id: 'go:today', label: 'Today at your platforms', icon: SquaresFour, meta: 'Go' },
           { id: 'go:overview', label: 'Overview', icon: House, meta: 'Go' },
-          ...data.platforms.map((p) => ({ id: `filter:${p.id}`, label: `Only ${p.shortName}`, leading: <PlatformLogo name={p.name} index={p.index} size={16} decorative />, meta: 'Filter' })),
+          ...data.platforms.map((p) => ({ id: `filter:${p.id}`, label: `Only ${p.shortName}`, leading: <PlatformLogo name={p.name} src={p.logo} index={p.index} size={16} decorative />, meta: 'Filter' })),
         ],
       },
     ],
@@ -333,18 +333,20 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
             key={idKey(p)}
             id={`today-${p.id}`}
             tabIndex={-1}
-            className={flashBlock?.id === p.id ? 'animate-row-flash rounded-card outline-none' : 'rounded-card outline-none'}
+            className="rounded-card outline-none"
             onMouseEnter={() => setHover(p.id)}
             onMouseLeave={() => setHover(null)}
           >
             <PlatformToday
               surface="surface"
               level={3}
-              platform={{ name: p.name, index: p.index, hq: p.hq }}
+              platform={{ name: p.name, src: p.logo, index: p.index, hq: p.hq }}
               kind={p.kind}
               facts={p.facts}
               leda={ledaMode(p)}
               maxRows={maxRows}
+              rowLayout={phone ? 'phone' : bodyW <= 720 ? 'narrow' : 'wide'}
+              flashRow={flashRow?.pid === p.id ? flashRow : null}
               loading={loading}
               error={failed === p.id}
               lastLoaded="9:10 AM"
@@ -362,12 +364,15 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
                     ? {
                         ...it,
                         link: {
-                          platform: { name: to.name, index: to.index, hq: to.hq },
+                          platform: { name: to.name, src: to.logo, index: to.index, hq: to.hq },
                           ref: it.linkRef,
                           text: it.linkText ?? '',
                           onSelect: () => {
-                            setFlashBlock((f) => ({ id: to.id, n: (f?.n ?? 0) + 1 }));
-                            document.getElementById(`today-${to.id}`)?.focus();
+                            const ref = it.linkRef ?? '';
+                            const row = document.querySelector<HTMLElement>(`#today-${to.id} [data-ref="${ref}"]`);
+                            if (!row) { go(to.hq ? { to: 'team' } : { to: 'platform', id: to.id }); return; }
+                            row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                            setFlashRow((f) => ({ pid: to.id, ref, n: (f?.n ?? 0) + 1 }));
                           },
                         },
                       }
@@ -405,7 +410,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
         <Breadcrumbs
           aria-label="Where this is"
           items={[
-            { label: p.name, logo: <PlatformLogo name={p.name} index={p.index} hq={p.hq} size={16} decorative />, href: p.hq ? '#team' : `#${p.id}`, onClick: (e) => { e.preventDefault(); go(p.hq ? { to: 'team' } : { to: 'platform', id: p.id }); } },
+            { label: p.name, logo: <PlatformLogo name={p.name} src={p.logo} index={p.index} hq={p.hq} size={16} decorative />, href: p.hq ? '#team' : `#${p.id}`, onClick: (e) => { e.preventDefault(); go(p.hq ? { to: 'team' } : { to: 'platform', id: p.id }); } },
             { label: p.kind },
           ]}
         />
@@ -535,7 +540,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
                 {visible.map((p) => (
                   <tr key={p.id} className="border-t border-rule">
                     <th scope="row" className="w-1/3 py-2 pr-3 text-left font-normal text-text">
-                      <span className="inline-flex items-center gap-2"><PlatformLogo name={p.name} index={p.index} size={16} decorative />{p.name}</span>
+                      <span className="inline-flex items-center gap-2"><PlatformLogo name={p.name} src={p.logo} index={p.index} size={16} decorative />{p.name}</span>
                     </th>
                     <td className="py-2 text-muted">
                       {p.yesterday.map((k, i) => (
@@ -555,7 +560,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
   const tabItems: TabItem[] = tabs.map((id) => {
     if (id === 'today') return { value: 'today', label: 'Today', icon: SquaresFour, closable: true };
     const it = lookup(id);
-    return { value: id, label: it?.title ?? id, leading: it ? <PlatformLogo name={it.platform.name} index={it.platform.index} hq={it.platform.hq} size={16} decorative /> : undefined, closable: true };
+    return { value: id, label: it?.title ?? id, leading: it ? <PlatformLogo name={it.platform.name} src={it.platform.src} index={it.platform.index} hq={it.platform.hq} size={16} decorative /> : undefined, closable: true };
   });
 
   const sheetBar = phone ? undefined : overview ? undefined : (
@@ -582,7 +587,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
         className="shrink-0"
         platforms={mapSlots({ ...data, hq: quiet || loading ? { ...data.hq, count: 0 } : data.hq, platforms: data.platforms.map((p) => ({ ...p, count: quiet || loading ? 0 : p.count, ...(p.id === failed ? { error: true } : {}) })) })}
         links={data.links}
-        caption={`${data.platforms.length} platforms + HQ`}
+        caption={<><b className="font-semibold text-text">{data.platforms.length} platforms</b> <span>+ HQ</span></>}
         label="Your platforms"
         selected={filter}
         highlight={hover ? [hover] : null}
@@ -646,6 +651,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
     <>
       <PortalFrame
         current="home"
+        account={{ name: owner.name, email: owner.email, role: 'Owner' }}
         teamCount={1}
         onAddPlatform={() => go({ to: 'platforms', add: true })}
         onNavigate={go}
@@ -659,10 +665,11 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
         topBar={detailBar}
         status={
           <StatusBar
-            platforms={data.platforms.map((p) => ({ id: p.id, name: p.shortName ?? p.name, color: p.index, health: p.id === failed ? 'bad' : healthOf(p), healthText: p.id === failed ? 'no data' : undefined, selected: filter === p.id, onSelect: () => setFilterTo(filter === p.id ? null : p.id) }))}
+            platforms={data.platforms.map((p) => ({ id: p.id, name: p.shortName ?? p.name, logoSrc: p.logo, color: p.index, health: p.id === failed ? 'bad' : healthOf(p), healthText: p.id === failed ? 'no data' : undefined, selected: filter === p.id, onSelect: () => setFilterTo(filter === p.id ? null : p.id) }))}
             people={{ count: 9 }}
             invites={{ count: 1 }}
-            leda={{ used: data.plan.used, max: data.plan.max }}
+            leda={{ used: data.plan.used, max: data.plan.max, daysLeft: '7 days left' }}
+            ledaFirst
             plan="Starter"
             updatedAt={clock()}
           />
