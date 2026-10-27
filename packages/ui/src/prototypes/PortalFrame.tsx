@@ -121,7 +121,7 @@ export function PortalFrame({ current, pageName, leda, topBar, teamCount = 0, on
       />
     </div>
   );
-  return <PlatformShell {...shell} rail={rail} railLabel="Portal" topBar={bar} phoneNav={phoneNav} phoneNavLabel="Portal">{children}</PlatformShell>;
+  return <PlatformShell {...shell} rail={rail} railLabel="Portal" topBar={bar} phoneNav={shell.detail ? undefined : phoneNav} phoneNavLabel="Portal">{children}</PlatformShell>;
 }
 
 /**

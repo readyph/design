@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ArrowLeft, ArrowRight, ArrowSquareOut, CalendarBlank, CaretDown, CheckCircle, Clock, Prohibit, Gauge, House, SquaresFour, Users } from '@phosphor-icons/react';
+import { ArrowRight, ArrowSquareOut, CalendarBlank, CaretDown, CaretLeft, CheckCircle, Clock, Prohibit, Gauge, House, SquaresFour, Users } from '@phosphor-icons/react';
 import { AskLedaBar } from '../components/AskLedaBar';
 import { Badge } from '../components/Badge';
 import { Button } from '../components/Button';
@@ -7,7 +7,6 @@ import { ChatChips, ChatComposer, ChatEmpty, ChatHeader, ChatMessage, ChatThread
 import { chatSample } from '../components/Chat.sample';
 import { CommandPalette, type CommandPaletteGroup, type CommandPaletteItem } from '../components/CommandPalette';
 import { Fact, FactsLine } from '../components/FactsLine';
-import { IconButton } from '../components/IconButton';
 import { LedaMark } from '../components/Leda';
 import { LedaNote } from '../components/LedaNote';
 import type { LedaProposalState } from '../components/LedaProposal';
@@ -17,7 +16,7 @@ import { PlatformLogo } from '../components/PlatformLogo';
 import { LedaFact, PlatformToday } from '../components/PlatformToday';
 import { Queue } from '../components/Queue';
 import { SheetBar } from '../components/SheetBar';
-import { cn } from '../utils/cn';
+import { cn, focusRing } from '../utils/cn';
 import { StatusBar, type StatusBarHealth } from '../components/StatusBar';
 import { SubpageLane, SubpageTransition, type SubpageDirection } from '../components/SubpageTransition';
 import { Tabs, type TabItem } from '../components/Tabs';
@@ -131,6 +130,7 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
   const [addOn, setAddOn] = useState<Record<string, boolean>>({});
   const [extraLines, setExtraLines] = useState<Record<string, HomeCaseLine[]>>({});
   const [writes, setWrites] = useState(0);
+  const [reviewed, setReviewed] = useState<string | null>(null);
   const nowMin = NOW + writes;
 
   // Leda
@@ -192,6 +192,15 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
     target?.focus();
   }, [tab, flash, phoneDetail]);
 
+  // Phone: the sticky bar reads "Review" until the "Leda will write" list has been on screen, then it becomes Confirm.
+  useLayoutEffect(() => {
+    if (!phone || !phoneDetail || !caseTab) return;
+    const last = proposalRef.current?.querySelector('ul li:last-child');
+    if (!last || typeof IntersectionObserver === 'undefined') { setReviewed(caseTab); return; }
+    const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { setReviewed(caseTab); io.disconnect(); } }, { rootMargin: '0px 0px -64px 0px', threshold: 1 });
+    io.observe(last);
+    return () => io.disconnect();
+  }, [phone, phoneDetail, caseTab, sub.n]);
   const openCase = useCallback((id: string, focus: 'confirm' | 'heading') => {
     setTabs((t) => [id, ...t.filter((x) => x === 'today' || x.startsWith('plat:'))]);
     setTab(id);
@@ -621,7 +630,7 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
     ];
     const snz = snoozed.find((x) => x.id === id);
     return (
-      <div className="px-pad pb-10 pt-5">
+      <div className="px-pad pb-10 pt-5 max-[640px]:pt-4">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-small text-muted">
           {crumbs.map((x, i) => <Fragment key={i}>{i ? sep : null}{x}</Fragment>)}
         </div>
@@ -910,19 +919,32 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
   const caseId = caseTab;
   const detailBar = phone && phoneDetail ? (
     <>
-      <IconButton
-        icon={ArrowLeft}
-        label="Back to Needs you"
+      <button
+        type="button"
+        className={cn('-ml-3 inline-flex h-11 items-center gap-1 rounded-control px-2 text-body text-text', focusRing)}
         onClick={() => {
           lastOpened.current = tab;
           slide('out');
           setPhoneDetail(false);
         }}
-      />
-      <span className="min-w-0 flex-1 truncate text-ui font-semibold">{caseId ? lookup(caseId)?.platform.name : platTab ? platformById(platTab)?.name : tab === 'today' ? 'Today' : 'Overview'}</span>
-      {caseId && openIds.includes(caseId) ? <Menu trigger={<IconButton icon={Clock} label="Snooze" />} items={snoozeItems(caseId)} align="end" /> : null}
-      {askBar('bar', false)}
+      >
+        <CaretLeft aria-hidden size={14} />
+        Needs you
+      </button>
+      {caseId && openIds.includes(caseId) ? <div className="ml-auto"><Menu trigger={<button type="button" aria-label="Snooze" className={cn('grid size-11 place-items-center rounded-control text-text', focusRing)}><Clock aria-hidden size={20} /></button>} items={snoozeItems(caseId)} align="end" /></div> : null}
+      <div className="ml-auto">{askBar('bar', false)}</div>
     </>
+  ) : undefined;
+  const barCase = phone && phoneDetail && caseTab ? caseOf(caseTab) : null;
+  const barPr = barCase?.proposal ?? null;
+  const barOpt = barPr?.options ? (barPr.options.find((o) => o.id === (choice[barPr.id] ?? barPr.options![0]!.id)) ?? barPr.options[0]) : null;
+  const barTotal = barPr ? linesOf(barPr.id).reduce((s, l) => s + l.qty * l.unitCost, 0) : 0;
+  const actionBar = barPr && caseTab ? (
+    reviewed === caseTab || pstate[caseTab] === 'writing' ? (
+      <Button variant="primary" actionBar fullWidth disabled={pstate[caseTab] === 'writing'} onClick={() => confirm(caseTab)}>{pstate[caseTab] === 'writing' ? 'Writing…' : barOpt?.confirmLabel ?? barPr.confirmLabel}</Button>
+    ) : (
+      <Button variant="secondary" actionBar fullWidth onClick={() => proposalRef.current?.scrollIntoView({ block: 'center' })}>Review{barTotal ? ` · ${peso(barTotal)}` : ''}</Button>
+    )
   ) : undefined;
 
   return (
@@ -941,6 +963,7 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
         sheetBar={sheetBar}
         sheetLabel={overview ? 'Overview' : tab === 'today' ? 'Today' : platTab ? (platformById(platTab)?.name ?? 'Platform') : 'Case'}
         detail={phone && phoneDetail}
+        actionBar={actionBar}
         topBar={detailBar}
         status={
           <StatusBar
