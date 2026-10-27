@@ -396,7 +396,18 @@ const preset = {
           "0%": {
             "opacity": "0"
           },
-          "18%, 70%": {
+          "18%, 72%": {
+            "opacity": "var(--halo-peak, 1)"
+          },
+          "100%": {
+            "opacity": "0"
+          }
+        },
+        "halo-glow": {
+          "0%": {
+            "opacity": "0"
+          },
+          "22%, 66%": {
             "opacity": "var(--halo-peak, 1)"
           },
           "100%": {
@@ -407,7 +418,7 @@ const preset = {
           "0%": {
             "opacity": "0"
           },
-          "50%": {
+          "18%, 72%": {
             "opacity": "1"
           },
           "100%": {
@@ -433,7 +444,8 @@ const preset = {
         "town-flow-b-slow": "town-flow-b 5s linear infinite",
         "halo-spin": "halo-spin var(--dur-halo) var(--ease-halo) 1 both",
         "halo-fade": "halo-fade var(--dur-halo) var(--ease-halo) 1 both",
-        "halo-fade-reduced": "halo-fade-reduced var(--dur-halo-reduced) ease-in-out 1 both"
+        "halo-glow": "halo-glow var(--dur-halo) var(--ease-halo) 1 both",
+        "halo-fade-reduced": "halo-fade-reduced var(--dur-halo-reduced) linear 1 both"
       },
       "transitionTimingFunction": {
         "subpage": "var(--ease-subpage)",
