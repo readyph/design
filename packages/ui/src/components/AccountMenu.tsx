@@ -18,6 +18,13 @@ export function applyTheme(theme: ThemeChoice, root: HTMLElement = document.docu
   else root.setAttribute('data-theme', theme);
 }
 
+/** The theme the page already shows (`data-theme` on `<html>`), else System. */
+function docTheme(): ThemeChoice {
+  if (typeof document === 'undefined') return 'system';
+  const t = document.documentElement.getAttribute('data-theme');
+  return t === 'light' || t === 'dark' ? t : 'system';
+}
+
 export function initialsOf(name: string): string {
   const w = name.split(/\s+/).filter(Boolean);
   if (!w.length) return '?';
@@ -33,7 +40,7 @@ export const AccountButton = forwardRef<HTMLButtonElement, ComponentPropsWithout
         type="button"
         aria-label={`Account menu, ${name}`}
         {...rest}
-        className={cn('grid size-9 shrink-0 place-items-center rounded-control', focusRing, className)}
+        className={cn('grid size-9 shrink-0 place-items-center rounded-control max-[640px]:size-11', focusRing, className)}
       >
         <span
           aria-hidden
@@ -84,7 +91,7 @@ export function AccountMenu({
   role,
   initials,
   theme,
-  defaultTheme = 'system',
+  defaultTheme = docTheme(),
   onThemeChange,
   applyToDocument = true,
   settingsHref,
@@ -234,6 +241,7 @@ export function AccountMenu({
               options={THEMES}
               value={current}
               onChange={chooseTheme}
+              className="[&_button]:h-[26px] [&_button]:gap-1 [&_button]:px-2 [&_button]:text-small [&_button_svg]:size-[13px] max-sm:[&_button]:h-9 max-sm:[&_button]:px-2.5"
             />
           </div>
           <RadixMenu.Separator className="-mx-1 my-1 h-px bg-border" />

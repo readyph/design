@@ -1,196 +1,199 @@
-import { platformInitialsFor } from '../components/PlatformLogo';
 import { sampleCatalog } from '../components/Marketplace.sample';
-import type { StatusTone } from '../components/StatusDot';
-import type { TownMapLink, TownMapPlatform, TownMapSlot } from '../components/TownMap';
+import { logoAutoworks, logoCafe } from './Platforms.logos';
 
-/** Story data for the Portal Platforms page (RDY-256). Prototype only: not exported from the package. */
+/**
+ * Data for the Portal Platforms story. Copied from the workshop prototype (data.js, data-ext.js, platforms-core.js):
+ * the same platforms, places, figures, links, health words and wording, per data set (duo, few = ?set=few, many = ?set=many).
+ */
 
-export type DataKind = 'stock' | 'catalog' | 'sales';
-export type LinkStatus = 'ok' | 'slow' | 'broken';
+export type DataKind = 'stock' | 'catalog' | 'sales' | 'ledger';
+export type MapStatus = 'ACTIVE' | 'DEGRADED' | 'OFFLINE';
+export type HealthState = 'SETUP' | 'NEW' | 'DEGRADED' | 'OFFLINE' | 'ACTIVE';
 
 export interface PlatformData {
   id: string;
+  /** The label ('Dela Cruz Auto Works'). */
   name: string;
-  /** Short name used inside sentences. */
+  /** Short name used in sentences, chips and the status bar. */
   short: string;
-  /** Marketplace key: 'inventory', 'repair_shop', 'pos', 'storefront', 'mobile_app'. */
+  /** Marketplace key: 'inventory', 'repair_shop', 'pos', 'storefront', 'mobile_app', 'accounting', ... */
   kind: string;
   place: string;
-  /** Health. A platform missing a data source reads "Setup needed" unless it is offline. */
-  health: StatusTone;
+  status: MapStatus;
   since?: string;
-  metrics: [string, string][];
+  isNew?: boolean;
+  color: string;
+  mono: string;
+  logo?: string;
+  /** Figures as [value, label]; the page reads them as "12 open jobs". */
+  kpis: [string, string][];
 }
 
 export interface DataLink {
   from: string;
   to: string;
   kind: DataKind;
-  status: LinkStatus;
+  /** The road: working or slow. */
+  road: 'ok' | 'slow';
+}
+
+export interface Owner {
+  name: string;
+  email: string;
+  initials: string;
+  role: string;
 }
 
 export interface PlatformSet {
+  owner: Owner;
+  people: number;
+  plan: string;
+  usedRequests: number;
+  /** Map lots in order; null is an empty lot. */
+  slots: (string | null)[];
   platforms: PlatformData[];
   links: DataLink[];
 }
 
-export const dataKindName: Record<DataKind, string> = { stock: 'Stock', catalog: 'Catalog', sales: 'Sales' };
-export const dataKindShares: Record<DataKind, string> = {
-  stock: 'Products and levels',
-  catalog: 'Parts and services',
-  sales: 'Receipts and totals',
+/** What a data kind is called and what it shares (data-ext.js kinds). Ledger is not shareable yet. */
+export const dataKinds: Record<DataKind, { name: string; shares: string | null }> = {
+  stock: { name: 'Stock', shares: 'Products, stock levels and movements' },
+  catalog: { name: 'Catalog', shares: 'Product catalog and pricing' },
+  sales: { name: 'Sales', shares: 'In-store sales and receipts' },
+  ledger: { name: 'Ledger', shares: null },
 };
-const lower = (s: string) => s.toLowerCase();
-export const lowerKind = (k: DataKind) => lower(dataKindName[k]);
+export const kname = (k: DataKind) => dataKinds[k].name;
+export const kshares = (k: DataKind) => dataKinds[k].shares ?? 'Nothing to share yet';
+export const lower = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
+
+const RAMON: Owner = { name: 'Ramon Dela Cruz', email: 'mon@delacruzauto.ph', initials: 'RD', role: 'Owner' };
+const BEA: Owner = { name: 'Bea Santos', email: 'bea@brewandbutter.ph', initials: 'BS', role: 'Owner' };
+const duo: PlatformSet = {
+  owner: RAMON,
+  people: 9, plan: "Starter", usedRequests: 1742,
+  slots: ["stockroom","autoworks",null,null],
+  platforms: [
+    { id: "autoworks", name: "Dela Cruz Auto Works", short: "Auto Works", kind: "repair_shop", place: "Aurora Blvd, Cubao", status: "ACTIVE", color: "#c2471f", mono: "DC", logo: logoAutoworks, kpis: [["12","open jobs"],["4","inquiries"],["3","for pickup"]] },
+    { id: "stockroom", name: "Parts Stockroom", short: "Stockroom", kind: "inventory", place: "Aurora Blvd, Cubao", status: "ACTIVE", color: "#6d48c6", mono: "PS", kpis: [["612","products"],["9","low stock"],["2","POs open"]] },
+  ],
+  links: [
+    { from: "stockroom", to: "autoworks", kind: "catalog", road: "ok" },
+  ],
+};
+const few: PlatformSet = {
+  owner: BEA,
+  people: 9, plan: "Starter", usedRequests: 610,
+  slots: ["inventory","cafepos","books",null],
+  platforms: [
+    { id: "inventory", name: "Inventory", short: "Café Inventory", kind: "inventory", place: "Café + kitchen", status: "ACTIVE", color: "#6d48c6", mono: "IN", kpis: [["68","products"],["8","low stock"],["4","out of stock"]] },
+    { id: "cafepos", name: "Café POS", short: "Café POS", kind: "pos", place: "Maginhawa St", status: "ACTIVE", color: "#7a4a2e", mono: "CP", logo: logoCafe, kpis: [["₱6,120","sales today"],["38","orders"]] },
+    { id: "books", name: "Books", short: "Books", kind: "accounting", place: "", status: "OFFLINE", since: "Wed 18:05", color: "#3a6d8c", mono: "BO", kpis: [] },
+  ],
+  links: [
+    { from: "inventory", to: "cafepos", kind: "stock", road: "ok" },
+  ],
+};
+const many: PlatformSet = {
+  owner: RAMON,
+  people: 23, plan: "Business", usedRequests: 1742,
+  slots: ["marikina","cubao","inventory","kapitolyo","stockroom","cafepos","counter",null,"books"],
+  platforms: [
+    { id: "stockroom", name: "Parts Stockroom", short: "Stockroom", kind: "inventory", place: "Cubao, QC", status: "ACTIVE", color: "#6d48c6", mono: "PS", kpis: [["612","products"],["9","low stock"],["2","POs open"]] },
+    { id: "cubao", name: "Cubao", short: "Cubao", kind: "repair_shop", place: "Aurora Blvd, QC", status: "ACTIVE", color: "#c2471f", mono: "CU", logo: logoAutoworks, kpis: [["11","jobs today"],["3","for pickup"]] },
+    { id: "kapitolyo", name: "Kapitolyo", short: "Kapitolyo", kind: "repair_shop", place: "Brixton St, Pasig", status: "ACTIVE", color: "#3a6d8c", mono: "KA", kpis: [["8","jobs today"],["1","waiting for parts"]] },
+    { id: "marikina", name: "Marikina", short: "Marikina", kind: "repair_shop", place: "J.P. Rizal St, Marikina", status: "DEGRADED", since: "7:40", color: "#85408f", mono: "MA", kpis: [["9","jobs today"]] },
+    { id: "counter", name: "Cubao Parts Counter", short: "Parts Counter", kind: "pos", place: "Aurora Blvd, QC", status: "ACTIVE", color: "#5c6b22", mono: "CP", kpis: [["₱23,480","sales today"],["31","receipts"]] },
+    { id: "inventory", name: "Café Inventory", short: "Café Inventory", kind: "inventory", place: "Café + kitchen", status: "ACTIVE", color: "#52607a", mono: "CI", kpis: [["68","products"],["8","low stock"],["4","out of stock"]] },
+    { id: "cafepos", name: "Café POS", short: "Café POS", kind: "pos", place: "Maginhawa St", status: "ACTIVE", color: "#7a4a2e", mono: "CF", logo: logoCafe, kpis: [["₱6,120","sales today"],["38","orders"]] },
+    { id: "books", name: "Books", short: "Books", kind: "accounting", place: "", status: "OFFLINE", since: "Wed 18:05", color: "#4f6b4a", mono: "BO", kpis: [] },
+  ],
+  links: [
+    { from: "stockroom", to: "cubao", kind: "catalog", road: "ok" },
+    { from: "stockroom", to: "kapitolyo", kind: "catalog", road: "ok" },
+    { from: "stockroom", to: "marikina", kind: "catalog", road: "slow" },
+    { from: "inventory", to: "cafepos", kind: "stock", road: "ok" },
+  ],
+};
+
+export const sets = { duo, few, many, empty: { owner: RAMON, people: 9, plan: 'Starter', usedRequests: 1742, slots: [null, null, null, null], platforms: [], links: [] } as PlatformSet };
+export type PlatformSetKey = keyof typeof sets;
+export const LAST_LOADED = '9:10 AM';
+export const NOW = '9:12 AM';
+export const USAGE = { limit: 2000, daysLeft: 7 };
+
+/* ---------- reads (platforms-core.js) ---------- */
+export const plural = (n: number, w: string, ws?: string) => `${n} ${n === 1 ? w : ws ?? `${w}s`}`;
+export const count = (n: number, w: string) => (n ? plural(n, w) : `No ${w}s`);
+export const andList = (a: string[]) => (a.length <= 1 ? a.join('') : `${a.slice(0, -1).join(', ')} and ${a[a.length - 1]}`);
 
 export const catalogItem = (key: string) => sampleCatalog.find((i) => i.key === key)!;
 export const kindName = (key: string) => catalogItem(key).name;
 export const hasApp = (key: string) => !!catalogItem(key).hasApp;
 const readsOf = (key: string) => (catalogItem(key).reads ?? []) as DataKind[];
-const sharesOf = (key: string) => (catalogItem(key).shares ?? []) as DataKind[];
-
-const stockroom: PlatformData = { id: 'stockroom', name: 'Parts Stockroom', short: 'Stockroom', kind: 'inventory', place: 'Cubao, QC', health: 'ok', metrics: [['Products', '612'], ['Low stock', '4'], ['POs open', '2']] };
-const autoWorks: PlatformData = { id: 'autoworks', name: 'Dela Cruz Auto Works', short: 'Auto Works', kind: 'repair_shop', place: 'Quezon City', health: 'ok', metrics: [['Jobs today', '11'], ['For pickup', '3']] };
-const slowAutoWorks: PlatformData = { ...autoWorks, health: 'warn', since: '7:40' };
-const counter: PlatformData = { id: 'counter', name: 'Cubao Parts Counter', short: 'Parts Counter', kind: 'pos', place: 'Aurora Blvd, QC', health: 'ok', metrics: [] };
-const cebu: PlatformData = { id: 'cebu', name: 'Cebu Parts Stockroom', short: 'Cebu Parts', kind: 'inventory', place: 'Cebu City', health: 'bad', since: 'Wed 18:05', metrics: [] };
-const kapitolyo: PlatformData = { id: 'kapitolyo', name: 'Kapitolyo Repair Shop', short: 'Kapitolyo', kind: 'repair_shop', place: 'Pasig', health: 'ok', metrics: [['Jobs today', '8'], ['Waiting for parts', '1']] };
-const marikina: PlatformData = { id: 'marikina', name: 'Marikina Repair Shop', short: 'Marikina', kind: 'repair_shop', place: 'Marikina', health: 'warn', since: '7:40', metrics: [['Jobs today', '9']] };
-const storefront: PlatformData = { id: 'storefront', name: 'Pasig Online Store', short: 'Online Store', kind: 'storefront', place: 'Pasig', health: 'accent', metrics: [] };
-
-export const sets: Record<'duo' | 'few' | 'many' | 'empty', PlatformSet> = {
-  duo: {
-    platforms: [stockroom, autoWorks],
-    links: [{ from: 'stockroom', to: 'autoworks', kind: 'catalog', status: 'ok' }],
-  },
-  few: {
-    platforms: [stockroom, slowAutoWorks, counter],
-    links: [{ from: 'stockroom', to: 'autoworks', kind: 'catalog', status: 'slow' }],
-  },
-  many: {
-    platforms: [stockroom, cebu, autoWorks, kapitolyo, marikina, counter, storefront],
-    links: [
-      { from: 'stockroom', to: 'autoworks', kind: 'catalog', status: 'ok' },
-      { from: 'stockroom', to: 'kapitolyo', kind: 'catalog', status: 'ok' },
-      { from: 'stockroom', to: 'marikina', kind: 'catalog', status: 'slow' },
-      { from: 'stockroom', to: 'storefront', kind: 'stock', status: 'ok' },
-    ],
-  },
-  empty: { platforms: [], links: [] },
-};
+const providesOf = (key: string) => (catalogItem(key).shares ?? []) as DataKind[];
+/** Kinds a platform may be added as (no "coming soon"). */
+export const addableKinds = () => sampleCatalog.filter((i) => !i.comingSoon);
 
 export const byId = (set: PlatformSet, id: string) => set.platforms.find((p) => p.id === id)!;
-export const sourcesOf = (set: PlatformSet, id: string, k: DataKind) => set.links.filter((l) => l.to === id && l.kind === k);
-export const sharedBy = (set: PlatformSet, id: string) => set.links.filter((l) => l.from === id);
-/** The data kinds a platform reads but has no source for. */
+export const sourcesOf = (set: PlatformSet, id: string, k?: DataKind) => set.links.filter((l) => l.to === id && (!k || l.kind === k));
+export const sharesOf = (set: PlatformSet, id: string) => set.links.filter((l) => l.from === id);
 export const missing = (set: PlatformSet, p: PlatformData) => readsOf(p.kind).filter((k) => !sourcesOf(set, p.id, k).length);
-export const setupNeeded = (set: PlatformSet, p: PlatformData) => p.health !== 'bad' && missing(set, p).length > 0;
+export const setupNeeded = (set: PlatformSet, p: PlatformData) => readsOf(p.kind).length > 0 && !set.links.some((l) => l.to === p.id);
+export const shareable = (p: PlatformData) => providesOf(p.kind).filter((k) => dataKinds[k].shares);
 
-export function healthOf(set: PlatformSet, p: PlatformData): { tone: StatusTone; word: string } {
-  if (p.health === 'bad') return { tone: 'bad', word: `Offline since ${p.since}` };
-  if (setupNeeded(set, p)) return { tone: 'neutral', word: 'Setup needed' };
-  if (p.health === 'warn') return { tone: 'warn', word: `Slow since ${p.since}` };
-  if (p.health === 'accent') return { tone: 'accent', word: 'Setting up' };
-  return { tone: 'ok', word: 'Running' };
+export interface Health {
+  st: HealthState;
+  text: string;
+  word: string;
 }
-const rank = (set: PlatformSet, p: PlatformData) => ['Offline', 'Setup needed', 'Slow', 'Setting up', 'Running'].findIndex((w) => healthOf(set, p).word.startsWith(w));
-/** Problem first: Offline, Setup needed, Slow, Setting up, Running. */
-export const ordered = (set: PlatformSet) => [...set.platforms].sort((a, b) => rank(set, a) - rank(set, b));
-export const noFigures = (p: PlatformData) => (p.health === 'bad' ? `No figures since ${p.since}` : 'No activity yet');
+export function health(set: PlatformSet, p: PlatformData): Health {
+  if (setupNeeded(set, p)) return { st: 'SETUP', text: 'Setup needed', word: 'needs setup' };
+  if (p.isNew) return { st: 'NEW', text: 'Setting up', word: 'setting up' };
+  if (p.status === 'DEGRADED') return { st: 'DEGRADED', text: `Slow since ${p.since}`, word: 'slow' };
+  if (p.status === 'OFFLINE') return { st: 'OFFLINE', text: `Offline since ${p.since}`, word: 'offline' };
+  return { st: 'ACTIVE', text: 'Running', word: 'running' };
+}
+const RANK: Record<HealthState, number> = { OFFLINE: 0, SETUP: 1, DEGRADED: 2, NEW: 3, ACTIVE: 4 };
+/** Problem first: offline, setup needed, slow, setting up, running; data order within each. */
+export const ordered = (set: PlatformSet) =>
+  set.platforms.map((p, i) => [p, i] as const).sort((a, b) => RANK[health(set, a[0]).st] - RANK[health(set, b[0]).st] || a[1] - b[1]).map((x) => x[0]);
+export const noFigures = (p: PlatformData) => (p.status === 'OFFLINE' && p.since && !p.isNew ? `No figures since ${p.since}` : 'No activity yet');
 
-export const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
-export const andList = (parts: string[]) => (parts.length <= 1 ? parts.join('') : `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`);
+/** The line under "All platforms". */
+export function healthLine(set: PlatformSet): string {
+  const odd = ordered(set).filter((p) => health(set, p).st !== 'ACTIVE');
+  const n = set.platforms.length;
+  if (!odd.length) return n === 2 ? 'Both running.' : n === 1 ? 'Running.' : `All ${n} running.`;
+  return `${n - odd.length} of ${n} running · ${odd.slice(0, 3).map((p) => `${p.short} ${health(set, p).word}`).join(' · ')}${odd.length > 3 ? ` · ${odd.length - 3} more` : ''}`;
+}
 
-/** The page's finding line (Leda's). */
+/** Leda's finding line in the place column. */
 export function headline(set: PlatformSet): string {
   if (!set.platforms.length) return 'No platforms yet.';
   const need = set.platforms.filter((p) => setupNeeded(set, p));
-  if (need.length) {
-    const more = need.length > 1 ? `, and ${need.length - 1} more` : '';
-    return `${plural(set.links.length, 'data link')}. ${need[0].name} needs a ${lowerKind(missing(set, need[0])[0])} source${more}.`;
-  }
+  if (need.length) return `${count(set.links.length, 'data link')}. ${need[0].name} needs a ${lower(kname(missing(set, need[0])[0]))} source${need.length > 1 ? `, and ${need.length - 1} more` : ''}.`;
   if (!set.links.length) return 'No data links yet.';
   if (set.links.length === 1) {
     const l = set.links[0];
-    return `${byId(set, l.from).name} shares its ${lowerKind(l.kind)} with ${byId(set, l.to).name}.`;
+    return `${byId(set, l.from).name} shares its ${lower(kname(l.kind))} with ${byId(set, l.to).name}.`;
   }
   return `${plural(set.links.length, 'data link')}, all set up.`;
-}
-
-/** The line under "All platforms": how many are not running. */
-export function healthLine(set: PlatformSet): string {
-  const words = set.platforms.map((p) => healthOf(set, p).word);
-  const off = words.filter((w) => w.startsWith('Offline')).length;
-  const need = words.filter((w) => w === 'Setup needed').length;
-  const slow = words.filter((w) => w.startsWith('Slow')).length;
-  const parts = [off && `${off} offline`, need && `${need} need setup`, slow && `${slow} slow`].filter(Boolean) as string[];
-  return `${plural(set.platforms.length, 'platform')}${parts.length ? ` · ${parts.join(', ')}` : ' · all running'}`;
-}
-
-export interface LinkLine {
-  key: string;
-  need?: boolean;
-  text: string;
-}
-const names = (set: PlatformSet, ids: string[]) => (ids.length <= 2 ? andList(ids.map((id) => byId(set, id).short)) : plural(ids.length, 'platform'));
-/** "Reads Stock from A and B", "No stock source", "Shares Catalog with C". */
-export function linkLines(set: PlatformSet, p: PlatformData): LinkLine[] {
-  const out: LinkLine[] = readsOf(p.kind).map((k) => {
-    const from = sourcesOf(set, p.id, k).map((l) => l.from);
-    return from.length ? { key: `r-${k}`, text: `Reads ${dataKindName[k]} from ${names(set, from)}` } : { key: `r-${k}`, need: true, text: `No ${lowerKind(k)} source` };
-  });
-  const to: Partial<Record<DataKind, string[]>> = {};
-  sharedBy(set, p.id).forEach((l) => (to[l.kind] ??= []).push(l.to));
-  (Object.keys(to) as DataKind[]).forEach((k) => out.push({ key: `s-${k}`, text: `Shares ${dataKindName[k]} with ${names(set, to[k]!)}` }));
-  if (!out.length) out.push({ key: 'none', text: sharesOf(p.kind).length ? `Can share ${andList(sharesOf(p.kind).map(lowerKind))}` : "Doesn't share data" });
-  return out;
 }
 
 export interface IdleShare {
   platform: PlatformData;
   kind: DataKind;
-  /** Marketplace keys of the kinds that could read it (not yet owned). */
+  /** Marketplace keys of the kinds that can read it (every addable kind that reads it). */
   readers: string[];
 }
-/** What a platform could share but nobody reads yet. */
-export function idleShares(set: PlatformSet): IdleShare[] {
-  const owned = new Set(set.platforms.map((p) => p.kind));
-  const out: IdleShare[] = [];
-  set.platforms.forEach((p) =>
-    sharesOf(p.kind).forEach((k) => {
-      if (set.links.some((l) => l.from === p.id && l.kind === k)) return;
-      const readers = sampleCatalog.filter((i) => !i.comingSoon && !owned.has(i.key) && (i.reads ?? []).includes(k)).map((i) => i.key);
-      if (readers.length) out.push({ platform: p, kind: k, readers });
-    }),
-  );
-  return out;
+export function idleList(set: PlatformSet): IdleShare[] {
+  return set.platforms
+    .flatMap((p) =>
+      shareable(p)
+        .filter((k) => !sharesOf(set, p.id).some((l) => l.kind === k))
+        .map((k) => ({ platform: p, kind: k, readers: addableKinds().filter((i) => (i.reads ?? []).includes(k)).map((i) => i.key) })),
+    )
+    .filter((x) => x.readers.length);
 }
 
-export function roadStatusWord(l: DataLink) {
-  return l.status === 'slow' ? 'slow' : l.status === 'broken' ? 'broken' : 'working';
-}
-
-const mapType = (kind: string) => ({ inventory: 'warehouse', repair_shop: 'service', pos: 'store' }[kind] as TownMapPlatform['mapType']);
-export function mapPlatforms(set: PlatformSet): TownMapSlot[] {
-  const slots: TownMapSlot[] = set.platforms.map((p, i) => ({
-    id: p.id,
-    name: p.name,
-    shortName: p.short,
-    kind: kindName(p.kind),
-    mapType: mapType(p.kind),
-    status: p.health === 'bad' ? 'OFFLINE' : p.health === 'warn' ? 'DEGRADED' : 'ACTIVE',
-    statusSince: p.health === 'warn' || p.health === 'bad' ? p.since : undefined,
-    index: i + 1,
-    initials: initialsOf(set)[p.id],
-    count: setupNeeded(set, p) ? 1 : undefined,
-  }));
-  while (slots.length < 4) slots.push(null);
-  return slots;
-}
-export const mapLinks = (set: PlatformSet): TownMapLink[] => set.links.map((l) => ({ from: l.from, to: l.to, status: l.status }));
-
-/** Collision-safe monograms for the whole set (two platforms never share one). */
-export function initialsOf(set: PlatformSet): Record<string, string> {
-  const ini = platformInitialsFor(set.platforms.map((p) => p.name));
-  return Object.fromEntries(set.platforms.map((p, i) => [p.id, ini[i]]));
-}
+export const caption = (set: PlatformSet) => `${plural(set.platforms.length, 'platform')} · ${count(set.links.length, 'data link').replace('No d', 'no d')}`;

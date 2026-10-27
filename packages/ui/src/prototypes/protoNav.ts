@@ -145,6 +145,22 @@ export function navigateTo(dest: Dest): boolean {
   return true;
 }
 
+/** Go to a story by id (the palette's "Prototype states": Loading, error, empty, scale test). Same hand-off as `navigateTo`, no page group change. */
+export function goToStory(id: string) {
+  if (!isStorybook() || isDocs()) return;
+  const w = window as PreviewWindow;
+  if (currentStoryId(w) === id) return;
+  const channel = w.__STORYBOOK_ADDONS_CHANNEL__;
+  if (inManager() && channel) {
+    channel.emit('selectStory', { storyId: id });
+    return;
+  }
+  const next = new URLSearchParams({ id, viewMode: 'story' });
+  const globals = params().get('globals');
+  if (globals) next.set('globals', globals);
+  window.location.assign(`${window.location.pathname}?${next.toString()}`);
+}
+
 /** The default handler for a page: go there, or tell the person this destination is not in the prototype. */
 export function go(dest: Dest) {
   if (!navigateTo(dest)) toast({ description: noPageMessage(dest) });

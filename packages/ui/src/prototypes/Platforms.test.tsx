@@ -4,7 +4,7 @@ import { cleanup, render, screen, waitFor, within } from '@testing-library/react
 import userEvent from '@testing-library/user-event';
 import axe from 'axe-core';
 import { PlatformsPage, type PlatformsPageProps } from './Platforms.page';
-import { headline, healthLine, idleShares, mapPlatforms, ordered, sets } from './Platforms.data';
+import { headline, healthLine, idleList, health, ordered, sets } from './Platforms.data';
 import { clearToasts } from '../components/toast/toastStore';
 
 afterEach(() => {
@@ -16,23 +16,25 @@ const renderPage = (props: PlatformsPageProps = {}) => render(<PlatformsPage {..
 const sheet = () => screen.getByRole('main', { name: 'All platforms' });
 
 describe('Platforms data', () => {
-  it('maps only the platforms to the map, with no HQ building', () => {
-    const placed = mapPlatforms(sets.duo).filter(Boolean);
-    expect(placed).toHaveLength(sets.duo.platforms.length);
-    expect(placed.some((p) => p?.name === 'HQ')).toBe(false);
+  it('is the workshop prototype data: two platforms in duo, eight in many, in data order', () => {
+    expect(sets.duo.platforms.map((p) => p.name)).toEqual(['Dela Cruz Auto Works', 'Parts Stockroom']);
+    expect(sets.many.platforms).toHaveLength(8);
+    expect(sets.many.slots).toContain(null);
   });
 
-  it('words the finding line like the handover', () => {
+  it('words the finding line like the prototype', () => {
     expect(headline(sets.duo)).toBe('Parts Stockroom shares its catalog with Dela Cruz Auto Works.');
     expect(headline(sets.many)).toBe('4 data links. Cubao Parts Counter needs a stock source.');
     expect(headline(sets.empty)).toBe('No platforms yet.');
   });
   it('orders problems first and counts them', () => {
-    expect(ordered(sets.many).map((p) => p.id)).toEqual(['cebu', 'counter', 'marikina', 'storefront', 'stockroom', 'autoworks', 'kapitolyo']);
-    expect(healthLine(sets.many)).toBe('7 platforms · 1 offline, 1 need setup, 1 slow');
+    expect(ordered(sets.many).map((p) => p.id)).toEqual(['books', 'counter', 'marikina', 'stockroom', 'cubao', 'kapitolyo', 'inventory', 'cafepos']);
+    expect(healthLine(sets.many)).toBe('5 of 8 running · Books offline · Parts Counter needs setup · Marikina slow');
+    expect(healthLine(sets.duo)).toBe('Both running.');
+    expect(health(sets.many, sets.many.platforms[3]).text).toBe('Slow since 7:40');
   });
-  it('lists what is not shared yet with the kinds that could read it', () => {
-    const [x] = idleShares(sets.duo);
+  it('lists what is not shared yet with every kind that can read it', () => {
+    const [x] = idleList(sets.duo);
     expect(x.platform.name).toBe('Parts Stockroom');
     expect(x.readers).toEqual(['pos', 'storefront', 'mobile_app']);
   });
@@ -42,7 +44,7 @@ describe('Platforms page', () => {
   it('lists the platforms in the sheet, problem first, with plain health words', () => {
     renderPage({ set: 'many' });
     const rows = within(within(sheet()).getByRole('table', { name: 'All platforms' })).getAllByRole('row');
-    expect(rows[1].textContent).toContain('Cebu Parts Stockroom');
+    expect(rows[1].textContent).toContain('Books');
     expect(rows[1].textContent).toContain('Offline since Wed 18:05');
     expect(rows[2].textContent).toContain('Setup needed');
     expect(within(rows[2]).getByRole('button', { name: 'Finish setup' })).toBeTruthy();
@@ -52,9 +54,9 @@ describe('Platforms page', () => {
     renderPage({ set: 'duo' });
     const place = screen.getByRole('region', { name: 'Your platforms' });
     expect(within(place).getByRole('heading', { level: 1, name: 'Platforms' })).toBeTruthy();
-    expect(within(place).getByRole('group', { name: 'Data links' })).toBeTruthy();
-    expect(within(place).getByRole('group', { name: 'Not shared yet' })).toBeTruthy();
-    expect(within(place).getByText(/2 platforms · 1 data link$/)).toBeTruthy();
+    expect(within(place).getByRole('heading', { level: 2, name: /Data links/ })).toBeTruthy();
+    expect(within(place).getByRole('heading', { level: 2, name: /Not shared yet/ })).toBeTruthy();
+    expect(place.textContent).toContain('2 platforms · 1 data link');
     expect(within(place).queryByText(/HQ/)).toBeNull();
   });
 
@@ -76,8 +78,8 @@ describe('Platforms page', () => {
     expect(screen.getByRole('dialog', { name: 'Add a platform' })).toBeTruthy();
     await user.keyboard('{Escape}');
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-    const idle = screen.getByRole('group', { name: 'Not shared yet' });
-    await user.click(within(idle).getByRole('button', { name: /Add POS/ }));
+    const place = screen.getByRole('region', { name: 'Your platforms' });
+    await user.click(within(place).getAllByRole('button', { name: 'Add' }).at(-1)!);
     expect((screen.getByRole('radio', { name: 'POS' }) as HTMLInputElement).getAttribute('aria-checked')).toBe('true');
   });
 
@@ -90,7 +92,7 @@ describe('Platforms page', () => {
   it('error: Try again moves focus to the list heading once the button is gone, and not when the user went elsewhere', async () => {
     const user = userEvent.setup();
     renderPage({ state: 'error' });
-    expect(within(sheet()).getByRole('alert').textContent).toContain('Couldn’t load your platforms.');
+    expect(within(sheet()).getByRole('alert').textContent).toContain("Couldn't load your platforms.");
     await user.click(screen.getByRole('button', { name: 'Try again' }));
     await waitFor(() => expect(within(sheet()).queryByRole('alert')).toBeNull());
     expect(document.activeElement).toBe(within(sheet()).getByRole('heading', { name: 'All platforms' }));
@@ -103,7 +105,7 @@ describe('Platforms page', () => {
     const user = userEvent.setup();
     renderPage({ set: 'empty' });
     expect(within(sheet()).getByRole('heading', { name: 'No platforms yet' })).toBeTruthy();
-    const choose = within(sheet()).getByRole('button', { name: 'Choose a platform' });
+    const choose = within(sheet()).getByRole('button', { name: 'Browse platforms' });
     await user.click(choose);
     expect(screen.getByRole('dialog', { name: 'Add a platform' })).toBeTruthy();
   });
@@ -111,12 +113,12 @@ describe('Platforms page', () => {
   it('Disconnect asks first and Cancel returns focus to the row menu button', async () => {
     const user = userEvent.setup();
     renderPage();
-    const more = within(sheet()).getByRole('button', { name: 'More for Parts Stockroom' });
+    const more = within(sheet()).getByRole('button', { name: 'More for Dela Cruz Auto Works' });
     more.focus();
     await user.keyboard('{Enter}');
     await user.click(await screen.findByRole('menuitem', { name: 'Disconnect' }));
     const dlg = await screen.findByRole('alertdialog');
-    expect(dlg.textContent).toContain('Disconnect Parts Stockroom?');
+    expect(dlg.textContent).toContain('Disconnect Dela Cruz Auto Works?');
     await user.click(within(dlg).getByRole('button', { name: 'Cancel' }));
     await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull());
     expect(document.activeElement).toBe(more);
@@ -128,11 +130,11 @@ describe('Platforms page', () => {
     const cur = () => within(sheet()).getAllByRole('row').filter((r) => r.getAttribute('aria-current') === 'true').map((r) => r.textContent ?? '');
     await user.keyboard('j');
     expect(cur()).toHaveLength(1);
-    expect(cur()[0]).toContain('Cebu Parts Stockroom');
+    expect(cur()[0]).toContain('Books');
     await user.keyboard('j');
     expect(cur()[0]).toContain('Cubao Parts Counter');
     await user.keyboard('k');
-    expect(cur()[0]).toContain('Cebu Parts Stockroom');
+    expect(cur()[0]).toContain('Books');
   });
 });
 
