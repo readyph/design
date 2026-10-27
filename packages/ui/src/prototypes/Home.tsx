@@ -589,6 +589,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
         links={data.links}
         caption={<><b className="font-semibold text-text">{data.platforms.length} platforms</b> <span>+ HQ</span></>}
         label="Your platforms"
+        onAddPlatform={() => go({ to: 'platforms', add: true })}
         selected={filter}
         highlight={hover ? [hover] : null}
         loading={loading}

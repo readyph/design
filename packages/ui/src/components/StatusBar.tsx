@@ -93,13 +93,16 @@ const dot: Record<StatusBarHealth, string> = {
 
 // Full class names so Tailwind can see them. `@max-[Npx]/status:` is a container query on the bar's own width.
 const item =
-  'inline-flex h-[26px] min-w-0 items-center gap-2 whitespace-nowrap rounded-chip px-[9px] text-small text-muted';
+  'inline-flex h-[26px] min-w-0 items-center gap-2 whitespace-nowrap rounded-chip px-[9px] text-small leading-5 text-muted';
 const interactive =
   'cursor-pointer hover:bg-frame-hover hover:text-text aria-pressed:bg-frame-active aria-[current=true]:bg-frame-active ' +
   'outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-frame forced-colors:outline-0 forced-colors:focus-visible:outline forced-colors:focus-visible:outline-2 forced-colors:focus-visible:outline-[Highlight]';
 const dropUpdated = '@max-[960px]/status:hidden';
 const dropPlan = '@max-[780px]/status:hidden';
 const dropInviteWord = '@max-[780px]/status:hidden';
+// Workshop shell breakpoints (viewport, shell.css: hide-mid 1180, hide-tab 960), used with `ledaFirst`.
+const wsMid = 'max-[1180px]:hidden';
+const wsTab = 'max-[960px]:hidden';
 
 interface ItemProps {
   href?: string;
@@ -134,7 +137,7 @@ function Item({ href, onSelect, selected, 'aria-label': label, title, className,
   );
 }
 
-const Divider = () => <span aria-hidden="true" className="mx-1.5 h-3 w-px shrink-0 bg-control" />;
+const Divider = ({ className }: { className?: string }) => <span aria-hidden="true" className={cn('ml-1.5 mr-2 h-3 w-px shrink-0 bg-control', className)} />;
 
 const plural = (n: number, one: string, many: string) => `${n.toLocaleString('en-US')} ${n === 1 ? one : many}`;
 
@@ -180,7 +183,7 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
     sections.push({ key: 'platforms', cls: 'flex min-w-0 shrink', node: (
         <ul role="list" aria-label="Platforms" className="flex min-w-0 items-center gap-0.5 overflow-hidden">
           {portalSummary && (
-            <li className="flex shrink-0">
+            <li className={cn('flex shrink-0', wsTab)}>
               <Item>
                 <span className="tabular-nums">{plural(platforms.length, 'platform', 'platforms')}</span>
                 <span>· all running</span>
@@ -207,7 +210,7 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
                       <span>{words(p)}</span>
                     </>
                   ) : (
-                    namesAlways && <span className={cn('max-w-[16ch] truncate', ledaFirst && 'text-ui font-medium text-text')}>{p.name}</span>
+                    namesAlways && <span className={cn('max-w-[16ch] truncate', ledaFirst && 'text-ui font-medium text-text', ledaFirst && platforms.length > 3 && wsMid)}>{p.name}</span>
                   )}
                 </Item>
               </li>
@@ -234,14 +237,17 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
 
   if (people) {
     sections.push({ key: 'people', cls: "flex shrink-0", node: (
-        <Item href={people.href} onSelect={people.onSelect} aria-label={plural(people.count, 'person', 'people')}>
+        <Item href={people.href} onSelect={people.onSelect} aria-label={plural(people.count, 'person', 'people') + (ledaFirst && invites && invites.count > 0 ? `, ${plural(invites.count, 'invite', 'invites')} pending` : '')}>
           <Users size={14} aria-hidden="true" />
           <span className="tabular-nums">{plural(people.count, 'person', 'people')}</span>
+          {ledaFirst && invites && invites.count > 0 ? (
+            <span className={cn('tabular-nums', wsMid)}>· {invites.count.toLocaleString('en-US')} {invites.count === 1 ? 'invite' : 'invites'} pending</span>
+          ) : null}
         </Item>
       ) });
   }
 
-  if (invites && invites.count > 0) {
+  if (invites && invites.count > 0 && !(ledaFirst && people)) {
     sections.push({ key: 'invites', cls: "flex shrink-0", node: (
         <Item href={invites.href} onSelect={invites.onSelect} aria-label={`${plural(invites.count, 'invite', 'invites')} waiting`}>
           <EnvelopeSimple size={14} aria-hidden="true" />
@@ -262,19 +268,19 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
           <span className="tabular-nums">
             {leda.used.toLocaleString('en-US')} / {leda.max.toLocaleString('en-US')}
           </span>
-          {ledaFirst && leda.daysLeft ? <span className="tabular-nums">{leda.daysLeft}</span> : null}
+          {ledaFirst && leda.daysLeft ? <span className={cn('tabular-nums', wsTab)}>{leda.daysLeft}</span> : null}
         </Item>
       ) });
   }
 
   if (plan) {
-    sections.push({ key: 'plan', cls: cn('flex shrink-0', dropPlan), node: (
+    sections.push({ key: 'plan', cls: cn('flex shrink-0', ledaFirst ? wsMid : dropPlan), node: (
         <Item>{plan} plan</Item>
       ) });
   }
 
   if (updatedAt) {
-    sections.push({ key: 'updated', cls: cn('ml-auto flex shrink-0', dropUpdated), node: (
+    sections.push({ key: 'updated', cls: cn('ml-auto flex shrink-0', ledaFirst ? wsMid : dropUpdated), node: (
         <Item className="tabular-nums">Updated {updatedAt}</Item>
       ) });
   }
@@ -286,7 +292,7 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
 
   return (
     <div ref={ref} className={cn(className, '@container/status flex h-full w-full min-w-0 items-center')}>
-      <ul role="list" aria-label={ariaLabel} className="m-0 flex min-w-0 flex-1 list-none items-center gap-1 p-0">
+      <ul role="list" aria-label={ariaLabel} className="m-0 flex min-w-0 flex-1 list-none items-center gap-0.5 p-0">
         {sections.map((s, i) => (
           <li key={s.key} className={cn('items-center', s.cls)}>
             {i > 0 && s.key !== 'updated' && <Divider />}

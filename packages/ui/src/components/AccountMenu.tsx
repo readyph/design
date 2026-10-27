@@ -39,7 +39,7 @@ export const AccountButton = forwardRef<HTMLButtonElement, ComponentPropsWithout
       >
         <span
           aria-hidden
-          className="grid size-7 place-items-center rounded-full bg-accent-tint text-[11px] font-semibold text-accent"
+          className="grid size-7 place-items-center rounded-full bg-avatar-bg text-[11px] font-semibold text-avatar-text"
         >
           {initialsOf(name)}
         </span>
@@ -196,7 +196,7 @@ export function AccountMenu({
           <div className="flex items-center gap-3 px-2.5 pb-3 pt-2.5">
             <span
               aria-hidden
-              className="grid size-8 shrink-0 place-items-center rounded-full bg-accent-tint text-ui font-semibold text-accent"
+              className="grid size-8 shrink-0 place-items-center rounded-full bg-avatar-bg text-[12px] font-semibold text-avatar-text"
             >
               {initialsOf(name)}
             </span>

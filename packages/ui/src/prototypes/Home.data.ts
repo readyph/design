@@ -315,10 +315,22 @@ export const many: HomeSet = {
 
 export const sets: Record<HomeSetKey, HomeSet> = { live, few, many };
 
-export const mapSlots = (s: HomeSet): TownMapSlot[] => [s.hq, ...s.platforms].map((p) => {
-  const { ledaCanAct: _a, facts: _f, lists: _l, week: _w, yesterday: _y, ...rest } = p;
-  return rest;
-});
+/**
+ * Workshop map order (data.js `mapOrder`): the platforms in order, the empty lots, and HQ in the last plot
+ * (two platforms: Stockroom, Auto Works, an empty lot, HQ).
+ */
+export const mapSlots = (s: HomeSet): TownMapSlot[] => {
+  const slim = (p: HomePlatform): TownMapSlot => {
+    const { ledaCanAct: _a, facts: _f, lists: _l, week: _w, yesterday: _y, ...rest } = p;
+    return rest;
+  };
+  const n = s.platforms.length + 1;
+  const total = Math.ceil(n / Math.max(1, Math.ceil(Math.sqrt(n)))) * Math.max(1, Math.ceil(Math.sqrt(n)));
+  // data.js mapOrder for the duo: Stockroom first, then Auto Works.
+  const order = (id: string) => (id === 'stockroom' ? 0 : id === 'autoworks' ? 1 : 2);
+  const ordered = [...s.platforms].sort((x, y) => order(x.id) - order(y.id));
+  return [...ordered.map(slim), ...Array.from({ length: total - n }, () => null), slim(s.hq)];
+};
 
 export const queuePlatforms = (s: HomeSet): QueuePlatform[] => [
   ...s.platforms.map((p) => ({ id: p.id, name: p.name, index: p.index })),

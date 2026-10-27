@@ -86,7 +86,7 @@ const rootCls: Record<ReturnType<typeof toSurface>, string> = {
 };
 
 const listCls: Record<ReturnType<typeof toSurface>, string> = {
-  editor: 'flex h-full min-w-0 items-stretch overflow-x-auto overflow-y-hidden',
+  editor: 'flex h-full min-w-0 items-stretch gap-1 overflow-x-auto overflow-y-hidden',
   fixed: 'flex min-h-0 min-w-0 flex-1 items-stretch gap-1 overflow-x-auto overflow-y-hidden border-b border-border',
   vertical: 'flex flex-col gap-1',
   chips: 'flex min-w-0 items-center gap-2 overflow-x-auto overflow-y-hidden py-0.5',
@@ -172,10 +172,9 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
                 ring,
                 v === 'editor' &&
                   cn(
-                    'relative flex h-full min-w-0 flex-1 items-center gap-2 px-3 hover:bg-raised hover:text-text',
+                    'relative flex h-full min-w-0 flex-1 items-center gap-[7px] rounded-t-chip px-2 text-[13px] hover:bg-raised hover:text-text',
                     'data-[state=active]:font-medium data-[state=active]:text-text',
-                    'after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:after:bg-accent',
-                    closable && 'pr-8',
+                    'after:absolute after:inset-x-2 after:-bottom-px after:h-0.5 data-[state=active]:after:bg-accent',
                   ),
                 v === 'fixed' &&
                   cn(
@@ -211,7 +210,7 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
                     e.stopPropagation();
                     onClose?.(item.value);
                   }}
-                  className="absolute right-1.5 top-1/2 inline-flex size-[18px] -translate-y-1/2 cursor-pointer items-center justify-center rounded-chip text-muted transition-colors duration-hover hover:bg-raised-2 hover:text-text"
+                  className="inline-flex size-[18px] shrink-0 cursor-pointer items-center justify-center rounded-[3px] text-faint transition-colors duration-hover hover:bg-raised-2 hover:text-text"
                 >
                   <X size={12} aria-hidden />
                 </span>
