@@ -1,9 +1,10 @@
 import { useEffect, useState, type MouseEvent, type ReactNode } from 'react';
 import { BookOpen, FileText, Graph, House, List, Plus, Users, type Icon } from '@phosphor-icons/react';
 import { AccountMenu } from '../components/AccountMenu';
-import { IconRailContent, IconRailFoot, IconRailItem, IconRailMark, IconRailSpacer, CountBadge } from '../components/IconRail';
+import { IconRailContent, IconRailFoot, IconRailItem, IconRailMark, IconRailSpacer } from '../components/IconRail';
 import { Menu } from '../components/Menu';
 import { PlatformShell, type PlatformShellProps } from '../components/PlatformShell';
+import { ReadyLogo } from '../components/ReadyMark';
 import { cn, focusRing } from '../utils/cn';
 import { focusIfLost } from '../utils/focusIfLost';
 import { arrivedByNav, clearHandoff, type Dest } from './protoNav';
@@ -12,7 +13,7 @@ import { arrivedByNav, clearHandoff, type Dest } from './protoNav';
  * Portal frame (prototype composition, NOT exported from the package index): the one chrome every Portal
  * prototype page wraps its content in. It fills PlatformShell's rail and phone slots so pages do not each
  * carry their own: the icon rail (Home, Platforms, Reports, Team, Memory, account), the phone top bar
- * (ReadyPH, page name, Leda entry, account avatar) and the phone nav (Home, Platforms, Reports, Team, More).
+ * (the Ready logo, page name, Leda entry, account avatar) and the phone nav (Home, Platforms, Reports, Team, More).
  * Everything else (place, sheetBar, sheetLabel, status, detail, actionBar, heading, children) is PlatformShell's own prop and passes straight through.
  */
 export type PortalPage = 'home' | 'platforms' | 'reports' | 'team' | 'memory';
@@ -45,18 +46,18 @@ export interface PortalFrameProps extends Omit<PlatformShellProps, 'rail' | 'rai
   /** "Add a platform" in the rail and under More. Omit to hide it. */
   onAddPlatform?: () => void;
   /**
-   * Called with the destination when a rail item, phone tab, More entry, the ReadyPH mark or an account menu entry is chosen
+   * Called with the destination when a rail item, phone tab, More entry, the Ready mark or an account menu entry is chosen
    * (RDY-357, prototype navigation). Optional and additive: omitted, the links keep their plain `#` hrefs and nothing else changes.
    * A plain click on a link calls it instead of following the href; Ctrl/Cmd/Shift-click and middle-click keep the href.
    */
   onNavigate?: (dest: Dest) => void;
   /** Signed-in person for the account menu. */
-  account?: { name: string; email: string; role: string };
+  account?: { name: string; email: string; role: string; initials?: string };
 }
 
-const defaultAccount = { name: 'Maria Santos', email: 'mon@delacruz.ph', role: 'Owner' };
+const defaultAccount = { name: 'Ramon Dela Cruz', email: 'mon@delacruzauto.ph', role: 'Owner' };
 const tabClass = cn(
-  'relative flex min-h-11 flex-col items-center justify-center gap-[3px] rounded-control text-small text-muted',
+  'relative flex min-h-11 flex-col items-center justify-center gap-[3px] rounded-chip text-tiny leading-5 text-muted',
   focusRing,
   'focus-visible:ring-offset-frame',
 );
@@ -72,34 +73,35 @@ export function PortalFrame({ current, pageName, leda, topBar, teamCount = 0, on
   const acct = onNavigate ? { onSettings: () => onNavigate({ to: 'settings' }), onLogout: () => onNavigate({ to: 'logout' }) } : {};
   useArrivalFocus(!!onNavigate);
   const name = pageName ?? byId(current).label;
+  // Workshop initials: the first letters of the first two words (Ramon Dela Cruz = RD), unless given.
+  const acctInitials = account.initials ?? account.name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
   const rail = (
     <IconRailContent>
       <IconRailMark href="#home" {...link({ to: 'home' })} />
       {RAIL.map((p) => <IconRailItem key={p.id} icon={p.icon} label={p.label} href={p.href} {...link(DEST[p.id])} current={p.id === current} count={p.id === 'team' ? teamCount : 0} />)}
       {onAddPlatform ? <IconRailItem icon={Plus} label="Add a platform" onClick={onAddPlatform} className="mt-2" /> : null}
       <IconRailSpacer />
-      <IconRailFoot><AccountMenu name={account.name} email={account.email} role={account.role} applyToDocument={false} {...acct} /></IconRailFoot>
+      <IconRailFoot><AccountMenu name={account.name} email={account.email} role={account.role} initials={acctInitials} applyToDocument={false} {...acct} /></IconRailFoot>
     </IconRailContent>
   );
   const bar = topBar ?? (
     <>
-      <span className="font-semibold">ReadyPH</span>
-      <span className="min-w-0 flex-1 truncate text-muted">{name}</span>
+      <ReadyLogo size={28} />
+      <span className="min-w-0 flex-1 truncate text-[13px] leading-5 text-muted">{name}</span>
       {leda}
-      <AccountMenu name={account.name} email={account.email} role={account.role} applyToDocument={false} {...acct} />
+      <span className="contents [&>button]:size-11"><AccountMenu name={account.name} email={account.email} role={account.role} initials={acctInitials} applyToDocument={false} {...acct} /></span>
     </>
   );
   const moreCurrent = current === 'memory';
   const phoneNav = (
-    <div className="grid h-[60px] w-full grid-cols-5 items-stretch px-1">
+    <div className="grid h-[60px] w-full grid-cols-5 items-stretch">
       {PHONE_TABS.map((p) => {
         const on = p.id === current;
         const n = p.id === 'team' ? teamCount : 0;
         return (
-          <a key={p.id} href={p.href} {...link(DEST[p.id])} aria-current={on ? 'page' : undefined} aria-label={n ? `${p.label}, ${n}` : undefined} className={cn(tabClass, on && 'bg-frame-active font-medium text-text')}>
+          <a key={p.id} href={p.href} {...link(DEST[p.id])} aria-current={on ? 'page' : undefined} aria-label={n ? `${p.label}, ${n}` : undefined} className={cn(tabClass, on && 'font-medium text-text')}>
             <p.icon size={20} aria-hidden />
             <span aria-hidden={n ? true : undefined}>{p.label}</span>
-            <CountBadge count={n} />
           </a>
         );
       })}
@@ -107,7 +109,7 @@ export function PortalFrame({ current, pageName, leda, topBar, teamCount = 0, on
         side="top"
         align="end"
         trigger={
-          <button type="button" aria-current={moreCurrent ? "page" : undefined} className={cn(tabClass, moreCurrent && 'bg-frame-active font-medium text-text')}>
+          <button type="button" aria-current={moreCurrent ? "page" : undefined} className={cn(tabClass, moreCurrent && 'font-medium text-text')}>
             <List size={20} aria-hidden />
             <span>More</span>
           </button>

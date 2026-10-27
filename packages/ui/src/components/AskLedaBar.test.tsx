@@ -150,3 +150,18 @@ describe('AskLedaBar utilities exist in the preset', () => {
     expect(preset).toMatch(/maxWidth[\s\S]*"leda-w-overview"/);
   });
 });
+
+describe('AskLedaBar workshop bar (RDY-364)', () => {
+  it('padding 10/6, gap 10, 13px on a 20px line; the key hint is a filled 16px chip, not an outline', () => {
+    render(<AskLedaBar variant="bar" shortcutLabel="⌘K" />);
+    const b = screen.getByRole('button');
+    expect(b.className).toContain('pl-2.5');
+    expect(b.className).toContain('pr-1.5');
+    expect(b.className).toContain('gap-2.5');
+    expect(b.className).toContain('leading-5');
+    const k = b.querySelector('kbd')!;
+    expect(k.className).toContain('bg-raised-2');
+    expect(k.className).toContain('h-4');
+    expect(k.className).not.toContain('border');
+  });
+});

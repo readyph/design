@@ -38,7 +38,7 @@ export const IdentityPalette: Story = {
     const codes = platformInitialsFor(names);
     return (
       <div className="flex flex-wrap items-center gap-3">
-        <PlatformLogo name="ReadyPH HQ" hq size={32} />
+        <PlatformLogo name="Ready HQ" hq size={32} />
         {names.map((n, i) => (
           <PlatformLogo key={n} name={n} index={i + 1} initials={codes[i]} size={32} />
         ))}

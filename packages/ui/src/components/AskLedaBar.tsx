@@ -173,7 +173,7 @@ export const AskLedaBar = forwardRef<HTMLButtonElement, AskLedaBarProps>(functio
         onClick={() => open.current?.('click')}
         {...rest}
         className={cn(
-          'relative z-[1] flex w-full items-center gap-2 rounded-control border border-control bg-surface px-[9px] text-left text-ui text-text transition-colors duration-hover hover:border-accent motion-reduce:transition-none',
+          'relative z-[1] flex w-full items-center gap-2.5 rounded-control border border-control bg-surface pl-2.5 pr-1.5 text-left text-ui leading-5 text-text transition-colors duration-hover hover:border-accent hover:[&_[data-ph]]:text-text motion-reduce:transition-none',
           focusRing,
           v.bar,
         )}
@@ -181,8 +181,8 @@ export const AskLedaBar = forwardRef<HTMLButtonElement, AskLedaBarProps>(functio
         <span className="inline-flex shrink-0 items-center">
           <LedaMark key={pass} size={v.mark} effect="scan" active={scan} once decorative className={cn(variant === 'bar' && 'max-[640px]:h-6 max-[640px]:w-6')} />
         </span>
-        <span className={cn('min-w-0 flex-1 truncate text-muted', variant === 'bar' && 'max-[640px]:hidden')} aria-hidden="true">{placeholder}</span>
-        <kbd aria-hidden="true" className={cn('shrink-0 rounded-[3px] border border-border px-1 font-sans text-tiny text-muted max-[640px]:hidden')}>{kbd}</kbd>
+        <span data-ph className={cn('min-w-0 flex-1 truncate text-muted', variant === 'bar' && 'max-[640px]:hidden')} aria-hidden="true">{placeholder}</span>
+        <kbd aria-hidden="true" className={cn('inline-block h-4 min-w-[18px] shrink-0 rounded-[3px] bg-raised-2 px-1 text-center font-sans text-tiny leading-4 text-text max-[640px]:hidden')}>{kbd}</kbd>
       </button>
       {halo && (
         <span key={`r${pass}`} aria-hidden="true" data-halo="ring" className="pointer-events-none absolute -inset-px z-[2] overflow-hidden rounded-control p-[2px] [mask-image:linear-gradient(#000_0_0),linear-gradient(#000_0_0)] [mask-clip:content-box,border-box] [mask-composite:exclude] dark:p-[1.5px] animate-halo-fade motion-reduce:animate-halo-fade-reduced max-[640px]:hidden">

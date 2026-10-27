@@ -6,7 +6,7 @@ import { Button } from './Button';
 import { ErrorBlock } from './ErrorBlock';
 import { Fact, FactsLine, type FactTone } from './FactsLine';
 import { ListGroup, ListGroups } from './ListGroup';
-import { ListCell, ListRow } from './List';
+import { ListRow } from './List';
 import { PlatformLogo, type PlatformLogoProps } from './PlatformLogo';
 import { Skeleton } from './Skeleton';
 
@@ -108,6 +108,10 @@ export interface PlatformTodayProps extends Omit<HTMLAttributes<HTMLElement>, 't
   retryLabel?: string;
   /** "Last loaded 9:10 AM" on the error block. */
   lastLoaded?: string;
+  /** Row anatomy. Default `narrow`; give `wide` on a sheet wider than 720px, `phone` on a phone. */
+  rowLayout?: TodayRowLayout;
+  /** Reference of one row to flash once (`n` changes to flash again), e.g. after its link chip was used. */
+  flashRow?: { ref: string; n: number } | null;
   /** Heading level of the platform name. Default 3. */
   level?: 2 | 3 | 4;
   /**
@@ -139,30 +143,40 @@ function LedaFact({ mode }: { mode: TodayLedaMode }) {
   return (
     <Fact className={cn(mode === 'acts' ? 'text-ok-ink' : 'text-muted')}>
       <span className="inline-flex items-baseline gap-1">
-        <Icon aria-hidden size={13} weight="fill" className="shrink-0 translate-y-[2px]" />
+        <Icon aria-hidden size={14} className="shrink-0 translate-y-[2px]" />
         {text}
       </span>
     </Fact>
   );
 }
 
-function Chip({ link, from }: { link: TodayLink; from: string }) {
+/** How a row lays out. `wide`: reference | title and detail | state and time. `narrow`: one column. `phone`: title | state, chip underneath. */
+export type TodayRowLayout = 'wide' | 'narrow' | 'phone';
+
+const COLUMNS: Record<TodayRowLayout, string> = {
+  wide: '84px minmax(0,1fr) auto',
+  narrow: 'minmax(0,1fr)',
+  phone: 'minmax(0,1fr) auto',
+};
+
+function Chip({ link, from, layout, flashId }: { link: TodayLink; from: string; layout: TodayRowLayout; flashId?: string }) {
   const body = (
     <>
-      <PlatformLogo {...link.platform} decorative size={16} />
-      {link.ref ? <span className="shrink-0 whitespace-nowrap font-medium">{link.ref}</span> : null}
-      <span className="min-w-0 [overflow-wrap:anywhere]">{link.text}</span>
+      <PlatformLogo {...link.platform} decorative size={14} />
+      {link.ref ? <span className="whitespace-nowrap font-mono text-small">{link.ref}</span> : null}
+      <span>{link.text}</span>
       <span className="sr-only"> in {link.platform.name}</span>
     </>
   );
   const cls = cn(
-    'mt-1 inline-flex max-w-full items-start gap-1.5 rounded-chip bg-accent-tint px-1.5 py-0.5 text-left text-small text-accent',
-    '[&>span:not(.sr-only)]:leading-[18px] [&>:first-child]:mt-px',
+    'inline-flex max-w-full items-center gap-[5px] rounded-chip bg-accent-tint py-px pl-1 pr-1.5 text-left text-small text-accent',
+    layout === 'wide' ? 'col-[2/-1] mt-0.5 w-max [&>span:not(.sr-only)]:truncate' : 'col-[1/-1] mt-0.5 flex-wrap items-start [&>span:not(.sr-only)]:whitespace-normal',
+    '[&>span:not(.sr-only)]:leading-[18px]',
     link.onSelect && 'hover:bg-accent-tint-2',
     focusRing,
   );
   return link.onSelect ? (
-    <button type="button" onClick={link.onSelect} className={cls} data-from={from}>
+    <button type="button" onClick={link.onSelect} className={cls} data-from={from} data-flash-id={flashId}>
       {body}
     </button>
   ) : (
@@ -170,53 +184,38 @@ function Chip({ link, from }: { link: TodayLink; from: string }) {
   );
 }
 
-const sideShort = {
-  grid: '@min-[360px]/today:grid-cols-[minmax(0,1fr)_auto]',
-  meta: '@min-[360px]/today:col-start-2 @min-[360px]/today:row-start-1 @min-[360px]/today:mt-0 @min-[360px]/today:justify-end',
-};
-const sideLong = {
-  grid: '@min-[440px]/today:grid-cols-[minmax(0,1fr)_auto]',
-  meta: '@min-[440px]/today:col-start-2 @min-[440px]/today:row-start-1 @min-[440px]/today:mt-0 @min-[440px]/today:justify-end',
-};
-
-function Row({ item, platform, label }: { item: TodayItem; platform: string; label: string }) {
+function Row({ item, platform, label, layout, flash }: { item: TodayItem; platform: string; label: string; layout: TodayRowLayout; flash?: boolean }) {
+  const wide = layout === 'wide';
   const title = <span className="font-medium">{item.title}</span>;
   const hasMeta = Boolean(item.state || item.qty || item.at);
-  // A long state pill ("Waiting for part") squeezes the title, so it stays underneath until the block is wider.
-  const long = (item.state?.length ?? 0) > 12;
   return (
-    <ListRow rowId={`${platform}:${item.id}`} label={label} onActivate={item.onActivate} className="py-row-y-tight">
-      <ListCell kind="lead">
-        {/* Narrow block: title, detail, meta, chip stacked. From 360px the quantity, state and time sit at the end of the title line. */}
-        <div className={cn('grid grid-cols-1 gap-x-3', long ? sideLong.grid : sideShort.grid)}>
-          <div className="text-ui">
-            {item.ref ? <span className="mr-1.5 whitespace-nowrap text-small text-muted">{item.ref}</span> : null}
-            {item.onActivate ? (
-              <button
-                type="button"
-                onClick={item.onActivate}
-                className={cn(
-                  'm-0 cursor-pointer border-0 bg-transparent p-0 text-left font-[inherit] text-[length:inherit] text-text hover:underline',
-                  focusRing,
-                )}
-              >
-                {title}
-              </button>
-            ) : (
-              title
-            )}
-          </div>
-          {item.detail ? <div className="text-small text-muted">{item.detail}</div> : null}
-          {hasMeta ? (
-            <div className={cn('mt-1 flex flex-wrap items-center gap-x-2 gap-y-1', long ? sideLong.meta : sideShort.meta)}>
-              {item.qty ? <b className="text-ui font-medium tabular-nums">{item.qty}</b> : null}
-              {item.state ? <Badge tone={item.tone ?? 'neutral'}>{item.state}</Badge> : null}
-              {item.at ? <span className="text-small tabular-nums text-muted">{item.at}</span> : null}
-            </div>
-          ) : null}
-          {item.link ? <div className="justify-self-start max-w-full"><Chip link={item.link} from={platform} /></div> : null}
+    <ListRow rowId={`${platform}:${item.id}`} label={label} onActivate={item.onActivate} flash={flash} className="!py-[7px] gap-x-2.5 gap-y-0.5 text-ui" data-ref={item.ref}>
+      {wide ? <span className="overflow-hidden text-ellipsis whitespace-nowrap pt-px font-mono text-small text-muted">{item.ref}</span> : null}
+      <div className="flex min-w-0 flex-col">
+        <div>
+          {!wide && item.ref ? <span className="mr-1.5 whitespace-nowrap font-mono text-small text-muted">{item.ref}</span> : null}
+          {item.onActivate ? (
+            <button
+              type="button"
+              onClick={item.onActivate}
+              className={cn('m-0 cursor-pointer border-0 bg-transparent p-0 text-left font-[inherit] text-[length:inherit] text-text hover:underline', focusRing)}
+            >
+              {title}
+            </button>
+          ) : (
+            title
+          )}
         </div>
-      </ListCell>
+        {item.detail ? <div className="text-small text-muted">{item.detail}</div> : null}
+      </div>
+      {hasMeta ? (
+        <div className={cn('flex items-center gap-2 whitespace-nowrap', layout === 'narrow' && 'flex-wrap justify-start gap-y-0.5')}>
+          {item.qty ? <b className="text-ui font-medium tabular-nums">{item.qty}</b> : null}
+          {item.state ? <Badge tone={item.tone ?? 'neutral'}>{item.state}</Badge> : null}
+          {item.at ? <span className={cn('text-small tabular-nums text-muted', layout === 'wide' && 'min-w-[38px] text-right')}>{item.at}</span> : null}
+        </div>
+      ) : wide || layout === 'phone' ? <span /> : null}
+      {item.link ? <Chip link={item.link} from={platform} layout={layout} /> : null}
     </ListRow>
   );
 }
@@ -266,6 +265,8 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
     retryLabel,
     lastLoaded,
     level = 3,
+    rowLayout = 'narrow',
+    flashRow = null,
     shortcuts = false,
     className,
     ...rest
@@ -285,35 +286,34 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
   ) : error ? (
     <ErrorBlock thing={platform.name} lastLoaded={lastLoaded} onRetry={onRetry} retryLabel={retryLabel} className="mt-4" />
   ) : lists.length > 0 ? (
-    <ListGroups shortcuts={shortcuts} aria-label={`${platform.name} today`}>
+    <ListGroups shortcuts={shortcuts} aria-label={`${platform.name} today`} columns={COLUMNS[rowLayout]} stackBelow={0}>
       {lists.map((l) => {
         const rows = pickTodayRows(l.items, maxRows);
         const more = l.total > rows.length;
         return (
-          <ListGroup
-            key={l.id}
-            title={l.title}
-            count={l.total}
-            level={listLevel}
-            className="[&>div:first-child]:pt-4"
-            actions={
-              more ? (
-                <Button
-                  variant="text"
-                  rightIcon={ArrowRight}
-                  onClick={l.onViewAll}
-                  aria-label={`${l.viewAllLabel ?? 'View all'} ${l.total} in ${l.title}`}
-                  className="!h-7 -mr-2 text-accent"
-                >
-                  {l.viewAllLabel ?? 'View all'} <span className="tabular-nums">{l.total}</span>
-                </Button>
-              ) : undefined
-            }
-          >
-            {rows.map((it) => (
-              <Row key={it.id} item={it} platform={platform.name} label={`${l.title}: ${typeof it.title === 'string' ? it.title : it.ref ?? ''}`} />
-            ))}
-          </ListGroup>
+          <div key={l.id}>
+            <ListGroup
+              title={l.title}
+              count={l.total}
+              level={listLevel}
+              className="[&>div:first-child]:gap-x-1 [&>div:first-child]:pb-1 [&>div:first-child]:pt-3.5 [&>div:first-child>*]:leading-5 [&>div:first-child>span]:text-ui"
+            >
+              {rows.map((it) => (
+                <Row key={flashRow && it.ref === flashRow.ref ? `${it.id}:${flashRow.n}` : it.id} item={it} platform={platform.name} layout={rowLayout} flash={!!flashRow && it.ref === flashRow.ref} label={`${l.title}: ${typeof it.title === 'string' ? it.title : it.ref ?? ''}`} />
+              ))}
+            </ListGroup>
+            {more ? (
+              <Button
+                variant="text"
+                rightIcon={ArrowRight}
+                onClick={l.onViewAll}
+                aria-label={`${l.viewAllLabel ?? 'View all'} ${l.total} in ${l.title}`}
+                className="-ml-1.5 mt-1.5 !h-7 !gap-1.5 !px-1.5 !text-ui !font-medium text-accent hover:bg-raised"
+              >
+                {l.viewAllLabel ?? 'View all'} <span className="tabular-nums">{l.total}</span>
+              </Button>
+            ) : null}
+          </div>
         );
       })}
     </ListGroups>
@@ -342,10 +342,10 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
       className={cn('@container/today relative min-w-0', className)}
       {...rest}
     >
-      <header className={cn('sticky top-0 z-10 flex items-start gap-2.5 border-b border-control bg-[var(--scope-bg)] pb-2.5 pt-0.5')}>
+      <header className={cn('sticky top-0 z-10 flex items-center gap-2.5 border-b border-control bg-[var(--scope-bg)] pb-2.5 pt-0.5')}>
         <PlatformLogo {...platform} name={platform.name} decorative size={24} className="mt-px" />
         <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2.5">
-          <Heading id={nameId} className="m-0 min-w-0 text-left text-body font-semibold leading-[22px] text-text [overflow-wrap:anywhere]">
+          <Heading id={nameId} className="m-0 min-w-0 text-left text-dialog text-text [overflow-wrap:anywhere]">
             {platform.name}
           </Heading>
           {kind ? <span className="text-small text-muted">{kind}</span> : null}

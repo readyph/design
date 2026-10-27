@@ -25,7 +25,7 @@ describe('PortalFrame', () => {
     const navs = screen.getAllByRole('navigation', { hidden: true });
     expect(navs).toHaveLength(2); // rail + phone nav; CSS shows exactly one per viewport
     const phone = within(navs[1]!);
-    expect(phone.getAllByRole('link', { hidden: true }).map((a) => a.textContent)).toEqual(['Home', 'Platforms', 'Reports', 'Team2']);
+    expect(phone.getAllByRole('link', { hidden: true }).map((a) => a.textContent)).toEqual(['Home', 'Platforms', 'Reports', 'Team']);
     expect(phone.getByText('More')).toBeTruthy();
     expect(phone.getByRole('link', { name: 'Platforms', hidden: true }).getAttribute('aria-current')).toBe('page');
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
@@ -34,7 +34,7 @@ describe('PortalFrame', () => {
   it('top bar carries the page name, the Leda slot and the account avatar; topBar replaces it', () => {
     const { unmount } = frame({ pageName: 'Platforms' });
     const header = within(screen.getByRole('banner', { hidden: true }));
-    expect(header.getByText('ReadyPH')).toBeTruthy();
+    expect(header.getByRole('img', { name: 'Ready' })).toBeTruthy();
     expect(header.getByText('Platforms')).toBeTruthy();
     expect(header.getByRole('button', { name: 'Ask Leda', hidden: true })).toBeTruthy();
     expect(header.getByRole('button', { name: /Account menu/, hidden: true })).toBeTruthy();
@@ -85,7 +85,7 @@ describe('PortalFrame', () => {
     const user = userEvent.setup();
     frame({ onNavigate: nav, current: 'home' });
     const [rail, phone] = screen.getAllByRole('navigation', { hidden: true });
-    await user.click(within(rail!).getByRole('link', { name: 'ReadyPH home', hidden: true }));
+    await user.click(within(rail!).getByRole('link', { name: 'Ready', hidden: true }));
     await user.click(within(rail!).getByRole('link', { name: 'Platforms', hidden: true }));
     await user.click(within(rail!).getByRole('link', { name: 'Reports', hidden: true }));
     await user.click(within(rail!).getByRole('link', { name: 'Memory', hidden: true }));
@@ -111,5 +111,18 @@ describe('PortalFrame', () => {
     const ev = new MouseEvent('click', { bubbles: true, cancelable: true, button: 0 });
     a.dispatchEvent(ev);
     expect(ev.defaultPrevented).toBe(false);
+  });
+});
+
+describe('PortalFrame workshop chrome (RDY-364)', () => {
+  it('account initials follow the workshop rule: first letters of the first two words (Ramon Dela Cruz = RD)', () => {
+    frame();
+    const rail = within(screen.getAllByRole('navigation', { hidden: true })[0]!);
+    expect(rail.getByRole('button', { name: /Account menu/, hidden: true }).textContent).toBe('RD');
+  });
+  it('phone nav has no count badge (the workshop pnav shows none); the count stays in the accessible name', () => {
+    frame();
+    const phone = within(screen.getAllByRole('navigation', { hidden: true })[1]!);
+    expect(phone.getByRole('link', { name: 'Team, 2', hidden: true }).textContent).toBe('Team');
   });
 });

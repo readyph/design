@@ -23,7 +23,7 @@ export const surfaces: Record<string, Pair> = {
   'accent-tint-2': ['#cfdbf6', '#2c3657'],
   hatch: ['#c7cfdb', '#4b4d50'],
   scrim: ['rgba(18,23,34,.28)', 'rgba(0,0,0,.5)'],
-  overlay: ['rgba(255,255,255,.86)', 'rgba(43,44,45,.90)'],
+  overlay: ['rgba(255,255,255,.82)', 'rgba(43,44,45,.86)'],
   skeleton: ['#e6eaf0', '#2b2c2d'],
   'avatar-bg': ['#dfe7f7', '#233152'],
   'avatar-text': ['#1f3d86', '#c4d3f7'],
@@ -69,6 +69,14 @@ export const dataviz: Record<string, Pair> = {
 
 /** Identity palette: generated monogram tiles, in platform order. Same in both themes. */
 export const identity = ['#6d48c6', '#3a6d8c', '#85408f', '#5c6b22', '#52607a', '#4f6b4a', '#8c5866', '#9b4f2c'] as const;
+
+/** Ready brand palette (RDY-363, decision.md): the falcon's vermilion tones and wordmark ink. A brand tone, never a status colour. Dark values are the lifted on-dark tones. */
+export const ready: Record<string, Pair> = {
+  'rd-lit': ['#F26B3E', '#FF8A5C'],
+  'rd-mid': ['#E4371C', '#F24A2C'],
+  'rd-deep': ['#B3240F', '#C42E16'],
+  'rd-ink': ['#16110F', '#FFFFFF'],
+};
 
 /** Leda palette: separate from the UI; paints only Leda's marks and animations. */
 export const leda: Record<string, Pair> = {

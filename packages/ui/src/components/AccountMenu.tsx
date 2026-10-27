@@ -1,17 +1,15 @@
 import { forwardRef, useCallback, useEffect, useId, useRef, useState, type ComponentPropsWithoutRef, type KeyboardEvent } from 'react';
 import * as RadixMenu from '@radix-ui/react-dropdown-menu';
-import { Gear, SignOut } from '@phosphor-icons/react';
-import { Badge } from './Badge';
+import { CircleHalf, Desktop, Moon, SignOut, Sun, UserGear } from '@phosphor-icons/react';
 import { SegmentedControl } from './SegmentedControl';
-import { menuItemBase, menuItemDanger, menuItemTone } from './Menu';
 import { cn, focusRing } from '../utils/cn';
 
 export type ThemeChoice = 'light' | 'dark' | 'system';
 
 const THEMES = [
-  { value: 'light', label: 'Light' },
-  { value: 'dark', label: 'Dark' },
-  { value: 'system', label: 'System' },
+  { value: 'light', label: 'Light', icon: Sun },
+  { value: 'dark', label: 'Dark', icon: Moon },
+  { value: 'system', label: 'System', icon: Desktop },
 ];
 
 /** Apply a theme to `<html>`: `data-theme="light|dark"`, or no attribute for System. */
@@ -27,8 +25,8 @@ export function initialsOf(name: string): string {
 }
 
 /** The 36px avatar button (28px initials circle). Spreads Radix trigger props. */
-export const AccountButton = forwardRef<HTMLButtonElement, ComponentPropsWithoutRef<'button'> & { name: string }>(
-  function AccountButton({ name, className, ...rest }, ref) {
+export const AccountButton = forwardRef<HTMLButtonElement, ComponentPropsWithoutRef<'button'> & { name: string; initials?: string }>(
+  function AccountButton({ name, initials, className, ...rest }, ref) {
     return (
       <button
         ref={ref}
@@ -39,9 +37,9 @@ export const AccountButton = forwardRef<HTMLButtonElement, ComponentPropsWithout
       >
         <span
           aria-hidden
-          className="grid size-7 place-items-center rounded-full bg-accent-tint text-small font-semibold text-accent"
+          className="grid size-7 place-items-center rounded-full bg-avatar-bg text-[11px] font-semibold text-avatar-text"
         >
-          {initialsOf(name)}
+          {initials ?? initialsOf(name)}
         </span>
       </button>
     );
@@ -53,6 +51,8 @@ export interface AccountMenuProps {
   email: string;
   /** Role chip text, e.g. "Owner". */
   role: string;
+  /** Initials in the avatar. Default: first and last name initial. */
+  initials?: string;
   /** Controlled theme choice. */
   theme?: ThemeChoice;
   /** Uncontrolled initial choice. Default System. */
@@ -67,6 +67,9 @@ export interface AccountMenuProps {
   className?: string;
 }
 
+const acctRow =
+  'flex h-8 w-full cursor-pointer items-center gap-2.5 rounded-chip px-2.5 text-left text-text outline-none data-[highlighted]:bg-frame-hover focus-visible:outline focus-visible:outline-[1.5px] focus-visible:-outline-offset-[1.5px] focus-visible:outline-accent max-sm:h-11';
+
 const itemSelector = '[role="menuitem"]:not([data-disabled]),[role="menuitemradio"][aria-checked="true"]';
 
 /**
@@ -79,6 +82,7 @@ export function AccountMenu({
   name,
   email,
   role,
+  initials,
   theme,
   defaultTheme = 'system',
   onThemeChange,
@@ -166,10 +170,10 @@ export function AccountMenu({
     target?.focus();
   };
 
-  const row = cn(menuItemBase, menuItemTone, 'max-sm:min-h-11');
+  const row = acctRow;
   const settingsContent = (
     <>
-      <Gear size={16} aria-hidden className="text-muted" />
+      <UserGear size={16} aria-hidden className="text-muted" />
       <span>Account settings</span>
     </>
   );
@@ -177,36 +181,36 @@ export function AccountMenu({
   return (
     <RadixMenu.Root open={open} onOpenChange={setOpen} modal={false}>
       <RadixMenu.Trigger asChild>
-        <AccountButton name={name} onKeyDown={onTriggerKeyDown} />
+        <AccountButton name={name} initials={initials} onKeyDown={onTriggerKeyDown} />
       </RadixMenu.Trigger>
       <RadixMenu.Portal>
         <RadixMenu.Content
           ref={contentRef}
           side={phone ? 'bottom' : 'right'}
           align="end"
-          sideOffset={phone ? 14 : 10}
+          sideOffset={phone ? 4 : 8}
           collisionPadding={8}
           loop
           onKeyDownCapture={onKeyDownCapture}
           className={cn(
-            'z-50 w-[304px] rounded-card border border-border bg-overlay p-1 shadow-float backdrop-blur-[14px] focus:outline-none max-sm:w-[calc(100vw-16px)]',
+            'z-50 w-[304px] rounded-card border border-border bg-overlay p-1 text-[13px] leading-[18px] text-text shadow-float backdrop-blur-[14px] backdrop-saturate-[1.2] focus:outline-none max-sm:w-[calc(100vw-16px)]',
             className,
           )}
         >
-          <div className="flex items-center gap-3 px-2.5 pb-3 pt-2.5">
+          <div className="flex items-center gap-2.5 px-2.5 pb-2.5 pt-2">
             <span
               aria-hidden
-              className="grid size-8 shrink-0 place-items-center rounded-full bg-accent-tint text-ui font-semibold text-accent"
+              className="grid size-8 shrink-0 place-items-center rounded-full bg-avatar-bg text-[12px] font-semibold text-avatar-text"
             >
-              {initialsOf(name)}
+              {initials ?? initialsOf(name)}
             </span>
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-ui font-medium text-text">{name}</div>
-              <div className="truncate text-small text-muted">{email}</div>
+            <div className="flex min-w-0 flex-col">
+              <div className="truncate text-[13px] font-semibold leading-[18px]">{name}</div>
+              <div className="truncate text-small leading-4 text-muted">{email}</div>
             </div>
-            <Badge tone="accent">{role}</Badge>
+            <span className="ml-auto h-[18px] shrink-0 self-start rounded-chip border border-border px-1.5 text-[11px] font-medium leading-4 text-muted">{role}</span>
           </div>
-          <RadixMenu.Separator className="-mx-1 mb-1 h-px bg-rule" />
+          <RadixMenu.Separator className="-mx-1 my-1 h-px bg-border" />
           {settingsHref !== undefined ? (
             <RadixMenu.Item asChild onSelect={onSettings}>
               <a href={settingsHref} className={row}>
@@ -218,21 +222,23 @@ export function AccountMenu({
               {settingsContent}
             </RadixMenu.Item>
           )}
-          <div className="flex items-center justify-between gap-3 px-2.5 py-1.5">
-            <span id={labelId} className="text-ui text-text">
+          <div className="flex items-center gap-2.5 py-1 pl-2.5 pr-1">
+            <CircleHalf size={16} aria-hidden className="shrink-0 text-muted" />
+            <span id={labelId} className="flex-1 text-text">
               Theme
             </span>
             <SegmentedControl
               semantics="menu"
+              size="menu"
               aria-labelledby={labelId}
               options={THEMES}
               value={current}
               onChange={chooseTheme}
             />
           </div>
-          <RadixMenu.Separator className="-mx-1 my-1 h-px bg-rule" />
-          <RadixMenu.Item onSelect={onLogout} className={cn(menuItemBase, menuItemDanger, 'max-sm:min-h-11')}>
-            <SignOut size={16} aria-hidden />
+          <RadixMenu.Separator className="-mx-1 my-1 h-px bg-border" />
+          <RadixMenu.Item onSelect={onLogout} className={acctRow}>
+            <SignOut size={16} aria-hidden className="text-muted" />
             <span>Log out</span>
           </RadixMenu.Item>
         </RadixMenu.Content>

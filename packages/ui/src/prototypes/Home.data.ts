@@ -1,3 +1,4 @@
+import { logoAutoworks, logoCafe } from './Home.logos';
 import type { DataListItem } from '../components/DataList';
 import type { DayBarMark } from '../components/DayBar';
 import type { OverviewPlatform } from '../components/OverviewCharts';
@@ -66,7 +67,9 @@ export interface HomeSet {
   plan: { used: number; max: number };
 }
 
-const today = (id: string, title: string, total: number, items: HomeListItem[]): HomeList => ({ id, title, total, items });
+/** The words of each list's "View all" link, as in the workshop data.js (`viewAll`). */
+const viewAll: Record<string, string> = { jobs: 'View all job orders', inq: 'View all inquiries', moves: 'View all movements', low: 'View all low stock' };
+const today = (id: string, title: string, total: number, items: HomeListItem[]): HomeList => ({ id, title, total, items, ...(viewAll[id] ? { viewAllLabel: viewAll[id] } : {}) });
 
 const hqPlatform: HomePlatform = {
   id: 'hq', name: 'HQ', shortName: 'HQ', kind: 'Team and plan', status: 'ACTIVE', hq: true, count: 1,
@@ -83,8 +86,8 @@ const stockroom: HomePlatform = {
   facts: [{ value: 612, label: 'products' }, { value: 9, label: 'low stock' }, { value: 2, label: 'POs open' }],
   lists: [
     today('moves', 'Stock in and out since yesterday', 9, [
-      { id: 'm1', ref: 'JO-0414', title: 'Toyota oil filter', detail: 'for JO-0414', state: 'Out', tone: 'neutral', qty: '-1 pc', at: '9:05' },
-      { id: 'm2', ref: 'PH-H4-12V', title: 'Headlight bulb H4', detail: 'dropped', state: 'Damaged', tone: 'bad', qty: '-1 pc', at: 'Wed 16:10' },
+      { id: 'm1', ref: 'JO-0414', title: 'Toyota oil filter', detail: 'for JO-0414', state: 'Out', tone: 'neutral', qty: '−1 pc', at: '9:05' },
+      { id: 'm2', ref: 'PH-H4-12V', title: 'Headlight bulb H4', detail: 'dropped', state: 'Damaged', tone: 'bad', qty: '−1 pc', at: 'Wed 16:10' },
       { id: 'm3', ref: 'PO-0214', title: 'Petron Blaze Racing 10W-40, 1L', detail: 'PO-0214 · 42 of 48', state: 'In', tone: 'ok', qty: '+42 bottle', at: 'Wed 14:30' },
     ]),
     today('low', 'Low stock', 9, [
@@ -98,7 +101,7 @@ const stockroom: HomePlatform = {
 };
 
 const autoworks: HomePlatform = {
-  id: 'autoworks', name: 'Dela Cruz Auto Works', shortName: 'Auto Works', kind: 'Repair shop', mapType: 'service', status: 'ACTIVE', index: 8, count: 1,
+  id: 'autoworks', name: 'Dela Cruz Auto Works', shortName: 'Auto Works', kind: 'Repair shop', mapType: 'service', status: 'ACTIVE', index: 8, logo: logoAutoworks, count: 1,
   ledaCanAct: false,
   facts: [{ value: 12, label: 'open jobs' }, { value: 4, label: 'inquiries' }, { value: 3, label: 'for pickup' }],
   lists: [
@@ -113,19 +116,19 @@ const autoworks: HomePlatform = {
       { id: 'i3', ref: 'QT-0092', title: 'Ranger · Noise check, front', detail: 'Gerry Ong', state: 'Quotation', at: '9:02' },
     ]),
   ],
-  week: { ...weekAuto, id: 'autoworks', name: 'Dela Cruz Auto Works', logo: { index: 8 }, status: { tone: 'ok', label: 'Running' } },
+  week: { ...weekAuto, id: 'autoworks', name: 'Dela Cruz Auto Works', logo: { index: 8, src: logoAutoworks }, status: { tone: 'ok', label: 'Running' } },
   yesterday: [{ value: '₱24,300', label: 'revenue' }, { value: 6, label: 'jobs closed' }],
 };
 
 const cafe: HomePlatform = {
-  id: 'cafe', name: 'Lia’s Cafe', shortName: 'Café', kind: 'Point of sale', mapType: 'store', status: 'ACTIVE', index: 7, count: 1,
+  id: 'cafe', name: 'Lia’s Cafe', shortName: 'Café', kind: 'Point of sale', mapType: 'store', status: 'ACTIVE', index: 7, logo: logoCafe, count: 1,
   ledaCanAct: false,
   facts: [{ value: 64, label: 'sales' }],
   lists: [today('sales', 'Sales so far', 64, [
     { id: 's1', ref: 'INV-77', title: 'Supplier invoice', detail: 'Delivery DR-3381', state: 'Differs', tone: 'warn', qty: '₱420', at: 'Fri' },
     { id: 's2', title: 'Closed shift for Lia Santos', at: '10:12 AM' },
   ])],
-  week: { ...weekCafe, id: 'cafe', name: 'Lia’s Cafe', logo: { index: 7 }, status: { tone: 'ok', label: 'Running' } },
+  week: { ...weekCafe, id: 'cafe', name: 'Lia’s Cafe', logo: { index: 7, src: logoCafe }, status: { tone: 'ok', label: 'Running' } },
   yesterday: [{ value: 104, label: 'sales' }],
 };
 
@@ -157,17 +160,17 @@ export const cases: Record<string, HomeCase> = {
       { label: 'Job', value: 'JO-0412 · Vios alternator', note: 'Dennis' },
       { label: 'Customer', value: 'Ana Villanueva' },
       { label: 'Part', value: 'ALT-NCP150', note: '0 on hand', tone: 'bad' },
-      { label: 'Supplier', value: 'Parts Depot', note: 'rush' },
+      { label: 'Supplier', value: 'Banawe Autoparts Supply', note: 'rush' },
       { label: 'Rush PO arrives', value: '10:30' },
     ],
     note: 'None in stock at Parts Stockroom. A rush order now lands at 10:30, before the 11:00 pickup.',
     proposal: {
       id: 'PO-0221',
       title: 'Order 1 alternator (ALT-NCP150)',
-      writes: ['Parts Stockroom: PO-0221 gets 1 line for ALT-NCP150', 'PO-0221 goes to Parts Depot as a rush order'],
-      notes: ['Notifies Dennis when the part arrives.', 'Nothing is charged until Parts Depot confirms.'],
+      writes: ['Parts Stockroom: PO-0221 gets 1 line for ALT-NCP150', 'PO-0221 goes to Banawe Autoparts Supply as a rush order'],
+      notes: ['Notifies Dennis when the part arrives.', 'Nothing is charged until Banawe Autoparts Supply confirms.'],
       confirmLabel: 'Order alternator',
-      toast: 'Alternator ordered from Parts Depot.',
+      toast: 'Alternator ordered from Banawe Autoparts Supply.',
       van: ['stockroom', 'autoworks'],
     },
   },
@@ -186,16 +189,16 @@ export const cases: Record<string, HomeCase> = {
       { label: 'Product', value: 'Toyota oil filter', note: '4 left' },
       { label: 'Reorder level', value: '20' },
       { label: 'Draft', value: 'PO-0219', note: '₱18,450' },
-      { label: 'Supplier', value: 'Parts Depot' },
+      { label: 'Supplier', value: 'Banawe Autoparts Supply' },
     ],
     note: 'Six maintenance jobs today use this filter. The draft covers two weeks.',
     proposal: {
       id: 'PO-0219',
       title: 'Confirm PO-0219',
-      writes: ['PO-0219 status: Draft to Ordered', 'Sent to Parts Depot'],
-      notes: ['Notifies Maria Santos by email.'],
+      writes: ['PO-0219: draft → ordered', 'Sent to Banawe Autoparts Supply'],
+      notes: ['Notifies Arnel'],
       confirmLabel: 'Confirm PO',
-      toast: 'PO-0219 sent to Parts Depot.',
+      toast: 'PO-0219 sent to Banawe Autoparts Supply.',
       van: ['stockroom', 'stockroom'],
     },
   },
@@ -244,19 +247,19 @@ export const cases: Record<string, HomeCase> = {
 };
 
 const liveItems: QueueItem[] = [
-  { id: 'q1', platform: { id: 'autoworks', name: 'Dela Cruz Auto Works', index: 8 }, due: 'Order by 9:45', urgent: true, title: 'Alternator needed for 11:00 Vios pickup', detail: 'None in stock · rush PO arrives 10:30', action: 'Order alternator' },
+  { id: 'q1', platform: { id: 'autoworks', name: 'Dela Cruz Auto Works', index: 8, src: logoAutoworks }, due: 'Order by 9:45', urgent: true, title: 'Alternator needed for 11:00 Vios pickup', detail: 'None in stock · rush PO arrives 10:30', action: 'Order alternator' },
   { id: 'q2', platform: { id: 'stockroom', name: 'Parts Stockroom', index: 1 }, due: 'Order by 12:00', title: 'Oil filters at 4, reorder level 20', detail: '6 maintenance jobs today · draft PO ₱18,450', action: 'Confirm PO' },
   { id: 'q3', platform: { id: 'stockroom', name: 'Parts Stockroom', index: 1 }, due: 'Dispute by Fri 23 Oct', title: 'Petron delivery 6 bottles short', detail: 'PO-0214 · 6 × ₱465 not received', action: 'Dispute or accept' },
   { id: 'q4', platform: { id: 'hq', name: 'HQ', hq: true }, source: 'HQ · Team', due: 'Today', title: 'Approve Rico Lim as mechanic', detail: 'Invited by Jun · write access to Auto Works', action: 'Approve invite' },
 ];
 const watching: QueueWatchItem[] = [
   { id: 'w1', platform: { id: 'stockroom', name: 'Parts Stockroom', index: 1 }, title: 'Brake pads reorder point in 2 days', detail: 'Leda will draft when it hits 6 left' },
-  { id: 'w2', platform: { id: 'autoworks', name: 'Dela Cruz Auto Works', index: 8 }, title: 'Fortuner PMS ready for pickup', detail: 'Leda tells Dr. Uy at 10:00' },
+  { id: 'w2', platform: { id: 'autoworks', name: 'Dela Cruz Auto Works', index: 8, src: logoAutoworks }, title: 'Fortuner PMS ready for pickup', detail: 'Leda tells Dr. Uy at 10:00' },
 ];
 const snoozed: QueueSnoozedItem[] = [{ id: 's1', platform: { id: 'stockroom', name: 'Parts Stockroom', index: 1 }, title: 'Cycle count off by 3', until: 'Later today · 13:00' }];
-const done: QueueDoneItem[] = [{ id: 'd1', platform: { id: 'autoworks', name: 'Dela Cruz Auto Works', index: 8 }, title: 'Oil filter order sent to Parts Depot', at: '8:12' }];
+const done: QueueDoneItem[] = [{ id: 'd1', platform: { id: 'autoworks', name: 'Dela Cruz Auto Works', index: 8, src: logoAutoworks }, title: 'Oil filter order sent to Banawe Autoparts Supply', at: '8:12' }];
 
-const common = { cases, next: 'Next: PO-0221 from Parts Depot arrives at 10:30 · 12 lines.', yesterdayDate: 'Sun 25 Oct', plan: { used: 1742, max: 2000 } };
+const common = { cases, next: 'Next: PO-0221 from Banawe Autoparts Supply arrives at 10:30 · 12 lines.', yesterdayDate: 'Sun 25 Oct', plan: { used: 1742, max: 2000 } };
 
 export const live: HomeSet = {
   key: 'live',
@@ -277,7 +280,7 @@ export const few: HomeSet = {
   links: [{ from: 'stockroom', to: 'autoworks', status: 'ok' }, { from: 'stockroom', to: 'cafe', status: 'slow' }],
   items: [
     ...liveItems.slice(0, 3),
-    { id: 'q5', platform: { id: 'cafe', name: 'Lia’s Cafe', index: 7 }, due: 'Fri 23 Oct', title: 'Supplier invoice differs by ₱420', detail: 'Delivery DR-3381 vs invoice INV-77', action: 'Dispute or accept' },
+    { id: 'q5', platform: { id: 'cafe', name: 'Lia’s Cafe', index: 7, src: logoCafe }, due: 'Fri 23 Oct', title: 'Supplier invoice differs by ₱420', detail: 'Delivery DR-3381 vs invoice INV-77', action: 'Dispute or accept' },
     liveItems[3]!,
   ],
   cases: { ...cases, q5: { ...cases.q3!, id: 'q5', evidence: [{ label: 'Invoice', value: 'INV-77', note: '₱420 more', tone: 'bad' }, { label: 'Delivery', value: 'DR-3381' }], note: 'The invoice is ₱420 higher than the delivery note.' } },
@@ -312,10 +315,22 @@ export const many: HomeSet = {
 
 export const sets: Record<HomeSetKey, HomeSet> = { live, few, many };
 
-export const mapSlots = (s: HomeSet): TownMapSlot[] => [s.hq, ...s.platforms].map((p) => {
-  const { ledaCanAct: _a, facts: _f, lists: _l, week: _w, yesterday: _y, ...rest } = p;
-  return rest;
-});
+/**
+ * Workshop map order (data.js `mapOrder`): the platforms in order, the empty lots, and HQ in the last plot
+ * (two platforms: Stockroom, Auto Works, an empty lot, HQ).
+ */
+export const mapSlots = (s: HomeSet): TownMapSlot[] => {
+  const slim = (p: HomePlatform): TownMapSlot => {
+    const { ledaCanAct: _a, facts: _f, lists: _l, week: _w, yesterday: _y, ...rest } = p;
+    return rest;
+  };
+  const n = s.platforms.length + 1;
+  const total = Math.ceil(n / Math.max(1, Math.ceil(Math.sqrt(n)))) * Math.max(1, Math.ceil(Math.sqrt(n)));
+  // data.js mapOrder for the duo: Stockroom first, then Auto Works.
+  const order = (id: string) => (id === 'stockroom' ? 0 : id === 'autoworks' ? 1 : 2);
+  const ordered = [...s.platforms].sort((x, y) => order(x.id) - order(y.id));
+  return [...ordered.map(slim), ...Array.from({ length: total - n }, () => null), slim(s.hq)];
+};
 
 export const queuePlatforms = (s: HomeSet): QueuePlatform[] => [
   ...s.platforms.map((p) => ({ id: p.id, name: p.name, index: p.index })),
