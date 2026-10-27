@@ -56,7 +56,7 @@ const po: LedaProposalProps = {
   writes: ['Creates PO-0187 for Metro Auto Parts', 'Moves JO-0412 to Waiting on parts'],
   writesHeading: 'Confirm creates',
   warning: 'Rush delivery cannot be cancelled after the supplier confirms.',
-  extra: <Button variant="secondary" actionBar className="focus-visible:ring-offset-raised">Change it first</Button>,
+  extra: <Button variant="secondary" actionBar>Change it first</Button>,
 };
 
 export const Waiting: Story = { render: () => frame(<LedaProposal {...base} />) };
@@ -65,7 +65,7 @@ export const WithLinesAndWarning: Story = { render: () => frame(<LedaProposal {.
 export const WithLinesOnSurface: Story = { render: () => surface(<LedaProposal {...po} />) };
 export const Writing: Story = { render: () => frame(<LedaProposal {...po} state="writing" />) };
 export const Done: Story = {
-  render: () => frame(<LedaProposal {...base} state="done" after="Reorder level is now 30." doneAt="9:12 AM" doneAction={<Button variant="secondary" actionBar className="focus-visible:ring-offset-raised">See it in Memory</Button>} />),
+  render: () => frame(<LedaProposal {...base} state="done" after="Reorder level is now 30." doneAt="9:12 AM" doneAction={<Button variant="secondary" actionBar>See it in Memory</Button>} />),
 };
 export const DoneOnSurface: Story = { render: () => surface(<LedaProposal {...base} state="done" after="Reorder level is now 30." doneAt="9:12 AM" />) };
 export const Discarded: Story = { render: () => frame(<LedaProposal {...base} state="discarded" />) };

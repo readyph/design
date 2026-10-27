@@ -473,12 +473,12 @@ export interface ChatBlocksProps {
   layout?: 'default' | 'workshop';
 }
 
-function Actions({ actions, onAction, secondary }: { actions: ChatActionItem[]; onAction?: (a: ChatActionItem) => void; secondary?: boolean }) {
+function Actions({ actions, onAction }: { actions: ChatActionItem[]; onAction?: (a: ChatActionItem) => void }) {
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
       {actions.map((a) =>
         a.href ? (
-          <LedaNoteLink key={a.id} href={a.href} onClick={() => onAction?.(a)} className={secondary ? 'focus-visible:ring-offset-surface' : undefined}>{a.label}</LedaNoteLink>
+          <LedaNoteLink key={a.id} href={a.href} onClick={() => onAction?.(a)}>{a.label}</LedaNoteLink>
         ) : (
           <button key={a.id} type="button" onClick={() => onAction?.(a)} className={cn(actionBtn, focusRing)}>{a.label}</button>
         ),
@@ -500,7 +500,7 @@ export function ChatBlocks({ blocks, onChip, onAction, onConfirm, onDiscard, onP
             return <p key={i} className="text-small text-muted [overflow-wrap:anywhere]">{b.text}</p>;
           case 'table':
             return (
-              <div key={i} role="region" aria-label={b.caption} tabIndex={0} className={cn('max-w-full overflow-x-auto rounded-card border border-border px-3 py-2.5', focusRing, 'focus-visible:ring-offset-surface')}>
+              <div key={i} role="region" aria-label={b.caption} tabIndex={0} className={cn('max-w-full overflow-x-auto rounded-card border border-border px-3 py-2.5', focusRing)}>
                 <table className="w-full border-collapse text-ui">
                   <caption className={sr}>{b.caption}</caption>
                   <thead>
@@ -595,13 +595,12 @@ export function ChatBlocks({ blocks, onChip, onAction, onConfirm, onDiscard, onP
             return <Actions key={i} actions={b.actions} onAction={onAction} />;
           case 'proposal': {
             const { extraLabel, doneActionLabel, ...p } = b.proposal;
-            const raisedBtn = 'focus-visible:ring-offset-raised';
-            return (
+                        return (
               <div key={b.blockId} className={onRaised}>
               <LedaProposal
                 {...p}
-                extra={extraLabel ? <Button variant="secondary" className={raisedBtn} onClick={() => onProposalAction?.(b.blockId, 'extra')}>{extraLabel}</Button> : undefined}
-                doneAction={doneActionLabel ? <Button variant="secondary" className={raisedBtn} onClick={() => onProposalAction?.(b.blockId, 'done')}>{doneActionLabel}</Button> : undefined}
+                extra={extraLabel ? <Button variant="secondary" onClick={() => onProposalAction?.(b.blockId, 'extra')}>{extraLabel}</Button> : undefined}
+                doneAction={doneActionLabel ? <Button variant="secondary" onClick={() => onProposalAction?.(b.blockId, 'done')}>{doneActionLabel}</Button> : undefined}
                 onConfirm={() => onConfirm?.(b.blockId)}
                 onDiscard={() => onDiscard?.(b.blockId)}
                 onOpenPage={() => onOpenPage?.(b.blockId)}
@@ -789,7 +788,6 @@ export const ChatComposer = forwardRef<HTMLTextAreaElement, ChatComposerProps>(f
               'forced-colors:border forced-colors:border-[ButtonText]',
               blocked && 'cursor-default bg-raised-2 text-faint hover:bg-raised-2',
               focusRing,
-              'focus-visible:ring-offset-surface',
             )}
           >
             <PaperPlaneRight aria-hidden size={16} />

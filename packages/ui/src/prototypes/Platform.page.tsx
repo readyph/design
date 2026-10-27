@@ -82,7 +82,7 @@ const saveName = (id: SectionId) => SECTIONS.find((s) => s.id === id)?.save ?? s
 const sectionNames: Record<SectionId, string> = { general: 'General info', system: 'System', team: 'Team', connections: 'Connections', leda: 'Leda & Memory' };
 
 const field =
-  'block w-full min-w-0 rounded-control border bg-surface px-3 text-body text-text placeholder:text-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent';
+  'block w-full min-w-0 rounded-control border bg-surface px-3 text-body text-text placeholder:text-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent focus-visible:border-accent';
 const link = 'text-accent underline underline-offset-2 hover:text-accent-hover';
 
 const healthTone: Record<Health, StatusTone> = { ok: 'ok', slow: 'warn', offline: 'bad', setup: 'neutral', 'setting-up': 'accent' };
@@ -890,7 +890,7 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
       </header>
     );
     return (
-      <section ref={panelRef} role={ob ? undefined : 'tabpanel'} aria-labelledby={ob ? `${uid}-h-${sec}` : tabId} tabIndex={-1} className="outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+      <section ref={panelRef} role={ob ? undefined : 'tabpanel'} aria-labelledby={ob ? `${uid}-h-${sec}` : tabId} tabIndex={-1} className="outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent">
         {head}
         {editable(sec) && !ob ? (
           <form onSubmit={(e) => { e.preventDefault(); submit(sec); }} noValidate>

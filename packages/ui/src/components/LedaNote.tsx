@@ -77,7 +77,6 @@ export const LedaNoteLink = forwardRef<HTMLAnchorElement, LedaNoteLinkProps>(fun
       className={cn(
         'inline-flex min-h-6 items-center rounded-chip text-ui font-medium text-accent underline underline-offset-2 hover:text-accent-hover max-sm:min-h-11',
         focusRing,
-        'focus-visible:ring-offset-raised',
         className,
       )}
     />
