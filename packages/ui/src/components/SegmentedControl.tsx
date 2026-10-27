@@ -27,8 +27,8 @@ export interface SegmentedControlProps {
   /** Uncontrolled initial value (defaults to the first enabled option). */
   defaultValue?: string;
   onChange?: (value: string) => void;
-  /** `md` is the 28px segment; `sm` is a 24px segment for dense bars. */
-  size?: 'sm' | 'md';
+  /** `md` is the 28px segment; `sm` is a 24px segment for dense bars; `menu` is the account menu's theme row (26px, 12px text, 13px icons, 36px on a phone). */
+  size?: 'sm' | 'md' | 'menu';
   semantics?: SegmentedSemantics;
   /** Disable every segment. */
   disabled?: boolean;
@@ -118,15 +118,15 @@ export function SegmentedControl({
             onKeyDown={(e) => onKeyDown(e, i)}
             className={cn(
               'inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-chip border px-3 text-ui transition-colors',
-              size === 'sm' ? 'h-6' : 'h-7',
-              semantics === 'menu' && 'max-sm:h-9',
+              size === 'sm' ? 'h-6' : size === 'menu' ? 'h-[26px] gap-1 px-2 text-small max-sm:h-9 max-sm:px-2.5' : 'h-7',
+              semantics === 'menu' && size !== 'menu' && 'max-sm:h-9',
               active ? 'border-border bg-surface font-medium text-text' : 'border-transparent text-muted hover:text-text',
               'disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:text-muted',
               active && 'disabled:hover:text-text',
               focusRing,
             )}
           >
-            {Icon && <Icon size={16} aria-hidden />}
+            {Icon && <Icon size={size === 'menu' ? 13 : 16} aria-hidden />}
             {o.label}
             {o.count !== undefined && (
               <span className="text-small tabular-nums text-muted">{o.count}</span>

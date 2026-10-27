@@ -55,9 +55,9 @@ export interface PortalFrameProps extends Omit<PlatformShellProps, 'rail' | 'rai
   account?: { name: string; email: string; role: string; initials?: string };
 }
 
-const defaultAccount = { name: 'Ramon Dela Cruz', email: 'mon@delacruzauto.ph', role: 'Owner', initials: 'RD' };
+const defaultAccount = { name: 'Ramon Dela Cruz', email: 'mon@delacruzauto.ph', role: 'Owner' };
 const tabClass = cn(
-  'relative flex min-h-11 flex-col items-center justify-center gap-[3px] rounded-control text-[11px] text-muted',
+  'relative flex min-h-11 flex-col items-center justify-center gap-[3px] rounded-chip text-tiny leading-5 text-muted',
   focusRing,
   'focus-visible:ring-offset-frame',
 );
@@ -73,21 +73,23 @@ export function PortalFrame({ current, pageName, leda, topBar, teamCount = 0, on
   const acct = onNavigate ? { onSettings: () => onNavigate({ to: 'settings' }), onLogout: () => onNavigate({ to: 'logout' }) } : {};
   useArrivalFocus(!!onNavigate);
   const name = pageName ?? byId(current).label;
+  // Workshop initials: the first letters of the first two words (Ramon Dela Cruz = RD), unless given.
+  const acctInitials = account.initials ?? account.name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
   const rail = (
     <IconRailContent>
       <IconRailMark href="#home" {...link({ to: 'home' })} />
       {RAIL.map((p) => <IconRailItem key={p.id} icon={p.icon} label={p.label} href={p.href} {...link(DEST[p.id])} current={p.id === current} count={p.id === 'team' ? teamCount : 0} />)}
       {onAddPlatform ? <IconRailItem icon={Plus} label="Add a platform" onClick={onAddPlatform} className="mt-2" /> : null}
       <IconRailSpacer />
-      <IconRailFoot><AccountMenu name={account.name} email={account.email} role={account.role} initials={account.initials} applyToDocument={false} {...acct} /></IconRailFoot>
+      <IconRailFoot><AccountMenu name={account.name} email={account.email} role={account.role} initials={acctInitials} applyToDocument={false} {...acct} /></IconRailFoot>
     </IconRailContent>
   );
   const bar = topBar ?? (
     <>
       <ReadyLogo size={28} />
-      <span className="min-w-0 flex-1 truncate text-ui text-muted">{name}</span>
+      <span className="min-w-0 flex-1 truncate text-[13px] leading-5 text-muted">{name}</span>
       {leda}
-      <AccountMenu name={account.name} email={account.email} role={account.role} initials={account.initials} applyToDocument={false} {...acct} />
+      <span className="contents [&>button]:size-11"><AccountMenu name={account.name} email={account.email} role={account.role} initials={acctInitials} applyToDocument={false} {...acct} /></span>
     </>
   );
   const moreCurrent = current === 'memory';
@@ -95,10 +97,11 @@ export function PortalFrame({ current, pageName, leda, topBar, teamCount = 0, on
     <div className="grid h-[60px] w-full grid-cols-5 items-stretch">
       {PHONE_TABS.map((p) => {
         const on = p.id === current;
+        const n = p.id === 'team' ? teamCount : 0;
         return (
-          <a key={p.id} href={p.href} {...link(DEST[p.id])} aria-current={on ? 'page' : undefined} className={cn(tabClass, on && 'font-medium text-text')}>
+          <a key={p.id} href={p.href} {...link(DEST[p.id])} aria-current={on ? 'page' : undefined} aria-label={n ? `${p.label}, ${n}` : undefined} className={cn(tabClass, on && 'font-medium text-text')}>
             <p.icon size={20} aria-hidden />
-            <span>{p.label}</span>
+            <span aria-hidden={n ? true : undefined}>{p.label}</span>
           </a>
         );
       })}

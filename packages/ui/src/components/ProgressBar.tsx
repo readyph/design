@@ -67,12 +67,13 @@ export const ProgressBar = forwardRef<HTMLDivElement, ProgressBarProps>(function
       aria-labelledby={label ? labelId : undefined}
       aria-label={label ? undefined : ariaLabel}
       aria-valuetext={indeterminate ? undefined : `${typeof label === 'string' ? label : `${used} of ${max}`}${status[resolved]}`}
-      className={cn('relative h-1 shrink-0 overflow-hidden rounded-full bg-frame-active', full ? 'w-full' : 'w-14')}
+      className={cn('relative h-1 shrink-0 overflow-hidden rounded-full bg-frame-active forced-colors:outline forced-colors:outline-1 forced-colors:outline-[CanvasText]', full ? 'w-full' : 'w-14')}
     >
       <RadixProgress.Indicator
         className={cn(
           'h-full rounded-full transition-[width] duration-hover-slow motion-reduce:transition-none',
           fill[resolved],
+          'forced-colors:bg-[Highlight]',
           indeterminate && 'w-1/3 animate-pulse motion-reduce:animate-none',
         )}
         style={indeterminate ? undefined : { width: `${pct}%` }}

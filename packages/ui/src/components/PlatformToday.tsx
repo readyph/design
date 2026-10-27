@@ -148,8 +148,8 @@ export function LedaFact({ mode }: { mode: TodayLedaMode }) {
   const Icon = mode === 'acts' ? CheckCircle : mode === 'reads' ? Eye : Prohibit;
   const text = mode === 'acts' ? 'Leda acts here' : mode === 'reads' ? 'Leda reads only' : "Leda can't read while offline";
   return (
-    <Fact className={cn(mode === 'acts' ? 'text-ok' : 'text-muted')}>
-      <span className="inline-flex items-baseline gap-1.5">
+    <Fact className={cn(mode === 'acts' ? 'text-ok-ink' : 'text-muted')}>
+      <span className="inline-flex items-baseline gap-1">
         <Icon aria-hidden size={14} className="shrink-0 translate-y-[2px]" />
         {text}
       </span>

@@ -800,10 +800,9 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
         className="shrink-0"
         platforms={mapSlots({ ...data, hq: quiet || loading ? { ...data.hq, count: 0 } : data.hq, platforms: data.platforms.map((p) => ({ ...p, count: quiet || loading ? 0 : p.count, ...(p.id === failed ? { error: true } : {}) })) })}
         links={data.links}
-        caption={<span><b className="font-semibold text-text">{data.platforms.length} platforms</b>{data.hasHq === false ? '' : ' + HQ'}</span>}
-        captionInside
-        identityPlots={false}
+        caption={<><b className="font-semibold text-text">{data.platforms.length} platforms</b> <span>+ HQ</span></>}
         label="Your platforms"
+        onAddPlatform={() => go({ to: 'platforms', add: true })}
         selected={filter}
         highlight={mapHighlight}
         loading={loading}

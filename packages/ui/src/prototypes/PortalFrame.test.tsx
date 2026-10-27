@@ -113,3 +113,16 @@ describe('PortalFrame', () => {
     expect(ev.defaultPrevented).toBe(false);
   });
 });
+
+describe('PortalFrame workshop chrome (RDY-364)', () => {
+  it('account initials follow the workshop rule: first letters of the first two words (Ramon Dela Cruz = RD)', () => {
+    frame();
+    const rail = within(screen.getAllByRole('navigation', { hidden: true })[0]!);
+    expect(rail.getByRole('button', { name: /Account menu/, hidden: true }).textContent).toBe('RD');
+  });
+  it('phone nav has no count badge (the workshop pnav shows none); the count stays in the accessible name', () => {
+    frame();
+    const phone = within(screen.getAllByRole('navigation', { hidden: true })[1]!);
+    expect(phone.getByRole('link', { name: 'Team, 2', hidden: true }).textContent).toBe('Team');
+  });
+});
