@@ -382,7 +382,7 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
             variant="text"
             onClick={onOpen}
             aria-label={`Open ${platform.name}`}
-            className="!h-7 shrink-0 !gap-2 !px-2 !font-medium text-text"
+            className="!h-7 shrink-0 !gap-2 !px-2 !font-medium text-text max-[640px]:!h-10"
           >
             Open
             <ArrowSquareOut size={14} aria-hidden="true" className="@max-[330px]/today:hidden" />

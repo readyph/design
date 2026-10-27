@@ -392,7 +392,7 @@ export function ChatChips({ chips, onPick, label = 'Suggestions', className, var
       className={cn(className, 'flex flex-wrap', variant === 'overview' ? 'gap-2' : 'gap-1.5', variant === 'strip' && 'flex-nowrap gap-2 overflow-x-auto [scrollbar-width:none]')}
     >
       {chips.map((c) => (
-        <button key={c.id} type="button" onClick={() => onPick?.(c)} className={cn(chipBase, focusRing, '[overflow-wrap:anywhere]', variant === 'overview' && '!h-[30px] !min-h-0 !py-0 leading-5 hover:bg-raised max-[640px]:!h-9', variant === 'strip' && 'shrink-0 whitespace-nowrap !min-h-9 leading-5')}>
+        <button key={c.id} type="button" onClick={() => onPick?.(c)} className={cn(chipBase, focusRing, '[overflow-wrap:anywhere]', variant === 'overview' && '!h-[30px] !min-h-0 !border-border !py-0 text-center leading-5 hover:bg-raised hover:!border-control max-[640px]:!h-9', variant === 'strip' && 'shrink-0 whitespace-nowrap !min-h-9 leading-5')}>
           {c.label}
         </button>
       ))}

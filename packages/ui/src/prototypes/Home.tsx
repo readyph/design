@@ -1,8 +1,9 @@
-import { Fragment, useCallback, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Icon } from '@phosphor-icons/react';
 import { Bank, Calculator, CircleNotch, DeviceMobile, Gift, Graph, Hash, Moon, Package, PencilSimple, PlusSquare, Storefront, Table, Truck, WarningCircle, Wrench, ArrowRight, ArrowSquareOut, CalendarBlank, CaretDown, CaretLeft, CheckCircle, Clock, Prohibit, Gauge, SquaresFour, Users } from '@phosphor-icons/react';
 import { AskLedaBar } from '../components/AskLedaBar';
 import { Badge } from '../components/Badge';
+import { Skeleton } from '../components/Skeleton';
 import { Button } from '../components/Button';
 import { ChatChips, ChatComposer, ChatEmpty, ChatHeader, ChatMessage, ChatThread, Chat, usePersistedChat, type ChatChip, type ChatMessageData, type ChatProposalData } from '../components/Chat';
 import { CommandPalette, type CommandPaletteGroup, type CommandPaletteItem } from '../components/CommandPalette';
@@ -107,9 +108,12 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
   const snoozed = [...data.snoozed, ...snoozedExtra.map((s) => ({ ...itemsAll.find((i) => i.id === s.id)!, ...s })).map((i) => ({ id: i.id, platform: i.platform, source: i.source, title: i.title, until: i.until }))];
   const done = [...doneExtra.map((d) => itemsAll.find((i) => i.id === d.id)!).map((i, k) => ({ id: i.id, platform: i.platform, source: i.source, title: i.title, at: doneExtra[k]!.at })), ...data.done];
 
+  // invites still waiting (the workshop's pendingInvites): the tenant's invites less the HQ decisions cleared here; badges the Team rail item
+  const invitesPending = Math.max(0, (data.hq.lists.find((l) => l.id === 'invites')?.total ?? 0) - doneExtra.filter((d) => itemsAll.find((i) => i.id === d.id)?.platform.id === 'hq').length);
+
   // sheet
   const startPlat = initialFilter && initialFilter !== 'hq' && !(typeof window !== 'undefined' && window.matchMedia(PHONE).matches) ? `plat:${initialFilter}` : null;
-  const [tabs, setTabs] = useState<string[]>(quiet ? [] : startPlat ? ['today', startPlat] : ['today']);
+  const [tabs, setTabs] = useState<string[]>(quiet ? [] : loading ? ['loading', 'today'] : startPlat ? ['today', startPlat] : ['today']);
   const [tab, setTab] = useState<string | null>(quiet ? null : startPlat ?? 'today');
   const [phoneDetail, setPhoneDetail] = useState(false);
   const [filter, setFilter] = useState<string | null>(initialFilter ?? null);
@@ -137,6 +141,7 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const opener = useRef<HTMLElement | null>(null);
+  const paletteReturn = useRef<HTMLElement | null>(null);
 
   const mapRef = useRef<TownMapHandle>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -348,10 +353,16 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
 
   // Leda
   const openChat = () => {
-    opener.current = document.activeElement as HTMLElement | null;
+    if (!palette) opener.current = document.activeElement as HTMLElement | null;
     setPalette(false);
     setChat(true);
   };
+  // Asking from the palette mounts the panel while the palette's focus trap is still on, so the palette would hand focus back to the page.
+  // While the panel is open the palette returns focus to the composer instead (a phone focuses the panel itself); the panel returns
+  // to the element that opened the palette or the chat.
+  useEffect(() => {
+    paletteReturn.current = chat && !phone ? document.querySelector<HTMLElement>('[data-chat-composer]') : null;
+  }, [chat, palette, phone]);
   const numFmt = (n: number) => Number(n).toLocaleString('en-PH');
   const ledaSuggest = [...(data.leda?.answers ?? []).map((a) => a.q), ...(data.leda?.commands ?? []).map((c) => c.q)];
   const findAsk = (q: string) => {
@@ -455,7 +466,7 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
   };
 
 
-  const askBar = (variant: 'bar' | 'overview', shortcuts: boolean) => (
+  const askBar = (variant: 'bar' | 'overview' | 'field', shortcuts: boolean) => (
     <AskLedaBar variant={variant} scope={filter ? scopeName : undefined} paused={palette || chat} shortcuts={shortcuts} onOpen={() => { opener.current = document.activeElement as HTMLElement | null; setPalette(true); }} />
   );
 
@@ -857,6 +868,7 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
   );
 
   const tabItems: TabItem[] = tabs.map((id) => {
+    if (id === 'loading') return { value: 'loading', label: 'Loading', icon: CircleNotch };
     if (id === 'today') return { value: 'today', label: 'Today', icon: SquaresFour, closable: true };
     if (id.startsWith('plat:')) {
       const pp = platformById(id.slice(5));
@@ -872,7 +884,27 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
     </SheetBar>
   );
 
-  const sheetBody = overview ? overviewView : tab === 'today' ? (inlineToday ? null : todayView) : platTab ? platformView(platTab) : caseView(tab);
+  // loading: the workshop's fixed "Loading" tab, and the case skeleton in the body whichever tab is on
+  const loadingView = (
+    <div className="px-pad pb-8 pt-5" aria-busy="true">
+      <span className="sr-only">Loading</span>
+      <Skeleton width={180} height={12} className="!rounded-[3px]" />
+      <Skeleton width="52%" height={22} className="mt-3 !rounded-[3px]" />
+      <Skeleton width="70%" height={14} className="mt-3 !rounded-[3px]" />
+      <Skeleton height={56} className="mt-5 !rounded-[3px]" />
+      <div className="mt-[22px] grid grid-cols-[minmax(0,1fr)_360px] items-start gap-gap @max-[900px]/sheet:grid-cols-[minmax(0,1fr)_320px] @max-[680px]/sheet:grid-cols-1">
+        <div>{[0, 1, 2, 3, 4].map((i) => <Skeleton key={i} height={16} className="my-3.5 !rounded-[3px]" />)}</div>
+        <div className="rounded-card bg-raised px-[18px] pb-[18px] pt-4 max-[640px]:px-4 max-[640px]:pb-4 max-[640px]:pt-3.5">
+          <Skeleton width="40%" height={12} className="!rounded-[3px]" />
+          <Skeleton width="80%" height={18} className="mt-3 !rounded-[3px]" />
+          {[0, 1, 2].map((i) => <Skeleton key={i} height={14} className="mt-3.5 !rounded-[3px]" />)}
+          <Skeleton width={140} height={32} className="mt-5 !rounded-[3px]" />
+        </div>
+      </div>
+    </div>
+  );
+
+  const sheetBody = loading ? loadingView : overview ? overviewView : tab === 'today' ? (inlineToday ? null : todayView) : platTab ? platformView(platTab) : caseView(tab);
 
   const phoneOverview = phone && quiet && !filter ? (
     <div className="-mx-1 mt-4 border-b border-border px-1 pb-6">
@@ -945,7 +977,7 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
         flushGroups={!!phoneOverview}
         tightGroups={phone && !phoneOverview}
         footer={phoneOverview ? data.next : undefined}
-        belowHeadline={phone ? <>{askBar('overview', false)}{phoneOverview}</> : undefined}
+        belowHeadline={phone ? <>{askBar('field', false)}{phoneOverview}</> : undefined}
         defaultOpenGroups={quiet ? ['watching'] : []}
         retryLabel="Retry"
         errors={failed ? [{ platform: { id: failed, name: platformById(failed)!.name, index: platformById(failed)!.index }, lastLoaded: '9:10 AM' }] : []}
@@ -999,7 +1031,7 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
       <PortalFrame
         current="home"
         account={{ name: owner.name, email: owner.email, role: 'Owner', initials: owner.initials }}
-        teamCount={1}
+        teamCount={invitesPending}
         onAddPlatform={() => go({ to: 'platforms', add: true })}
         onNavigate={go}
         pageName={`${data.platforms.length} platforms${data.hasHq === false ? '' : ' + HQ'}`}
@@ -1015,7 +1047,7 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
           <StatusBar
             platforms={data.platforms.map((p) => ({ id: p.id, name: p.shortName ?? p.name, logoSrc: p.logo, color: p.index, initials: monos[p.id], health: p.id === failed ? 'bad' : healthOf(p), healthText: p.id === failed ? 'no data' : undefined, selected: filter === p.id, onSelect: () => setFilterTo(filter === p.id ? null : p.id) }))}
             people={{ count: Number(data.hq.facts?.find((f) => f.label === 'people')?.value ?? 9) }}
-            invites={{ count: data.hq.lists.find((l) => l.id === 'invites')?.total ?? 0 }}
+            invites={{ count: invitesPending }}
             leda={{ used: data.plan.used, max: data.plan.max, daysLeft: '7 days left' }}
             ledaFirst
             plan={data.plan.name ?? 'Starter'}
@@ -1040,7 +1072,7 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
         onQueryChange={setQuery}
         conversationMessages={messages.length}
         onOpenConversation={openChat}
-        returnFocusRef={opener}
+        returnFocusRef={paletteReturn}
         placeholder={filter ? `Ask Leda about ${scopeName}` : 'Ask Leda or tell it what to do'}
       />
       {chat && (
