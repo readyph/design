@@ -1,7 +1,10 @@
-import { createContext, forwardRef, useContext, type Ref, type AnchorHTMLAttributes, type ButtonHTMLAttributes, type HTMLAttributes, type ReactNode } from 'react';
+import { createContext, forwardRef, useContext, useRef, useState, type Ref, type AnchorHTMLAttributes, type ButtonHTMLAttributes, type HTMLAttributes, type ReactNode } from 'react';
 import * as RadixTooltip from '@radix-ui/react-tooltip';
 import type { Icon as PhosphorIcon } from '@phosphor-icons/react';
 import { cn, focusRing } from '../utils/cn';
+import { ReadyMark, READY_ASSEMBLE_MS } from './ReadyMark';
+
+const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
 
 /** Focus ring for controls that sit on the frame colour (the ring gap is the frame, not the surface). */
 const frameRing = cn(focusRing, 'focus-visible:ring-offset-frame');
@@ -101,28 +104,56 @@ export const IconRail = forwardRef<HTMLElement, IconRailProps>(function IconRail
 });
 
 export interface IconRailMarkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'children'> {
-  /** Accessible name. Default "ReadyPH home". */
+  /** Accessible name. Default "Ready". */
   label?: string;
+  /** Play the swoop-assemble animation: once on mount, and again on hover or keyboard focus. Default true. */
+  animate?: boolean;
 }
 
-/** The ReadyPH "R" mark: 32px, links Home. Sits above the items with 12px of air. */
+/**
+ * The Ready falcon (RDY-363): 28px mark in a 32px link to Home. Sits above the items with 12px of air.
+ * Swoop-assemble plays once when the rail mounts (not on re-renders) and again on hover or keyboard focus, never in a loop, and only
+ * after the last run has finished. `prefers-reduced-motion` turns it into a 400ms fade (see ReadyMark).
+ */
 export const IconRailMark = forwardRef<HTMLAnchorElement, IconRailMarkProps>(function IconRailMark(
-  { label = 'ReadyPH home', href = '/', className, ...rest },
+  { label = 'Ready', href = '/', animate = true, className, onMouseEnter, onFocus, ...rest },
   ref,
 ) {
+  const [run, setRun] = useState(animate ? 1 : 0);
+  const startedAt = useRef(animate ? now() : -Infinity);
+  const replay = () => {
+    if (!animate || now() - startedAt.current < READY_ASSEMBLE_MS) return;
+    startedAt.current = now();
+    setRun((n) => n + 1);
+  };
   return (
     <a
       ref={ref}
       href={href}
       aria-label={label}
       {...rest}
+      onMouseEnter={(e) => {
+        onMouseEnter?.(e);
+        replay();
+      }}
+      onFocus={(e) => {
+        onFocus?.(e);
+        // Keyboard focus only: a click already played it through the hover.
+        let visible = true;
+        try {
+          visible = e.currentTarget.matches(':focus-visible');
+        } catch {
+          /* engines without :focus-visible */
+        }
+        if (visible) replay();
+      }}
       className={cn(
-        'mb-3 grid size-8 shrink-0 place-items-center rounded-control text-[18px] font-semibold leading-none tracking-[-0.02em] text-text transition-colors motion-reduce:transition-none hover:bg-frame-hover',
+        'mb-3 grid size-8 shrink-0 place-items-center rounded-control transition-colors motion-reduce:transition-none hover:bg-frame-hover',
         frameRing,
         className,
       )}
     >
-      <span aria-hidden>R</span>
+      <ReadyMark size={28} decorative animate={run} />
     </a>
   );
 });

@@ -34,7 +34,7 @@ describe('PortalFrame', () => {
   it('top bar carries the page name, the Leda slot and the account avatar; topBar replaces it', () => {
     const { unmount } = frame({ pageName: 'Platforms' });
     const header = within(screen.getByRole('banner', { hidden: true }));
-    expect(header.getByText('ReadyPH')).toBeTruthy();
+    expect(header.getByRole('img', { name: 'Ready' })).toBeTruthy();
     expect(header.getByText('Platforms')).toBeTruthy();
     expect(header.getByRole('button', { name: 'Ask Leda', hidden: true })).toBeTruthy();
     expect(header.getByRole('button', { name: /Account menu/, hidden: true })).toBeTruthy();
@@ -85,7 +85,7 @@ describe('PortalFrame', () => {
     const user = userEvent.setup();
     frame({ onNavigate: nav, current: 'home' });
     const [rail, phone] = screen.getAllByRole('navigation', { hidden: true });
-    await user.click(within(rail!).getByRole('link', { name: 'ReadyPH home', hidden: true }));
+    await user.click(within(rail!).getByRole('link', { name: 'Ready', hidden: true }));
     await user.click(within(rail!).getByRole('link', { name: 'Platforms', hidden: true }));
     await user.click(within(rail!).getByRole('link', { name: 'Reports', hidden: true }));
     await user.click(within(rail!).getByRole('link', { name: 'Memory', hidden: true }));

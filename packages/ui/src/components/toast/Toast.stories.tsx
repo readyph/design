@@ -2,6 +2,7 @@ import { useEffect, type ReactNode } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { House, Graph, FileText, Users, DotsThree } from '@phosphor-icons/react';
 import { PlatformShell } from '../PlatformShell';
+import { ReadyLogo } from '../ReadyMark';
 import { StatusBar } from '../StatusBar';
 import { Button } from '../Button';
 import { Toaster } from './Toaster';
@@ -71,7 +72,7 @@ function Stage({ fire, children }: { fire?: ToastOptions | ToastOptions[]; child
         placeLabel="Platforms"
         sheetBar={<p className="px-6 py-3 text-small">Sheet bar</p>}
         status={<StatusBar platforms={[{ id: '1', name: 'Stockroom' }, { id: '2', name: 'Auto Works' }]} people={{ count: 12 }} plan="Starter" updatedAt="9:12 AM" />}
-        topBar={<span className="font-semibold">ReadyPH</span>}
+        topBar={<ReadyLogo size={28} />}
         phoneNav={<PhoneNav />}
         detail
       >

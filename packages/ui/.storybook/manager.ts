@@ -1,4 +1,16 @@
 import { addons } from '@storybook/manager-api';
+import { create } from '@storybook/theming/create';
+
+/** RDY-363: the Ready falcon lockup (static) as the Storybook brand; the favicon is static/favicon.svg. */
+const dark = typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+addons.setConfig({
+  theme: create({
+    base: dark ? 'dark' : 'light',
+    brandTitle: 'Ready',
+    brandImage: dark ? './ready-lockup-dark.svg' : './ready-lockup.svg',
+    brandTarget: '_self',
+  }),
+});
 
 /**
  * RDY-356. The toolbar's viewport tool reads `parameters.viewport.viewports` once, when a story is selected, and the story's

@@ -13,7 +13,7 @@ const meta: Meta<typeof IconRail> = {
     layout: 'fullscreen',
     docs: {
       description: {
-        component: `Icon rail (RDY-262, handover C2): the 52px \`nav\` on the \`--frame\` colour. Stack: \`IconRailMark\` (the "R", 32px, links Home), 36x36 \`IconRailItem\`s (19px icons, 5px radius), "+" add platform, \`IconRailSpacer\`, then \`IconRailFoot\` with the \`AccountMenu\`. **No Settings item**: Settings lives in the avatar menu.
+        component: `Icon rail (RDY-262, handover C2): the 52px \`nav\` on the \`--frame\` colour. Stack: \`IconRailMark\` (the Ready falcon, 28px in a 32px link to Home; swoop-assemble plays once on mount and on hover or keyboard focus), 36x36 \`IconRailItem\`s (19px icons, 5px radius), "+" add platform, \`IconRailSpacer\`, then \`IconRailFoot\` with the \`AccountMenu\`. **No Settings item**: Settings lives in the avatar menu.
 
 States: default muted, hover \`--frame-hover\`, current \`--frame-active\` + \`aria-current="page"\`, optional count badge (\`99+\` above 99; the accessible name becomes "Team, 3"). The tooltip (right, 12px, ink) shows on hover and on keyboard focus; Esc dismisses. Focus rings use the frame colour as the gap.
 

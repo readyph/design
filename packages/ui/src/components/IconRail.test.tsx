@@ -23,7 +23,7 @@ describe('IconRail', () => {
   it('is a labelled nav with named items, aria-current only on the current one, and no Settings', () => {
     rail();
     expect(screen.getByRole('navigation', { name: 'Main' })).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'ReadyPH home' }).getAttribute('href')).toBe('/home');
+    expect(screen.getByRole('link', { name: 'Ready' }).getAttribute('href')).toBe('/home');
     expect(screen.getByRole('link', { name: 'Home' }).getAttribute('aria-current')).toBe('page');
     expect(screen.getByRole('link', { name: 'Team, 3' }).getAttribute('aria-current')).toBeNull();
     expect(screen.getByRole('button', { name: 'Add a platform' })).toBeTruthy();
@@ -54,7 +54,7 @@ describe('IconRail', () => {
     rail();
     expect(screen.getByRole('link', { name: 'Home' }).className).toContain('size-9');
     await user.tab();
-    expect(document.activeElement).toBe(screen.getByRole('link', { name: 'ReadyPH home' }));
+    expect(document.activeElement).toBe(screen.getByRole('link', { name: 'Ready' }));
     await user.tab();
     expect(document.activeElement).toBe(screen.getByRole('link', { name: 'Home' }));
     await user.tab();
