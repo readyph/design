@@ -184,7 +184,7 @@ export function PlatformShell({
           hiddenWins,
         )}
       >
-        {sheetBar != null && <div className="shrink-0">{sheetBar}</div>}
+        {sheetBar != null && <div className="shrink-0 border-b border-border">{sheetBar}</div>}
         <div tabIndex={0} className="min-h-0 flex-1 overflow-y-auto overscroll-contain focus-visible:outline focus-visible:-outline-offset-2">
           {!placeIsMain && h1}
           {children}

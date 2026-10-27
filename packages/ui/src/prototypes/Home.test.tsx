@@ -76,6 +76,14 @@ describe('Home', () => {
     expect(document.activeElement).toBe(screen.getByRole('heading', { level: 2, name: 'Today' }));
   });
 
+  it('a watched case also offers Snooze on desktop, as the workshop case does', () => {
+    render(<Home />);
+    const group = screen.getByRole('button', { name: /Leda is watching/ });
+    if (group.getAttribute('aria-expanded') !== 'true') fireEvent.click(group);
+    fireEvent.click(screen.getByText('Estimate ₱14,800 waiting since Tuesday'));
+    expect(screen.getByRole('button', { name: 'Snooze' })).toBeTruthy();
+  });
+
   it('closing the last tab shows the overview and focuses its greeting', () => {
     render(<Home />);
     const x = screen.getByRole('tab', { name: 'Today' }).querySelector('[data-close]')!;

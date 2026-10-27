@@ -665,7 +665,7 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
           <h2 ref={headingEl} tabIndex={-1} className="m-0 min-w-0 text-case text-text outline-none focus-visible:ring-2 focus-visible:ring-accent">{item.title}</h2>
           <div className="ml-auto flex flex-none gap-2 max-[640px]:ml-0">
             {p && !c.open ? <Button variant="secondary" leftIcon={ArrowSquareOut} className="@max-[680px]/sheet:hidden" onClick={() => go(p.hq ? { to: 'team' } : { to: 'platform', id: p.id })}>Open {p.name}</Button> : null}
-            {isOpen && !phone ? <Menu trigger={<Button variant="secondary" leftIcon={Clock} rightIcon={CaretDown}>Snooze</Button>} items={snoozeItems(id)} align="end" /> : null}
+            {!phone ? <Menu trigger={<Button variant="secondary" leftIcon={Clock} rightIcon={CaretDown}>Snooze</Button>} items={snoozeItems(id)} align="end" /> : null}
           </div>
         </div>
         {snz ? <p className="m-0 mt-3 flex items-start gap-2.5 rounded-card bg-raised px-3.5 py-3 text-ui leading-[19px] text-text"><Clock aria-hidden size={14} className="mt-0.5" /><span>Snoozed · {snz.until}</span></p> : null}
@@ -958,7 +958,7 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
         <CaretLeft aria-hidden size={14} />
         Needs you
       </button>
-      {caseId && openIds.includes(caseId) ? <div className="ml-auto"><Menu trigger={<button type="button" aria-label="Snooze" className={cn('grid size-11 place-items-center rounded-control text-text', focusRing)}><Clock aria-hidden size={20} /></button>} items={snoozeItems(caseId)} align="end" /></div> : null}
+      {caseId ? <div className="ml-auto"><Menu trigger={<button type="button" aria-label="Snooze" className={cn('grid size-11 place-items-center rounded-control text-text', focusRing)}><Clock aria-hidden size={20} /></button>} items={snoozeItems(caseId)} align="end" /></div> : null}
       <div className="ml-auto">{askBar('bar', false)}</div>
     </>
   ) : undefined;
