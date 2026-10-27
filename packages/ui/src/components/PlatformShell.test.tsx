@@ -48,7 +48,12 @@ describe('PlatformShell', () => {
   it('phone action bar keeps the bottom safe-area inset (workshop .pbar)', () => {
     render(<PlatformShell {...slots} detail actionBar={<button>Save</button>}>Body</PlatformShell>);
     const bar = screen.getByRole('button', { name: 'Save', hidden: true }).parentElement!;
-    expect(bar.className).toContain('max-[640px]:pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]');
+    expect(bar.className).toContain('max-[640px]:pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]');
+    // workshop .pbar: on --frame, 8px 16px, no top border, 44px buttons sharing the row
+    expect(bar.className).toContain('max-[640px]:bg-frame');
+    expect(bar.className).toContain('max-[640px]:px-4');
+    expect(bar.className).not.toContain('border-t');
+    expect(bar.className).toContain('max-[640px]:[&>*]:h-11');
   });
   it('phone detail drops the bottom nav (workshop body.detail .pnav) and its grid row', () => {
     const { container, rerender } = render(<PlatformShell {...slots}>Body</PlatformShell>);
