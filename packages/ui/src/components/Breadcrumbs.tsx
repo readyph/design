@@ -1,4 +1,5 @@
 import { forwardRef, Fragment, type MouseEventHandler, type ReactNode } from 'react';
+import type { Icon as PhosphorIcon } from '@phosphor-icons/react';
 import { cn, focusRing } from '../utils/cn';
 
 export interface Crumb {
@@ -9,9 +10,11 @@ export interface Crumb {
   onClick?: MouseEventHandler<HTMLElement>;
   /** Optional leading logo (trail variant only), e.g. `<PlatformLogo decorative name="..." />`. */
   logo?: ReactNode;
+  /** Leading Phosphor icon (`where` variant). */
+  icon?: PhosphorIcon;
 }
 
-export type BreadcrumbsVariant = 'trail' | 'sheet' | 'phone';
+export type BreadcrumbsVariant = 'trail' | 'sheet' | 'phone' | 'where';
 
 export interface BreadcrumbsProps {
   /** Root first, current last. The last item is the current page and is never a link. */
@@ -78,6 +81,42 @@ export const Breadcrumbs = forwardRef<HTMLElement, BreadcrumbsProps>(function Br
         <span aria-hidden className="text-header leading-none">‹</span>
         <span className="truncate">{back.label}</span>
       </Action>
+    );
+  } else if (variant === 'where') {
+    // The prototype's "you are here" line (`.where`): 13/18 muted, links 28px with a hover tint, "/" in the control colour, the current place 500 in text colour.
+    body = (
+      <ol className="flex min-w-0 list-none items-center gap-2 p-0 text-ui text-muted">
+        {items.map((item, i) => {
+          const last = i === items.length - 1;
+          const Icon = item.icon;
+          const inner = (
+            <>
+              {Icon && <Icon size={16} aria-hidden />}
+              <span className="min-w-0 truncate">{item.label}</span>
+            </>
+          );
+          return (
+            <Fragment key={i}>
+              <li className="flex min-w-0 items-center">
+                {last ? (
+                  <b aria-current="page" title={item.label} className="inline-flex min-w-0 items-center gap-1.5 whitespace-nowrap font-medium text-text">
+                    {inner}
+                  </b>
+                ) : (
+                  <Action crumb={item} className={cn('-ml-1.5 inline-flex h-7 items-center gap-1.5 whitespace-nowrap rounded-control px-1.5 text-muted transition-colors duration-hover hover:bg-raised hover:text-text', focusRing)}>
+                    {inner}
+                  </Action>
+                )}
+              </li>
+              {!last && (
+                <li aria-hidden className="text-control">
+                  /
+                </li>
+              )}
+            </Fragment>
+          );
+        })}
+      </ol>
     );
   } else if (variant === 'sheet') {
     body = (

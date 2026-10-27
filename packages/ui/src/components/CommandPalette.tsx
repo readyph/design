@@ -243,9 +243,11 @@ export function CommandPalette({
             if (composing.current || e.isComposing || e.keyCode === 229) e.preventDefault();
           }}
           onCloseAutoFocus={(e) => {
-            if (opener.current?.isConnected) {
+            // The page may point focus somewhere else by the time the palette closes (Leda's composer after an ask).
+            const target = returnFocusRef?.current?.isConnected ? returnFocusRef.current : opener.current;
+            if (target?.isConnected) {
               e.preventDefault();
-              opener.current.focus();
+              target.focus();
             }
           }}
           className={cn(
@@ -281,7 +283,7 @@ export function CommandPalette({
               onCompositionEnd={() => { composing.current = false; }}
               className="min-w-0 flex-1 border-0 bg-transparent text-[15px] leading-[20px] text-text outline-none placeholder:text-faint"
             />
-            <kbd aria-hidden className="inline-block min-w-[18px] shrink-0 rounded-[3px] bg-raised-2 px-1 text-center font-sans text-[11px] leading-4 text-text max-sm:hidden">esc</kbd>
+            <kbd aria-hidden className="inline-block min-w-[18px] rounded-[3px] bg-frame-active px-1 text-center font-sans text-tiny text-text [@media(hover:none)]:hidden max-sm:hidden">esc</kbd>
           </div>
 
           {/* tabIndex=0 is kept on purpose: axe `scrollable-region-focusable` fails a scroller with no focusable content (options are display-only; the input drives them). */}
@@ -311,7 +313,7 @@ export function CommandPalette({
                             item.disabled && 'opacity-50',
                           )}
                         >
-                          <span aria-hidden className={cn('grid h-5 w-5 shrink-0 place-items-center', selected ? 'text-accent' : 'text-muted')}>
+                          <span aria-hidden className={cn('grid h-5 shrink-0 place-items-center', item.leda ? 'w-5 max-sm:w-[22px]' : 'w-4', selected ? 'text-accent' : 'text-muted')}>
                             {item.leda ? (
                               <>
                                 <span className="max-sm:hidden"><LedaMark size={20} decorative /></span>

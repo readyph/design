@@ -19,8 +19,8 @@ export const ASK_LEDA_TIMING = {
 export type AskLedaOpenSource = 'click' | 'shortcut' | 'slash';
 
 export interface AskLedaBarProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'onClick' | 'children' | 'type' | 'aria-label'> {
-  /** `bar`: 320px / 34px in the sheet bar (a 44px icon button at 640px and below). `overview`: centred 560px / 44px (full width when narrower). */
-  variant?: 'bar' | 'overview';
+  /** `bar`: 320px / 34px in the sheet bar (a 44px icon button at 640px and below). `overview`: centred 560px / 44px (full width when narrower). `field`: full width, 44px, 15px text, with the halo on a phone (Platforms column, prototype `.pask`). */
+  variant?: 'bar' | 'overview' | 'field';
   /** Page or platform short name: placeholder becomes "Ask Leda about {scope}". */
   scope?: string;
   /** Opens the palette. Called on click, on Cmd/Ctrl+K and on "/" (the palette itself is a separate component). */
@@ -112,13 +112,19 @@ const VARIANT = {
   bar: {
     outer: 'inline-flex w-auto max-w-full shrink-0 basis-auto',
     wrap: 'w-leda-w shrink-0 max-[640px]:w-[var(--ctl-touch)]',
-    bar: 'text-ui leading-5 h-[var(--ctl-leda-bar)] max-[640px]:h-[var(--ctl-touch)] max-[640px]:justify-center max-[640px]:border-transparent max-[640px]:bg-transparent max-[640px]:px-0',
+    bar: 'text-ui leading-5 h-[var(--ctl-leda-bar)] gap-2.5 pl-2.5 pr-1.5 max-[640px]:h-[var(--ctl-touch)] max-[640px]:justify-center max-[640px]:border-transparent max-[640px]:bg-transparent max-[640px]:px-0',
     mark: 20,
   },
   overview: {
     outer: 'flex w-full max-w-leda-w-overview shrink basis-auto',
     wrap: 'w-full max-w-leda-w-overview',
     bar: 'text-body leading-5 h-[var(--ctl-touch)] gap-3 pl-3.5 pr-2 max-[640px]:gap-2.5 max-[640px]:pl-3 max-[640px]:pr-3 max-[640px]:text-[15px]',
+    mark: 22,
+  },
+  field: {
+    outer: 'flex w-full shrink basis-auto',
+    wrap: 'w-full',
+    bar: 'h-[var(--ctl-touch)] gap-2.5 px-3 text-[15px]',
     mark: 22,
   },
 } as const;

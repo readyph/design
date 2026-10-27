@@ -34,7 +34,7 @@ describe('ConfirmDialog', () => {
     const d = screen.getByRole('alertdialog', { name: 'Delete this topic?' });
     expect(d.getAttribute('aria-describedby')).toBeTruthy();
     expect(document.getElementById(d.getAttribute('aria-describedby')!)?.textContent).toBe('This cannot be undone.');
-    expect(d.className).toContain('min(420px,calc(100vw-48px))');
+    expect(d.className).toContain('min(420px,calc(100vw-32px))');
     expect(d.className).not.toContain('max-sm:inset-0');
   });
   it('starts focus on Cancel', async () => {
@@ -92,7 +92,7 @@ describe('ConfirmDialog', () => {
     const long = 'A'.repeat(120);
     render(<Demo name={long} />);
     await userEvent.click(screen.getByText('Open'));
-    expect(screen.getByText(long).className).toContain('break-words');
+    expect(screen.getByText(long).className).toContain('overflow-wrap:anywhere');
     expect(screen.getByText('Custom topic')).toBeTruthy();
   });
   it('buttons use the 44px phone action-bar height', async () => {

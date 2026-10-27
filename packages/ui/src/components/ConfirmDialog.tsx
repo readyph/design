@@ -79,33 +79,34 @@ export function ConfirmDialog({
       hideClose
       initialFocus={cancelRef}
       onCloseAutoFocus={onCloseAutoFocus}
-      title={title}
-      footer={
-        <>
-          <Button ref={cancelRef} variant="secondary" actionBar onClick={() => handleOpenChange(false)} disabled={loading}>
+    >
+      {/* The prototype's confirm (.cfm): one padded block, no header or footer rules. */}
+      <div className="px-[22px] py-5">
+        <Dialog.Title className="m-0 text-[16px] font-semibold leading-[22px] text-text">{title}</Dialog.Title>
+        {name != null && (
+          <div className="mt-3 flex items-start gap-2.5 rounded-card border border-border bg-raised px-3 py-2.5 text-body font-medium">
+            {(iconNode || Mark) && (
+              <span aria-hidden className="mt-0.5 grid shrink-0 place-items-center text-bad">
+                {iconNode ?? (Mark && <Mark size={16} />)}
+              </span>
+            )}
+            <span className="min-w-0 flex-1 [overflow-wrap:anywhere]">
+              {name}
+              {context && <span className="mt-0.5 block text-small font-normal text-muted">{context}</span>}
+            </span>
+          </div>
+        )}
+        {description && <Dialog.Description className="m-0 mt-3 break-words text-body text-muted">{description}</Dialog.Description>}
+        {children}
+        <div className="mt-5 flex flex-wrap justify-end gap-2">
+          <Button ref={cancelRef} variant="secondary" actionBar className="max-[640px]:flex-auto" onClick={() => handleOpenChange(false)} disabled={loading}>
             {cancelLabel}
           </Button>
-          <Button variant={confirmVariant} actionBar onClick={onConfirm} loading={loading}>
+          <Button variant={confirmVariant} actionBar className="max-[640px]:flex-auto" onClick={onConfirm} loading={loading}>
             {confirmLabel}
           </Button>
-        </>
-      }
-    >
-      {name != null && (
-        <div className="mb-3 flex items-center gap-3 rounded-card border border-border bg-raised px-3 py-2.5">
-          {(iconNode || Mark) && (
-            <span aria-hidden className="grid shrink-0 place-items-center text-bad">
-              {iconNode ?? (Mark && <Mark size={20} />)}
-            </span>
-          )}
-          <div className="min-w-0 flex-1">
-            <div className="break-words text-ui font-medium text-text">{name}</div>
-            {context && <div className="mt-0.5 break-words text-[12px] leading-4 text-muted">{context}</div>}
-          </div>
         </div>
-      )}
-      {description && <Dialog.Description className="break-words text-body text-muted">{description}</Dialog.Description>}
-      {children}
+      </div>
     </Modal>
   );
 }
