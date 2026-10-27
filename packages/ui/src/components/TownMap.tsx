@@ -222,7 +222,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
     const boxes = anchors.flatMap((a) => {
       const el = labelEls.current.get(a.id);
       if (!el) return [];
-      const pri = (el.dataset.sel ? 4 : 0) + (el.dataset.count ? 2 : 0) + (el.dataset.hl ? 1 : 0);
+      const pri = (el.dataset.sel !== undefined ? 4 : 0) + (el.dataset.count !== undefined ? 2 : 0) + (el.dataset.hl !== undefined ? 1 : 0);
       return [{ id: a.id, ax: a.ax, ay: a.ay, w: el.offsetWidth, h: el.offsetHeight, priority: pri }];
     });
     if (rect.width > 0) {
@@ -485,7 +485,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
                           <span aria-hidden="true" className="my-0.5 block h-2.5 w-[76px] rounded-chip bg-skeleton" />
                         ) : (
                           <>
-                            {p.hq ? null : alert ? <StatusMark status={p.status} error={p.error} filled={!!p.sub} /> : p.sub ? <StatusMark status={p.status} /> : null}
+                            {p.hq ? null : alert ? <StatusMark status={p.status} error={p.error} filled={!!p.sub} /> : p.sub || sel ? <StatusMark status={p.status} /> : null}
                             {p.hq ? hqSub?.(p) : sub}
                           </>
                         )}

@@ -18,7 +18,9 @@ export const type: Record<string, readonly [string, string, string?, string?]> =
   'tiny': ['11px', '16px'],
   'figure': ['36px', '44px', '500'],
   'figure-sm': ['30px', '36px', '500'],
-  'overview-figure': ['22px', '28px'],
+  'overview-figure': ['22px', '28px', '500', '-0.01em'],
+  'overview-figure-sm': ['17px', '24px', '500', '-0.01em'],
+  'section': ['15px', '22px', '600'],
   'reading': ['16px', '27px'],
 };
 

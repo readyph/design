@@ -1,5 +1,6 @@
 import { forwardRef, useCallback, useId, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { cn, focusRing } from '../utils/cn';
+import { OverviewPlot } from './WeekChart.overview';
 
 /** Formats a number for a label. */
 export type ChartFormat = (value: number) => string;
@@ -60,6 +61,10 @@ export interface WeekChartProps {
   noDataLabel?: string;
   /** Replaces the generated summary. */
   'aria-label'?: string;
+  /** `overview`: the Home overview drawing (bars and In/Out with captions in the plot, no value labels, no legend line). */
+  variant?: 'default' | 'overview';
+  /** `overview` only: the drawing's total height in px. Default 132. */
+  height?: number;
   /** Merged on the wrapper only. */
   className?: string;
 }
@@ -107,7 +112,7 @@ function xPicks(labels: string[], slot: number): Set<number> {
 export const WeekChart = forwardRef<HTMLDivElement, WeekChartProps>(function WeekChart(
   {
     kind = 'bars', labels, values = [], up = [], down = [], highlight, aboveLabel = 'In', belowLabel = 'Out',
-    format, tickFormat, locale, unit, tickCount = 4, compact = false, title, closedLabel = 'Closed', noDataLabel = 'No data', 'aria-label': ariaLabel, className,
+    format, tickFormat, locale, unit, tickCount = 4, compact = false, title, closedLabel = 'Closed', noDataLabel = 'No data', 'aria-label': ariaLabel, className, variant = 'default', height,
   },
   ref,
 ) {
@@ -116,6 +121,8 @@ export const WeekChart = forwardRef<HTMLDivElement, WeekChartProps>(function Wee
   const [active, setActive] = useState<number | null>(null);
   const [announce, setAnnounce] = useState('');
   const id = useId();
+  const ov = variant === 'overview';
+  const [ovGeo, setOvGeo] = useState<{ padL: number; padT: number; plotH: number; slot: number; top: (i: number) => number } | null>(null);
 
   useLayoutEffect(() => {
     const el = box.current;
@@ -165,6 +172,7 @@ export const WeekChart = forwardRef<HTMLDivElement, WeekChartProps>(function Wee
   const bw = Math.max(4, Math.min(28, slot * 0.56));
   const cx = (i: number) => padL + slot * i + slot / 2;
   const picks = xPicks(labels, slot);
+  const g = ov && ovGeo ? ovGeo : null;
 
   const valueAt = (i: number): string => {
     if (diverging) return `${aboveLabel} ${vals[i] == null ? noDataLabel : fmt(vals[i] as number)}, ${belowLabel} ${downs[i] == null ? noDataLabel : fmt(downs[i] as number)}`;
@@ -200,8 +208,8 @@ export const WeekChart = forwardRef<HTMLDivElement, WeekChartProps>(function Wee
 
   const onPointer = (e: PointerEvent<SVGSVGElement>) => {
     const r = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - r.left - padL;
-    const i = Math.floor(x / slot);
+    const x = e.clientX - r.left - (g?.padL ?? padL);
+    const i = Math.floor(x / (g?.slot ?? slot));
     move(i >= 0 && i < n ? i : null);
   };
 
@@ -216,8 +224,8 @@ export const WeekChart = forwardRef<HTMLDivElement, WeekChartProps>(function Wee
   if (active !== null && active < n) {
     const l2 = valueAt(active);
     const w = Math.max(l2.length, labels[active].length) * 6.6 + 16;
-    const top = diverging ? y(Math.max(vals[active] ?? 0, 0)) : vals[active] == null ? y0 : y(Math.max(0, vals[active] as number));
-    const x = Math.max(0, Math.min(W - w, cx(active) - w / 2));
+    const top = g ? g.top(active) : diverging ? y(Math.max(vals[active] ?? 0, 0)) : vals[active] == null ? y0 : y(Math.max(0, vals[active] as number));
+    const x = Math.max(0, Math.min(W - w, (g ? (g.padL + g.slot * active + g.slot / 2) : cx(active)) - w / 2));
     tip = { x, y: Math.max(0, top - 46), w, l1: labels[active], l2 };
   }
 
@@ -232,6 +240,9 @@ export const WeekChart = forwardRef<HTMLDivElement, WeekChartProps>(function Wee
         onBlur={() => move(null, true)}
         className={cn('block w-full min-w-0 max-w-full overflow-hidden rounded-chip', focusRing)}
       >
+        {ov ? (
+          <OverviewPlot boxRef={box} width={width} height={height ?? 132} labels={labels} vals={vals} downs={downs} diverging={diverging} highlight={hl} aboveLabel={aboveLabel} belowLabel={belowLabel} fmt={fmt} tfmt={tickFormat ?? fmt} tickCount={tickCount} summary={summary} active={active} onPointer={onPointer} onLeave={() => move(null)} onGeometry={setOvGeo} />
+        ) : (
         <svg role="img" aria-label={summary} width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="block max-w-full tabular-nums" onPointerMove={onPointer} onPointerDown={onPointer} onPointerLeave={() => move(null)}>
           {/* grid and y axis */}
           {(diverging ? tickLabels : ticks).map((t) => (
@@ -288,9 +299,10 @@ export const WeekChart = forwardRef<HTMLDivElement, WeekChartProps>(function Wee
             </g>
           )}
         </svg>
+        )}
         <span id={`${id}-live`} aria-live="polite" className="sr-only">{announce}</span>
       </div>
-      {diverging && (
+      {diverging && !ov && (
         <p className="mt-1 flex gap-4 text-small text-muted">
           <span><span aria-hidden>{'▲'} </span>{aboveLabel} above the line</span>
           <span><span aria-hidden>{'▼'} </span>{belowLabel} below</span>

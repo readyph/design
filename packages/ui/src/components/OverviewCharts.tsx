@@ -140,6 +140,8 @@ export interface OverviewChartsProps {
   locale?: string;
   /** Own width below which the platforms stack. Default 760. */
   stackBelow?: number;
+  /** `home`: the Home overview's exact layout (name and kind on one line, charts drawn with the overview geometry, share legend with square swatches). */
+  variant?: 'default' | 'home' | 'home-phone';
   /** Merged on the wrapper only. */
   className?: string;
 }
@@ -158,7 +160,7 @@ function StatusPart({ status }: { status: OverviewPlatformStatus }) {
 
 interface BlockProps {
   p: OverviewPlatform;
-  layout: 'col' | 'row' | 'stack-row';
+  layout: 'col' | 'row' | 'stack-row' | 'phone';
   locale?: string;
 }
 
@@ -260,6 +262,134 @@ function PlatformBlock({ p, layout, locale }: BlockProps) {
   );
 }
 
+function HomeShare({ title, total, parts, onOpen }: ShareBarProps) {
+  const ok = (v: number) => Number.isFinite(v);
+  let grey = 0;
+  const resolved = parts.map((x) => ({ ...x, tone: (x.tone ?? 'neutral') as ShareTone, alt: x.tone ? 0 : grey++ % 2 }));
+  const shown = resolved.filter((x) => ok(x.value) && x.value > 0);
+  const swatch = (x: (typeof resolved)[number]) => (x.tone === 'neutral' ? (x.alt ? 'bg-share-2' : 'bg-share-1') : partSwatch[x.tone]);
+  return (
+    <div>
+      <div className="flex items-baseline gap-2 text-ui">
+        {onOpen ? <button type="button" onClick={onOpen} className={cn('rounded-chip text-left hover:underline hover:underline-offset-[3px]', focusRing)}>{title}</button> : <span>{title}</span>}
+        {total !== undefined && <b className="font-semibold tabular-nums">{total}</b>}
+      </div>
+      {shown.length > 0 && (
+        <svg role="img" aria-label={resolved.map((x) => `${x.label} ${x.value}`).join(', ')} width="100%" height={6} className="mt-1.5 block overflow-hidden rounded-[3px]">
+          {(() => {
+            const sum = shown.reduce((t, x) => t + x.value, 0);
+            let at = 0;
+            return shown.map((x, i) => {
+              const left = (at / sum) * 100;
+              at += x.value;
+              return (
+                <rect key={`${x.label}-${i}`} x={`${left}%`} y={0} width={`${(x.value / sum) * 100}%`} height={6} strokeWidth={2} className={cn('stroke-surface forced-colors:fill-[CanvasText] forced-colors:stroke-[Canvas]', x.tone === 'neutral' ? (x.alt ? 'fill-share-2' : 'fill-share-1') : partFill[x.tone])}><title>{`${x.label}: ${x.value}`}</title></rect>
+              );
+            });
+          })()}
+        </svg>
+      )}
+      <p className="m-0 mt-1.5 flex flex-wrap gap-x-[14px] gap-y-0.5 text-small text-muted">
+        {resolved.map((x, i) => (
+          <span key={`${x.label}-${i}`} className="inline-flex items-center gap-1.5 whitespace-nowrap">
+            <i aria-hidden className={cn('size-[7px] rounded-[2px]', swatch(x))} />
+            {x.label} <b className="font-medium tabular-nums text-text">{ok(x.value) ? x.value : '\u2014'}</b>
+          </span>
+        ))}
+      </p>
+    </div>
+  );
+}
+
+function HomeBlock({ p, layout, locale }: BlockProps) {
+  const nameId = useId();
+  const headRef = useRef<HTMLHeadingElement | null>(null);
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const retried = useRef(false);
+  const state = p.state ?? 'ready';
+  const phone = layout === 'phone';
+  const row = layout === 'row' || layout === 'stack-row';
+  useLayoutEffect(() => {
+    if (state !== 'error' && retried.current) {
+      retried.current = false;
+      focusIfLost(sectionRef.current, headRef.current);
+    }
+  }, [state]);
+  const retry = p.onRetry ? () => { retried.current = true; p.onRetry?.(); } : undefined;
+  const name = (
+    <h3 ref={headRef} tabIndex={-1} id={nameId} className="m-0 min-w-0 text-section text-text outline-0">
+      {p.onOpen ? <button type="button" onClick={p.onOpen} className={cn('rounded-chip text-left hover:underline hover:underline-offset-[3px]', focusRing)}>{p.name}</button> : p.name}
+    </h3>
+  );
+  const figure = state === 'loading' ? (
+    <div className="flex flex-col gap-1.5" aria-hidden><Skeleton className="h-7 w-28" /><Skeleton variant="text" className="w-40" /></div>
+  ) : state === 'error' || !p.figure ? null : (
+    <div className="min-w-0">
+      <p className={cn('m-0 flex', row ? 'flex-col' : 'flex-wrap items-baseline gap-x-2.5 gap-y-0.5')}>
+        <span className={cn('tabular-nums text-text', row ? 'text-overview-figure-sm' : 'text-overview-figure')}>{p.figure.value}</span>
+        <span className={cn('text-muted', row ? 'text-small' : 'text-ui leading-5')}>{p.figure.label}</span>
+      </p>
+      {p.sub && <p className="m-0 mt-0.5 text-small tabular-nums text-muted">{p.sub}</p>}
+    </div>
+  );
+  const plot = state === 'loading' ? (
+    <Skeleton className={cn('w-full', row ? 'h-[88px]' : 'h-[132px]')} />
+  ) : state === 'error' ? (
+    <ErrorBlock thing={p.errorThing ?? `${p.name} numbers`} onRetry={retry} retrying={p.retrying} retryLabel="Retry" />
+  ) : !p.chart ? (
+    <p className="m-0 mt-3 text-ui text-muted">No 7-day history yet</p>
+  ) : (
+    <WeekChart {...p.chart} variant="overview" locale={p.chart.locale ?? locale} height={p.chart.height ?? (row ? (p.chart.kind === 'diverging' ? 104 : 88) : phone ? 116 : 132)} tickCount={p.chart.tickCount ?? (row ? 1 : 3)} />
+  );
+  if (row) {
+    return (
+      <section ref={sectionRef} aria-labelledby={nameId} aria-busy={state === 'loading' || undefined} className={cn('grid min-w-0 items-center gap-x-7 gap-y-1 border-t border-rule py-3 first:border-control', layout === 'row' ? 'grid-cols-[minmax(180px,1.1fr)_minmax(150px,0.9fr)_minmax(0,1.6fr)]' : 'grid-cols-[minmax(0,1fr)_auto]')}>
+        <div className="flex min-w-0 items-start gap-2.5">
+          <PlatformLogo name={p.name} {...p.logo} size={20} decorative className="mt-px" />
+          <div>
+            {name}
+            <p className="m-0 mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-small text-muted">{p.kind}{p.kind && p.status && state !== 'error' ? ' \u00b7 ' : ''}{p.status && state !== 'error' && <StatusPart status={p.status} />}</p>
+          </div>
+        </div>
+        <div className={cn(layout === 'stack-row' && 'text-right [&_p]:items-end')}>{figure}</div>
+        <div className={cn('min-w-0', layout === 'stack-row' && 'col-span-full')}>
+          {state === 'ready' && p.chart && <span className="mb-0.5 block text-small text-muted">{p.chart.title}</span>}
+          {plot}
+        </div>
+      </section>
+    );
+  }
+  return (
+    <section ref={sectionRef} aria-labelledby={nameId} aria-busy={state === 'loading' || undefined} className={cn('min-w-0', phone && 'mt-5')}>
+      <header className="flex items-center gap-2.5 border-b border-control pb-2.5 pt-0.5">
+        <PlatformLogo name={p.name} {...p.logo} size={phone ? 20 : 24} decorative />
+        <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2.5">
+          {name}
+          {p.kind && <span className="whitespace-nowrap text-small leading-5 text-muted">{p.kind}</span>}
+        </div>
+        {p.status && state !== 'error' && <StatusPart status={p.status} />}
+      </header>
+      {figure && <div className="mt-3.5">{figure}</div>}
+      <div className={cn(p.chart || state !== 'ready' ? (phone ? 'mt-2.5' : 'mt-4') : '')}>
+        {state === 'ready' && p.chart && (
+          <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <h4 className="m-0 text-ui font-medium leading-5 text-text">{p.chart.title}</h4>
+            {p.chart.note && <span className="text-small leading-5 text-faint">{p.chart.note}</span>}
+          </div>
+        )}
+        {plot}
+      </div>
+      {state === 'ready' && !phone && p.shares && p.shares.length > 0 && (
+        <div className="mt-5 grid gap-3">
+          <h4 className="m-0 text-ui font-medium leading-5 text-text">{p.sharesTitle ?? 'Today so far'}</h4>
+          {p.shares.map((s) => <HomeShare key={s.title} {...s} />)}
+        </div>
+      )}
+      {state === 'ready' && !phone && p.facts && <div className="mt-3.5">{p.facts}</div>}
+    </section>
+  );
+}
+
 /**
  * Overview charts (C31): each platform's last 7 days. Up to 3 platforms get a column each; 4 or more get one compact
  * row each (identity, figure, a short chart with 2-3 ticks). Below 760px of the component's own width (measured, not
@@ -267,7 +397,7 @@ function PlatformBlock({ p, layout, locale }: BlockProps) {
  * Retry" in the chart's place while the rest still render. All colours are tokens.
  */
 export const OverviewCharts = forwardRef<HTMLDivElement, OverviewChartsProps>(function OverviewCharts(
-  { platforms, 'aria-label': ariaLabel = 'Last 7 days', locale, stackBelow = 760, className },
+  { platforms, 'aria-label': ariaLabel = 'Last 7 days', locale, stackBelow = 760, variant = 'default', className },
   ref,
 ) {
   const box = useRef<HTMLDivElement | null>(null);
@@ -297,6 +427,30 @@ export const OverviewCharts = forwardRef<HTMLDivElement, OverviewChartsProps>(fu
 
   const stacked = width > 0 && width < (stackBelow * Math.max(16, rem)) / 16;
   const many = platforms.length >= 4;
+  if (variant === 'home-phone') {
+    return (
+      <div ref={setRefs} role="region" aria-label={ariaLabel} className={cn('relative block w-full min-w-0 max-w-full', className)}>
+        <span ref={probe} aria-hidden className="pointer-events-none invisible absolute left-0 top-0 h-0 w-4" />
+        {platforms.map((p) => <HomeBlock key={p.id} p={p} layout="phone" locale={locale} />)}
+      </div>
+    );
+  }
+  if (variant === 'home') {
+    return (
+      <div ref={setRefs} role="region" aria-label={ariaLabel} className={cn('relative block w-full min-w-0 max-w-full', className)}>
+        <span ref={probe} aria-hidden className="pointer-events-none invisible absolute left-0 top-0 h-0 w-4" />
+        {many ? (
+          <div className="-mt-1 flex flex-col">
+            {platforms.map((p) => <HomeBlock key={p.id} p={p} layout={stacked ? 'stack-row' : 'row'} locale={locale} />)}
+          </div>
+        ) : (
+          <div className={cn('mt-4 grid gap-x-12 gap-y-10', stacked ? 'grid-cols-1' : colsClass[Math.min(3, platforms.length)])}>
+            {platforms.map((p) => <HomeBlock key={p.id} p={p} layout="col" locale={locale} />)}
+          </div>
+        )}
+      </div>
+    );
+  }
   return (
     <div ref={setRefs} role="region" aria-label={ariaLabel} className={cn('relative block w-full min-w-0 max-w-full', className)}>
       <span ref={probe} aria-hidden className="pointer-events-none invisible absolute left-0 top-0 h-0 w-4" />

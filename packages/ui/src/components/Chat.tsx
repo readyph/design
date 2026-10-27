@@ -12,7 +12,7 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
-import { NotePencil, PaperPlaneRight, X } from '@phosphor-icons/react';
+import { NotePencil, Prohibit, PaperPlaneRight, X } from '@phosphor-icons/react';
 import { cn, focusRing } from '../utils/cn';
 import { focusIfLost } from '../utils/focusIfLost';
 import { useMatchMedia } from '../utils/useMatchMedia';
@@ -47,6 +47,16 @@ export interface ChatTableBlock {
   columns: { key: string; label: string; align?: 'left' | 'right' }[];
   rows: Record<string, string>[];
 }
+/** A table answer as the workshop draws it: no box, hairline rows, a bar under the lead figure, a total row. Cells are formatted by the caller. */
+export interface ChatAnswerTableBlock {
+  type: 'answerTable';
+  caption: string;
+  columns: string[];
+  rows: { label: string; cells: string[]; /** A bar under cell `at`, `pct` wide. */ bar?: { at: number; pct: number }; lead?: boolean }[];
+  /** The "All" row. */
+  foot?: string[];
+  unit?: string;
+}
 export interface ChatActionItem {
   id: string;
   label: string;
@@ -63,6 +73,9 @@ export type ChatBlock =
   | { type: 'meta'; text: string }
   | ChatTableBlock
   | { type: 'figure'; value: string; label: string; detail?: string }
+  | ChatAnswerTableBlock
+  | { type: 'answerFigure'; figure: string; sub: string }
+  | { type: 'refuse'; text: string }
   | { type: 'refusal'; text: string; actions?: ChatActionItem[] }
   | { type: 'actions'; actions: ChatActionItem[] }
   | { type: 'proposal'; blockId: string; proposal: ChatProposalData }
@@ -221,10 +234,12 @@ export interface ChatHeaderProps extends Omit<HTMLAttributes<HTMLElement>, 'titl
   /** Where focus goes when the confirm dialog closes after "Start new conversation" (the old thread is gone). Default: the composer. */
   newFocusRef?: RefObject<HTMLElement | null>;
   tagline?: string;
+  /** The workshop's header: title and tagline on one line, "New conversation" with its pencil (icon only on a phone). Default: stacked. */
+  layout?: 'stacked' | 'inline';
 }
 
 /** Header (48px): Leda mark 20px, "Leda", tagline, "New conversation" (asks first through `ConfirmDialog`), close. */
-export function ChatHeader({ busy = false, empty = false, onNewConversation, onClose, newFocusRef, tagline = 'Ask Leda', className, ...rest }: ChatHeaderProps) {
+export function ChatHeader({ busy = false, empty = false, onNewConversation, onClose, newFocusRef, tagline = 'Ask Leda', layout = 'stacked', className, ...rest }: ChatHeaderProps) {
   const [asking, setAsking] = useState(false);
   const ranNew = useRef(false);
   return (
@@ -261,7 +276,7 @@ export function ChatHeader({ busy = false, empty = false, onNewConversation, onC
           aria-label="Close Leda"
           onClick={onClose}
           className={cn(
-            'inline-grid h-8 w-8 shrink-0 place-items-center rounded-control text-muted hover:bg-raised hover:text-text max-[640px]:h-11 max-[640px]:w-11',
+            'inline-grid h-8 w-8 shrink-0 place-items-center rounded-control text-muted hover:bg-raised hover:text-text max-[640px]:h-11 max-[640px]:w-11 max-[640px]:[&_svg]:size-[18px]',
             focusRing,
           )}
         >
@@ -348,10 +363,12 @@ export interface ChatChipsProps extends Omit<HTMLAttributes<HTMLDivElement>, 'on
   onPick?: (chip: ChatChip) => void;
   /** Name of the group. Default "Suggestions". */
   label?: string;
+  /** `overview`: the Home hero's chips (30px, 13px / 20px). */
+  variant?: 'default' | 'overview' | 'strip';
 }
 
 /** Follow-up chips (28px, 13px, 5px radius; 40px on a phone). Wrap, never cut. */
-export function ChatChips({ chips, onPick, label = 'Suggestions', className, ...rest }: ChatChipsProps) {
+export function ChatChips({ chips, onPick, label = 'Suggestions', className, variant = 'default', ...rest }: ChatChipsProps) {
   const box = useRef<HTMLDivElement>(null);
   const had = useRef(false);
   // A picked chip usually disappears (the empty state or the follow-ups are replaced by the thread). If focus was in the chips
@@ -372,10 +389,10 @@ export function ChatChips({ chips, onPick, label = 'Suggestions', className, ...
       {...rest}
       onFocus={(e) => { had.current = true; rest.onFocus?.(e); }}
       onBlur={(e) => { if (e.relatedTarget) had.current = false; rest.onBlur?.(e); }}
-      className={cn(className, 'flex flex-wrap gap-1.5')}
+      className={cn(className, 'flex flex-wrap', variant === 'overview' ? 'gap-2' : 'gap-1.5', variant === 'strip' && 'flex-nowrap gap-2 overflow-x-auto [scrollbar-width:none]')}
     >
       {chips.map((c) => (
-        <button key={c.id} type="button" onClick={() => onPick?.(c)} className={cn(chipBase, focusRing, '[overflow-wrap:anywhere]')}>
+        <button key={c.id} type="button" onClick={() => onPick?.(c)} className={cn(chipBase, focusRing, '[overflow-wrap:anywhere]', variant === 'overview' && '!h-[30px] !min-h-0 !border-border !py-0 text-center leading-5 hover:bg-raised hover:!border-control max-[640px]:!h-9', variant === 'strip' && 'shrink-0 whitespace-nowrap !min-h-9 leading-5')}>
           {c.label}
         </button>
       ))}
@@ -398,7 +415,7 @@ export function ChatScopeChip({ children, className }: { children: ReactNode; cl
  * Word-by-word reveal. Every word is in the layout from the start (opacity only, nothing reflows). Assistive tech gets the full text once;
  * the animated words are hidden from it. Reduced motion: the reply shows at once.
  */
-function StreamedText({ text, onDone }: { text: string; onDone?: () => void }) {
+function StreamedText({ text, onDone, step = 32 }: { text: string; onDone?: () => void; step?: number }) {
   const reduced = useMatchMedia(REDUCED);
   const parts = useMemo(() => text.split(/(\s+)/), [text]);
   const total = useMemo(() => parts.filter((p) => p.trim()).length, [parts]);
@@ -411,9 +428,9 @@ function StreamedText({ text, onDone }: { text: string; onDone?: () => void }) {
       done.current?.();
       return;
     }
-    const t = setInterval(() => setShown((n) => n + 1), 32);
+    const t = setInterval(() => setShown((n) => n + 1), step);
     return () => clearInterval(t);
-  }, [finished]);
+  }, [finished, step]);
   let w = 0;
   return (
     <p className="text-body text-text [overflow-wrap:anywhere]">
@@ -452,6 +469,8 @@ export interface ChatBlocksProps {
   onOpenPage?: (blockId: string) => void;
   /** A streamed text block finished revealing. */
   onStreamed?: () => void;
+  /** `workshop`: streamed words land every 24 ms like the workshop's (default 32). */
+  layout?: 'default' | 'workshop';
 }
 
 function Actions({ actions, onAction }: { actions: ChatActionItem[]; onAction?: (a: ChatActionItem) => void }) {
@@ -469,13 +488,14 @@ function Actions({ actions, onAction }: { actions: ChatActionItem[]; onAction?: 
 }
 
 /** Renders a message's blocks: text, meta, table, figure, refusal, actions, proposal card, chips. */
-export function ChatBlocks({ blocks, onChip, onAction, onConfirm, onDiscard, onProposalAction, onOpenPage, onStreamed }: ChatBlocksProps) {
+export function ChatBlocks({ blocks, onChip, onAction, onConfirm, onDiscard, onProposalAction, onOpenPage, onStreamed, layout = 'default' }: ChatBlocksProps) {
+  const bodyText = 'text-body';
   return (
     <div className="flex min-w-0 flex-col gap-2">
       {blocks.map((b, i) => {
         switch (b.type) {
           case 'text':
-            return b.stream ? <StreamedText key={i} text={b.text} onDone={onStreamed} /> : <p key={i} className="text-body text-text [overflow-wrap:anywhere]">{b.text}</p>;
+            return b.stream ? <StreamedText key={i} text={b.text} onDone={onStreamed} step={layout === 'workshop' ? 24 : 32} /> : <p key={i} className={cn(bodyText, 'text-text [overflow-wrap:anywhere]')}>{b.text}</p>;
           case 'meta':
             return <p key={i} className="text-small text-muted [overflow-wrap:anywhere]">{b.text}</p>;
           case 'table':
@@ -512,6 +532,57 @@ export function ChatBlocks({ blocks, onChip, onAction, onConfirm, onDiscard, onP
                 <p className="text-figure-sm font-semibold tabular-nums text-text [overflow-wrap:anywhere]">{b.value}</p>
                 <p className="text-ui text-text">{b.label}</p>
                 {b.detail && <p className="text-small text-muted">{b.detail}</p>}
+              </div>
+            );
+          case 'answerTable':
+            return (
+              <div key={i} className="min-w-0 overflow-x-auto rounded-card border border-border bg-surface px-3 py-2.5">
+                <table className="w-full border-collapse text-ui leading-[18px]">
+                  <caption className={sr}>{b.caption}</caption>
+                  <thead>
+                    <tr>
+                      {b.columns.map((c, ci) => (
+                        <th key={ci} scope="col" className={cn('whitespace-nowrap pb-1.5 pl-0 pr-2 pt-0 text-small font-normal leading-[18px] text-muted', ci ? 'pl-3 text-right tabular-nums' : 'text-left', ci === b.columns.length - 1 && 'pr-0')}>{c}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {b.rows.map((r, ri) => (
+                      <tr key={ri} className={r.lead ? 'font-medium' : undefined}>
+                        <th scope="row" className="border-t border-rule py-[7px] pl-0 pr-2 text-left align-middle [font-weight:inherit]">{r.label}</th>
+                        {r.cells.map((c, ci) => (
+                          <td key={ci} className={cn('whitespace-nowrap border-t border-rule py-[7px] pl-3 pr-2 text-right align-middle tabular-nums', ci === r.cells.length - 1 && 'pr-0')}>
+                            {c}
+                            {r.bar && r.bar.at === ci ? <div className="mt-[5px] h-[3px] overflow-hidden rounded-[2px] bg-raised-2"><i className={cn('block h-full', r.lead ? 'bg-accent' : 'bg-control')} style={{ width: `${r.bar.pct}%` }} /></div> : null}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                  {b.foot ? (
+                    <tfoot>
+                      <tr className="font-semibold">
+                        <td className="border-t border-control py-[7px] pl-0 pr-2">All</td>
+                        {b.foot.map((c, ci) => <td key={ci} className={cn('border-t border-control py-[7px] pl-3 pr-2 text-right tabular-nums', ci === b.foot!.length - 1 && 'pr-0')}>{c}</td>)}
+                      </tr>
+                    </tfoot>
+                  ) : null}
+                </table>
+                {b.unit ? <p className="m-0 mt-2 text-small text-muted">{b.unit}</p> : null}
+              </div>
+            );
+          case 'answerFigure':
+            return (
+              <div key={i} className="min-w-0 overflow-x-auto rounded-card border border-border bg-surface px-3 py-2.5">
+                <p className="m-0 text-[30px] font-medium leading-9 tracking-[-0.01em] tabular-nums text-text">{b.figure}</p>
+                <p className="m-0 mt-0.5 text-ui text-muted">{b.sub}</p>
+              </div>
+            );
+          case 'refuse':
+            return (
+              <div key={i} className="flex items-start gap-2.5 rounded-card bg-raised px-3 py-2.5 text-ui leading-[19px]">
+                <Prohibit aria-hidden size={18} className="mt-px shrink-0 text-muted" />
+                <span>{b.text}</span>
               </div>
             );
           case 'refusal':
@@ -551,6 +622,8 @@ export interface ChatMessageProps extends Omit<ChatBlocksProps, 'blocks'> {
   message: ChatMessageData;
   /** Initials for the owner's avatar. Default: from `message.name`. */
   initials?: string;
+  /** The workshop's row: 28px avatar column with a 10px gap, 16px sides, the scope chip under what was said. Default: chip above. */
+  layout?: 'default' | 'workshop';
 }
 
 const initialsFrom = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]!.toUpperCase()).join('');
@@ -559,7 +632,7 @@ const initialsFrom = (name: string) => name.split(/\s+/).filter(Boolean).slice(0
  * One flat row: 28px avatar column (owner initials; Leda the bare 16px shard, no tile), name 13px 600 and time 12px tabular, then the blocks.
  * Hover `--raised`. The owner's row carries its scope chip. While `thinking`, the avatar plays Aurora above a reserved "Thinking…" line.
  */
-export function ChatMessage({ message: m, initials, ...handlers }: ChatMessageProps) {
+export function ChatMessage({ message: m, initials, layout = 'default', ...handlers }: ChatMessageProps) {
   const leda = m.from === 'leda';
   return (
     <article aria-label={`${m.name}${m.time ? `, ${m.time}` : ''}`} className="group/msg grid grid-cols-[28px_minmax(0,1fr)] gap-x-2.5 px-4 py-2 hover:bg-raised max-[640px]:hover:bg-transparent" aria-busy={m.thinking || undefined}>
@@ -569,7 +642,7 @@ export function ChatMessage({ message: m, initials, ...handlers }: ChatMessagePr
             <LedaMark size={28} effect="aurora" active={!!m.thinking} decorative />
           </span>
         ) : (
-          <span aria-hidden className="grid h-7 w-7 place-items-center rounded-full bg-avatar-bg text-small font-semibold text-avatar-text">{initials ?? initialsFrom(m.name)}</span>
+          <span aria-hidden className="grid h-7 w-7 place-items-center rounded-full bg-avatar-bg text-[11px] font-semibold text-avatar-text">{initials ?? initialsFrom(m.name)}</span>
         )}
       </div>
       <div className="flex min-w-0 flex-col">
@@ -599,6 +672,8 @@ export interface ChatEmptyProps extends HTMLAttributes<HTMLDivElement> {
   onPick?: (chip: ChatChip) => void;
   /** The one explanatory line. */
   description?: string;
+  /** `workshop`: the workshop's spacing (24px sides, 16px title, 13px line, chips 14px below). */
+  layout?: 'default' | 'workshop';
 }
 
 /** Empty thread: 32px bare shard, "Ask Leda about {scope}", one line, this page's questions as chips. */
@@ -607,15 +682,17 @@ export function ChatEmpty({
   chips = [],
   onPick,
   description = 'She reads your platforms and answers here. When she drafts a change, you see exactly what it writes, and nothing is written until you confirm.',
+  layout = 'default',
   className,
   ...rest
 }: ChatEmptyProps) {
+  const ws = layout === 'workshop';
   return (
-    <div {...rest} className={cn(className, 'flex flex-col items-start gap-2 px-4 py-6')}>
+    <div {...rest} className={cn(className, 'flex flex-col items-start', ws ? 'px-6 pb-2 pt-7' : 'gap-2 px-4 py-6')}>
       <LedaMark size={32} decorative />
-      <h3 className="text-[15px] font-semibold leading-5 text-text">Ask Leda about {scope}</h3>
-      <p className="text-ui text-muted">{description}</p>
-      {chips.length > 0 && <ChatChips chips={chips} onPick={onPick} label={`Questions about ${scope}`} className="mt-1" />}
+      <h3 className={cn('font-semibold text-text', ws ? 'mt-3 text-dialog' : 'text-[15px] leading-5')}>Ask Leda about {scope}</h3>
+      <p className={cn('text-ui text-muted', ws && 'mt-1 leading-[19px]')}>{description}</p>
+      {chips.length > 0 && <ChatChips chips={chips} onPick={onPick} label={`Questions about ${scope}`} className={ws ? 'mt-3.5' : 'mt-1'} />}
     </div>
   );
 }
@@ -635,6 +712,8 @@ export interface ChatComposerProps extends Omit<HTMLAttributes<HTMLFormElement>,
   label?: string;
   maxLength?: number;
   placeholder?: string;
+  /** The workshop's composer: the box floats 12px in from the panel (8px on a phone) with no rule above it, the textarea is 14px with a faint placeholder, send is quiet until there is text. Default: ruled footer. */
+  layout?: 'default' | 'workshop';
 }
 
 /**
@@ -704,7 +783,8 @@ export const ChatComposer = forwardRef<HTMLTextAreaElement, ChatComposerProps>(f
             aria-disabled={blocked || undefined}
             aria-busy={busy || undefined}
             className={cn(
-              'inline-grid h-8 w-8 shrink-0 place-items-center rounded-control bg-accent text-accent-ink transition-colors duration-hover hover:bg-accent-hover motion-reduce:transition-none max-[640px]:h-10 max-[640px]:w-10',
+              'inline-grid h-8 w-8 shrink-0 place-items-center rounded-control transition-colors duration-hover motion-reduce:transition-none max-[640px]:h-10 max-[640px]:w-10',
+              blocked ? 'cursor-default bg-raised-2 text-faint' : 'bg-accent text-accent-ink hover:bg-accent-hover',
               'forced-colors:border forced-colors:border-[ButtonText]',
               blocked && 'cursor-default bg-raised-2 text-faint hover:bg-raised-2',
               focusRing,

@@ -142,8 +142,9 @@ const preset = {
         'town-flow-b': { from: { strokeDashoffset: '13' }, to: { strokeDashoffset: '40' } },
         // Ask Leda halo (RDY-266, handover 4.7): one revolution + an opacity envelope; the reduced-motion fade has no rotation.
         'halo-spin': { from: { transform: 'translate(-50%, -50%) rotate(0deg)' }, to: { transform: 'translate(-50%, -50%) rotate(360deg)' } },
-        'halo-fade': { '0%': { opacity: '0' }, '18%, 70%': { opacity: 'var(--halo-peak, 1)' }, '100%': { opacity: '0' } },
-        'halo-fade-reduced': { '0%': { opacity: '0' }, '50%': { opacity: '1' }, '100%': { opacity: '0' } },
+        'halo-fade': { '0%': { opacity: '0' }, '18%, 72%': { opacity: 'var(--halo-peak, 1)' }, '100%': { opacity: '0' } },
+        'halo-glow': { '0%': { opacity: '0' }, '22%, 66%': { opacity: 'var(--halo-peak, 1)' }, '100%': { opacity: '0' } },
+        'halo-fade-reduced': { '0%': { opacity: '0' }, '18%, 72%': { opacity: '1' }, '100%': { opacity: '0' } },
       },
       animation: {
         'row-flash': 'row-flash var(--dur-row-flash) ease-out 1',
@@ -163,7 +164,8 @@ const preset = {
         'town-flow-b-slow': 'town-flow-b 5s linear infinite',
         'halo-spin': 'halo-spin var(--dur-halo) var(--ease-halo) 1 both',
         'halo-fade': 'halo-fade var(--dur-halo) var(--ease-halo) 1 both',
-        'halo-fade-reduced': 'halo-fade-reduced var(--dur-halo-reduced) ease-in-out 1 both',
+        'halo-glow': 'halo-glow var(--dur-halo) var(--ease-halo) 1 both',
+        'halo-fade-reduced': 'halo-fade-reduced var(--dur-halo-reduced) linear 1 both',
       },
       transitionTimingFunction: { subpage: v('ease-subpage'), halo: v('ease-halo') },
       transitionDuration: { hover: v('dur-hover'), 'hover-slow': v('dur-hover-slow'), tab: v('dur-tab'), 'subpage-in': v('dur-subpage-in'), 'subpage-out': v('dur-subpage-out') },

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Home } from './Home';
 import { clearToasts } from '../components/toast/toastStore';
@@ -41,7 +41,7 @@ describe('Home', () => {
     vi.useFakeTimers();
     render(<Home />);
     fireEvent.click(screen.getByRole('button', { name: 'Order alternator' }));
-    const confirm = screen.getAllByRole('button', { name: 'Order alternator' }).find((b) => b.closest('[data-state]'))!;
+    const confirm = screen.getByRole('button', { name: /^Confirm rush PO/ });
     expect(document.activeElement).toBe(confirm);
     expect(queue().getAllByRole('listitem')).toHaveLength(4);
     fireEvent.click(confirm);
@@ -49,12 +49,20 @@ describe('Home', () => {
       await vi.advanceTimersByTimeAsync(900);
     });
     expect(queue().getAllByRole('listitem')).toHaveLength(3);
-    // the pressed button is gone: focus is on the result line, never on <body>
-    expect(document.activeElement).not.toBe(document.body);
-    expect(document.activeElement?.closest('[data-state="done"]')).toBeTruthy();
-    // next: focus moves to the next case's heading
-    fireEvent.click(screen.getByRole('button', { name: /Next: Oil filters/ }));
+    // the workshop moves on by itself to the next decision in the same tab, focus on its heading
+    expect(screen.queryByRole('button', { name: /Next: / })).toBeNull();
     expect(document.activeElement).toBe(screen.getByRole('heading', { level: 2, name: /Oil filters at 4/ }));
+    expect(screen.getAllByRole('tab', { name: /Oil filters at 4/ })).toHaveLength(1);
+    expect(screen.queryByRole('tab', { name: /alternator/i })).toBeNull();
+  });
+
+  it('picking a platform on the map opens its tab with the platform page; picking it again closes the tab', () => {
+    render(<Home />);
+    fireEvent.click(screen.getByRole('button', { name: /^Dela Cruz Auto Works/ }));
+    expect(screen.getByRole('tab', { name: /Auto Works/ })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 3, name: 'Linked platforms' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /^Dela Cruz Auto Works/ }));
+    expect(screen.queryByRole('tab', { name: /Auto Works/ })).toBeNull();
   });
 
   it('snoozing a case moves it to Snoozed and puts focus on the sheet, not body', async () => {
@@ -66,6 +74,14 @@ describe('Home', () => {
     await user.click(await screen.findByRole('menuitem', { name: /Later today/ }));
     expect(queue().getAllByRole('listitem')).toHaveLength(3);
     expect(document.activeElement).toBe(screen.getByRole('heading', { level: 2, name: 'Today' }));
+  });
+
+  it('a watched case also offers Snooze on desktop, as the workshop case does', () => {
+    render(<Home />);
+    const group = screen.getByRole('button', { name: /Leda is watching/ });
+    if (group.getAttribute('aria-expanded') !== 'true') fireEvent.click(group);
+    fireEvent.click(screen.getByText('Estimate ₱14,800 waiting since Tuesday'));
+    expect(screen.getByRole('button', { name: 'Snooze' })).toBeTruthy();
   });
 
   it('closing the last tab shows the overview and focuses its greeting', () => {
@@ -80,7 +96,7 @@ describe('Home', () => {
   it('quiet: opens on the overview, says nothing needs you, shows next and yesterday', () => {
     render(<Home state="quiet" />);
     expect(screen.getByText(/Both platforms are running\. Nothing needs you right now\./)).toBeTruthy();
-    expect(screen.getByText(/Next: PO-0221/)).toBeTruthy();
+    expect(screen.getByText(/Next: Banawe delivery/)).toBeTruthy();
     expect(screen.getByRole('heading', { name: /Yesterday/ })).toBeTruthy();
     expect(screen.queryByRole('tab')).toBeNull();
   });
@@ -94,5 +110,16 @@ describe('Home', () => {
     cleanup();
     render(<Home set="many" />);
     expect(screen.getAllByRole('heading', { level: 3 }).length).toBeGreaterThanOrEqual(8);
+  });
+
+  it('Escape from Leda returns focus to the Ask bar when the opener was body, not to body', async () => {
+    render(<Home />);
+    (document.activeElement as HTMLElement | null)?.blur();
+    const bar = screen.getAllByRole('button').find((b) => /^Ask Leda/.test(b.textContent ?? '')) as HTMLElement;
+    fireEvent.click(bar);
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.keyDown(dialog, { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await waitFor(() => expect(document.activeElement).toBe(bar));
   });
 });

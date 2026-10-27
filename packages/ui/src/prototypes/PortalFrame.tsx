@@ -121,7 +121,7 @@ export function PortalFrame({ current, pageName, leda, topBar, hidePhoneNav = fa
       />
     </div>
   );
-  return <PlatformShell {...shell} rail={rail} railLabel="Portal" topBar={bar} phoneNav={hidePhoneNav ? undefined : phoneNav} phoneNavLabel="Portal">{children}</PlatformShell>;
+  return <PlatformShell {...shell} rail={rail} railLabel="Portal" topBar={bar} phoneNav={hidePhoneNav || shell.detail ? undefined : phoneNav} phoneNavLabel="Portal">{children}</PlatformShell>;
 }
 
 /**

@@ -9,11 +9,10 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { CaretDown, CaretRight, Check, CheckCircle, FunnelSimple, X } from '@phosphor-icons/react';
+import { CaretDown, CaretRight, Check, CheckCircle, WarningCircle, X } from '@phosphor-icons/react';
 import { cn, focusRing } from '../utils/cn';
 import { Button } from './Button';
 import { EmptyState } from './EmptyState';
-import { ErrorBlock } from './ErrorBlock';
 import { LedaMark } from './Leda';
 import { useListCursor } from './List';
 import { Menu, type MenuItem } from './Menu';
@@ -47,8 +46,10 @@ interface QueueBase {
 
 /** One decision waiting for the owner. */
 export interface QueueItem extends QueueBase {
-  /** Due time, drawn right-aligned and never wrapped: "9:45", "Today 17:00". */
-  due: string;
+  /** Due time, drawn right-aligned and never wrapped: "9:45", "Today 17:00". Omit when the item has none (the row then shows no time). */
+  due?: string;
+  /** Colour of the row's dot: `urgent` (red), `soon` (amber, due today), none (grey). Defaults to `urgent` when `urgent` is set. */
+  severity?: 'urgent' | 'soon';
   /** Due soon: the time reads in the bad tone (and is announced as urgent). */
   urgent?: boolean;
   /** One line under the title. */
@@ -91,6 +92,14 @@ export interface QueueProps {
   onFilterChange?: (platformId: string | null) => void;
   /** Heading text. Default "Needs you". */
   title?: string;
+  /** Leaves out the "Nothing open" empty state (a quiet day that still lists what Leda is watching). */
+  hideEmpty?: boolean;
+  /** Drops the rule above the pinned groups (the content above brings its own). */
+  flushGroups?: boolean;
+  /** Phone page: the groups follow the list 10px under it with no rule above and nothing below (the content under them brings its own rule). */
+  tightGroups?: boolean;
+  /** A line after the groups (a quiet day's "Next: ..." on a phone). */
+  footer?: ReactNode;
   /** Heading level of the title (pinned groups sit one level below). Default 1. */
   headingLevel?: 1 | 2;
   /** Leda's one-line summary. Defaults to "4 decisions. First: …". */
@@ -126,15 +135,17 @@ export interface QueueProps {
 const EDITABLE = 'input,textarea,select,[contenteditable]:not([contenteditable="false"])';
 const INTERACTIVE = 'button,a[href],input,select,textarea,summary,[role="button"],[role="menuitem"],[role="menuitemradio"],[role="switch"],[role="checkbox"],[role="combobox"]';
 
-const logo = (p: QueuePlatform) => (
-  <PlatformLogo decorative name={p.name} src={p.src} index={p.index} color={p.color} hq={p.hq} initials={p.initials} size={16} />
+const logo = (p: QueuePlatform, size: 16 | 18 = 16) => (
+  <PlatformLogo decorative name={p.name} src={p.src} index={p.index} color={p.color} hq={p.hq} initials={p.initials} size={size} />
 );
 const sourceOf = (x: QueueBase) => x.source ?? x.platform.name;
 
 /** Row surface: no hairline, 8px apart; hover on --frame-hover, the cursor row lifts to --surface with a border. */
 const rowSurface =
-  'relative rounded-card border border-transparent px-3 py-2.5 transition-colors duration-hover motion-reduce:transition-none ' +
+  'relative rounded-card border border-transparent pb-[11px] pl-7 pr-3 pt-2.5 transition-colors duration-hover motion-reduce:transition-none ' +
   'hover:bg-frame-hover data-[current=true]:border-border data-[current=true]:bg-surface ' +
+  // Phone: a flat row on the surface, 44px tall at least, the dot a little further in.
+  'max-[640px]:min-h-11 max-[640px]:rounded-none max-[640px]:border-0 max-[640px]:py-3 max-[640px]:pl-8 max-[640px]:pr-4 max-[640px]:hover:bg-raised max-[640px]:data-[current=true]:bg-transparent ' +
   // Forced colors paint transparent borders: hide them on plain rows, mark the cursor row with Highlight.
   'forced-colors:border-[Canvas] forced-colors:data-[current=true]:border-[Highlight]';
 
@@ -188,35 +199,55 @@ function Row({ data, onOpen, onHover, moveCursor, children, inert = false, curre
 }
 
 /** Logo + name, with something right-aligned. */
-function Source({ data, end }: { data: QueueBase; end?: ReactNode }) {
+function Source({ data, end, size = 18 }: { data: QueueBase; end?: ReactNode; size?: 16 | 18 }) {
   return (
-    <div className="flex items-center gap-2 text-small text-muted">
-      {logo(data.platform)}
-      <span className="min-w-0 font-semibold text-text [overflow-wrap:anywhere]">{sourceOf(data)}</span>
-      {end ? <span className="ml-auto shrink-0 whitespace-nowrap pl-2">{end}</span> : null}
+    <div className="flex items-center gap-[7px] text-small leading-[18px] text-muted">
+      {logo(data.platform, size)}
+      <span className="min-w-0 truncate font-semibold text-text">{sourceOf(data)}</span>
+      {end ? <span className="ml-auto shrink-0 whitespace-nowrap leading-4">{end}</span> : null}
     </div>
   );
 }
+
+type Dot = 'urgent' | 'soon' | 'watch' | 'none';
+const dotCls: Record<Dot, string> = {
+  urgent: 'bg-bad-dot',
+  soon: 'bg-warn-dot',
+  watch: 'border-[1.5px] border-warn-dot',
+  none: 'bg-control',
+};
+/** The row's status dot (decorative: the due time and the button say the same in words). */
+const SeverityDot = ({ kind }: { kind: Dot }) => (
+  <span aria-hidden="true" className={cn('absolute left-3 top-4 size-[7px] rounded-full forced-colors:bg-[CanvasText] max-[640px]:left-4 max-[640px]:top-[17px]', dotCls[kind])} />
+);
 
 function OpenItem({ item, current, onOpen, onAction, onHover, moveCursor }: { item: QueueItem; current: boolean } & Pick<QueueProps, 'onOpen' | 'onAction'> & { onHover?: (id: string | null) => void; moveCursor: (id: string) => void }) {
   const titleId = useId();
   return (
     <Row data={item} current={current} onOpen={onOpen} onHover={onHover} moveCursor={moveCursor}>
+      <SeverityDot kind={item.severity ?? (item.urgent ? 'urgent' : 'none')} />
       <Source
         data={item}
         end={
-          <span className={cn('tabular-nums', item.urgent && 'font-medium text-bad')}>
-            {item.urgent ? <span className="sr-only">Urgent, due </span> : <span className="sr-only">Due </span>}
-            {item.due}
-          </span>
+          item.due ? (
+            <span className={cn('tabular-nums', item.urgent && 'font-medium text-bad')}>
+              {item.urgent ? <span className="sr-only">Urgent, due </span> : <span className="sr-only">Due </span>}
+              {item.due}
+            </span>
+          ) : undefined
         }
       />
-      <p id={titleId} className="mt-1 text-body font-semibold text-text [overflow-wrap:anywhere]">
+      <p id={titleId} className="m-0 mt-[3px] text-body font-semibold leading-5 text-text [overflow-wrap:anywhere]">
         {item.title}
       </p>
-      <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-2">
-        {item.detail ? <p className="min-w-0 flex-1 basis-40 text-ui text-muted [overflow-wrap:anywhere]">{item.detail}</p> : <span className="flex-1" />}
-        <Button variant={current ? 'primary' : 'secondary'} aria-describedby={titleId} onClick={() => onAction?.(item.id)} className="ml-auto h-auto min-h-[var(--ctl-button)] max-w-full whitespace-normal py-1 text-left [overflow-wrap:anywhere]">
+      <div className="mt-0.5 flex items-center gap-2.5 text-ui leading-[18px] text-muted">
+        {item.detail ? <p className="m-0 min-w-0 flex-1 [overflow-wrap:anywhere] max-[640px]:whitespace-normal">{item.detail}</p> : <span className="flex-1" />}
+        <Button
+          variant={current ? 'primary' : 'secondary'}
+          aria-describedby={titleId}
+          onClick={() => onAction?.(item.id)}
+          className="ml-auto !h-7 !min-h-0 max-w-full shrink-0 whitespace-normal !px-2.5 !py-0 !text-small text-left max-[960px]:!px-2 max-[640px]:!h-9 max-[640px]:!px-3 max-[640px]:!text-ui"
+        >
           {item.action}
         </Button>
       </div>
@@ -252,13 +283,12 @@ function PinnedGroup({
           aria-controls={`${uid}-b`}
           onClick={onToggle}
           className={cn(
-            'flex h-9 w-full items-center gap-2 rounded-card px-3 text-left text-ui text-muted transition-colors duration-hover hover:bg-frame-hover hover:text-text motion-reduce:transition-none max-[640px]:min-h-11',
+            'flex h-9 w-full items-center gap-2 rounded-card px-3 text-left text-ui text-muted transition-colors duration-hover hover:bg-frame-hover hover:text-text motion-reduce:transition-none max-[640px]:h-11 max-[640px]:rounded-none max-[640px]:px-4',
             focusRing,
           )}
         >
           <CaretRight
             size={12}
-            weight="bold"
             aria-hidden
             className={cn('shrink-0 transition-transform duration-150 motion-reduce:transition-none', open && 'rotate-90')}
           />
@@ -298,6 +328,10 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
     defaultFilter = null,
     onFilterChange,
     title = 'Needs you',
+    hideEmpty = false,
+    flushGroups = false,
+    tightGroups = false,
+    footer,
     headingLevel = 1,
     headline,
     loading = false,
@@ -452,60 +486,63 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
     >
       {/* Layout lives on this inner box so a caller's className cannot change the column. */}
       <div className="flex h-full min-h-0 min-w-0 flex-col text-text">
-        <header className="shrink-0 px-3 pb-2">
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <header className="shrink-0 pb-2.5 pl-3 pr-1 pt-3 max-[640px]:px-4 max-[640px]:pb-3 max-[640px]:pt-4">
+          <div className="flex items-center gap-x-2.5">
             <Title className="m-0 text-title text-text">{title}</Title>
             {!loading && count > 0 ? (
-              <span className="inline-flex h-6 min-w-[26px] items-center justify-center rounded-control bg-accent px-1.5 text-body font-semibold tabular-nums text-accent-ink">
+              <span className="inline-flex h-6 min-w-[26px] shrink-0 items-center justify-center rounded-control bg-accent px-[7px] text-body font-semibold tabular-nums text-accent-ink">
                 {count}
                 <span className="sr-only"> open</span>
               </span>
             ) : null}
-            <div className="ml-auto flex min-w-0 items-center gap-1">
-              <Menu
-                align="end"
-                trigger={
+            <div className="ml-auto flex shrink-0 items-center gap-1">
+              {filterPlatform ? (
+                <span className="inline-flex h-7 w-max max-w-full items-center gap-1.5 rounded-chip bg-frame-active py-[3px] pl-2 pr-1 text-ui text-text">
+                  <span className="inline-flex min-w-0 items-center gap-1.5">
+                    {logo(filterPlatform)}
+                    <span className="min-w-0 whitespace-nowrap">{`${filterPlatform.hq ? `${filterPlatform.name} · team and plan` : filterPlatform.name} only`}</span>
+                  </span>
                   <button
                     type="button"
+                    aria-label="Show all platforms"
+                    title="Show all platforms"
+                    onClick={() => setFilter(null)}
                     className={cn(
-                      'inline-flex h-8 min-w-0 items-center gap-1.5 rounded-control px-2 text-ui font-medium text-text transition-colors duration-hover hover:bg-frame-hover motion-reduce:transition-none max-[640px]:min-h-11',
-                      filterPlatform && 'bg-accent-tint hover:bg-accent-tint-2',
+                      'grid size-5 shrink-0 place-items-center rounded-[3px] text-muted transition-colors duration-hover hover:bg-frame-hover hover:text-text motion-reduce:transition-none',
                       focusRing,
                     )}
                   >
-                    {filterPlatform ? logo(filterPlatform) : <FunnelSimple size={14} aria-hidden className="shrink-0 text-muted" />}
-                    <span className="min-w-0 [overflow-wrap:anywhere]">
-                      {filterPlatform ? `${filterPlatform.hq ? `${filterPlatform.name} · team and plan` : filterPlatform.name} only` : 'All platforms'}
-                    </span>
-                    <span className="sr-only">, filter by platform</span>
-                    <CaretDown size={12} weight="bold" aria-hidden className="shrink-0 text-muted" />
+                    <X size={12} aria-hidden />
                   </button>
-                }
-                items={filterItems}
-              />
-              {filterPlatform ? (
-                <button
-                  type="button"
-                  aria-label="Show all platforms"
-                  title="Show all platforms"
-                  onClick={() => setFilter(null)}
-                  className={cn(
-                    'grid h-8 w-8 shrink-0 place-items-center rounded-control text-muted transition-colors duration-hover hover:bg-frame-hover hover:text-text motion-reduce:transition-none max-[640px]:h-11 max-[640px]:w-11',
-                    focusRing,
-                  )}
-                >
-                  <X size={14} aria-hidden />
-                </button>
-              ) : null}
+                </span>
+              ) : (
+                <Menu
+                  align="end"
+                  trigger={
+                    <button
+                      type="button"
+                      className={cn(
+                        'inline-flex h-7 min-w-0 items-center gap-1.5 rounded-control px-2 text-ui font-normal text-muted transition-colors duration-hover hover:bg-frame-hover hover:text-text motion-reduce:transition-none aria-expanded:bg-frame-hover aria-expanded:text-text max-[640px]:h-9',
+                        focusRing,
+                      )}
+                    >
+                      <span className="min-w-0 [overflow-wrap:anywhere]">All platforms</span>
+                      <span className="sr-only">, filter by platform</span>
+                      <CaretDown size={12} aria-hidden className="shrink-0" />
+                    </button>
+                  }
+                  items={filterItems}
+                />
+              )}
             </div>
           </div>
-          <p className="m-0 mt-2 flex items-start gap-2 text-ui text-muted">
-            <span className="mt-px shrink-0">
+          <p className="m-0 mt-1.5 flex items-start gap-2 text-body leading-5 text-text">
+            <span className="mt-0.5 shrink-0">
               <LedaMark size={16} decorative />
             </span>
             <span className="min-w-0 [overflow-wrap:anywhere]">{loading ? 'Looking at your platforms…' : summary}</span>
           </p>
-          {belowHeadline ? <div className="mt-2">{belowHeadline}</div> : null}
+          {belowHeadline ? <div className="mt-3">{belowHeadline}</div> : null}
         </header>
 
         <div
@@ -515,15 +552,30 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
           data-more={more ? 'true' : undefined}
           className={cn(
             // While loading the skeletons are not focusable, so the box must not scroll (axe scrollable-region-focusable).
-            'min-h-0 flex-initial overscroll-contain scroll-pb-8 px-0 py-1',
+            'min-h-0 flex-initial overscroll-contain scroll-pb-8 px-0 pt-0',
+            hideEmpty && isEmpty ? 'pb-3' : tightGroups ? (hasPinned ? 'pb-1.5' : 'pb-0') : 'pb-3',
             loading ? 'overflow-hidden' : 'overflow-y-auto',
             'data-[more=true]:[mask-image:linear-gradient(to_bottom,#000_calc(100%-28px),transparent)]',
           )}
         >
           {vErrors.length ? (
-            <div className="mb-2 flex flex-col gap-2 px-3">
+            <div className="flex flex-col">
               {vErrors.map((e) => (
-                <ErrorBlock key={e.platform.id} thing={`${e.platform.name} items`} lastLoaded={e.lastLoaded} retrying={e.retrying} retryLabel={retryLabel} onRetry={onRetry ? () => onRetry(e.platform.id) : undefined} />
+                <p
+                  key={e.platform.id}
+                  role="alert"
+                  className="m-0 mb-2.5 ml-3 mr-1 flex items-center gap-2 rounded-card bg-surface px-2.5 py-2 text-small leading-4 text-text max-[640px]:mx-4 max-[640px]:bg-raised"
+                >
+                  <WarningCircle size={14} aria-hidden className="shrink-0 text-bad" />
+                  <span className="min-w-0">
+                    {e.platform.name} didn’t load{e.lastLoaded ? ` · last good ${e.lastLoaded}` : ''}
+                  </span>
+                  {onRetry ? (
+                    <button type="button" disabled={e.retrying} onClick={() => onRetry(e.platform.id)} className={cn('ml-auto shrink-0 rounded-chip font-medium text-text underline', focusRing)}>
+                      {retryLabel ?? 'Try again'}
+                    </button>
+                  ) : null}
+                </p>
               ))}
             </div>
           ) : null}
@@ -542,7 +594,7 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
               ))}
             </div>
           ) : isEmpty ? (
-            vErrors.length ? null : (
+            vErrors.length || hideEmpty ? null : (
               <EmptyState
                 align="start"
                 icon={CheckCircle}
@@ -568,15 +620,16 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
         </div>
 
         {hasPinned ? (
-          <div className="flex max-h-[45%] shrink-0 flex-col gap-0.5 overflow-y-auto overscroll-contain border-t border-rule pb-2.5 pt-1">
+          <div className={cn('flex max-h-[45%] shrink-0 flex-col gap-2.5 overflow-y-auto overscroll-contain', hideEmpty && isEmpty && !flushGroups && !tightGroups ? 'pt-[5px]' : 'pt-1', tightGroups ? 'pb-0' : 'pb-2.5', !flushGroups && !tightGroups && !(hideEmpty && isEmpty) && 'border-t border-rule')}>
             {vWatching.length ? (
               <PinnedGroup kind="watching" count={vWatching.length} level={pinnedLevel} open={open.has('watching')} onToggle={() => toggle('watching')}>
-                <ul className="m-0 flex list-none flex-col gap-1 p-0 pb-1">
+                <ul className="m-0 flex list-none flex-col gap-2 p-0 pb-1">
                   {vWatching.map((w) => (
-                    <Row key={w.id} data={w} current={current === w.id} {...rowProps}>
+                    <Row key={w.id} data={w} current={current === w.id} className="pb-[9px] pt-2" {...rowProps}>
+                      <SeverityDot kind="watch" />
                       <Source data={w} />
-                      <p className="mt-0.5 text-ui font-medium text-text [overflow-wrap:anywhere]">{w.title}</p>
-                      {w.detail ? <p className="text-ui text-muted [overflow-wrap:anywhere]">{w.detail}</p> : null}
+                      <p className="m-0 mt-[3px] text-body font-medium leading-5 text-text [overflow-wrap:anywhere]">{w.title}</p>
+                      {w.detail ? <p className="m-0 mt-0.5 text-ui leading-[18px] text-muted [overflow-wrap:anywhere]">{w.detail}</p> : null}
                     </Row>
                   ))}
                 </ul>
@@ -586,10 +639,11 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
               <PinnedGroup kind="snoozed" count={vSnoozed.length} level={pinnedLevel} open={open.has('snoozed')} onToggle={() => toggle('snoozed')}>
                 <ul className="m-0 flex list-none flex-col gap-1 p-0 pb-1">
                   {vSnoozed.map((s) => (
-                    <Row key={s.id} data={s} current={current === s.id} {...rowProps}>
+                    <Row key={s.id} data={s} current={current === s.id} className="pb-[9px] pt-2" {...rowProps}>
+                      <SeverityDot kind="none" />
                       <Source data={s} end={<span className="sr-only">Snoozed</span>} />
-                      <p className="mt-0.5 text-ui font-medium text-text [overflow-wrap:anywhere]">{s.title}</p>
-                      <p className="text-ui text-muted [overflow-wrap:anywhere]">Snoozed · {s.until}</p>
+                      <p className="m-0 mt-[3px] text-body font-medium leading-5 text-text [overflow-wrap:anywhere]">{s.title}</p>
+                      <p className="m-0 mt-0.5 text-ui leading-[18px] text-muted [overflow-wrap:anywhere]">Snoozed · {s.until}</p>
                     </Row>
                   ))}
                 </ul>
@@ -599,10 +653,10 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
               <PinnedGroup kind="done" count={vDone.length} level={pinnedLevel} open={open.has('done')} onToggle={() => toggle('done')}>
                 <ul className="m-0 flex list-none flex-col gap-1 p-0 pb-1">
                   {vDone.map((d) => (
-                    <Row key={d.id} data={d} inert current={false} {...rowProps}>
-                      <Source data={d} end={<span className="tabular-nums">{d.at}</span>} />
-                      <p className="mt-0.5 flex items-start gap-1.5 text-ui text-muted">
-                        <Check size={12} weight="bold" aria-hidden className="mt-1 shrink-0 text-ok" />
+                    <Row key={d.id} data={d} inert current={false} className="pb-[9px] pt-2" {...rowProps}>
+                      <Check size={13} aria-hidden className="absolute left-2 top-2.5 text-ok max-[640px]:left-[13px] max-[640px]:top-3.5" />
+                      <Source data={d} size={16} end={<span className="tabular-nums">{d.at}</span>} />
+                      <p className="m-0 mt-[3px] text-ui leading-[18px] text-muted">
                         <span className="line-clamp-2 min-w-0 [overflow-wrap:anywhere]">
                           <span className="sr-only">Done: </span>
                           {d.title}
@@ -615,6 +669,7 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
             ) : null}
           </div>
         ) : null}
+        {footer ? <p className="m-0 shrink-0 px-3 pb-4 pt-3 text-body font-medium text-text">{footer}</p> : null}
 
         {shortcuts ? (
           <span role="status" aria-live="polite" className="sr-only">

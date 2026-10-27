@@ -40,7 +40,7 @@ export const FactsLine = forwardRef<HTMLUListElement, FactsLineProps>(function F
 ) {
   return (
     <div className={cn('overflow-hidden', className)}>
-      <ul ref={ref} className="-ml-[23px] flex list-none flex-wrap p-0 text-ui leading-5 text-muted" {...rest}>
+      <ul ref={ref} className="-ml-[23px] flex list-none flex-wrap gap-y-1 p-0 text-ui leading-5 text-muted" {...rest}>
         {children}
       </ul>
     </div>
@@ -52,10 +52,10 @@ export const Fact = forwardRef<HTMLLIElement, FactProps>(function Fact(
   { tone = 'default', value, valueFirst = false, className, children, ...rest },
   ref,
 ) {
-  const v = value != null && <strong className={cn('font-semibold', valueTone[tone])}>{value}</strong>;
+  const v = value != null && <strong className={cn('font-semibold', valueFirst && 'mr-[2.75px]', valueTone[tone])}>{value}</strong>;
   return (
     <li ref={ref} className={cn('relative min-w-0 pl-[23px] [overflow-wrap:anywhere]', className)} {...rest}>
-      <span aria-hidden className="absolute left-[10px] top-1/2 h-[3px] -translate-y-1/2 w-[3px] rounded-full bg-faint" />
+      <span aria-hidden className="absolute left-[10px] top-1/2 h-[3px] -translate-y-1/2 w-[3px] rounded-full bg-control" />
       {valueFirst && v}
       {valueFirst && children != null && ' '}
       {children}

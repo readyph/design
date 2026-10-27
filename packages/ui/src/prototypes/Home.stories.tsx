@@ -38,4 +38,10 @@ export const FewPlatformsQuiet: Story = { args: { set: 'few', state: 'quiet' } }
 /** Leda's conversation panel open on load (scope "About all your platforms"). */
 export const ConversationOpen: Story = { args: { set: 'live', state: 'live', startChat: true } };
 /** At 375 and 320 (phone: map strip, Leda bar, items; a row pushes to the case). */
+/** The map filtered to HQ (team and plan): Today shows only the HQ block. */
+export const HqFilter: Story = { args: { set: 'live', state: 'live', filter: 'hq' } };
+
+/** The map filtered to one platform: Today shows its block with four rows per list. */
+export const PlatformFilter: Story = { args: { set: 'live', state: 'live', filter: 'stockroom' } };
+
 export const Phone: Story = { args: { set: 'live', state: 'live' }, parameters: { viewport: { defaultViewport: 'mobile1' } } };

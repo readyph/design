@@ -170,3 +170,25 @@ describe('Chat', () => {
     expect(renderHook(() => usePersistedChat<string[]>(['x'])).result.current[0]).toEqual(['x']);
   });
 });
+
+describe('workshop layouts (RDY-359)', () => {
+  it('inline header keeps the New conversation name and the close button; axe clean', async () => {
+    const { container } = render(<ChatHeader layout="inline" onNewConversation={() => {}} onClose={() => {}} />);
+    expect(screen.getByRole('button', { name: 'New conversation' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Close Leda' })).toBeTruthy();
+    await check(container);
+  });
+  it('workshop message puts the scope chip under what was said', () => {
+    const m = { id: 'a', from: 'owner' as const, name: 'Ramon Dela Cruz', time: '9:12 AM', scope: 'About all your platforms', blocks: [{ type: 'text' as const, text: 'How are sales?' }] };
+    render(<ChatMessage message={m} layout="workshop" />);
+    const text = screen.getByText('How are sales?');
+    const chip = screen.getByText('About all your platforms');
+    expect(text.compareDocumentPosition(chip) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+  it('workshop composer sends on Enter and labels the field', () => {
+    const onSend = vi.fn();
+    render(<ChatComposer layout="workshop" label="Message Leda" placeholder="Reply to Leda" value="hi" onChange={() => {}} onSend={onSend} scope="About all" />);
+    fireEvent.keyDown(screen.getByLabelText('Message Leda'), { key: 'Enter' });
+    expect(onSend).toHaveBeenCalledWith('hi');
+  });
+});

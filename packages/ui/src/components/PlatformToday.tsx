@@ -32,6 +32,10 @@ export interface TodayItem {
   id: string;
   /** Short reference ("JO-0412"). Muted, before the title. */
   ref?: string;
+  /** Draw the reference in the text font, not monospace (a date such as "Wed 21 Oct"). */
+  refPlain?: boolean;
+  /** Narrow layout only: leave the reference out of the title line (the Home team pane, where the workshop hides it). */
+  hideRefNarrow?: boolean;
   title: ReactNode;
   /** One quiet line under the title. Wraps. */
   detail?: ReactNode;
@@ -84,6 +88,8 @@ export interface PlatformTodayProps extends Omit<HTMLAttributes<HTMLElement>, 't
   kind?: string;
   /** Short facts: up to 3 are shown, as `value label`. */
   facts?: TodayFact[];
+  /** A platform that is not running: its state pill first in the facts line ("DEGRADED since 7:40"). */
+  status?: { label: string; tone: BadgeTone; since?: string };
   /** Quiet words in place of facts when there are none ("Paused since 8:10 AM"). */
   note?: ReactNode;
   /** "Leda acts here" / "Leda reads only" / "Leda can't read while offline". Omit to say nothing. */
@@ -93,6 +99,8 @@ export interface PlatformTodayProps extends Omit<HTMLAttributes<HTMLElement>, 't
   activity?: TodayActivity[];
   /** Rows per list. Default 3; give 2 on a narrow sheet or with 4+ platforms. */
   maxRows?: number;
+  /** Small muted text at the right end of the header, before the Open button (the HQ block's "1 in Needs you"). */
+  headerNote?: ReactNode;
   /** Opens the platform. Draws an "Open" button in the header (its label folds away in a narrow block). */
   onOpen?: () => void;
   /** Extra content after the lists, e.g. the plan bar in the HQ block. */
@@ -119,6 +127,8 @@ export interface PlatformTodayProps extends Omit<HTMLAttributes<HTMLElement>, 't
    * list), and a Today block is a side panel. Turn on only when this block is the page's main list.
    */
   shortcuts?: boolean;
+  /** Lists only: no header and no facts line, for a page that draws its own (the Home platform tab). Needs `aria-label`. */
+  bare?: boolean;
 }
 
 /**
@@ -137,12 +147,13 @@ export function pickTodayRows<T extends { tone?: string }>(items: readonly T[], 
 
 const SHOWN_FACTS = 3;
 
-function LedaFact({ mode }: { mode: TodayLedaMode }) {
+/** The "Leda acts here" fact; also used by Home's overview. */
+export function LedaFact({ mode, wide = false }: { mode: TodayLedaMode; wide?: boolean }) {
   const Icon = mode === 'acts' ? CheckCircle : mode === 'reads' ? Eye : Prohibit;
-  const text = mode === 'acts' ? 'Leda acts here' : mode === 'reads' ? 'Leda reads only' : "Leda can't read while offline";
+  const text = mode === 'acts' ? 'Leda acts here' : mode === 'reads' ? (wide ? 'Leda reads only, can’t act here yet' : 'Leda reads only') : "Leda can't read while offline";
   return (
-    <Fact className={cn(mode === 'acts' ? 'text-ok-ink' : 'text-muted')}>
-      <span className="inline-flex items-baseline gap-1">
+    <Fact className={cn(mode === 'acts' ? 'text-ok' : 'text-muted')}>
+      <span className="inline-flex items-baseline gap-1.5">
         <Icon aria-hidden size={14} className="shrink-0 translate-y-[2px]" />
         {text}
       </span>
@@ -189,11 +200,11 @@ function Row({ item, platform, label, layout, flash }: { item: TodayItem; platfo
   const title = <span className="font-medium">{item.title}</span>;
   const hasMeta = Boolean(item.state || item.qty || item.at);
   return (
-    <ListRow rowId={`${platform}:${item.id}`} label={label} onActivate={item.onActivate} flash={flash} className="!py-[7px] gap-x-2.5 gap-y-0.5 text-ui" data-ref={item.ref}>
-      {wide ? <span className="overflow-hidden text-ellipsis whitespace-nowrap pt-px font-mono text-small text-muted">{item.ref}</span> : null}
+    <ListRow rowId={`${platform}:${item.id}`} label={label} onActivate={item.onActivate} flash={flash} className="-mx-1.5 border-x-[6px] pb-[7px] pt-2 gap-x-2.5 gap-y-0.5 text-ui leading-[18px] after:hidden before:pointer-events-none before:absolute before:-inset-x-1.5 before:top-0 before:h-px before:bg-rule before:content-['']" data-ref={item.ref}>
+      {wide ? <span className={cn('overflow-hidden text-ellipsis whitespace-nowrap pt-px text-small text-muted', !item.refPlain && 'font-mono')}>{item.ref}</span> : null}
       <div className="flex min-w-0 flex-col">
         <div>
-          {!wide && item.ref ? <span className="mr-1.5 whitespace-nowrap font-mono text-small text-muted">{item.ref}</span> : null}
+          {!wide && layout !== 'phone' && item.ref && !item.hideRefNarrow ? <span className="mr-1.5 whitespace-nowrap font-mono text-small text-muted">{item.ref}</span> : null}
           {item.onActivate ? (
             <button
               type="button"
@@ -206,16 +217,25 @@ function Row({ item, platform, label, layout, flash }: { item: TodayItem; platfo
             title
           )}
         </div>
-        {item.detail ? <div className="text-small text-muted">{item.detail}</div> : null}
+        {item.detail ? (
+          item.link && !item.link.text && item.link.onSelect ? (
+            <button type="button" onClick={item.link.onSelect} data-from={platform} title={`In ${item.link.platform.name}`} className={cn('m-0 cursor-pointer self-start border-0 bg-transparent p-0 text-left font-[inherit] text-small leading-[18px] text-muted hover:text-accent hover:underline hover:underline-offset-2', focusRing)}>
+              {item.detail}
+              <span className="sr-only"> in {item.link.platform.name}</span>
+            </button>
+          ) : (
+            <div className="text-small leading-[18px] text-muted">{item.detail}</div>
+          )
+        ) : null}
       </div>
       {hasMeta ? (
         <div className={cn('flex items-center gap-2 whitespace-nowrap', layout === 'narrow' && 'flex-wrap justify-start gap-y-0.5')}>
           {item.qty ? <b className="text-ui font-medium tabular-nums">{item.qty}</b> : null}
           {item.state ? <Badge tone={item.tone ?? 'neutral'}>{item.state}</Badge> : null}
-          {item.at ? <span className={cn('text-small tabular-nums text-muted', layout === 'wide' && 'min-w-[38px] text-right')}>{item.at}</span> : null}
+          {item.at ? <span className={cn('text-small leading-[18px] tabular-nums text-muted', layout === 'wide' && 'min-w-[38px] text-right')}>{item.at}</span> : null}
         </div>
       ) : wide || layout === 'phone' ? <span /> : null}
-      {item.link ? <Chip link={item.link} from={platform} layout={layout} /> : null}
+      {item.link && item.link.text ? <Chip link={item.link} from={platform} layout={layout} /> : null}
     </ListRow>
   );
 }
@@ -251,12 +271,14 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
     platform,
     kind,
     facts = [],
+    status,
     note,
     leda,
     lists = [],
     activity = [],
     maxRows = 3,
     onOpen,
+    headerNote,
     children,
     surface = 'frame',
     loading = false,
@@ -268,6 +290,7 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
     rowLayout = 'narrow',
     flashRow = null,
     shortcuts = false,
+    bare = false,
     className,
     ...rest
   },
@@ -277,7 +300,7 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
   const nameId = `${uid}-n`;
   const Heading = `h${level}` as 'h3';
   const shown = facts.slice(0, SHOWN_FACTS);
-  const hasFacts = shown.length > 0 || note != null || leda != null;
+  const hasFacts = shown.length > 0 || note != null || leda != null || status != null;
   const sub = (level + 1) as 3 | 4 | 5;
   const listLevel = Math.min(sub, 4) as 3 | 4;
 
@@ -296,7 +319,8 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
               title={l.title}
               count={l.total}
               level={listLevel}
-              className="[&>div:first-child]:gap-x-1 [&>div:first-child]:pb-1 [&>div:first-child]:pt-3.5 [&>div:first-child>*]:leading-5 [&>div:first-child>span]:text-ui"
+              listClassName="border-t-0"
+              className="[&>div:first-child]:gap-x-[7.25px] [&>div:first-child]:pb-1 [&>div:first-child]:pt-3.5 [&>div:first-child>*]:leading-5 [&>div:first-child>span]:text-ui"
             >
               {rows.map((it) => (
                 <Row key={flashRow && it.ref === flashRow.ref ? `${it.id}:${flashRow.n}` : it.id} item={it} platform={platform.name} layout={rowLayout} flash={!!flashRow && it.ref === flashRow.ref} label={`${l.title}: ${typeof it.title === 'string' ? it.title : it.ref ?? ''}`} />
@@ -310,60 +334,67 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
                 aria-label={`${l.viewAllLabel ?? 'View all'} ${l.total} in ${l.title}`}
                 className="-ml-1.5 mt-1.5 !h-7 !gap-1.5 !px-1.5 !text-ui !font-medium text-accent hover:bg-raised"
               >
-                {l.viewAllLabel ?? 'View all'} <span className="tabular-nums">{l.total}</span>
+                {l.viewAllLabel ?? 'View all'}<span className="tabular-nums">{l.total}</span>
               </Button>
             ) : null}
           </div>
         );
       })}
     </ListGroups>
-  ) : activity.length > 0 ? (
-    <div className="mt-4">
-      <Heading className="m-0 text-ui font-semibold text-text">Today</Heading>
-      <ol className="m-0 mt-1 list-none p-0">
-        {activity.slice(0, maxRows).map((a) => (
-          <li key={a.id} className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 border-t border-rule py-2 text-ui">
-            <span className="min-w-[4.5ch] text-small tabular-nums leading-5 text-muted">{a.at}</span>
+  ) : (
+    <div className="mt-3.5">
+      <Heading className="m-0 text-ui font-semibold leading-5 text-text">Today</Heading>
+      <ol className="m-0 list-none p-0">
+        {activity.length > 0 ? activity.slice(0, maxRows).map((a) => (
+          <li key={a.id} className="grid grid-cols-[76px_minmax(0,1fr)] gap-x-3 border-t border-rule py-[7px] text-ui leading-[19px]">
+            <span className="whitespace-nowrap tabular-nums text-muted">{a.at}</span>
             <span className="min-w-0 [overflow-wrap:anywhere]">{a.text}</span>
           </li>
-        ))}
+        )) : (
+          <li className="grid grid-cols-[76px_minmax(0,1fr)] gap-x-3 border-t border-rule py-[7px] text-ui leading-[19px]">
+            <span className="text-muted">·</span>
+            <span className="text-muted">No activity yet</span>
+          </li>
+        )}
       </ol>
     </div>
-  ) : (
-    <p className="m-0 mt-4 border-t border-rule py-2 text-ui text-muted">Nothing yet today.</p>
   );
 
   return (
     <section
       ref={ref}
-      aria-labelledby={nameId}
+      aria-labelledby={bare ? undefined : nameId}
       aria-busy={loading || undefined}
       data-surface={surface}
       className={cn('@container/today relative min-w-0', className)}
       {...rest}
     >
+      {bare ? null : (
       <header className={cn('sticky top-0 z-10 flex items-center gap-2.5 border-b border-control bg-[var(--scope-bg)] pb-2.5 pt-0.5')}>
-        <PlatformLogo {...platform} name={platform.name} decorative size={24} className="mt-px" />
+        <PlatformLogo {...platform} name={platform.name} decorative size={24} className="mt-px max-[640px]:mt-0" />
         <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2.5">
           <Heading id={nameId} className="m-0 min-w-0 text-left text-dialog text-text [overflow-wrap:anywhere]">
             {platform.name}
           </Heading>
-          {kind ? <span className="text-small text-muted">{kind}</span> : null}
+          {kind ? <span className="text-small leading-5 text-muted">{kind}</span> : null}
         </div>
+        {headerNote ? <span className="ml-auto shrink-0 whitespace-nowrap text-small text-muted">{headerNote}</span> : null}
         {onOpen ? (
           <Button
             variant="text"
             onClick={onOpen}
-            rightIcon={ArrowSquareOut}
             aria-label={`Open ${platform.name}`}
-            className="-mr-2 !h-7 shrink-0 text-muted hover:text-text"
+            className="!h-7 shrink-0 !gap-2 !px-2 !font-medium text-text max-[640px]:!h-10"
           >
-            <span className="@max-[330px]/today:sr-only">Open</span>
+            Open
+            <ArrowSquareOut size={14} aria-hidden="true" className="@max-[330px]/today:hidden" />
           </Button>
         ) : null}
       </header>
-      {hasFacts && !loading ? (
+      )}
+      {hasFacts && !loading && !bare ? (
         <FactsLine aria-label={`${platform.name} facts`} className="mt-1.5">
+          {status ? <Fact valueFirst value={<Badge tone={status.tone}>{status.label}</Badge>}>{status.since ? `since ${status.since}` : null}</Fact> : null}
           {shown.map((f, i) => (
             <Fact key={i} value={f.value} tone={f.tone} valueFirst>
               {f.label}
