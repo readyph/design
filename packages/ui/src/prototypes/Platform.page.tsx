@@ -957,18 +957,18 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
         onSelect={(id) => { if (id && id !== p?.id && !ob) { setPid(id); setDrafts({}); setTab('general'); setMemEdit(null); } }}
         onHover={(id) => setHover(id ? [id] : null)}
       />
-      <div className="px-2">
-        <div className="flex items-center gap-3">
+      <div className="px-1">
+        <div className="mt-0.5 flex items-center gap-2.5">
           <PlatformLogo name={p ? nameOf(p.id) : general.label || kind.name} src={p ? details[p.id].logo : general.logo ?? undefined} index={p?.index ?? platforms.length + 1} size={32} decorative />
-          <p className="m-0 min-w-0 flex-1 text-body font-semibold text-text [overflow-wrap:anywhere]">{p ? nameOf(p.id) : general.label || kind.name}</p>
+          <p className="m-0 min-w-0 flex-1 truncate text-title font-semibold tracking-[-0.01em] text-text">{p ? nameOf(p.id) : general.label || kind.name}</p>
         </div>
-        <p className="m-0 mt-2 flex flex-wrap items-center gap-x-3 text-ui text-muted">
+        <p className="m-0 mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px] leading-5 text-muted">
           <span>{kind.name}{p?.place ? ` · ${p.place}` : ''}</span>
           {p ? <StatusDot status={healthOf(p).tone} label={healthOf(p).word} /> : <span>Not added yet</span>}
         </p>
       </div>
       {p && !ob ? (
-        <div ref={tabsRef} className="px-1">
+        <div ref={tabsRef} className="-mx-2 -mt-1">
           <Tabs variant="vertical" aria-label={nameOf(p.id)} items={tabItems} value={tab} onValueChange={(v) => { setTab(v as SectionId); setFlashId(null); setGenErr(''); }} />
         </div>
       ) : null}
