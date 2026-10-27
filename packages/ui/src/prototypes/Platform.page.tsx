@@ -1,7 +1,7 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import {
   ArrowRight, ArrowSquareOut, Brain, Buildings, ChatCircle, IdentificationCard, LinkBreak, Plugs, SlidersHorizontal, ListChecks, LockSimple, Plus,
-  ShieldCheck, UploadSimple, UserPlus, Users, X,
+  ShieldCheck, UserPlus, Users, X,
 } from '@phosphor-icons/react';
 import { AskLedaBar } from '../components/AskLedaBar';
 import { BlockedQuestions, type BlockedQuestionItem } from '../components/BlockedQuestions';
@@ -17,6 +17,7 @@ import { LedaNote } from '../components/LedaNote';
 import { Modal } from '../components/Modal';
 import { OnboardingStepper, StepList, type StepperStep } from '../components/OnboardingStepper';
 import { OpeningHours, type OpeningHoursValue } from '../components/OpeningHours';
+import { LogoUpload } from '../components/LogoUpload';
 import { PlatformLogo } from '../components/PlatformLogo';
 import { RolePicker } from '../components/RolePicker';
 import { Select } from '../components/Select';
@@ -175,8 +176,6 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
   const sheetRef = useRef<HTMLDivElement>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-  const logoInput = useRef<HTMLInputElement>(null);
-  const uploadBtn = useRef<HTMLButtonElement>(null);
   const topicAddBtn = useRef<HTMLButtonElement>(null);
   const topicTitle = useRef<HTMLInputElement>(null);
   const teamAddRef = useRef<HTMLDivElement>(null);
@@ -244,8 +243,7 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
   const doFocus = (w: string | null) => {
     const root = sheetRef.current;
     if (!w) return;
-    if (w === 'upload') focusIfLost(root, uploadBtn.current);
-    else if (w === 'topic-add') focusIfLost(root, topicAddBtn.current);
+    if (w === 'topic-add') focusIfLost(root, topicAddBtn.current);
     else if (w === 'topic-title') topicTitle.current?.focus();
     else if (w === 'team-add') focusIfLost(root, teamAddRef.current?.querySelector<HTMLElement>('button, [role="combobox"]') ?? null);
     else if (w.startsWith('team-row:')) focusIfLost(root, root?.querySelector<HTMLElement>(`[data-person="${w.slice(9)}"] [role="combobox"], [data-person="${w.slice(9)}"] button`) ?? null);
@@ -491,45 +489,13 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
     toast({ description: `${nameOf(p.id)} disconnected.` });
   };
 
-  /* ----- the logo ----- */
-  const readLogo = (file: File | undefined) => {
-    if (!file) return;
-    const fr = new FileReader();
-    fr.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        const c = document.createElement('canvas');
-        c.width = c.height = 128;
-        const s = Math.min(img.width, img.height) || 1;
-        c.getContext('2d')?.drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, 128, 128);
-        setDraft('general', { ...general, logo: c.toDataURL('image/png') });
-      };
-      img.onerror = () => setDraft('general', { ...general, logo: String(fr.result) });
-      img.src = String(fr.result);
-    };
-    fr.readAsDataURL(file);
-  };
-
   /* =============== section bodies =============== */
   const generalBody = () => {
-    const customLogo = !!general.logo;
     return (
       <>
         <div className="grid gap-x-4 gap-y-4 sm:grid-cols-2">
           <TextField size="large" requiredMark={false} id={`${uid}-name`} label="Name" value={general.label} required maxLength={120} autoComplete="off" hint="Give this a clear name, like a branch name." error={genErr || undefined} onChange={(e) => { setGenErr(''); setDraft('general', { ...general, label: e.target.value }); }} />
-          <div className="min-w-0">
-            <span id={`${uid}-logo`} className="mb-1 block text-ui font-medium text-text">Logo</span>
-            <div role="group" aria-labelledby={`${uid}-logo`} className="flex flex-wrap items-center gap-3">
-              <PlatformLogo name={general.label || kind.name} src={general.logo ?? undefined} index={p?.index ?? platforms.length + 1} size={32} decorative />
-              <input ref={logoInput} type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" className="sr-only" tabIndex={-1} aria-hidden onChange={(e) => { readLogo(e.target.files?.[0]); e.target.value = ''; }} />
-              <Button ref={uploadBtn} type="button" variant="secondary" leftIcon={UploadSimple} onClick={() => logoInput.current?.click()}>Upload</Button>
-              {customLogo ? (
-                <Button type="button" variant="text" onClick={() => { setDraft('general', { ...general, logo: null }); refocus('upload'); }}>Use the default</Button>
-              ) : (
-                <span className="text-small text-muted">Default: initials on a colour. PNG, JPG or SVG.</span>
-              )}
-            </div>
-          </div>
+          <LogoUpload name={general.label || kind.name} value={general.logo} index={p?.index ?? platforms.length + 1} onChange={(_file, url) => setDraft('general', { ...general, logo: url })} />
           {kind.basics.map((b) => (
             <TextField size="large" key={b} id={`${uid}-b-${b}`} label={basicLabels[b][0]} hint={basicLabels[b][1]} type={b === 'phone' ? 'tel' : 'text'} className={b === 'address' ? 'sm:col-span-2' : undefined} maxLength={120} autoComplete="off" value={general.basics[b] ?? ''} onChange={(e) => setDraft('general', { ...general, basics: { ...general.basics, [b]: e.target.value } })} />
           ))}
