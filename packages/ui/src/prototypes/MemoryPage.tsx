@@ -31,6 +31,7 @@ import {
 import { AskLedaBar } from "../components/AskLedaBar";
 import { Button } from "../components/Button";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { Modal } from "../components/Modal";
 import { LedaMark } from "../components/Leda";
 import { PlatformLogo } from "../components/PlatformLogo";
 import { PortalFrame } from "./PortalFrame";
@@ -117,6 +118,7 @@ const sentences = (t: string, n: number) => ((t.match(/[^.!?]+[.!?]+/g) || [t]).
 const srcName = (s: MemSrc) => MEM_NAME[s];
 const srcShort = (s: MemSrc) => MEM_SHORT[s];
 const keyOf = (t: { src: MemSrc; k: string }) => `${t.src}|${t.k}`;
+const NEW_DOC = "new";
 
 function params(): URLSearchParams {
   try {
@@ -172,6 +174,52 @@ function Head({ title, sub, extra, h = "h2" }: { title: ReactNode; sub?: ReactNo
 }
 
 const roNoteClass = "mt-4 flex items-start gap-2 rounded-card border border-dashed border-control px-3 py-2.5 text-[13px] leading-[18px] text-muted";
+
+/** The workshop's own confirm card (platforms.css dialog.dlg): a 440px card, a 16px title with an optional mark, one muted line, the buttons on the right. */
+function DlgCard({
+  open,
+  title,
+  mark,
+  children,
+  cancelLabel = "Cancel",
+  confirmLabel,
+  tone,
+  focus = "confirm",
+  onCancel,
+  onConfirm,
+}: {
+  open: boolean;
+  title: string;
+  mark?: ReactNode;
+  children: ReactNode;
+  cancelLabel?: string;
+  confirmLabel: string;
+  tone: "primary" | "danger";
+  focus?: "confirm" | "cancel";
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  const goRef = useRef<HTMLButtonElement>(null);
+  const noRef = useRef<HTMLButtonElement>(null);
+  return (
+    <Modal
+      open={open}
+      onOpenChange={(o) => !o && onCancel()}
+      size="confirm"
+      role="alertdialog"
+      aria-label={title}
+      initialFocus={focus === "confirm" ? goRef : noRef}
+      className="w-[min(440px,calc(100vw-32px))] px-[22px] py-5"
+    >
+      <h2 aria-hidden className="m-0 flex items-center gap-2.5 text-base font-semibold leading-[22px]">{mark}{title}</h2>
+      {children}
+      <div className="mt-5 flex flex-wrap justify-end gap-2">
+        <Button ref={noRef} variant="secondary" onClick={onCancel} className="max-[640px]:h-11 max-[640px]:flex-auto">{cancelLabel}</Button>
+        <Button ref={goRef} variant={tone === "danger" ? "danger" : "primary"} onClick={onConfirm} className="max-[640px]:h-11 max-[640px]:flex-auto">{confirmLabel}</Button>
+      </div>
+    </Modal>
+  );
+}
 
 export interface MemoryPageProps {
   state?: MemoryState;
@@ -240,7 +288,8 @@ export function MemoryPage(props: MemoryPageProps) {
   const [hover, setHover] = useState<string | null>(null);
   const [bulkAsk, setBulkAsk] = useState<{ src: MemSrc; how: "on" | "off" } | null>(null);
   const [delAsk, setDelAsk] = useState<MemTopic | null>(null);
-  const [edit, setEdit] = useState<{ t: string; c: string; err?: string; errAt?: "t" | "c" } | null>(doc0 && doc0.type === "custom" && !readOnly ? { t: doc0.title, c: doc0.text } : null);
+  const [edit, setEdit] = useState<{ t: string; c: string; err?: string; errAt?: "t" | "c"; src?: MemSrc; pick?: boolean } | null>(doc0 && doc0.type === "custom" && !readOnly ? { t: doc0.title, c: doc0.text } : null);
+  const [bulkSens, setBulkSens] = useState(false);
   const [leaveAsk, setLeaveAsk] = useState<(() => void) | null>(null);
   const [refEdit, setRefEdit] = useState<{ src: MemSrc; v: string; err?: string } | null>(null);
   const [bqText, setBqText] = useState("");
@@ -287,7 +336,15 @@ export function MemoryPage(props: MemoryPageProps) {
   const used = allTopics.filter((t) => t.type === "custom").reduce((n, t) => n + t.title.length + t.text.length, 0);
   const left = MEM_CAP - used;
   const roomState: "ok" | "near" | "full" = used / MEM_CAP >= 1 ? "full" : used / MEM_CAP >= 0.85 ? "near" : "ok";
-  const curTopic = doc ? allTopics.find((t) => keyOf(t) === doc) : undefined;
+  // the bulk confirm (memory.js bulk): what would change, and the topics that start off and need their own tick
+  const bulkTopics = bulkAsk ? allTopics.filter((t) => t.src === bulkAsk.src) : [];
+  const bulkChange = bulkAsk ? bulkTopics.filter((t) => t.on !== (bulkAsk.how === "on")) : [];
+  const bulkSensTopics = bulkAsk?.how === "on" ? bulkChange.filter((t) => t.sensitive) : [];
+  const bulkPlain = bulkChange.filter((t) => !bulkSensTopics.includes(t));
+  // a new topic is a page of its own until it is added (memory.js docHTML with k "new"): it is not in the list yet
+  const isNew = doc === NEW_DOC;
+  const draft: MemTopic = { src: edit?.src ?? "company", k: NEW_DOC, type: "custom", title: "", text: "", on: true, ask: "", qs: [], updated: "" };
+  const curTopic = isNew ? draft : doc ? allTopics.find((t) => keyOf(t) === doc) : undefined;
 
   // fade a tab or folder switch: 120ms ease-out (shell: no slide for these), never under reduced motion
   useEffect(() => {
@@ -308,7 +365,7 @@ export function MemoryPage(props: MemoryPageProps) {
       if (doc && curTopic) {
         u.searchParams.set("tab", "topics");
         u.searchParams.set("folder", curTopic.src);
-        u.searchParams.set("topic", curTopic.k);
+        if (!isNew) u.searchParams.set("topic", curTopic.k);
       } else if (!phone || phoneSheet) {
         if (tab !== "topics" || folder || phone) u.searchParams.set("tab", tab);
         if (folder) u.searchParams.set("folder", folder);
@@ -320,7 +377,7 @@ export function MemoryPage(props: MemoryPageProps) {
     } catch {
       /* ignore */
     }
-  }, [tab, folder, doc, curTopic, phone, phoneSheet]);
+  }, [tab, folder, doc, curTopic, phone, phoneSheet, isNew]);
 
   // Back and Forward (memory.js popstate): the address says which tab, folder and topic page
   useEffect(() => {
@@ -387,6 +444,7 @@ export function MemoryPage(props: MemoryPageProps) {
   };
   const dirty = (() => {
     if (!edit || !curTopic) return false;
+    if (doc === NEW_DOC) return !!(edit.t.trim() || edit.c.trim());
     return edit.t !== curTopic.title || edit.c !== curTopic.text;
   })();
   const pickFolder = (id: "" | MemSrc) => {
@@ -439,6 +497,12 @@ export function MemoryPage(props: MemoryPageProps) {
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, []);
+  // a new topic starts on its title (memory.js newDoc focus '#docT')
+  useEffect(() => {
+    if (!isNew) return undefined;
+    const id = window.setTimeout(() => document.getElementById("docT")?.focus(), 60);
+    return () => window.clearTimeout(id);
+  }, [isNew]);
   const goTab = (v: string) =>
     guardLeave(() => {
       setDoc(null);
@@ -679,7 +743,7 @@ export function MemoryPage(props: MemoryPageProps) {
           </button>
         ) : null}
         <span aria-hidden className="text-control">/</span>
-        <b className="inline-flex min-w-0 items-center gap-1.5 truncate font-medium text-text" aria-current="page"><span className="truncate">{curTopic?.title ?? "Topic"}</span></b>
+        <b className="inline-flex min-w-0 items-center gap-1.5 truncate font-medium text-text" aria-current="page"><span className="truncate">{curTopic?.title || (isNew ? "New topic" : "Topic")}</span></b>
       </nav>
     </SheetBar>
   ) : (
@@ -792,15 +856,13 @@ export function MemoryPage(props: MemoryPageProps) {
       New topic
     </Button>
   ) : null;
-  const newTopic = (src: MemSrc = (folder || "company") as MemSrc) => {
-    const id = `new${Date.now()}`;
-    const t: MemTopic = { src, k: `c:${id}`, type: "custom", title: "New topic", text: "", on: true, ask: "What should I know about this?", qs: [], updated: "Thu 22 Oct" };
-    setAdded((a) => [...a, t]);
-    setOn((o) => ({ ...o, [keyOf(t)]: true }));
+  const newTopic = (src0?: MemSrc) => {
     setDir("in");
     pushRef.current = true;
-    setDoc(keyOf(t));
-    setEdit({ t: "", c: "" });
+    setTab("topics");
+    setPhoneSheet(true);
+    setDoc(NEW_DOC);
+    setEdit({ t: "", c: "", src: src0 ?? ((folder || "company") as MemSrc), pick: !src0 && !folder });
   };
 
   const libraryBody = (() => {
@@ -812,7 +874,7 @@ export function MemoryPage(props: MemoryPageProps) {
     const withF = !f || !!q;
     const all = ts.length > 0 && onN === ts.length;
     const bulk = f && canEdit && ts.length ? (
-      <Button variant="secondary" leftIcon={all ? ToggleLeft : ToggleRight} onClick={() => setBulkAsk({ src: f, how: all ? "off" : "on" })} className="max-[640px]:h-11">
+      <Button variant="secondary" leftIcon={all ? ToggleLeft : ToggleRight} onClick={() => { setBulkSens(false); setBulkAsk({ src: f, how: all ? "off" : "on" }); }} className="max-[640px]:h-11">
         {all ? "Turn all off" : "Turn all on"}
       </Button>
     ) : null;
@@ -1088,11 +1150,11 @@ export function MemoryPage(props: MemoryPageProps) {
             {srcs.map((src, si) => {
               const label = src === "company" ? (f ? "Leda replies" : "Leda replies, for the company and every business") : `At ${srcShort(src)}, Leda replies`;
               return refEdit?.src === src ? (
-                <div key={src} className={si ? "mt-2" : "mt-4"}>
-                  <label htmlFor="refT" className="mb-1 block text-[13px] font-medium leading-[18px]">{src === "company" ? "Leda's reply for the company and every business" : `Leda's reply at ${srcShort(src)}`}</label>
-                  <textarea id="refT" maxLength={400} rows={2} value={refEdit.v} onChange={(e) => setRefEdit({ src, v: e.target.value })} aria-invalid={refEdit.err ? true : undefined} className={cn("block w-full rounded-control border border-control bg-surface px-3 py-2 text-[14px] leading-5", focusRing)} />
-                  {refEdit.err ? <p className="m-0 mt-1 text-[13px] leading-[18px] text-bad">{refEdit.err}</p> : <p className="m-0 mt-1 text-[13px] leading-[18px] text-muted">Keep it polite and short. Customers see it as Leda's answer.</p>}
-                  <div className="mt-2 flex gap-2">
+                <div key={src} className={cn("rounded-card bg-raised px-4 pb-4 pt-3.5", si ? "mt-2" : "mt-4")}>
+                  <label htmlFor="refT" className="block text-[14px] font-medium leading-5">{src === "company" ? "Leda's reply for the company and every business" : `Leda's reply at ${srcShort(src)}`}</label>
+                  <textarea id="refT" autoFocus maxLength={400} rows={2} value={refEdit.v} onChange={(e) => setRefEdit({ src, v: e.target.value })} aria-invalid={refEdit.err ? true : undefined} className="mt-2 block min-h-[84px] w-full resize-y rounded-control border border-control bg-surface px-3 py-2 text-[14px] leading-5 text-text focus-visible:border-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[1px] focus-visible:outline-accent" />
+                  {refEdit.err ? <p className="m-0 mt-1.5 text-[12px] leading-4 text-bad">{refEdit.err}</p> : <p className="m-0 mt-1.5 text-[12px] leading-4 text-muted">Keep it polite and short. Customers see it as Leda's answer.</p>}
+                  <div className="mt-5 flex flex-wrap items-center gap-2">
                     <Button onClick={() => {
                       if (!refEdit.v.trim()) return setRefEdit({ ...refEdit, err: "Write the reply Leda should give." });
                       setReplies((r) => ({ ...r, [src]: refEdit.v.trim() }));
@@ -1216,19 +1278,57 @@ export function MemoryPage(props: MemoryPageProps) {
           <div className="mt-3 flex gap-2"><Button variant="secondary" leftIcon={ArrowLeft} onClick={closeDoc}>Back to Memory</Button></div>
         </EmptyBox>
       );
+    const nw = isNew;
     const ed = !!edit && t.type === "custom";
     const room = Math.max(0, left);
-    const qs = [t.ask, ...t.qs].filter((x, i, a) => x && a.indexOf(x) === i).slice(0, 3);
+    const qs = nw ? [] : [t.ask, ...t.qs].filter((x, i, a) => x && a.indexOf(x) === i).slice(0, 3);
     const save = () => {
       if (!edit) return;
       const ti = edit.t.trim();
       const c = edit.c.trim();
       if (!ti) return setEdit({ ...edit, err: "A title is needed.", errAt: "t" });
       if (!c) return setEdit({ ...edit, err: "Write what Leda should know about it.", errAt: "c" });
-      if (allTopics.some((x) => x.title.toLowerCase() === ti.toLowerCase() && keyOf(x) !== keyOf(t))) return setEdit({ ...edit, err: "A topic with this title already exists in memory. Titles are unique across the company.", errAt: "t" });
+      if (allTopics.some((x) => x.title.toLowerCase() === ti.toLowerCase() && (nw || keyOf(x) !== keyOf(t)))) return setEdit({ ...edit, err: "A topic with this title already exists in memory. Titles are unique across the company.", errAt: "t" });
+      const used2 = used - (nw ? 0 : t.title.length + t.text.length);
+      if (used2 + ti.length + c.length > MEM_CAP) return setEdit({ ...edit, err: `The memory is full: this needs ${num(used2 + ti.length + c.length - MEM_CAP)} more characters. Shorten it, or delete other topics first.`, errAt: "c" });
+      if (nw) {
+        const id = `m${Date.now()}`;
+        const added1: MemTopic = { src: edit.src ?? "company", k: `c:${id}`, type: "custom", title: ti, text: c, on: true, ask: `What should I know about ${lower(ti)}?`, qs: [], updated: "Thu 22 Oct" };
+        setAdded((a) => [...a, added1]);
+        setOn((o) => ({ ...o, [keyOf(added1)]: true }));
+        setDoc(keyOf(added1));
+        setEdit({ t: ti, c });
+        toast.undo(`Topic added: ${ti}.`, () => {
+          setAdded((a) => a.filter((x) => x.k !== added1.k));
+          setDoc(null);
+          setEdit(null);
+        });
+        return;
+      }
+      const prev = custom[keyOf(t)];
       setCustom((m) => ({ ...m, [keyOf(t)]: { title: ti, text: c } }));
       setEdit({ t: ti, c });
-      toast.info(`Topic saved: ${ti}.`);
+      toast.undo(`Topic saved: ${ti}.`, () => {
+        setCustom((m) => {
+          const n = { ...m };
+          if (prev) n[keyOf(t)] = prev;
+          else delete n[keyOf(t)];
+          return n;
+        });
+        setEdit({ t: prev?.title ?? t.title, c: prev?.text ?? t.text });
+      });
+    };
+    const discard = () => {
+      if (nw) {
+        setEdit(null);
+        if (window.history.state?.mem) window.history.back();
+        else {
+          setDir("out");
+          setDoc(null);
+        }
+        return;
+      }
+      setEdit({ t: t.title, c: t.text });
     };
     return (
       <article aria-labelledby="docH" className="max-w-[680px]">
@@ -1237,17 +1337,35 @@ export function MemoryPage(props: MemoryPageProps) {
           <span aria-hidden className="text-control">/</span>
           <a href="#folder" onClick={(e) => { e.preventDefault(); pickFolder(t.src); }} className={cn(crumbLink, "min-h-11")}><Logo src={t.src} size={14} /><span>{srcName(t.src)}</span></a>
         </nav>
-        <p className="m-0 flex items-center gap-1.5 text-[13px] leading-[18px] text-muted">{srcLabel(t)}</p>
+        <p className="m-0 flex items-center gap-1.5 text-[13px] leading-[18px] text-muted">
+          {nw ? (
+            <>
+              <PencilSimpleLine size={14} aria-hidden className="shrink-0" />
+              <span>Custom · new topic</span>
+            </>
+          ) : (
+            srcLabel(t)
+          )}
+        </p>
+        {nw && edit?.pick ? (
+          <div className="mt-3 flex items-center gap-2.5">
+            <span id="docSL" className="m-0 text-[12px] leading-4 text-muted">Folder</span>
+            <div className="w-[240px] max-[640px]:w-auto max-[640px]:flex-1 [&_[role=combobox]]:pl-2.5 [&_[role=combobox]]:pr-2 [&_[role=combobox]]:text-[13px]">
+              <Select size="sm" aria-labelledby="docSL" options={SRCS.map((x) => ({ value: x, label: srcName(x) }))} value={edit.src ?? "company"} onValueChange={(v) => setEdit({ ...edit, src: v as MemSrc })} className="w-full min-w-0" />
+            </div>
+          </div>
+        ) : null}
         <div className="mt-2 flex items-start gap-6 max-[640px]:flex-col max-[640px]:gap-3">
           {ed ? (
             <>
-              <h1 id="docH" className={sr}>{edit!.t.trim() || t.title}</h1>
+              <h1 id="docH" className={sr}>{edit!.t.trim() || (nw ? "New topic" : t.title)}</h1>
               <label htmlFor="docT" className={sr}>Title</label>
-              <input id="docT" maxLength={100} value={edit!.t} onChange={(e) => setEdit({ ...edit!, t: e.target.value, err: undefined })} placeholder="A title, like “Senior citizen discount”" autoComplete="off" aria-invalid={edit!.err && edit!.errAt === "t" ? true : undefined} className={cn("-ml-[9px] block h-10 min-w-0 flex-1 rounded-control border border-transparent bg-transparent px-2 text-[24px] font-semibold leading-8 tracking-[-0.01em] text-text placeholder:font-medium placeholder:text-faint hover:border-border max-[640px]:text-[20px]", focusRing)} />
+              <input id="docT" autoFocus={nw} maxLength={100} value={edit!.t} onChange={(e) => setEdit({ ...edit!, t: e.target.value, err: undefined })} placeholder="A title, like “Senior citizen discount”" autoComplete="off" aria-invalid={edit!.err && edit!.errAt === "t" ? true : undefined} className={cn("-ml-[9px] block h-10 min-w-0 flex-1 rounded-control border border-transparent bg-transparent px-2 text-[24px] font-semibold leading-8 tracking-[-0.01em] text-text placeholder:font-medium placeholder:text-faint hover:border-border max-[640px]:text-[20px]", "focus-visible:border-transparent focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-accent forced-colors:focus-visible:outline-[Highlight]")} />
             </>
           ) : (
             <h1 id="docH" className="m-0 min-w-0 flex-1 text-[24px] font-semibold leading-8 tracking-[-0.01em] max-[640px]:text-[20px] max-[640px]:leading-7">{t.title}</h1>
           )}
+          {nw ? null : (
           <label className="mt-1.5 flex max-w-[240px] shrink-0 items-start gap-3 max-[640px]:min-h-11 max-[640px]:max-w-none">
             <Switch look="workshop" aria-label={`Customers' Leda can use ${t.title}`} checked={t.on} disabled={readOnly} onCheckedChange={(v) => setTopic(t, v)} />
             <span className="text-[13px] font-medium leading-[18px]">
@@ -1255,6 +1373,7 @@ export function MemoryPage(props: MemoryPageProps) {
               <span className="block text-[12px] font-medium leading-4 text-muted">{t.on ? "Saves as you switch it" : "Leda won't use it for customers"}</span>
             </span>
           </label>
+          )}
         </div>
         {ed && edit!.err ? <p role="alert" className="m-0 mt-1.5 text-[13px] leading-[18px] text-bad">{edit!.err}</p> : null}
         {t.sensitive ? (
@@ -1263,14 +1382,14 @@ export function MemoryPage(props: MemoryPageProps) {
         {ed ? (
           <>
             <label htmlFor="docC" className={sr}>What Leda should know</label>
-            <textarea id="docC" maxLength={8000} rows={5} value={edit!.c} onChange={(e) => setEdit({ ...edit!, c: e.target.value, err: undefined })} placeholder="Write it as you would explain it to a customer, in full sentences. Leda answers from it in its own words." className={cn("-ml-[9px] mt-[18px] block min-h-[190px] w-[calc(100%+18px)] resize-none rounded-control border border-transparent bg-transparent px-2 py-1.5 text-[16px] leading-[27px] text-text placeholder:text-faint hover:border-border max-[640px]:text-[16px] max-[640px]:leading-[26px]", focusRing)} />
+            <textarea id="docC" maxLength={8000} rows={5} value={edit!.c} onChange={(e) => setEdit({ ...edit!, c: e.target.value, err: undefined })} placeholder="Write it as you would explain it to a customer, in full sentences. Leda answers from it in its own words." className={cn("-ml-[9px] mt-[18px] block min-h-[190px] w-[calc(100%+18px)] resize-none rounded-control border border-transparent bg-transparent px-2 py-1.5 text-[16px] leading-[27px] text-text placeholder:text-faint hover:border-border max-[640px]:text-[16px] max-[640px]:leading-[26px]", "focus-visible:border-transparent focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-accent forced-colors:focus-visible:outline-[Highlight]")} />
             <div className="mt-3.5 flex flex-wrap items-center gap-x-3.5 gap-y-2 border-t border-rule pt-3 text-[13px] leading-[18px] text-muted">
-              {dirty ? <span className="inline-flex items-center gap-1.5 text-warn"><PencilSimpleLine size={16} aria-hidden />Unsaved changes</span> : <span className="inline-flex items-center gap-1.5"><Check size={16} aria-hidden className="text-ok" />Saved</span>}
+              {dirty ? <span className="inline-flex items-center gap-1.5 text-warn"><PencilSimpleLine size={16} aria-hidden />Unsaved changes</span> : nw ? <span>Write a title and the paragraph</span> : <span className="inline-flex items-center gap-1.5"><Check size={16} aria-hidden className="text-ok" />Saved</span>}
               <span className="tabular-nums">{num(room)} characters left in memory</span>
               <span className="flex-1" />
-              <Button variant="text" leftIcon={Trash} onClick={() => setDelAsk(t)} className="!border-0 !px-2 [&_svg]:text-bad max-[640px]:h-11">Delete</Button>
-              <Button variant="text" disabled={!dirty} onClick={() => { setEdit({ t: t.title, c: t.text }); }} className="!border-0 !px-2 max-[640px]:h-11">Discard</Button>
-              <Button disabled={!dirty} onClick={save} className="max-[640px]:h-11">Save</Button>
+              {nw ? null : <Button variant="text" leftIcon={Trash} onClick={() => setDelAsk(t)} className="!border-0 !px-2 [&_svg]:text-bad max-[640px]:h-11">Delete</Button>}
+              <Button variant="text" disabled={!dirty} onClick={discard} className="!border-0 !px-2 disabled:!opacity-50 max-[640px]:h-11">{nw ? "Cancel" : "Discard"}</Button>
+              <Button disabled={!dirty} onClick={save} className="disabled:!opacity-50 max-[640px]:h-11">{nw ? "Add topic" : "Save"}</Button>
             </div>
           </>
         ) : (
@@ -1308,9 +1427,9 @@ export function MemoryPage(props: MemoryPageProps) {
             </Button>
           </section>
         ) : null}
-        <p className="m-0 mt-7 text-[12px] leading-4 text-muted">
+        {nw ? null : <p className="m-0 mt-7 text-[12px] leading-4 text-muted">
           {t.type === "custom" ? `Last edited ${t.updated}` : `Last changed ${t.updated}, when ${t.src === "company" ? "the company profile" : `${srcShort(t.src)} data`} changed`} · {srcName(t.src)}
-        </p>
+        </p>}
       </article>
     );
   })();
@@ -1370,29 +1489,45 @@ export function MemoryPage(props: MemoryPageProps) {
         footnote="As customers see it in your mobile app, with the switches as they are now."
         note="Other customers' details, staff notes and pay are never used for customers. Your team's own use of Leda follows their role on Team."
       />
-      <ConfirmDialog
+      <DlgCard
         open={!!bulkAsk}
-        onOpenChange={(o) => !o && setBulkAsk(null)}
         title={bulkAsk ? `Turn ${bulkAsk.how} everything in ${srcName(bulkAsk.src)}?` : ""}
-        description={
-          bulkAsk
-            ? bulkAsk.how === "on"
-              ? `Customers' Leda can then use ${andList(topicsOf(bulkAsk.src).filter((t) => !t.on && !t.sensitive).map((t) => t.title)) || "nothing new"}.`
-              : `Customers' Leda won't answer any question about ${andList(topicsOf(bulkAsk.src).filter((t) => t.on).map((t) => t.title))}. Your team's own use of Leda doesn't change.`
-            : ""
-        }
-        confirmLabel={bulkAsk?.how === "on" ? "Turn on" : "Turn off"}
+        mark={bulkAsk ? <Logo src={bulkAsk.src} size={20} /> : null}
+        confirmLabel={bulkAsk?.how === "on" ? "Turn on" : bulkAsk ? `Turn off ${plural(bulkChange.length, "topic")}` : ""}
         tone={bulkAsk?.how === "on" ? "primary" : "danger"}
+        onCancel={() => setBulkAsk(null)}
         onConfirm={() => {
           if (!bulkAsk) return;
           const b = bulkAsk;
-          const before = on;
-          setOn((o) => ({ ...o, ...Object.fromEntries(topicsOf(b.src).filter((t) => (b.how === "on" ? !t.sensitive : true)).map((t) => [keyOf(t), b.how === "on"])) }));
+          const xs = b.how === "on" ? [...bulkPlain, ...(bulkSens ? bulkSensTopics : [])] : bulkChange;
           setBulkAsk(null);
-          toast.undo(`${srcShort(b.src)}: topics ${b.how} for customers.`, () => setOn(before));
+          if (!xs.length) return toast.info("Nothing to change.");
+          const before = on;
+          setOn((o) => ({ ...o, ...Object.fromEntries(xs.map((t) => [keyOf(t), b.how === "on"])) }));
+          toast.undo(`${srcShort(b.src)}: ${plural(xs.length, "topic")} ${b.how} for customers.`, () => setOn(before));
         }}
-        onCancel={() => setBulkAsk(null)}
-      />
+      >
+        {bulkAsk?.how === "on" ? (
+          <>
+            <p className="m-0 mt-2 text-[14px] leading-5 text-muted">
+              {bulkPlain.length ? <>Customers' Leda can then use <b className="font-medium text-text">{andList(bulkPlain.map((t) => t.title))}</b>.</> : "Everything that is safe to share is already on."}
+            </p>
+            {bulkSensTopics.length ? (
+              <div className="mt-4 flex items-start gap-3">
+                <Switch look="workshop" checked={bulkSens} onCheckedChange={setBulkSens} aria-labelledby="bulkSensL" />
+                <span className="flex flex-col text-[14px] leading-5" id="bulkSensL">
+                  Also turn on {andList(bulkSensTopics.map((t) => t.title))}
+                  <span className="text-[12px] leading-4 text-muted">Off by default. {[...new Set(bulkSensTopics.map((t) => t.sensitive))].join(" ")}</span>
+                </span>
+              </div>
+            ) : null}
+          </>
+        ) : bulkAsk ? (
+          <p className="m-0 mt-2 text-[14px] leading-5 text-muted">
+            Customers' Leda won't answer any question about <b className="font-medium text-text">{andList(bulkChange.map((t) => t.title))}</b> ({plural(bulkChange.length, "topic")}). Your team's own use of Leda doesn't change.
+          </p>
+        ) : null}
+      </DlgCard>
       <ConfirmDialog
         open={!!delAsk}
         onOpenChange={(o) => !o && setDelAsk(null)}
@@ -1429,22 +1564,25 @@ export function MemoryPage(props: MemoryPageProps) {
         }}
         onCancel={() => setRmAsk(null)}
       />
-      <ConfirmDialog
+      <DlgCard
         open={!!leaveAsk}
-        onOpenChange={(o) => !o && setLeaveAsk(null)}
         title="Discard your changes?"
-        description={`Your edits to “${curTopic?.title ?? ""}” aren't saved.`}
-        confirmLabel="Discard"
         cancelLabel="Keep editing"
+        confirmLabel="Discard"
         tone="danger"
+        focus="cancel"
+        onCancel={() => setLeaveAsk(null)}
         onConfirm={() => {
           const go = leaveAsk;
           setLeaveAsk(null);
           setEdit(null);
           go?.();
         }}
-        onCancel={() => setLeaveAsk(null)}
-      />
+      >
+        <p className="m-0 mt-2 text-[14px] leading-5 text-muted">
+          {isNew ? "This new topic isn't added yet." : `Your edits to “${curTopic?.title ?? ""}” aren't saved.`}
+        </p>
+      </DlgCard>
       <Toaster />
     </SubpageTransition>
   );
