@@ -219,7 +219,7 @@ export const IconRailItem = forwardRef<HTMLAnchorElement | HTMLButtonElement, Ic
   const name = count > 0 ? `${label}, ${formatCount(count)}` : label;
   const classes = cn(
     itemClass,
-    isCurrent ? 'bg-frame-active text-text' : 'text-muted hover:bg-frame-hover hover:text-text',
+    isCurrent ? 'bg-frame-active text-text forced-colors:border-l-4 forced-colors:border-[Highlight]' : 'text-muted hover:bg-frame-hover hover:text-text',
     focusRing,
     className,
   );

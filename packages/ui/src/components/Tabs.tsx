@@ -180,16 +180,16 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
                   cn(
                     'relative flex h-full min-w-0 flex-1 items-center gap-[7px] rounded-t-chip px-2 text-[13px] hover:bg-raised hover:text-text',
                     'data-[state=active]:font-medium data-[state=active]:text-text',
-                    'after:absolute after:inset-x-2 after:-bottom-px after:h-0.5 data-[state=active]:after:bg-accent',
+                    'after:absolute after:inset-x-2 after:-bottom-px after:h-0.5 data-[state=active]:after:bg-accent forced-colors:data-[state=active]:after:bg-[Highlight]',
                   ),
                 v === 'fixed' &&
                   cn(
                     'relative inline-flex h-full min-h-[47px] max-w-[16rem] shrink-0 items-center gap-[7px] whitespace-nowrap rounded-t-chip px-2 text-[13px] hover:bg-raised hover:text-text',
                     'data-[state=active]:font-medium data-[state=active]:text-text',
-                    'after:absolute after:inset-x-2 after:-bottom-px after:h-0.5 data-[state=active]:after:bg-accent',
+                    'after:absolute after:inset-x-2 after:-bottom-px after:h-0.5 data-[state=active]:after:bg-accent forced-colors:data-[state=active]:after:bg-[Highlight]',
                   ),
                 v === 'vertical' &&
-                  'group grid w-full grid-cols-[20px_minmax(0,1fr)_auto] items-center gap-x-2.5 gap-y-0.5 rounded-card border border-transparent px-3 py-2.5 text-left text-[14px] leading-5 text-text hover:bg-frame-hover data-[state=active]:border-border data-[state=active]:bg-surface',
+                  'group grid w-full grid-cols-[20px_minmax(0,1fr)_auto] items-center gap-x-2.5 gap-y-0.5 rounded-card border border-transparent px-3 py-2.5 text-left text-[14px] leading-5 text-text hover:bg-frame-hover data-[state=active]:border-border data-[state=active]:bg-surface forced-colors:border-0 forced-colors:data-[state=active]:border-2 forced-colors:data-[state=active]:border-[Highlight]',
                 v === 'chips' &&
                   'inline-flex h-[30px] shrink-0 items-center gap-2 whitespace-nowrap rounded-control border border-border px-3 hover:bg-raised hover:text-text max-[640px]:h-9 max-[640px]:rounded-[18px] max-[640px]:text-[13px] max-[640px]:text-text data-[state=active]:border-accent data-[state=active]:bg-accent-tint data-[state=active]:font-medium data-[state=active]:text-text max-[640px]:data-[state=active]:bg-transparent max-[640px]:data-[state=active]:font-normal max-[640px]:data-[state=active]:text-accent',
               )}

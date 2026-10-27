@@ -196,3 +196,13 @@ describe('Tabs vertical, workshop .snav (RDY-364)', () => {
   });
 });
 
+
+describe('Tabs forced-colors (RDY-321)', () => {
+  it.each(['vertical', 'editor', 'fixed'] as const)('%s: the active tab is marked with Highlight, inactive tabs are not', (variant) => {
+    render(<Tabs items={items} variant={variant} defaultValue={items[0]!.value} aria-label="T" />);
+    const tabs = screen.getAllByRole('tab');
+    expect(tabs[0]!.className).toMatch(/forced-colors:data-\[state=active\]:(after:bg|border)-\[Highlight\]/);
+    expect(tabs[0]!.getAttribute('data-state')).toBe('active');
+    expect(tabs[1]!.getAttribute('data-state')).toBe('inactive');
+  });
+});

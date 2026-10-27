@@ -110,7 +110,7 @@ export function PortalFrame({ current, pageName, leda, topBar, hidePhoneNav = fa
         const on = p.id === current;
         const n = p.id === 'team' ? teamCount : 0;
         return (
-          <a key={p.id} href={p.href} {...link(DEST[p.id])} aria-current={on ? 'page' : undefined} aria-label={n ? `${p.label}, ${n}` : undefined} className={cn(tabClass, on && 'font-medium text-text')}>
+          <a key={p.id} href={p.href} {...link(DEST[p.id])} aria-current={on ? 'page' : undefined} aria-label={n ? `${p.label}, ${n}` : undefined} className={cn(tabClass, on && 'font-medium text-text forced-colors:border-t-4 forced-colors:border-[Highlight]')}>
             <p.icon size={20} aria-hidden />
             <span aria-hidden={n ? true : undefined}>{p.label}</span>
           </a>

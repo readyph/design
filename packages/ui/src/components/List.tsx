@@ -288,7 +288,8 @@ export const ListRow = forwardRef<HTMLElement, ListRowProps>(function ListRow(
     activateRef.current?.();
   };
   const cls = cn(
-    'relative -mx-2 grid grid-cols-[var(--list-cols)] items-start gap-x-4 border-x-8 border-transparent px-0 py-row-y',
+    'relative -mx-2 grid grid-cols-[var(--list-cols)] items-start gap-x-4 border-x-8 border-transparent px-0 py-row-y forced-colors:mx-0 forced-colors:border-x-0',
+    'forced-colors:data-[current=true]:outline forced-colors:data-[current=true]:outline-2 forced-colors:data-[current=true]:-outline-offset-2 forced-colors:data-[current=true]:outline-[Highlight]',
     "after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-rule after:content-['']",
     'transition-colors duration-hover motion-reduce:transition-none',
     listRowSurface,
