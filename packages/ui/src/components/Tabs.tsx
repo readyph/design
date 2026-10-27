@@ -188,7 +188,7 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
                   'inline-flex h-[30px] shrink-0 items-center gap-2 whitespace-nowrap rounded-control border border-border px-3 hover:bg-raised hover:text-text max-[640px]:h-11 data-[state=active]:border-accent data-[state=active]:bg-accent-tint data-[state=active]:font-medium data-[state=active]:text-text',
               )}
             >
-              {Lead && <Lead size={16} aria-hidden className={cn('shrink-0', v === 'vertical' && 'text-muted group-data-[state=active]:text-accent')} />}
+              {Lead && <Lead size={v === 'editor' || v === 'fixed' ? 14 : 16} aria-hidden className={cn('shrink-0', v === 'vertical' && 'text-muted group-data-[state=active]:text-accent')} />}
               {item.leading && <span aria-hidden className="inline-flex shrink-0">{item.leading}</span>}
               <span className={cn('min-w-0', v === 'editor' || v === 'fixed' ? 'truncate' : v === 'vertical' ? 'truncate font-medium' : '', item.preview && 'italic')}>
                 {item.label}
