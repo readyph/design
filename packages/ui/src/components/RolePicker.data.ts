@@ -1,4 +1,4 @@
-import type { RoleOption, RolePickerPlatform, RolePickerValue } from './RolePicker';
+import type { RoleOption, RolePickerInvite, RolePickerPerson, RolePickerPlatform, RolePickerRoles, RolePickerValue } from './RolePicker';
 
 export const roleOptions: Record<string, RoleOption[]> = {
   'Repair shop': [
@@ -36,3 +36,13 @@ export const manyRoles: Record<string, RoleOption[]> = {
   ...roleOptions,
   'Repair shop': Array.from({ length: 14 }, (_, i) => ({ id: `r${i}`, name: i === 3 ? long : `Role number ${i + 1}`, about: i === 3 ? unbreakable : 'A role with a line.' })),
 };
+
+/** By-role mode: the people on one platform (Quezon City Auto Works, a repair shop). */
+export const people: RolePickerPerson[] = [
+  { id: 'lm', name: 'Liza Mendoza', initials: 'LM', title: 'Owner', access: 'owner', elsewhere: 'Manager at Cebu Parts Stockroom' },
+  { id: 'ac', name: 'Ana Cruz', initials: 'AC', title: 'Service advisor', access: 'member' },
+  { id: 'rb', name: 'Ramon Bautista', initials: 'RB', title: 'Mechanic', access: 'member', elsewhere: 'Stock clerk at Cebu Parts Stockroom' },
+  { id: 'gl', name: 'Grace Lumbao', initials: 'GL', access: 'admin' },
+];
+export const invites: RolePickerInvite[] = [{ id: 'eli', name: 'Eli Tan', initials: 'ET', status: 'Invite not sent yet', roleId: 'mechanic' }];
+export const savedByRole: RolePickerRoles = { lm: 'manager', ac: 'advisor', rb: 'mechanic', gl: 'manager' };

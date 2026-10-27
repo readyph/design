@@ -1,12 +1,13 @@
-import { forwardRef, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type HTMLAttributes, type ReactNode } from 'react';
+import { forwardRef, useEffect, useId, useMemo, useRef, useState, type HTMLAttributes, type ReactNode } from 'react';
 import * as RadioGroup from '@radix-ui/react-radio-group';
 import { Lock, Warning } from '@phosphor-icons/react';
 import { cn } from '../utils/cn';
-import { focusIfLost } from '../utils/focusIfLost';
-import { Button } from './Button';
-import { ConfirmDialog } from './ConfirmDialog';
 import { PlatformLogo, type PlatformLogoProps } from './PlatformLogo';
+import { RolePickerByRole, type RolePickerByRoleProps } from './RolePickerByRole';
+import { DraftFooter, useDraftSave } from './RolePickerSave';
 import { Select, type SelectOption } from './Select';
+
+export type { RolePickerByRoleProps, RolePickerPerson, RolePickerInvite, RolePickerRoles } from './RolePickerByRole';
 
 /** Company (Portal) access. `owner` can be shown but never chosen. */
 export type CompanyAccess = 'owner' | 'admin' | 'member';
@@ -37,6 +38,8 @@ export interface RoleOption {
 }
 
 export interface RolePickerProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onChange' | 'defaultValue'> {
+  /** Person by platform (default): one person's role on each platform. `by-role` is one platform's people, see `RolePickerByRoleProps`. */
+  mode?: 'by-platform';
   /** The draft. */
   value: RolePickerValue;
   /** The last saved value. The picker is "dirty" when `value` differs from it; Save and Discard stay disabled until then. */
@@ -79,10 +82,10 @@ export interface RolePickerProps extends Omit<HTMLAttributes<HTMLDivElement>, 'o
   removeConfirm?: RolePickerRemoveConfirm;
 }
 
-export interface RolePickerRemoveConfirm {
-  title?: ReactNode | ((removed: RolePickerPlatform[]) => ReactNode);
-  description?: ReactNode | ((removed: RolePickerPlatform[]) => ReactNode);
-  confirmLabel?: string | ((removed: RolePickerPlatform[]) => string);
+export interface RolePickerRemoveConfirm<T = RolePickerPlatform> {
+  title?: ReactNode | ((removed: T[]) => ReactNode);
+  description?: ReactNode | ((removed: T[]) => ReactNode);
+  confirmLabel?: string | ((removed: T[]) => string);
 }
 
 const ACCESS: Record<CompanyAccess, { name: string; can: string }> = {
@@ -101,8 +104,13 @@ const same = (a: RolePickerValue, b: RolePickerValue, ids: string[]) =>
  * the chosen role's line), then the company access radios. Admin and Owner replace the rows with "Full access to every platform".
  * It edits a draft: one Save and Discard, disabled until something changed. Controlled: the page owns `value`.
  */
-export const RolePicker = forwardRef<HTMLDivElement, RolePickerProps>(function RolePicker(
+export const RolePicker = forwardRef<HTMLDivElement, RolePickerProps | RolePickerByRoleProps>(function RolePicker(props, ref) {
+  return props.mode === 'by-role' ? <RolePickerByRole ref={ref} {...props} /> : <RolePickerByPlatform ref={ref} {...props} />;
+});
+
+const RolePickerByPlatform = forwardRef<HTMLDivElement, RolePickerProps>(function RolePickerByPlatform(
   {
+    mode: _mode,
     value,
     savedValue,
     onChange,
@@ -132,19 +140,8 @@ export const RolePicker = forwardRef<HTMLDivElement, RolePickerProps>(function R
   const ids = useMemo(() => platforms.map((p) => p.id), [platforms]);
   const dirty = !same(value, savedValue, ids);
   const full = value.access !== 'member';
-  const [confirm, setConfirm] = useState(false);
   const [announce, setAnnounce] = useState('');
   const first = useRef(true);
-  const heading = useRef<HTMLHeadingElement>(null);
-  const saveBtn = useRef<HTMLButtonElement>(null);
-  const actions = useRef<HTMLDivElement>(null);
-  // Save and Discard stay focusable (aria-disabled), so focus is never dropped while they work. When the work is over
-  // (saved, discarded, or failed) focus goes to the heading, or back to Save on a failure, but only if the user has
-  // not already moved on: `focusIfLost` leaves a focused input, dropdown or link alone.
-  const used = useRef(false);
-  const complete = useRef(false);
-  const toSave = useRef(false);
-  const viaDialog = useRef(false);
   const copy = { ...ACCESS, ...Object.fromEntries(Object.entries(accessCopy ?? {}).map(([k, v]) => [k, { ...ACCESS[k as CompanyAccess], can: v }])) } as typeof ACCESS;
 
   // Say what changed when Admin swaps the rows; focus stays on the radio.
@@ -162,34 +159,13 @@ export const RolePicker = forwardRef<HTMLDivElement, RolePickerProps>(function R
     ...optionsOf(p).map((r) => ({ value: r.id, label: r.name, textValue: r.name })),
   ];
 
-  const place = () => {
-    used.current = false;
-    complete.current = false;
-    focusIfLost(actions.current, toSave.current ? saveBtn.current : heading.current, { preventScroll: true });
-  };
-  useLayoutEffect(() => {
-    if (!used.current || saving || (dirty && !error)) {
-      complete.current = false;
-      return;
-    }
-    complete.current = true;
-    toSave.current = dirty;
-    // Through the confirm dialog its own focus return runs after this; `onCloseAutoFocus` places focus then.
-    if (!viaDialog.current) place();
-  }, [dirty, saving, error]);
-
   const removed = platforms.filter((p) => (savedValue.roles[p.id] ?? null) && !(value.roles[p.id] ?? null) && !full);
   const nAssigned = platforms.filter((p) => value.roles[p.id]).length;
   const noRole = !full && nAssigned === 0 && platforms.length > 0;
   const off = readOnly || saving;
+  const draft = useDraftSave({ dirty, saving, error, removedCount: removed.length, save: () => onSave(value), discard: onDiscard });
 
   const setRole = (id: string, role: string) => onChange({ ...value, roles: { ...value.roles, [id]: role === NOT_ASSIGNED ? null : role } });
-  const trySave = () => {
-    if (!dirty || saving) return;
-    if (removed.length) return setConfirm(true);
-    used.current = true;
-    onSave(value);
-  };
 
   const accessChoices: CompanyAccess[] = value.access === 'owner' || savedValue.access === 'owner' ? ['owner', 'admin', 'member'] : ['admin', 'member'];
   const accessLocked = off || !!accessReason || value.access === 'owner';
@@ -209,7 +185,7 @@ export const RolePicker = forwardRef<HTMLDivElement, RolePickerProps>(function R
       ) : null}
 
       <section aria-labelledby={`${uid}-roles`} className="min-w-0">
-        <h3 ref={heading} tabIndex={-1} id={`${uid}-roles`} className="text-ui font-medium text-text outline-0">
+        <h3 ref={draft.heading} tabIndex={-1} id={`${uid}-roles`} className="text-ui font-medium text-text outline-0">
           Roles on each platform
         </h3>
         {rolesIntro ? <p className="m-0 mt-1 text-small text-muted">{rolesIntro}</p> : null}
@@ -330,77 +306,20 @@ export const RolePicker = forwardRef<HTMLDivElement, RolePickerProps>(function R
         </section>
       )}
 
-      {readOnly ? null : (
-        <div className="flex flex-col gap-2">
-          {error ? (
-            <p role="alert" className="m-0 flex items-start gap-2 rounded-card bg-bad-bg px-3 py-2 text-small text-bad-ink">
-              <Warning aria-hidden size={14} weight="bold" className="mt-0.5 shrink-0" />
-              <span className="min-w-0">{error}</span>
-            </p>
-          ) : null}
-          <div ref={actions} className="flex flex-wrap items-center gap-2">
-            <Button
-              ref={saveBtn}
-              variant="primary"
-              onClick={trySave}
-              aria-disabled={!dirty || saving || undefined}
-              aria-busy={saving || undefined}
-              actionBar
-              className="aria-disabled:cursor-not-allowed aria-disabled:opacity-70 aria-disabled:hover:bg-accent"
-            >
-              {saving ? <span aria-hidden className="size-3.5 animate-spin rounded-full border-2 border-current border-t-transparent motion-reduce:animate-none" /> : null}
-              {saving ? 'Saving' : saveLabel}
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => {
-                if (!dirty || saving) return;
-                used.current = true;
-                onDiscard();
-              }}
-              aria-disabled={!dirty || saving || undefined}
-              actionBar
-              className="aria-disabled:cursor-not-allowed aria-disabled:opacity-70 aria-disabled:hover:border-control"
-            >
-              Discard
-            </Button>
-            {dirty ? (
-              <span className="inline-flex items-center gap-1.5 text-small text-warn-ink">
-                <span aria-hidden className="size-2 rounded-full bg-warn-dot" />
-                Unsaved changes
-              </span>
-            ) : null}
-          </div>
-        </div>
-      )}
-
-      <ConfirmDialog
-        open={confirm}
-        onOpenChange={setConfirm}
-        title={typeof removeConfirm?.title === 'function' ? (removed.length ? removeConfirm.title(removed) : null) : (removeConfirm?.title ?? 'Remove access?')}
-        description={
+      <DraftFooter
+        draft={draft}
+        dirty={dirty}
+        saving={saving}
+        error={error}
+        saveLabel={saveLabel}
+        hidden={readOnly}
+        confirmTitle={typeof removeConfirm?.title === 'function' ? (removed.length ? removeConfirm.title(removed) : null) : (removeConfirm?.title ?? 'Remove access?')}
+        confirmDescription={
           typeof removeConfirm?.description === 'function'
             ? (removed.length ? removeConfirm.description(removed) : null)
             : (removeConfirm?.description ?? `${removed.map((p) => p.name).join(', ')}: ${subject} will no longer be able to open ${removed.length > 1 ? 'them' : 'it'}.`)
         }
         confirmLabel={typeof removeConfirm?.confirmLabel === 'function' ? (removed.length ? removeConfirm.confirmLabel(removed) : 'Save and remove') : (removeConfirm?.confirmLabel ?? 'Save and remove')}
-        tone="danger"
-        onCancel={() => setConfirm(false)}
-        onCloseAutoFocus={(e) => {
-          if (!viaDialog.current) return;
-          viaDialog.current = false;
-          // Save and remove ran: the dialog's own return to Save would fight us. Place focus once, guarded.
-          if (complete.current) {
-            e.preventDefault();
-            place();
-          }
-        }}
-        onConfirm={() => {
-          setConfirm(false);
-          used.current = true;
-          viaDialog.current = true;
-          onSave(value);
-        }}
       />
     </div>
   );
