@@ -1,9 +1,8 @@
 import { logoAutoworks } from './Home.logos';
-import { fewLive, fewQuiet, manyLive, manyQuiet } from './Home.sets.data';
+import { fewLive, fewQuiet, liveMeta, liveWeeks, manyLive, manyQuiet } from './Home.sets.data';
 import type { DataListItem } from '../components/DataList';
 import type { DayBarMark } from '../components/DayBar';
 import type { OverviewPlatform } from '../components/OverviewCharts';
-import { autoWorks as weekAuto, stockroom as weekStock } from '../components/OverviewCharts.data';
 import type { QueueDoneItem, QueueItem, QueuePlatform, QueueSnoozedItem, QueueWatchItem } from '../components/Queue';
 import type { TodayFact, TodayItem, TodayLedaMode, TodayList } from '../components/PlatformToday';
 import type { TownMapLink, TownMapPlatform, TownMapSlot } from '../components/TownMap';
@@ -76,6 +75,9 @@ export interface HomeSet {
   hasHq?: boolean;
   /** Leda's headline lines from the workshop data. */
   headline?: string;
+  owner?: { name: string; short: string; initials: string };
+  suggestions?: string[];
+  weekRange?: string;
   quietHeadline?: string;
   yesterdayLine?: string;
   /** The set as it reads on a quiet day (its own platforms, watching, yesterday), when it differs from the live one. */
@@ -111,7 +113,7 @@ const stockroom: HomePlatform = {
       { id: 'l3', ref: 'BX-DB1863', title: 'Bendix brake pads, Vios front', detail: 'reorder level 6 · PO-0219', state: 'Low', tone: 'warn', qty: '2 set' },
     ]),
   ],
-  week: { ...weekStock, id: 'stockroom', name: 'Parts Stockroom', logo: { index: 1 }, status: { tone: 'ok', label: 'Running' } },
+  week: liveWeeks.stockroom!,
   yesterday: [{ value: 14, label: 'received' }, { value: 31, label: 'shipped' }],
 };
 
@@ -131,7 +133,7 @@ const autoworks: HomePlatform = {
       { id: 'i3', ref: 'QT-0092', title: 'Ranger · Noise check, front', detail: 'Gerry Ong', state: 'Quotation', at: '9:02' },
     ]),
   ],
-  week: { ...weekAuto, id: 'autoworks', name: 'Dela Cruz Auto Works', logo: { index: 8, src: logoAutoworks }, status: { tone: 'ok', label: 'Running' } },
+  week: liveWeeks.autoworks!,
   yesterday: [{ value: '₱24,300', label: 'revenue' }, { value: 6, label: 'jobs closed' }],
 };
 
@@ -261,6 +263,9 @@ const common = { cases, next: 'Next: PO-0221 from Banawe Autoparts Supply arrive
 
 export const live: HomeSet = {
   key: 'live',
+  owner: liveMeta.owner,
+  suggestions: [...liveMeta.suggestions],
+  weekRange: liveMeta.weekRange,
   ...common,
   platforms: [autoworks, stockroom],
   hq: hqPlatform,
@@ -294,7 +299,7 @@ export const queuePlatforms = (s: HomeSet): QueuePlatform[] => [
 
 export const ledaMode = (p: HomePlatform): TodayLedaMode => (p.status === 'OFFLINE' ? 'offline' : p.ledaCanAct ? 'acts' : 'reads');
 
-export const suggestions = [
+export const defaultSuggestions = [
   'How did the shop do this week?',
   'Anong parts ang pinakamaraming nagamit kahapon?',
   'Raise oil filter reorder level to 30',

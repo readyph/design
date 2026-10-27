@@ -35,7 +35,7 @@ function build(key, quiet) {
   const plat = (id) => t.platforms.find((p) => p.id === id);
   const items = [...t.needsYou, ...t.watching].map((i) => ({ ...i, watch: i.type === 'watch' }));
   const srcPid = (i) => i.platformId || 'hq';
-  const hasHq = (tl.mapPlatforms || []).some((m) => m.hq);
+  const hasHq = (tl.mapPlatforms || []).some((m) => m && m.hq);
   const idx = (pid) => pal.indexOf(ID[pid].color) + 1;
   const pref = (pid) => (pid === 'hq' || !ID[pid] ? { id: 'hq', name: 'HQ', hq: true } : { id: pid, name: plat(pid).label, index: idx(pid), ...(ID[pid].logo ? { src: LOGO[ID[pid].logo] } : {}) });
   const dueInfo = (it) => { const d = it.due; if (!d) return null; const tt = d.day ? null : toMin(d.at), left = tt != null ? tt - NOW : null;
@@ -88,7 +88,7 @@ function build(key, quiet) {
     }
     const yr = (t.yesterday.rows.find((r) => r.platformId === p.id));
     const open = items.filter((i) => !i.watch && srcPid(i) === p.id).length;
-    return { id: p.id, name: p.label, shortName: ID[p.id].short, kind: p.kindName, mapType: ((t.mapPlatforms.find((m) => m.id === p.id) || {}).type) === 'generic' ? undefined : (t.mapPlatforms.find((m) => m.id === p.id) || {}).type, status: p.status, ...(p.statusSince ? { statusSince: clock(p.statusSince) } : {}), ...(p.statusNote ? { statusNote: p.statusNote } : {}), index: idx(p.id), initials: ID[p.id].mono, ...(ID[p.id].logo ? { logo: LOGO[ID[p.id].logo] } : {}), count: open, ledaCanAct: !!p.ledaCanAct, ledaCanRead: !!p.ledaCanRead,
+    return { id: p.id, name: p.label, shortName: ID[p.id].short, kind: p.kindName, mapType: ((t.mapPlatforms.find((m) => m && m.id === p.id) || {}).type) === 'generic' ? undefined : (t.mapPlatforms.find((m) => m && m.id === p.id) || {}).type, status: p.status, ...(p.statusSince ? { statusSince: clock(p.statusSince) } : {}), ...(p.statusNote ? { statusNote: p.statusNote } : {}), index: idx(p.id), initials: ID[p.id].mono, ...(ID[p.id].logo ? { logo: LOGO[ID[p.id].logo] } : {}), count: open, ledaCanAct: !!p.ledaCanAct, ledaCanRead: !!p.ledaCanRead,
       facts: p.kpis.map((k) => ({ value: k.value, label: k.label })), lists: [], activity: p.activity.map((a, i) => ({ id: `${p.id}-a${i}`, at: clock(a.at), text: a.text })), week, yesterday: yr ? (yrows[p.id] || yr.kpis).map((k) => ({ value: k.value, label: k.label })) : [] };
   });
   // HQ
@@ -101,8 +101,8 @@ function build(key, quiet) {
   const links = t.connections.map((c) => ({ from: c.from, to: c.to, status: c.status }));
   const out = { key: key === 'b' ? 'few' : 'many', platforms, hasHq, hq, links, items: queueItems, watching, snoozed: [], done: [], cases,
     next: (tl.quiet && tl.quiet.next) || '', yesterdayDate: t.yesterday.date, plan: { used: u.used, max: u.limit, cycleStart: u.cycleStart, cycleEnd: u.cycleEnd, daysLeft: u.daysLeft },
-    headline: t.leda.headline, quietHeadline: t.leda.quietHeadline, yesterdayLine: t.leda.yesterdayLine, decisions: t.counts.decisions,
-    mapOrder: tl.mapOrder || tl.mapPlatforms.map((m) => m.id) };
+    owner: (() => { const o = t.people.find((x) => x.role === 'Owner') || t.people[0]; return { name: o.name, short: o.short, initials: o.initials }; })(), suggestions: t.leda.suggestions, weekRange: EXT.week.range, headline: t.leda.headline, quietHeadline: t.leda.quietHeadline, yesterdayLine: t.leda.yesterdayLine, decisions: t.counts.decisions,
+    mapOrder: tl.mapOrder || tl.mapPlatforms.filter(Boolean).map((m) => m.id) };
   return out;
 }
 const body = (o) => JSON.stringify(o, null, 1).replace(/"@@(\w+)@@"/g, '$1');
@@ -118,5 +118,8 @@ const PESOK = chartNumberFormat({ locale: 'en-PH', currency: 'PHP', compact: tru
 for (const [k, n] of [['b', 'few'], ['all', 'many']]) {
   ts += `export const ${n}Live = ${body(build(k, false))} as unknown as HomeSet;\n\nexport const ${n}Quiet = ${body(build(k, true))} as unknown as HomeSet;\n\n`;
 }
+const duo = build('duo', false);
+ts += `/** Week figures and charts of the live set's platforms, from the workshop's data-ext.js. */\nexport const liveWeeks = ${body(Object.fromEntries(duo.platforms.map((p) => [p.id, p.week])))} as unknown as Record<string, NonNullable<HomeSet['platforms'][number]['week']>>;\n\n`;
+ts += `export const liveMeta = ${body({ owner: duo.owner, suggestions: duo.suggestions, weekRange: duo.weekRange })} as const;\n`;
 fs.writeFileSync(process.argv[2], ts);
 console.log('written', ts.length);

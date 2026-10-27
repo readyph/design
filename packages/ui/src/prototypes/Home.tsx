@@ -31,7 +31,7 @@ import { PortalFrame } from './PortalFrame';
 import { destFromHash, go } from './protoNav';
 import { focusIfLost } from '../utils/focusIfLost';
 import { useMatchMedia } from '../utils/useMatchMedia';
-import { ledaMode, mapSlots, queuePlatforms, sets, suggestions, type HomeCase, type HomePlatform, type HomeSetKey, type HomeState } from './Home.data';
+import { ledaMode, mapSlots, queuePlatforms, sets, defaultSuggestions, type HomeCase, type HomePlatform, type HomeSetKey, type HomeState } from './Home.data';
 
 /**
  * Portal Home (RDY-255): the place column (map, Needs you), the sheet (Today, a case, or the overview) and Leda's
@@ -47,7 +47,7 @@ export interface HomeProps {
 const NOW = 9 * 60 + 12;
 const PHONE = '(max-width: 640px)';
 const CHAT_KEY = 'rph-home-prototype-chat';
-const owner = { name: 'Ramon Dela Cruz', short: 'Mon', email: 'mon@delacruzauto.ph' };
+const ownerDefault = { name: 'Ramon Dela Cruz', short: 'Mon', initials: 'RD', email: 'mon@delacruzauto.ph' };
 const healthOf = (p: HomePlatform): StatusBarHealth => (p.status === 'ACTIVE' ? 'ok' : p.status === 'DEGRADED' ? 'warn' : 'bad');
 const dayPart = NOW < 12 * 60 ? 'morning' : NOW < 18 * 60 ? 'afternoon' : 'evening';
 const clock = () => new Date(2026, 9, 26, 9, 12).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
@@ -95,6 +95,8 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
   const phone = useMatchMedia(PHONE);
   const quiet = state === 'quiet';
   const data = quiet && base.quietSet ? base.quietSet : base;
+  const suggestions = data.suggestions ?? defaultSuggestions;
+  const owner = data.owner ? { ...ownerDefault, name: data.owner.name, short: data.owner.short, initials: data.owner.initials, email: data.owner.initials === ownerDefault.initials ? ownerDefault.email : '' } : ownerDefault;
   const loading = state === 'loading';
   const failedId = state === 'error' ? (data.platforms.find((p) => p.id === 'counter') ?? data.platforms[data.platforms.length - 1]!).id : null;
   const [fixed, setFixed] = useState(false);
@@ -537,7 +539,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
         <div className="px-pad">
           <div className="mb-4 flex flex-wrap items-baseline gap-x-4 gap-y-1">
             <h3 id="ov7" className="m-0 text-header text-text">Last 7 days</h3>
-            <span className="text-ui text-muted">Fri 16 to Thu 22 Oct</span>
+            <span className="text-ui text-muted">{data.weekRange ?? 'Thu 15 – Wed 21 Oct'}</span>
             <Button variant="text" leftIcon={SquaresFour} rightIcon={ArrowRight} className="ml-auto" onClick={showToday}>Today at your platforms</Button>
           </div>
           <OverviewCharts
@@ -616,7 +618,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
         className="shrink-0"
         platforms={mapSlots({ ...data, hq: quiet || loading ? { ...data.hq, count: 0 } : data.hq, platforms: data.platforms.map((p) => ({ ...p, count: quiet || loading ? 0 : p.count, ...(p.id === failed ? { error: true } : {}) })) })}
         links={data.links}
-        caption={<span><b className="font-semibold text-text">{data.platforms.length} platforms</b> + HQ</span>}
+        caption={<span><b className="font-semibold text-text">{data.platforms.length} platforms</b>{data.hasHq === false ? '' : ' + HQ'}</span>}
         captionInside
         identityPlots={false}
         label="Your platforms"
@@ -679,11 +681,11 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
     <>
       <PortalFrame
         current="home"
-        account={{ name: owner.name, email: owner.email, role: 'Owner', initials: 'RD' }}
+        account={{ name: owner.name, email: owner.email, role: 'Owner', initials: owner.initials }}
         teamCount={1}
         onAddPlatform={() => go({ to: 'platforms', add: true })}
         onNavigate={go}
-        pageName={`${data.platforms.length} platforms + HQ`}
+        pageName={`${data.platforms.length} platforms${data.hasHq === false ? '' : ' + HQ'}`}
         place={place}
         placeLabel="Your platforms"
         heading={phone && phoneDetail ? 'Home' : null}

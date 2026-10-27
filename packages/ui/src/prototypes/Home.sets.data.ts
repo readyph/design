@@ -518,6 +518,18 @@ export const fewLive = {
   "cycleEnd": "29 Oct",
   "daysLeft": 7
  },
+ "owner": {
+  "name": "Bea Santos",
+  "short": "Bea",
+  "initials": "BS"
+ },
+ "suggestions": [
+  "Top sellers yesterday",
+  "Ilan ang orders kahapon?",
+  "Set oat milk reorder level to 24",
+  "Mark yesterday synced in Books"
+ ],
+ "weekRange": "Thu 15 – Wed 21 Oct",
  "headline": "2 decisions. First: 4 items out before 11:00 lunch.",
  "quietHeadline": "All clear. Leda is watching 2 things.",
  "yesterdayLine": "Yesterday: ₱54,380 from 411 orders.",
@@ -931,6 +943,18 @@ export const fewQuiet = {
   "cycleEnd": "29 Oct",
   "daysLeft": 7
  },
+ "owner": {
+  "name": "Bea Santos",
+  "short": "Bea",
+  "initials": "BS"
+ },
+ "suggestions": [
+  "Top sellers yesterday",
+  "Ilan ang orders kahapon?",
+  "Set oat milk reorder level to 24",
+  "Mark yesterday synced in Books"
+ ],
+ "weekRange": "Thu 15 – Wed 21 Oct",
  "headline": "2 decisions. First: 4 items out before 11:00 lunch.",
  "quietHeadline": "All clear. Leda is watching 2 things.",
  "yesterdayLine": "Yesterday: ₱54,380 from 411 orders.",
@@ -2231,6 +2255,22 @@ export const manyLive = {
   "cycleEnd": "29 Oct",
   "daysLeft": 7
  },
+ "owner": {
+  "name": "Ramon Dela Cruz",
+  "short": "Mon",
+  "initials": "RD"
+ },
+ "suggestions": [
+  "How did each branch do this week?",
+  "Top sellers yesterday",
+  "Magkano benta ng counter kahapon?",
+  "Ilan ang orders kahapon?",
+  "Raise oil filter reorder level to 30",
+  "Set oat milk reorder level to 24",
+  "Move KAP-0412 to In progress",
+  "Mark yesterday synced in Books"
+ ],
+ "weekRange": "Thu 15 – Wed 21 Oct",
  "headline": "6 decisions. First: Kapitolyo alternator, transfer by 10:15.",
  "quietHeadline": "All clear. Leda is watching 3 things.",
  "yesterdayLine": "Yesterday: 27 jobs completed, ₱61,250 at the parts counter, ₱54,380 at the café.",
@@ -3141,6 +3181,22 @@ export const manyQuiet = {
   "cycleEnd": "29 Oct",
   "daysLeft": 7
  },
+ "owner": {
+  "name": "Ramon Dela Cruz",
+  "short": "Mon",
+  "initials": "RD"
+ },
+ "suggestions": [
+  "How did each branch do this week?",
+  "Top sellers yesterday",
+  "Magkano benta ng counter kahapon?",
+  "Ilan ang orders kahapon?",
+  "Raise oil filter reorder level to 30",
+  "Set oat milk reorder level to 24",
+  "Move KAP-0412 to In progress",
+  "Mark yesterday synced in Books"
+ ],
+ "weekRange": "Thu 15 – Wed 21 Oct",
  "headline": "6 decisions. First: Kapitolyo alternator, transfer by 10:15.",
  "quietHeadline": "All clear. Leda is watching 3 things.",
  "yesterdayLine": "Yesterday: 27 jobs completed, ₱61,250 at the parts counter, ₱54,380 at the café.",
@@ -3158,3 +3214,114 @@ export const manyQuiet = {
  ]
 } as unknown as HomeSet;
 
+/** Week figures and charts of the live set's platforms, from the workshop's data-ext.js. */
+export const liveWeeks = {
+ "autoworks": {
+  "id": "autoworks",
+  "name": "Dela Cruz Auto Works",
+  "kind": "Repair shop",
+  "logo": {
+   "index": 0,
+   "src": logoAutoworks
+  },
+  "status": {
+   "tone": "ok",
+   "label": "Running"
+  },
+  "figure": {
+   "value": "₱208,880",
+   "label": "revenue, last 7 days"
+  },
+  "sub": "59 jobs · best day Tue 20",
+  "chart": {
+   "title": "Jobs completed a day",
+   "note": "Closed Sundays",
+   "labels": [
+    "Thu 15",
+    "Fri 16",
+    "Sat 17",
+    "Sun 18",
+    "Mon 19",
+    "Tue 20",
+    "Wed 21"
+   ],
+   "values": [
+    11,
+    9,
+    8,
+    0,
+    10,
+    12,
+    9
+   ],
+   "unit": "jobs"
+  }
+ },
+ "stockroom": {
+  "id": "stockroom",
+  "name": "Parts Stockroom",
+  "kind": "Inventory",
+  "logo": {
+   "index": 1
+  },
+  "status": {
+   "tone": "ok",
+   "label": "Running"
+  },
+  "figure": {
+   "value": "₱1,284,650",
+   "label": "stock value on hand"
+  },
+  "sub": "21 in · 199 out",
+  "chart": {
+   "kind": "diverging",
+   "title": "Stock movements a day",
+   "note": "Closed Sundays",
+   "labels": [
+    "Thu 15",
+    "Fri 16",
+    "Sat 17",
+    "Sun 18",
+    "Mon 19",
+    "Tue 20",
+    "Wed 21"
+   ],
+   "up": [
+    0,
+    14,
+    0,
+    0,
+    6,
+    0,
+    1
+   ],
+   "down": [
+    34,
+    30,
+    26,
+    0,
+    31,
+    38,
+    40
+   ],
+   "unit": "movements",
+   "aboveLabel": "In",
+   "belowLabel": "Out"
+  }
+ }
+} as unknown as Record<string, NonNullable<HomeSet['platforms'][number]['week']>>;
+
+export const liveMeta = {
+ "owner": {
+  "name": "Ramon Dela Cruz",
+  "short": "Mon",
+  "initials": "RD"
+ },
+ "suggestions": [
+  "How did the shop do this week?",
+  "Anong parts ang pinakamaraming nagamit kahapon?",
+  "Raise oil filter reorder level to 30",
+  "Move JO-0412 to In progress"
+ ],
+ "weekRange": "Thu 15 – Wed 21 Oct"
+} as const;
