@@ -502,20 +502,24 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
     const statusText = p.status === 'ACTIVE' ? 'Running' : p.status === 'DEGRADED' ? 'Slow' : 'Offline';
     return (
       <div className="px-pad pb-10 pt-5">
-        <p className="m-0 text-small text-muted">{[p.kind, n ? `${n} in Needs you` : ''].filter(Boolean).join(' · ')}</p>
+        <p className="m-0 text-small text-muted">{[p.kind, n ? `${n} in Needs you` : ''].filter(Boolean).map((t, i) => <span key={t}>{i ? <span aria-hidden className="mx-2 text-faint">/</span> : null}{t}</span>)}</p>
         <div className="mt-2 flex flex-wrap items-center gap-3">
           <PlatformLogo name={p.name} src={p.logo} index={p.index} size={24} decorative />
           <h2 ref={headingEl} tabIndex={-1} className="m-0 min-w-0 text-title text-text outline-none focus-visible:ring-2 focus-visible:ring-accent">{p.name}</h2>
           <Button variant="primary" leftIcon={ArrowSquareOut} className="ml-auto" onClick={() => go({ to: 'platform', id: p.id })}>Open {p.name}</Button>
         </div>
         <FactsLine aria-label={`${p.name} facts`} className="mt-2">
-          <Fact tone={p.status === 'ACTIVE' ? 'ok' : p.status === 'DEGRADED' ? 'warn' : 'bad'}>{statusText}</Fact>
+          <Fact><Badge tone={p.status === 'ACTIVE' ? 'ok' : p.status === 'DEGRADED' ? 'warn' : 'bad'}>{p.status === 'ACTIVE' ? 'ACTIVE' : statusText}</Badge></Fact>
           {err ? <Fact tone="muted">no data · last good 9:10 AM</Fact> : p.facts.slice(0, 3).map((f, i) => <Fact key={i} value={f.value} tone={f.tone} valueFirst>{f.label}</Fact>)}
           {p.ledaCanAct ? <Fact tone="ok">Leda acts here</Fact> : <Fact tone="muted">Leda reads only, can’t act here yet</Fact>}
         </FactsLine>
         {err ? <p className="m-0 mt-5 text-ui text-muted">Couldn’t load {p.name}’s overview. Last good 9:10 AM.</p> : null}
         {p.lists.length && !err ? (
-          <PlatformToday surface="surface" platform={{ name: p.name, src: p.logo, index: p.index }} aria-label={`${p.name} lists`} bare lists={listsOf(p)} maxRows={6} rowLayout={phone ? 'phone' : bodyW <= 720 ? 'narrow' : 'wide'} className="mt-2" />
+          <div className={cn('mt-2 grid grid-cols-1 gap-x-10', p.lists.length > 1 && '@min-[720px]/sheet:grid-cols-2')}>
+            {listsOf(p).map((l) => (
+              <PlatformToday key={l.id} surface="surface" platform={{ name: p.name, src: p.logo, index: p.index }} aria-label={`${p.name}: ${l.title}`} bare lists={[l]} maxRows={6} rowLayout={phone ? 'phone' : bodyW <= 720 ? 'narrow' : 'wide'} />
+            ))}
+          </div>
         ) : null}
         <div className="mt-8 grid grid-cols-1 gap-x-10 gap-y-8 @min-[760px]/sheet:grid-cols-2">
           <section>
@@ -542,6 +546,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
                   const word = { ok: 'OK', slow: 'Slow', broken: 'Broken' }[c.status];
                   return (
                     <li key={`${c.from}-${c.to}`} className="flex items-center gap-2 border-t border-rule py-2 text-ui">
+                      <span aria-hidden className={cn('h-0.5 w-3 shrink-0 rounded-full', c.status === 'broken' ? 'bg-bad-dot' : c.status === 'slow' ? 'bg-warn-dot' : 'bg-accent')} />
                       <PlatformLogo name={o.name} src={o.logo} index={o.index} hq={o.hq} size={16} decorative />
                       <span>{o.name}</span>
                       <span className="text-muted">{linkLabel(c.from, c.to)}</span>
