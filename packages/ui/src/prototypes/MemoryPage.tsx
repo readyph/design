@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   ArrowLeft,
+  CaretLeft,
   ArrowRight,
   Buildings,
   Check,
@@ -160,7 +161,7 @@ function SegBtn({ pressed, onClick, label, children, className }: { pressed: boo
 function Head({ title, sub, extra, h = "h2" }: { title: ReactNode; sub?: ReactNode; extra?: ReactNode; h?: "h1" | "h2" }) {
   const H = h;
   return (
-    <div className="flex flex-wrap items-start gap-4 max-[640px]:flex-wrap">
+    <div className="flex flex-wrap items-start gap-4 max-[640px]:gap-2.5">
       <div className="min-w-0">
         <H className="m-0 text-[20px] font-semibold leading-7 tracking-[-0.01em] max-[640px]:text-[18px] max-[640px]:leading-[25px]">{title}</H>
         {sub ? <p className="m-0 mt-0.5 text-[14px] leading-5 text-muted">{sub}</p> : null}
@@ -461,12 +462,12 @@ export function MemoryPage(props: MemoryPageProps) {
   const curFolder: "" | MemSrc | undefined = phone && !phoneSheet ? undefined : doc && curTopic ? curTopic.src : folder;
   const lrow = (on0: boolean) =>
     cn(
-      "flex w-full items-center rounded-[6px] border px-3 py-[9px] text-left max-[640px]:min-h-11 max-[640px]:px-4 max-[640px]:py-3",
+      "flex w-full items-center rounded-[6px] border px-3 py-[9px] text-left max-[640px]:min-h-11 max-[640px]:rounded-none max-[640px]:border-0 max-[640px]:px-4 max-[640px]:py-3 max-[640px]:[button+&]:mt-0.5 max-[640px]:[button+&]:border-t max-[640px]:[button+&]:border-rule",
       on0 ? "border-border bg-surface" : "border-transparent hover:bg-frame-hover",
       focusRing,
     );
   const ghead = (b: string, span?: string, mt = false) => (
-    <div className={cn("flex items-center gap-2 px-3 pb-1.5 pt-2 text-[12px] leading-5 text-muted", mt && "mt-2.5")}>
+    <div className={cn("flex items-center gap-2 px-3 pb-1.5 pt-2 text-[12px] leading-5 text-muted max-[640px]:px-4 max-[640px]:pt-3", mt && "mt-2.5")}>
       <b className="text-[13px] font-semibold leading-5 text-text">{b}</b>
       {span ? <span className="ml-auto">{span}</span> : null}
     </div>
@@ -483,7 +484,7 @@ export function MemoryPage(props: MemoryPageProps) {
   };
   const placeBody = (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto pb-4">
-      <div className="min-h-[220px] shrink-0">
+      <div className="min-h-[220px] shrink-0 max-[640px]:min-h-0">
         <TownMap
           platforms={error ? [null, null, null, null] : empty ? [null, null, null, mapSlots[3]] : mapSlots}
           caption={caption}
@@ -493,7 +494,7 @@ export function MemoryPage(props: MemoryPageProps) {
           onSelect={(id) => (id ? pickFolder(mapOf(id) as MemSrc) : pickFolder(""))}
         />
       </div>
-      <div className="px-3 pb-3 pr-1 pt-3 max-[640px]:px-4">
+      <div className="px-3 pb-3 pr-1 pt-3 max-[640px]:px-4 max-[640px]:pt-4">
         <div className="flex items-center gap-2.5">
           {phone && phoneSheet ? null : <LedaMark size={20} decorative className="shrink-0" />}
           {phone && phoneSheet ? (
@@ -531,7 +532,7 @@ export function MemoryPage(props: MemoryPageProps) {
           {ghead("Folders", "Where Leda's knowledge comes from")}
           <div role="list" aria-label="Folders" className="pb-1 max-[640px]:px-0">
             {folderRows.map((f) => (
-              <div role="listitem" key={f.id || "all"} className={f.id ? "mt-0.5" : ""}>
+              <div role="listitem" key={f.id || "all"} className={cn(f.id && "mt-0.5", "max-[640px]:[div+&]:border-t max-[640px]:[div+&]:border-rule")}>
                 <button
                   type="button"
                   aria-pressed={curFolder === f.id}
@@ -560,7 +561,7 @@ export function MemoryPage(props: MemoryPageProps) {
             </>
           ) : null}
           {ghead("Memory room", "Topics you write", true)}
-          <div className="mx-3 pt-1 text-[13px] leading-[18px]">
+          <div className="mx-3 pt-1 text-[13px] leading-[18px] max-[640px]:mx-4">
             <div className="flex items-center gap-2.5 font-medium">
               <span className={cn("tabular-nums", roomState === "full" ? "text-bad" : roomState === "near" && "text-warn")}>
                 {num(used)} of {num(MEM_CAP)} characters
@@ -586,7 +587,7 @@ export function MemoryPage(props: MemoryPageProps) {
   // ----- sheet parts -----
   const tryBtn =
     loading || error ? null : (
-      <Button variant="secondary" leftIcon={ChatCircle} aria-haspopup="dialog" onClick={() => openTry(folder || undefined)} className="mr-4 min-[641px]:max-[1100px]:ml-auto min-[641px]:max-[1100px]:mr-0 max-[640px]:mr-0 max-[640px]:h-10">
+      <Button variant="secondary" leftIcon={ChatCircle} aria-haspopup="dialog" onClick={() => openTry(folder || undefined)} className="mr-4 min-[641px]:max-[1100px]:ml-auto min-[641px]:max-[1100px]:mr-0 max-[640px]:mr-3 max-[640px]:h-10">
         Try it
       </Button>
     );
@@ -630,6 +631,33 @@ export function MemoryPage(props: MemoryPageProps) {
       </div>
     </SheetBar>
   );
+
+  // Phone detail screens (the workshop's fixed .sbar): the way back, Try it and the Leda entry replace the frame's top bar; the tabs become icon-less chips under it.
+  const phoneDetail = phone && (phoneSheet || inDoc);
+  const phoneTop = phoneDetail ? (
+    <>
+      <button type="button" onClick={() => (inDoc ? closeDoc() : setPhoneSheet(false))} className={cn("-ml-3 inline-flex h-11 shrink-0 items-center gap-1 self-center rounded-control px-2 text-[14px] text-text", focusRing)}>
+        <CaretLeft size={16} aria-hidden />
+        <span>Memory</span>
+      </button>
+      <span className="flex-1" />
+      {tryBtn}
+      <AskLedaBar variant="bar" scope="memory" paused={tryShown} onOpen={() => openTry()} className="max-[640px]:[&_button]:!border-0 max-[640px]:[&_button]:!bg-transparent" />
+    </>
+  ) : undefined;
+  const phoneChips =
+    phone && phoneSheet && !inDoc ? (
+      <div className="sticky top-0 z-[5] flex gap-1.5 overflow-x-auto border-b border-rule bg-surface px-4 py-2 [scrollbar-width:none]">
+        <Tabs
+          variant="chips"
+          aria-label="Memory"
+          items={TABS.map((t) => ({ value: t.value, label: t.label }))}
+          value={tab}
+          onValueChange={goTab}
+          className="[&_[role=tablist]]:gap-1.5 [&_[role=tablist]]:py-0 [&_[role=tab]]:!h-9 [&_[role=tab]]:!rounded-[18px] [&_[role=tab]]:!bg-transparent [&_[role=tab]]:text-[13px] [&_[role=tab]]:font-normal [&_[role=tab]]:text-text [&_[role=tab][data-state=active]]:!border-accent [&_[role=tab][data-state=active]]:!text-accent"
+        />
+      </div>
+    ) : null;
 
   const bizFilter = (
     <div className="w-[216px] min-w-0 shrink-0 max-[640px]:w-auto max-[640px]:flex-1 max-[640px]:basis-full [&_[role=combobox]]:pl-2.5 [&_[role=combobox]]:pr-2 [&_[role=combobox]]:text-[13px]">
@@ -692,7 +720,7 @@ export function MemoryPage(props: MemoryPageProps) {
 
   const docHref = (t: MemTopic) => `?tab=topics&folder=${t.src}&topic=${encodeURIComponent(t.k)}`;
   const nw = canEdit ? (
-    <Button leftIcon={Plus} disabled={roomState === "full"} title={roomState === "full" ? "Memory is full" : undefined} onClick={() => newTopic()} className="max-[640px]:h-11 max-[640px]:flex-1">
+    <Button leftIcon={Plus} disabled={roomState === "full"} title={roomState === "full" ? "Memory is full" : undefined} onClick={() => newTopic()} className="max-[640px]:h-11">
       New topic
     </Button>
   ) : null;
@@ -716,7 +744,7 @@ export function MemoryPage(props: MemoryPageProps) {
     const withF = !f || !!q;
     const all = ts.length > 0 && onN === ts.length;
     const bulk = f && canEdit && ts.length ? (
-      <Button variant="secondary" leftIcon={all ? ToggleLeft : ToggleRight} onClick={() => setBulkAsk({ src: f, how: all ? "off" : "on" })} className="max-[640px]:h-11 max-[640px]:flex-1">
+      <Button variant="secondary" leftIcon={all ? ToggleLeft : ToggleRight} onClick={() => setBulkAsk({ src: f, how: all ? "off" : "on" })} className="max-[640px]:h-11">
         {all ? "Turn all off" : "Turn all on"}
       </Button>
     ) : null;
@@ -828,8 +856,8 @@ export function MemoryPage(props: MemoryPageProps) {
     }
     return (
       <>
-        <nav aria-label="Folder" className="mb-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] leading-[18px] max-[640px]:hidden">
-          <a href="#memory" onClick={(e) => { e.preventDefault(); pickFolder(""); }} className={crumbLink}>Memory</a>
+        <nav aria-label="Folder" className="mb-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] leading-[18px]">
+          <a href="#memory" onClick={(e) => { e.preventDefault(); pickFolder(""); }} className={cn(crumbLink, "max-[640px]:min-h-11")}>Memory</a>
           <span aria-hidden className="text-control">/</span>
           <b className="inline-flex items-center gap-1.5 font-medium text-text">
             {f ? <Logo src={f} size={14} /> : null}
@@ -1220,8 +1248,9 @@ export function MemoryPage(props: MemoryPageProps) {
   })();
 
   const sheet = (
-    <div ref={bodyRef} className="px-6 pb-8 pt-5 max-[640px]:px-4">
-      {inDoc ? docBody : renderPanel()}
+    <div ref={bodyRef} className="px-6 pb-8 pt-5 max-[640px]:px-0 max-[640px]:pt-0">
+      {phoneChips}
+      <div className="max-[640px]:px-4 max-[640px]:pb-[120px] max-[640px]:pt-4">{inDoc ? docBody : renderPanel()}</div>
     </div>
   );
 
@@ -1230,15 +1259,16 @@ export function MemoryPage(props: MemoryPageProps) {
       <PortalFrame
         current="memory"
         heading={null}
-        pageName="Memory"
+        pageName={loading || error || empty ? "Memory" : `${allTopics.filter((t) => t.on).length} topics on`}
         onAddPlatform={() => navGo({ to: "platforms", add: true })}
         onNavigate={(d: Dest) => (d.to === "memory" ? (inDoc ? closeDoc() : undefined) : navGo(d))}
-        leda={<AskLedaBar variant="bar" scope="memory" paused={tryShown} onOpen={() => openTry()} />}
         detail={inDoc || phoneSheet}
         placeLabel="Memory folders"
         place={placeBody}
         sheetLabel="Memory"
-        sheetBar={sheetBar}
+        sheetBar={phoneDetail ? undefined : sheetBar}
+        topBar={phoneTop}
+        hidePhoneNav={phoneDetail}
         account={readOnly ? { name: "Arnel Cruz", email: "arnel@example.ph", role: "Member" } : { name: "Ramon Dela Cruz", email: "ramon@delacruz.ph", role: "Owner" }}
         status={
           <StatusBar

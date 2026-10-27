@@ -41,6 +41,8 @@ export interface PortalFrameProps extends Omit<PlatformShellProps, 'rail' | 'rai
   leda?: ReactNode;
   /** Replaces the whole phone top bar (a detail screen's back bar). The avatar is yours to add then; the frame does not repeat it. */
   topBar?: ReactNode;
+  /** Phone only: hide the bottom nav (the workshop's detail screens). Default false. */
+  hidePhoneNav?: boolean;
   /** Unread count on Team (rail and phone tab). */
   teamCount?: number;
   /** "Add a platform" in the rail and under More. Omit to hide it. */
@@ -62,7 +64,7 @@ const tabClass = cn(
   'focus-visible:ring-offset-frame',
 );
 
-export function PortalFrame({ current, pageName, leda, topBar, teamCount = 0, onAddPlatform, account = defaultAccount, onNavigate, children, ...shell }: PortalFrameProps) {
+export function PortalFrame({ current, pageName, leda, topBar, hidePhoneNav = false, teamCount = 0, onAddPlatform, account = defaultAccount, onNavigate, children, ...shell }: PortalFrameProps) {
   const link = (dest: Dest) => onNavigate ? {
     onClick: (e: MouseEvent<HTMLElement>) => {
       if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
@@ -121,7 +123,7 @@ export function PortalFrame({ current, pageName, leda, topBar, teamCount = 0, on
       />
     </div>
   );
-  return <PlatformShell {...shell} rail={rail} railLabel="Portal" topBar={bar} phoneNav={phoneNav} phoneNavLabel="Portal">{children}</PlatformShell>;
+  return <PlatformShell {...shell} rail={rail} railLabel="Portal" topBar={bar} phoneNav={hidePhoneNav ? undefined : phoneNav} phoneNavLabel="Portal">{children}</PlatformShell>;
 }
 
 /**
