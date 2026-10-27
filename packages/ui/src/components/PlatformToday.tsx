@@ -371,7 +371,7 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
     >
       {bare ? null : (
       <header className={cn('sticky top-0 z-10 flex items-center gap-2.5 border-b border-control bg-[var(--scope-bg)] pb-2.5 pt-0.5')}>
-        <PlatformLogo {...platform} name={platform.name} decorative size={24} className="mt-px" />
+        <PlatformLogo {...platform} name={platform.name} decorative size={24} className="mt-px max-[640px]:mt-0" />
         <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2.5">
           <Heading id={nameId} className="m-0 min-w-0 text-left text-dialog text-text [overflow-wrap:anywhere]">
             {platform.name}
