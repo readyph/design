@@ -121,3 +121,13 @@ describe('StatusBar', () => {
     expect((container.firstElementChild as HTMLElement).className).toContain('w-full');
   });
 });
+
+describe('StatusBar forced colors (RDY-364)', () => {
+  it('the Leda minibar keeps an outline and a Highlight fill when backgrounds are forced', () => {
+    render(<StatusBar leda={{ used: 10, max: 100 }} />);
+    const bar = screen.getByRole('progressbar');
+    expect(bar.className).toContain('forced-colors:outline-[CanvasText]');
+    expect(bar.firstElementChild!.className).toContain('forced-colors:bg-[Highlight]');
+  });
+});
+
