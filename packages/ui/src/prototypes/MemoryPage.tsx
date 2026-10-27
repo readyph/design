@@ -212,7 +212,7 @@ export function MemoryPage(props: MemoryPageProps) {
   const SRCS: MemSrc[] = empty ? ["company"] : MEM_SOURCES;
 
   const [tab, setTab] = useState<"topics" | "blocked" | "requests">(tab0);
-  const [folder, setFolder] = useState<"" | MemSrc>(doc0 ? doc0.src : folder0);
+  const [folder, setFolder] = useState<"" | MemSrc>(folder0);
   const [q, setQ] = useState(props.initialQuery ?? "");
   const [filter, setFilter] = useState<Filter>(props.initialFilter ?? "all");
   const [layout, setLayout] = useState<"list" | "grid">(() => {
@@ -248,6 +248,8 @@ export function MemoryPage(props: MemoryPageProps) {
   const [bqErr, setBqErr] = useState<string | null>(null);
   const [rmAsk, setRmAsk] = useState<MemBlocked | null>(null);
   const bodyRef = useRef<HTMLDivElement | null>(null);
+  const pushRef = useRef(false);
+  const allTopicsRef = useRef<MemTopic[]>([]);
   // the topic's paragraph grows with its words (memory.js autoGrow), on every render, on resize and once fonts are ready
   const autoGrow = () => {
     const c = document.getElementById("docC");
@@ -277,6 +279,7 @@ export function MemoryPage(props: MemoryPageProps) {
             .map((t) => ({ ...t, on: on[keyOf(t)] ?? t.on })),
     [empty, added, removed, custom, on],
   );
+  allTopicsRef.current = allTopics;
   const topicsOf = (src: MemSrc | "") => (src ? allTopics.filter((t) => t.src === src) : allTopics);
   const onCount = (src: MemSrc | "") => topicsOf(src).filter((t) => t.on).length;
   const blockedAll = empty ? [] : blocked;
@@ -310,11 +313,34 @@ export function MemoryPage(props: MemoryPageProps) {
         if (tab !== "topics" || folder || phone) u.searchParams.set("tab", tab);
         if (folder) u.searchParams.set("folder", folder);
       }
-      window.history.replaceState(window.history.state, "", u.toString());
+      if (pushRef.current) {
+        pushRef.current = false;
+        window.history.pushState({ mem: 1 }, "", u.toString());
+      } else window.history.replaceState(window.history.state, "", u.toString());
     } catch {
       /* ignore */
     }
   }, [tab, folder, doc, curTopic, phone, phoneSheet]);
+
+  // Back and Forward (memory.js popstate): the address says which tab, folder and topic page
+  useEffect(() => {
+    const onPop = () => {
+      const u = new URL(window.location.href).searchParams;
+      const t = u.get("tab");
+      const f = u.get("folder");
+      const k = u.get("topic");
+      const nextFolder = (MEM_SOURCES.includes(f as MemSrc) ? f : "") as "" | MemSrc;
+      const topic = k ? allTopicsRef.current.find((x) => x.k === k && (!nextFolder || x.src === nextFolder)) : undefined;
+      setDir("out");
+      setTab(t === "blocked" || t === "requests" ? t : "topics");
+      setFolder(nextFolder);
+      setDoc(topic ? keyOf(topic) : null);
+      setEdit(topic && topic.type === "custom" && !readOnly ? { t: topic.title, c: topic.text } : null);
+      setPhoneSheet(!!(t || f || k));
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [readOnly]);
 
   const headline = loading
     ? null
@@ -376,7 +402,7 @@ export function MemoryPage(props: MemoryPageProps) {
   };
   const openDoc = (t: MemTopic) => {
     setDir("in");
-    setFolder(t.src);
+    pushRef.current = true;
     setTab("topics");
     setDoc(keyOf(t));
     setPhoneSheet(true);
@@ -384,10 +410,35 @@ export function MemoryPage(props: MemoryPageProps) {
   };
   const closeDoc = () =>
     guardLeave(() => {
+      // a topic page opened here sits on its own history entry: Back pops it, as memory.js does
+      if (window.history.state?.mem) {
+        window.history.back();
+        return;
+      }
       setDir("out");
       setDoc(null);
       setEdit(null);
     });
+  // Esc (memory.js onEscape): leaves a topic page (a phone detail screen goes back to the folders), or clears the search. Dialogs, menus and text fields keep their own Esc.
+  const escRef = useRef<() => void>(() => undefined);
+  escRef.current = () => {
+    if (document.querySelector('[role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"]')) return;
+    const a = document.activeElement as HTMLInputElement | null;
+    if (a && /INPUT|TEXTAREA/.test(a.tagName) && a.type !== "checkbox") return;
+    if (doc) closeDoc();
+    else if (phone && phoneSheet) setPhoneSheet(false);
+    else if (q) {
+      setQ("");
+      document.getElementById("mq")?.focus();
+    }
+  };
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !e.defaultPrevented) escRef.current();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
   const goTab = (v: string) =>
     guardLeave(() => {
       setDoc(null);
@@ -503,6 +554,8 @@ export function MemoryPage(props: MemoryPageProps) {
           platforms={error ? [null, null, null, null] : empty ? [null, null, null, mapSlots[3]] : mapSlots}
           caption={caption}
           loading={loading}
+          onAddPlatform={() => navGo({ to: "platforms", add: true })}
+          hqLabel={() => `Company, ${onCount("company")} of ${topicsOf("company").length} topics on`}
           selected={shown ? BUILDING[shown] : null}
           highlight={hover ? [hover] : null}
           onSelect={(id) => (id ? pickFolder(mapOf(id) as MemSrc) : pickFolder(""))}
@@ -745,7 +798,7 @@ export function MemoryPage(props: MemoryPageProps) {
     setAdded((a) => [...a, t]);
     setOn((o) => ({ ...o, [keyOf(t)]: true }));
     setDir("in");
-    setFolder(src);
+    pushRef.current = true;
     setDoc(keyOf(t));
     setEdit({ t: "", c: "" });
   };
@@ -1061,7 +1114,7 @@ export function MemoryPage(props: MemoryPageProps) {
           {list.length ? (
             <ul className="m-0 mt-2 list-none p-0">
               {list.map((b) => (
-                <li key={b.id} onMouseEnter={() => setHover(BUILDING[b.src])} onMouseLeave={() => setHover(null)} className="flex items-center gap-1 border-t border-rule py-4 first:border-t-0 max-[640px]:flex-wrap">
+                <li key={`${b.src}|${b.id}`} onMouseEnter={() => setHover(BUILDING[b.src])} onMouseLeave={() => setHover(null)} className="flex items-center gap-1 border-t border-rule py-4 first:border-t-0 max-[640px]:flex-wrap">
                   <span className="min-w-0 flex-1 text-[14px] leading-5 max-[640px]:basis-full">“{b.q}”</span>
                   {f ? null : (
                     <span className="mr-1 inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap text-[12px] leading-4 text-muted"><Logo src={b.src} size={14} />{b.src === "company" ? "Every business" : srcShort(b.src)}</span>
@@ -1289,12 +1342,13 @@ export function MemoryPage(props: MemoryPageProps) {
           <StatusBar
             ledaFirst
             platforms={empty ? [] : [
-              { id: "autoworks", name: "Auto Works", logoSrc: AUTO_LOGO },
-              { id: "stockroom", name: "Stockroom", color: "#6d48c6", initials: "PS" },
+              { id: "autoworks", name: "Auto Works", logoSrc: AUTO_LOGO, onSelect: () => navGo({ to: "platform", id: "autoworks" }) },
+              { id: "stockroom", name: "Stockroom", color: "#6d48c6", initials: "PS", onSelect: () => navGo({ to: "platform", id: "stockroom" }) },
             ]}
-            people={{ count: 9 }}
-            leda={{ used: 1742, max: 2000, daysLeft: "7 days left" }}
+            people={{ count: 9, onSelect: () => navGo({ to: "team" }) }}
+            leda={{ used: 1742, max: 2000, daysLeft: "7 days left", onSelect: () => navGo({ to: "plan" }) }}
             plan="Starter"
+            onPlanSelect={() => navGo({ to: "plan" })}
             updatedAt="9:12 AM"
           />
         }
@@ -1369,7 +1423,7 @@ export function MemoryPage(props: MemoryPageProps) {
         onConfirm={() => {
           if (!rmAsk) return;
           const b = rmAsk;
-          setBlocked((x) => x.filter((y) => y.id !== b.id));
+          setBlocked((x) => x.filter((y) => !(y.id === b.id && y.src === b.src)));
           setRmAsk(null);
           toast.undo(`Unblocked: “${b.q}”`, () => setBlocked((x) => [...x, b]));
         }}

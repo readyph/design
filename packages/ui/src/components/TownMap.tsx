@@ -99,6 +99,8 @@ export interface TownMapProps {
   label?: string;
   /** Overrides the accessible name of a platform button. */
   platformLabel?: (p: TownMapPlatform) => string;
+  /** Overrides the accessible name of the HQ button (default "HQ, your team and plan"). */
+  hqLabel?: (p: TownMapPlatform) => string;
   className?: string;
 }
 
@@ -167,6 +169,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
     onAddPlatform,
     label = 'Platform map',
     platformLabel = defaultLabel,
+    hqLabel = defaultLabel,
     className,
   },
   ref,
@@ -391,7 +394,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
                     data-sel={sel ? '' : undefined}
                     data-hl={hl ? '' : undefined}
                     data-count={n ? '' : undefined}
-                    aria-label={p.hq ? defaultLabel(p) : platformLabel(p)}
+                    aria-label={p.hq ? hqLabel(p) : platformLabel(p)}
                     aria-pressed={sel}
                     aria-disabled={loading || undefined}
                     onClick={() => {

@@ -112,4 +112,38 @@ describe('Memory page', () => {
     await user.click(more);
     expect(screen.getByRole('menuitem', { name: 'Memory' })).toBeTruthy();
   });
+
+  it('Escape leaves a topic page and returns to All topics; Back pops the topic page the way memory.js does', async () => {
+    const user = userEvent.setup();
+    render(<MemoryPage />);
+    await user.click(screen.getAllByRole('link', { name: /Opening hours/ })[0]);
+    expect(screen.getByRole('heading', { level: 1, name: 'Opening hours' })).toBeTruthy();
+    expect(window.location.search).toContain('topic=hours');
+    expect(window.history.state?.mem).toBe(1);
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.getByRole('heading', { level: 2, name: 'All topics' })).toBeTruthy());
+    expect(window.location.search).not.toContain('topic=');
+  });
+
+  it('Escape in a text field does not leave the topic page', async () => {
+    const user = userEvent.setup();
+    render(<MemoryPage openTopic="c:m5" />);
+    const title = screen.getByRole('textbox', { name: /title/i });
+    act(() => title.focus());
+    await user.keyboard('{Escape}');
+    expect(screen.getByRole('textbox', { name: /title/i })).toBeTruthy();
+    expect(window.location.search).toContain('topic=');
+  });
+
+  it('the empty room has no platforms: the status bar says 0 platforms and the left column lists only the company', () => {
+    render(<MemoryPage state="empty" />);
+    expect(screen.getByText('0 platforms')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /Parts Stockroom/ })).toBeNull();
+  });
+
+  it('full adds the price list topic and fills the memory room to 14,682 of 16,000', () => {
+    render(<MemoryPage state="full" />);
+    expect(screen.getByText('14,682 of 16,000 characters')).toBeTruthy();
+    expect(screen.getByText(/Customers' Leda can use 19 of 23 topics/)).toBeTruthy();
+  });
 });
