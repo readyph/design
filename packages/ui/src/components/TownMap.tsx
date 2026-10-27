@@ -428,7 +428,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
                         {p.name}
                       </span>
                       <span className={cn('max-w-[120px] truncate text-ui font-medium leading-4', dim ? 'text-muted' : 'text-text', many ? 'inline' : 'hidden @max-[400px]/town:inline')}>
-                        {p.hq ? 'HQ' : short}
+                        {p.hq ? (p.shortName ?? 'HQ') : short}
                       </span>
                       {alert && !sel ? <StatusMark status={p.status} error={p.error} className="hidden @max-[400px]/town:inline-block" /> : null}
                       {n ? (

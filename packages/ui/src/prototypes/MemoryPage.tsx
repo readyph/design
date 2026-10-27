@@ -91,7 +91,7 @@ const mapSlots: TownMapSlot[] = [
   { id: "stockroom", name: "Parts Stockroom", shortName: "Stockroom", kind: "Inventory", mapType: "warehouse", status: "ACTIVE", initials: "PS", color: "#6d48c6" },
   { id: "autoworks", name: "Dela Cruz Auto Works", shortName: "Auto Works", kind: "Repair shop", mapType: "service", status: "ACTIVE", logo: AUTO_LOGO },
   null,
-  { id: "hq", name: "Company", kind: "HQ", status: "ACTIVE", hq: true },
+  { id: "hq", name: "Company", shortName: "Company", kind: "HQ", status: "ACTIVE", hq: true },
 ];
 
 const TABS: { value: "topics" | "blocked" | "requests"; label: string; icon: Icon }[] = [
@@ -332,7 +332,7 @@ export function MemoryPage(props: MemoryPageProps) {
   const topicsOf = (src: MemSrc | "") => (src ? allTopics.filter((t) => t.src === src) : allTopics);
   const onCount = (src: MemSrc | "") => topicsOf(src).filter((t) => t.on).length;
   const blockedAll = empty ? [] : blocked;
-  const requestsAll: MemRequest[] = memRequests.map((r) => ({ ...r, on: reqOn[`${r.src}|${r.key}`] }));
+  const requestsAll: MemRequest[] = (empty ? [] : memRequests).map((r) => ({ ...r, on: reqOn[`${r.src}|${r.key}`] }));
   const used = allTopics.filter((t) => t.type === "custom").reduce((n, t) => n + t.title.length + t.text.length, 0);
   const left = MEM_CAP - used;
   const roomState: "ok" | "near" | "full" = used / MEM_CAP >= 1 ? "full" : used / MEM_CAP >= 0.85 ? "near" : "ok";
@@ -638,7 +638,7 @@ export function MemoryPage(props: MemoryPageProps) {
           <LedaMark size={16} decorative className="mt-0.5 shrink-0" />
           {loading ? <span className="mt-[3px] block h-[13px] w-[88%] rounded-[3px] bg-skeleton" /> : <span>{headline}</span>}
         </p>
-        {phone && !loading ? (
+        {phone ? (
           <div className="mt-3">
             <AskLedaBar variant="overview" scope="memory" shortcuts={false} paused={tryShown} />
           </div>
@@ -648,7 +648,7 @@ export function MemoryPage(props: MemoryPageProps) {
         <>
           {ghead("Folders")}
           {[0, 1, 2, 3].map((i) => (
-            <div key={i} aria-hidden="true" className="flex px-3 py-[9px]">
+            <div key={i} aria-hidden="true" className={cn("flex items-center border border-transparent px-3 py-[9px] max-[640px]:min-h-11 max-[640px]:border-0 max-[640px]:px-4 max-[640px]:py-3", i > 0 && "mt-0.5 max-[640px]:border-t max-[640px]:border-rule")}>
               <span className="block h-[13px] w-[70%] rounded-[3px] bg-skeleton" />
             </div>
           ))}
@@ -683,7 +683,7 @@ export function MemoryPage(props: MemoryPageProps) {
             <>
               {ghead("Rules", "For customers", true)}
               {tabRow("blocked", String(blockedAll.length), Prohibit)}
-              {tabRow("requests", `${requestsAll.filter((r) => r.on).length} of ${requestsAll.length} on`, HandWaving)}
+              {requestsAll.length ? tabRow("requests", `${requestsAll.filter((r) => r.on).length} of ${requestsAll.length} on`, HandWaving) : null}
               <button type="button" className={cn(lrow(false), "gap-1.5")} onClick={() => openTry()}>
                 <ChatCircle size={14} aria-hidden className="shrink-0 text-muted" />
                 <span className="min-w-0 truncate text-[13px] font-medium leading-[18px]">Try it</span>
