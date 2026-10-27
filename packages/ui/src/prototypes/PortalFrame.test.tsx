@@ -25,7 +25,7 @@ describe('PortalFrame', () => {
     const navs = screen.getAllByRole('navigation', { hidden: true });
     expect(navs).toHaveLength(2); // rail + phone nav; CSS shows exactly one per viewport
     const phone = within(navs[1]!);
-    expect(phone.getAllByRole('link', { hidden: true }).map((a) => a.textContent)).toEqual(['Home', 'Platforms', 'Reports', 'Team2']);
+    expect(phone.getAllByRole('link', { hidden: true }).map((a) => a.textContent)).toEqual(['Home', 'Platforms', 'Reports', 'Team']);
     expect(phone.getByText('More')).toBeTruthy();
     expect(phone.getByRole('link', { name: 'Platforms', hidden: true }).getAttribute('aria-current')).toBe('page');
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
@@ -111,5 +111,18 @@ describe('PortalFrame', () => {
     const ev = new MouseEvent('click', { bubbles: true, cancelable: true, button: 0 });
     a.dispatchEvent(ev);
     expect(ev.defaultPrevented).toBe(false);
+  });
+});
+
+describe('PortalFrame workshop chrome (RDY-364)', () => {
+  it('account initials follow the workshop rule: first letters of the first two words (Ramon Dela Cruz = RD)', () => {
+    frame();
+    const rail = within(screen.getAllByRole('navigation', { hidden: true })[0]!);
+    expect(rail.getByRole('button', { name: /Account menu/, hidden: true }).textContent).toBe('RD');
+  });
+  it('phone nav has no count badge (the workshop pnav shows none); the count stays in the accessible name', () => {
+    frame();
+    const phone = within(screen.getAllByRole('navigation', { hidden: true })[1]!);
+    expect(phone.getByRole('link', { name: 'Team, 2', hidden: true }).textContent).toBe('Team');
   });
 });

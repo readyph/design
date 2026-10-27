@@ -63,7 +63,7 @@ export interface StatusBarProps {
   leda?: StatusBarLeda;
   /** Plan name, e.g. "Starter". Shown as "Starter plan". */
   plan?: string;
-  /** Workshop shell order (RDY-358): Leda first, then "N platforms · all running" and a named logo per platform, people, plan. Default false keeps the earlier order. */
+  /** Workshop shell order (shell.js renderStatus, RDY-364): Leda first, then "N platforms · all running" and a named logo per platform, people with invites pending, plan. Default true; `false` keeps the earlier order. */
   ledaFirst?: boolean;
   /** Last refresh, already formatted, e.g. "9:12 AM". Shown as "Updated 9:12 AM". */
   updatedAt?: string;
@@ -153,7 +153,7 @@ const plural = (n: number, one: string, many: string) => `${n.toLocaleString('en
  * Items are plain text unless given `href` (link) or `onSelect` (button). A hidden live region announces health changes only.
  */
 export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function StatusBar(
-  { platforms = [], maxPlatforms = 8, moreHref, onMore, people, invites, leda, plan, ledaFirst = false, updatedAt, 'aria-label': ariaLabel, className },
+  { platforms = [], maxPlatforms = 8, moreHref, onMore, people, invites, leda, plan, ledaFirst = true, updatedAt, 'aria-label': ariaLabel, className },
   ref,
 ) {
   const shown = platforms.slice(0, maxPlatforms);

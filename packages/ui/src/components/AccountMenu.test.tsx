@@ -104,3 +104,27 @@ describe('AccountMenu', () => {
     expect(screen.getByRole('menuitem', { name: 'Account settings' }).getAttribute('href')).toBe('/settings');
   });
 });
+
+describe('AccountMenu workshop menu (RDY-364)', () => {
+  it('avatar uses the avatar tokens and takes explicit initials', () => {
+    setup({ initials: 'RD' });
+    const b = btn();
+    expect(b.textContent).toBe('RD');
+    expect(b.firstElementChild!.className).toContain('bg-avatar-bg');
+    expect(b.firstElementChild!.className).toContain('text-avatar-text');
+  });
+  it('head: 13px/600 name, outlined 18px role chip; theme row has icons and the 26px segments', async () => {
+    const user = setup({ initials: 'RD' });
+    await user.click(btn());
+    const menu = await screen.findByRole('menu');
+    const role = screen.getByText('Owner');
+    expect(role.className).toContain('h-[18px]');
+    expect(role.className).toContain('border-border');
+    expect(screen.getByText('Maria Santos').className).toContain('font-semibold');
+    expect(menu.className).toContain('text-[13px]');
+    const light = screen.getByRole('menuitemradio', { name: 'Light' });
+    expect(light.className).toContain('h-[26px]');
+    expect(light.querySelector('svg')).toBeTruthy();
+    expect(menu.querySelectorAll('[role="separator"]').length).toBe(2);
+  });
+});

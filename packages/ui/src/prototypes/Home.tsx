@@ -656,7 +656,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
         teamCount={1}
         onAddPlatform={() => go({ to: 'platforms', add: true })}
         onNavigate={go}
-        leda={askBar('bar', false)}
+        pageName={`${data.platforms.length} platforms + HQ`}
         place={place}
         placeLabel="Your platforms"
         heading={phone && phoneDetail ? 'Home' : null}

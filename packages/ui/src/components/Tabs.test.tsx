@@ -134,3 +134,21 @@ describe('SheetBar', () => {
     expect(screen.getByText('Invite')).toBeTruthy();
   });
 });
+
+describe('Tabs editor, workshop tab (RDY-364)', () => {
+  it('13px tab, 8px padding, 7px gap, 4px between tabs, underline inset 8px at -1px; the close X sits in the tab, faint', () => {
+    const { container } = render(<Tabs items={items} variant="editor" onClose={() => {}} aria-label="Open" />);
+    expect(screen.getByRole('tablist').className).toContain('gap-1');
+    const tab = screen.getAllByRole('tab')[1]!;
+    expect(tab.className).toMatch(/px-2/);
+    expect(tab.className).toContain('gap-[7px]');
+    expect(tab.className).toContain('text-[13px]');
+    expect(tab.className).toContain('after:inset-x-2');
+    expect(tab.className).toContain('after:-bottom-px');
+    const x = tab.querySelector('[data-close]')!;
+    expect(x.className).toContain('size-[18px]');
+    expect(x.className).toContain('text-faint');
+    expect(x.className).not.toContain('absolute');
+    expect(container.querySelectorAll('[data-close]')).toHaveLength(2);
+  });
+});

@@ -1,7 +1,7 @@
 import { useEffect, useState, type MouseEvent, type ReactNode } from 'react';
 import { BookOpen, FileText, Graph, House, List, Plus, Users, type Icon } from '@phosphor-icons/react';
 import { AccountMenu } from '../components/AccountMenu';
-import { IconRailContent, IconRailFoot, IconRailItem, IconRailMark, IconRailSpacer, CountBadge } from '../components/IconRail';
+import { IconRailContent, IconRailFoot, IconRailItem, IconRailMark, IconRailSpacer } from '../components/IconRail';
 import { Menu } from '../components/Menu';
 import { PlatformShell, type PlatformShellProps } from '../components/PlatformShell';
 import { ReadyLogo } from '../components/ReadyMark';
@@ -57,7 +57,7 @@ export interface PortalFrameProps extends Omit<PlatformShellProps, 'rail' | 'rai
 
 const defaultAccount = { name: 'Ramon Dela Cruz', email: 'mon@delacruzauto.ph', role: 'Owner' };
 const tabClass = cn(
-  'relative flex min-h-11 flex-col items-center justify-center gap-[3px] rounded-control text-tiny text-muted',
+  'relative flex min-h-11 flex-col items-center justify-center gap-[3px] rounded-chip text-tiny leading-5 text-muted',
   focusRing,
   'focus-visible:ring-offset-frame',
 );
@@ -87,7 +87,7 @@ export function PortalFrame({ current, pageName, leda, topBar, teamCount = 0, on
   const bar = topBar ?? (
     <>
       <ReadyLogo size={28} />
-      <span className="min-w-0 flex-1 truncate text-muted">{name}</span>
+      <span className="min-w-0 flex-1 truncate text-[13px] leading-5 text-muted">{name}</span>
       {leda}
       <span className="contents [&>button]:size-11"><AccountMenu name={account.name} email={account.email} role={account.role} initials={acctInitials} applyToDocument={false} {...acct} /></span>
     </>
@@ -102,7 +102,6 @@ export function PortalFrame({ current, pageName, leda, topBar, teamCount = 0, on
           <a key={p.id} href={p.href} {...link(DEST[p.id])} aria-current={on ? 'page' : undefined} aria-label={n ? `${p.label}, ${n}` : undefined} className={cn(tabClass, on && 'font-medium text-text')}>
             <p.icon size={20} aria-hidden />
             <span aria-hidden={n ? true : undefined}>{p.label}</span>
-            <CountBadge count={n} />
           </a>
         );
       })}
