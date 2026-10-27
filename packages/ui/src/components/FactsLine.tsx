@@ -40,7 +40,7 @@ export const FactsLine = forwardRef<HTMLUListElement, FactsLineProps>(function F
 ) {
   return (
     <div className={cn('overflow-hidden', className)}>
-      <ul ref={ref} className="-ml-[23px] flex list-none flex-wrap p-0 text-ui leading-5 text-muted" {...rest}>
+      <ul ref={ref} className="-ml-[23px] flex list-none flex-wrap gap-y-1 p-0 text-ui leading-5 text-muted" {...rest}>
         {children}
       </ul>
     </div>

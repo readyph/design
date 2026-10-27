@@ -3,7 +3,6 @@ import {
   ArrowLeft, ArrowRight, ArrowSquareOut, Brain, Buildings, ChatCircle, IdentificationCard, LinkBreak, Plugs, SlidersHorizontal, ListChecks, LockSimple, Plus,
   ShieldCheck, UploadSimple, UserPlus, Users, X,
 } from '@phosphor-icons/react';
-import { AccountMenu } from '../components/AccountMenu';
 import { AskLedaBar } from '../components/AskLedaBar';
 import { Badge } from '../components/Badge';
 import { BlockedQuestions, type BlockedQuestionItem } from '../components/BlockedQuestions';
@@ -40,7 +39,7 @@ import { go, useHandoff } from './protoNav';
 import { focusIfLost } from '../utils/focusIfLost';
 import { useMatchMedia } from '../utils/useMatchMedia';
 import {
-  SECTIONS, andList, basicLabels, companyWeek, dataKinds, dataTopics, detailsStart, everyBusinessBlocked, invites, kinds, ledaStart, linksStart,
+  SECTIONS, tabFacts, andList, basicLabels, companyWeek, dataKinds, dataTopics, detailsStart, everyBusinessBlocked, invites, kinds, ledaStart, linksStart,
   memoryCap, neverShared, nowSample, people, person, plural, platformsStart, publicHolidays, requestDefs, sectionName, settingsDefaults, shortName,
   sampleSet, today, tryQuestions, usage, type BasicKey, type CustomTopic, type DataLink, type DataKind, type Detail, type KindKey, type LedaState, type PlatformRec,
   type SectionId, type SettingField,
@@ -328,7 +327,7 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
     if (!x) return null;
     const h = healthOf(x);
     const k = kinds[x.kind];
-    return { id: x.id, name: nameOf(x.id), shortName: shortName(x), kind: k.name, mapType: k.mapType, status: h.tone === 'bad' ? 'OFFLINE' : h.tone === 'warn' ? 'DEGRADED' : 'ACTIVE', sub: `${k.name} · ${h.word}`, color: x.color, logo: details[x.id]?.logo ?? x.logo, initials: x.mono, index: x.index };
+    return { id: x.id, name: nameOf(x.id), shortName: shortName(x), kind: k.name, mapType: k.mapType, status: h.tone === 'bad' ? 'OFFLINE' : h.tone === 'warn' ? 'DEGRADED' : 'ACTIVE', sub: `${k.name} · ${h.word.toLowerCase()}`, color: x.color, logo: details[x.id]?.logo ?? x.logo, initials: x.mono, index: x.index };
   });
   const mapLinks: TownMapLink[] = links.map((l) => ({ from: l.from, to: l.to, status: l.status === 'slow' ? 'slow' : 'ok' }));
 
@@ -340,18 +339,17 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
     if (sec === 'general') return dd.basics.address ? ['Address set', 'muted'] : ['No address yet', 'warn'];
     if (sec === 'system') {
       const n = kinds[x.kind].settings.filter((f) => dd.settings[f.key] !== f.def).length;
-      return [`${dd.hours.sameAsCompany ? 'Company hours' : 'Own hours'}${n ? ` · ${plural(n, 'change')}` : ''}`, 'muted'];
+      return [`${tabFacts(x.id, x.kind).ownHours ? 'Own hours' : 'Company hours'}${n ? ` · ${plural(n, 'change')}` : ''}`, 'muted'];
     }
-    if (sec === 'team') { const n = Object.keys(dd.team).length; return n ? [plural(n, 'person', 'people'), 'muted'] : ['Nobody yet', 'warn']; }
+    if (sec === 'team') { const n = tabFacts(x.id, x.kind).people; return n ? [plural(n, 'person', 'people'), 'muted'] : ['Nobody yet', 'warn']; }
     if (sec === 'connections') {
       if (needsLink(x)) return ['Setup needed', 'warn'];
       const n = links.filter((l) => l.to === x.id || l.from === x.id).length;
       return [n ? plural(n, 'link') : 'No links', 'muted'];
     }
-    const keys = Object.keys(dd.leda.data);
-    const on = keys.filter((k) => dd.leda.data[k]).length;
-    const b = dd.leda.blocked.filter((q) => q.scope === x.id).length;
-    return [`${on} of ${keys.length} topics on${b ? ` · ${b} blocked` : ''}`, 'muted'];
+    const tf = tabFacts(x.id, x.kind);
+    const b = tf.blocked;
+    return [`${tf.topicsOn} of ${tf.topicsAll} topics on${b ? ` · ${b} blocked` : ''}`, 'muted'];
   };
 
   /* ----- saving ----- */
@@ -530,11 +528,11 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
     const customLogo = general.logo ? true : general.logo === '' ? false : !!p?.logo;
     return (
       <>
-        <div className="grid max-w-[720px] gap-x-6 gap-y-6 sm:grid-cols-2">
+        <div className="grid max-w-[720px] gap-x-6 gap-y-6 @min-[641px]/sheet:grid-cols-2">
           <TextField id={`${uid}-name`} label="Name" value={general.label} required hint="Give this a clear name, like a branch name." error={genErr || undefined} onChange={(v) => { setGenErr(''); setDraft('general', { ...general, label: v }); }} />
           <div className="min-w-0">
             <span id={`${uid}-logo`} className="block text-body font-medium text-text">Logo</span>
-            <div role="group" aria-labelledby={`${uid}-logo`} className="mt-2 flex flex-wrap items-center gap-3">
+            <div role="group" aria-labelledby={`${uid}-logo`} className="mt-2 flex items-center gap-3">
               {p ? <Logo x={p} src={general.logo ?? undefined} size={40} /> : <PlatformLogo name={general.label || kind.name} src={general.logo ?? undefined} index={platforms.length + 1} size={40} decorative />}
               <input ref={logoInput} type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" className="sr-only" tabIndex={-1} aria-hidden onChange={(e) => { readLogo(e.target.files?.[0]); e.target.value = ''; }} />
               <Button ref={uploadBtn} type="button" variant="secondary" leftIcon={UploadSimple} onClick={() => logoInput.current?.click()}>Upload</Button>
@@ -546,7 +544,7 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
             </div>
           </div>
           {kind.basics.map((b) => (
-            <TextField key={b} id={`${uid}-b-${b}`} label={basicLabels[b][0]} hint={basicLabels[b][1]} type={b === 'phone' ? 'tel' : 'text'} className={b === 'address' ? 'sm:col-span-2' : undefined} value={general.basics[b] ?? ''} onChange={(v) => setDraft('general', { ...general, basics: { ...general.basics, [b]: v } })} />
+            <TextField key={b} id={`${uid}-b-${b}`} label={basicLabels[b][0]} hint={basicLabels[b][1]} type={b === 'phone' ? 'tel' : 'text'} className={b === 'address' ? '@min-[641px]/sheet:col-span-2' : undefined} value={general.basics[b] ?? ''} onChange={(v) => setDraft('general', { ...general, basics: { ...general.basics, [b]: v } })} />
           ))}
         </div>
       </>
@@ -560,7 +558,7 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
         <FactsTable
           className="mt-8"
           items={[
-            { label: 'Kind', value: <span className="inline-flex items-center gap-2"><KindIcon kind={p.kind} />{kind.name}</span> },
+            { label: 'Kind', value: <><KindIcon kind={p.kind} />{kind.name}</> },
             { label: 'Status', value: <Health tone={h.tone} word={h.word} /> },
             { label: 'Version', value: p.version ?? 'Not reported yet' },
             { label: 'Last synced', value: p.synced ?? 'Not synced yet' },
@@ -600,7 +598,7 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
   };
   const systemBody = () => (
     <>
-      <div className="grid max-w-[720px] gap-x-6 gap-y-6 sm:grid-cols-2">{kind.settings.map(settingField)}</div>
+      <div className="grid max-w-[720px] gap-x-6 gap-y-6 @min-[641px]/sheet:grid-cols-2">{kind.settings.map(settingField)}</div>
       <div className="mt-8">
         <OpeningHours
           value={system.hours}
@@ -863,7 +861,7 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
     const foot = <FormFoot dirty={dirty} saveLabel={`Save ${lowerName(saveName(sec))}`} onDiscard={() => { clearDraft(sec); setGenErr(''); }} />;
     const inner = sec === 'general' && !ob ? <>{generalBody()}{foot}{factsAndDanger()}</> : body(sec);
     const head = (
-      <header className="flex flex-wrap items-baseline gap-x-2.5">
+      <header className="flex flex-wrap items-baseline gap-x-2.5 gap-y-2.5">
         <h2 id={`${uid}-h-${sec}`} className="m-0 flex items-center gap-2 text-dialog font-semibold text-text">
           {sec === 'leda' ? <LedaMark size={20} decorative /> : null}{sectionNames[sec]}
         </h2>
@@ -897,22 +895,24 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
     : [];
   const kindAny = kind;
   const header = p && !ob ? (
-    <div>
+    <div className={phone ? 'mt-4' : undefined}>
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-small text-muted">
         <a href="#platforms" onClick={(e) => { e.preventDefault(); go({ to: 'platforms' }); }} className="rounded-[2px] hover:text-text">All platforms</a>
         <span aria-hidden className="text-control">/</span>
         <span className="inline-flex items-center gap-1.5"><KindIcon kind={p.kind} size={14} />{kind.name}</span>
       </div>
-      <div className="mt-2 flex flex-wrap items-center gap-3">
+      <div className={`mt-2 flex gap-3 ${phone ? 'flex-wrap items-start' : 'items-center'}`}>
         <Logo x={p} src={details[p.id].logo} />
-        <h1 className="m-0 min-w-0 flex-1 basis-48 text-case font-semibold text-text [overflow-wrap:anywhere]">{nameOf(p.id)}</h1>
-        {needsLink(p) ? (
-          <Button variant="primary" leftIcon={ArrowRight} onClick={() => { setTab('connections'); setFlashId(null); refocus('panel'); }}>Finish setup</Button>
-        ) : kindAny.hasApp ? (
-          <Button variant="primary" leftIcon={ArrowSquareOut} onClick={() => toast({ description: `Opening ${shortName({ label: nameOf(p.id) })}.` })}>Open {shortName({ label: nameOf(p.id) })}</Button>
-        ) : (
-          <span className="text-ui text-muted">No app yet</span>
-        )}
+        <h1 className={`m-0 font-semibold text-text ${phone ? 'text-[18px] leading-[25px]' : 'text-case'}`}>{nameOf(p.id)}</h1>
+        <div className={phone ? 'flex basis-full gap-2 [&>*]:h-11 [&>*]:flex-1' : 'ml-auto flex shrink-0 gap-2'}>
+          {needsLink(p) ? (
+            <Button variant="primary" leftIcon={ArrowRight} onClick={() => { setTab('connections'); setFlashId(null); refocus('panel'); }}>Finish setup</Button>
+          ) : kindAny.hasApp ? (
+            <Button variant="primary" leftIcon={ArrowSquareOut} onClick={() => toast({ description: `Opening ${shortName({ label: nameOf(p.id) })}.` })}>Open {shortName({ label: nameOf(p.id) })}</Button>
+          ) : (
+            <span className="text-ui text-muted">No app yet</span>
+          )}
+        </div>
       </div>
       <FactsLine className="mt-2" aria-label="Facts">
         <Fact><Health tone={healthOf(p).tone} word={healthOf(p).word} /></Fact>
@@ -931,6 +931,7 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
 
   const place = (
     <div className="flex min-h-0 flex-col gap-4 px-2 pb-4">
+      <div className="-mx-2">
       <TownMap
         ref={mapRef}
         platforms={mapPlatforms}
@@ -940,11 +941,12 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
         highlight={hover}
         dimOthers
         loading={state === 'loading'}
-        caption={`${plural(platforms.length, 'platform')} · ${links.length ? plural(links.length, 'data link') : 'no data links'}`}
+        caption={<><b className="font-semibold text-text">{plural(platforms.length, 'platform')}</b> · {links.length ? plural(links.length, 'data link') : 'no data links'}</>}
         label="This platform on your map"
         onSelect={(id) => { if (id && id !== p?.id && !ob) { setPid(id); setDrafts({}); setTab('general'); setMemEdit(null); } }}
         onHover={(id) => setHover(id ? [id] : null)}
       />
+      </div>
       <div className="px-1">
         <div className="mt-0.5 flex items-center gap-2.5">
           {p ? <Logo x={p} src={details[p.id].logo} /> : <PlatformLogo name={general.label || kind.name} src={general.logo ?? undefined} index={platforms.length + 1} size={32} decorative />}
@@ -963,7 +965,7 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
     </div>
   );
 
-  const ask = <AskLedaBar variant="bar" scope={p ? shortName({ label: nameOf(p.id) }) : 'your platforms'} onOpen={() => toast({ description: 'Leda is ready.', leda: true })} />;
+  const ask = <AskLedaBar variant="bar" scope="your platforms" onOpen={() => toast({ description: 'Leda is ready.', leda: true })} />;
   const crumbs = [{ label: 'All platforms', href: '#platforms', onClick: (e: MouseEvent) => { e.preventDefault(); go({ to: 'platforms' }); } }, ...(ob ? [{ label: 'Add a platform' }] : []), { label: p ? nameOf(p.id) : ob ? general.label || kind.name : 'Platform' }];
 
   const whereCrumbs = [{ label: 'All platforms', icon: ArrowLeft, plain: true, href: '#platforms', onClick: (e: MouseEvent) => { e.preventDefault(); go({ to: 'platforms' }); } }, ...(ob ? [{ label: 'Add a platform' }] : []), { label: p ? nameOf(p.id) : ob ? general.label || kind.name : 'Platform', ...(p ? { leading: <Logo x={p} src={details[p.id].logo} size={16} /> } : {}) }];
@@ -1015,10 +1017,10 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
       );
     }
     return (
-      <div ref={sheetRef} className="p-pad pb-8 pt-5">
+      <div ref={sheetRef} className="p-pad pb-8 pt-5 max-[640px]:pt-4">
         <div>
           {phone && p ? (
-            <div ref={tabsRef} className="mb-4">
+            <div ref={tabsRef} className="sticky top-0 z-[5] -mx-4 -mt-4 border-b border-rule bg-surface px-4 py-2">
               <Tabs variant="chips" aria-label={nameOf(p.id)} items={tabItems.map((t) => ({ ...t, status: undefined }))} value={tab} onValueChange={(v) => { setTab(v as SectionId); setFlashId(null); }} />
             </div>
           ) : null}
@@ -1035,7 +1037,7 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
         current="platforms"
         pageName="Platform"
         heading={null}
-        account={{ name: 'Maria Santos', email: 'maria@santosauto.ph', role: 'Owner' }}
+        account={{ name: sampleSet.owner.name, email: sampleSet.owner.email, role: sampleSet.owner.role, initials: sampleSet.owner.initials }}
         onAddPlatform={() => go({ to: 'platforms', add: true })}
         onNavigate={go}
         placeLabel="This platform on your map"
@@ -1045,9 +1047,8 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
         topBar={
           <>
             <Breadcrumbs variant="phone" aria-label="Back" items={crumbs} />
-            <span className="min-w-0 flex-1 truncate font-semibold">{p ? nameOf(p.id) : 'Add a platform'}</span>
+            <span className="min-w-0 flex-1" />
             <AskLedaBar variant="bar" scope="your platforms" shortcuts={false} onOpen={() => toast({ description: 'Leda is ready.', leda: true })} />
-            <AccountMenu name="Maria Santos" email="maria@santosauto.ph" role="Owner" applyToDocument={false} />
           </>
         }
         sheetBar={phone ? undefined : <SheetBar actions={ask} wrapChildren={false}><Breadcrumbs variant="where" aria-label="You are here" items={whereCrumbs} /></SheetBar>}

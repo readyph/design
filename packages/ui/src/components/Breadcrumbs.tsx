@@ -1,5 +1,5 @@
 import { forwardRef, Fragment, type MouseEventHandler, type ReactNode } from 'react';
-import type { Icon as PhosphorIcon } from '@phosphor-icons/react';
+import { CaretLeft, type Icon as PhosphorIcon } from '@phosphor-icons/react';
 import { cn, focusRing } from '../utils/cn';
 
 export interface Crumb {
@@ -78,11 +78,11 @@ export const Breadcrumbs = forwardRef<HTMLElement, BreadcrumbsProps>(function Br
         crumb={back}
         className={cn(
           link,
-          'inline-flex max-w-full items-center gap-1 text-ui font-medium text-muted hover:text-text max-sm:min-h-11 max-sm:min-w-11',
+          'inline-flex max-w-full items-center gap-1 text-[14px] leading-[18px] text-text max-sm:min-h-11 max-sm:min-w-11',
           focusRing,
         )}
       >
-        <span aria-hidden className="text-header leading-none">‹</span>
+        <CaretLeft aria-hidden size={12} className="shrink-0" />
         <span className="truncate">{back.label}</span>
       </Action>
     );

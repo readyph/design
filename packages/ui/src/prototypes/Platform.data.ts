@@ -2,7 +2,7 @@ import type { BlockedQuestionItem } from '../components/BlockedQuestions';
 import type { DayHours, DayKey, OpeningHoursValue, PublicHoliday } from '../components/OpeningHours';
 import type { RoleOption } from '../components/RolePicker';
 import type { TryItAbout, TryItQuestion } from '../components/TryIt';
-import { instances, platformDetail } from './Platform.detail.generated';
+import { instances, platformDetail, teamData } from './Platform.detail.generated';
 import { sets, USAGE } from './Platforms.data';
 
 /** Sample data for the Platform page prototype (RDY-257). Not exported from the package. */
@@ -62,12 +62,7 @@ export const kinds: Record<KindKey, Kind> = {
     mapType: 'service',
     hasApp: true,
     basics: platformDetail.basics.repair_shop,
-    settings: [
-      { key: 'prefix', label: 'Job number prefix', type: 'text', hint: 'Starts every job number, like JOB-1042.', def: 'JOB' },
-      { key: 'warranty', label: 'Default warranty', type: 'number', unit: 'days', hint: 'Used when a job does not set its own.', def: 30 },
-      { key: 'labour', label: 'Labour rate', type: 'number', unit: '₱ per hour', def: 650 },
-      { key: 'bays', label: 'Service bays', type: 'number', hint: 'How many jobs can run at once.', def: 4 },
-    ],
+    settings: platformDetail.settings.repair_shop as SettingField[],
     roles: [
       { id: 'manager', name: 'Manager', about: 'Runs the shop and changes its settings.' },
       { id: 'advisor', name: 'Service advisor', about: 'Writes up jobs and talks to customers.' },
@@ -84,11 +79,7 @@ export const kinds: Record<KindKey, Kind> = {
     mapType: 'warehouse',
     hasApp: true,
     basics: platformDetail.basics.inventory,
-    settings: [
-      { key: 'reorder', label: 'Default reorder level', type: 'number', hint: 'Low-stock alerts start below this.', def: 5 },
-      { key: 'unit', label: 'Default unit', type: 'select', options: ['Piece', 'Box', 'Litre', 'Kilogram'], def: 'Piece' },
-      { key: 'alerts', label: 'Low-stock alerts', type: 'toggle', hint: 'Tell the manager when an item runs low.', def: true },
-    ],
+    settings: platformDetail.settings.inventory as SettingField[],
     roles: [
       { id: 'manager', name: 'Manager', about: 'Runs the stockroom and changes its settings.' },
       { id: 'clerk', name: 'Stock clerk', about: 'Receives, counts and moves stock.' },
@@ -104,11 +95,7 @@ export const kinds: Record<KindKey, Kind> = {
     mapType: 'store',
     hasApp: true,
     basics: platformDetail.basics.pos,
-    settings: [
-      { key: 'footer', label: 'Receipt footer', type: 'text', hint: 'Printed at the bottom of every receipt.', def: 'Thank you! Come again.' },
-      { key: 'vat', label: 'Prices include VAT', type: 'toggle', def: true },
-      { key: 'terminals', label: 'Terminals', type: 'number', hint: 'Tills that can take payment at once.', def: 2 },
-    ],
+    settings: platformDetail.settings.pos as SettingField[],
     roles: genericRoles,
     provides: ['catalog'],
     reads: ['stock'],
@@ -119,10 +106,7 @@ export const kinds: Record<KindKey, Kind> = {
     lower: 'loyalty program',
     hasApp: false,
     basics: platformDetail.basics._generic,
-    settings: [
-      { key: 'summary', label: 'Daily summary', type: 'toggle', hint: 'Email the team a summary each evening.', def: false },
-      { key: 'note', label: 'Note for the team', type: 'text', hint: 'Shown at the top of this platform for staff.', def: '' },
-    ],
+    settings: platformDetail.settings._generic as SettingField[],
     roles: genericRoles,
     provides: [],
     reads: ['catalog'],
@@ -369,3 +353,17 @@ export const detailsStart = (): Record<string, Detail> => ({
 
 export const plural = (n: number, one: string, many?: string) => `${n} ${n === 1 ? one : (many ?? `${one}s`)}`;
 export const andList = (xs: string[]) => (xs.length <= 1 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`);
+
+/** Tab-list facts straight from the workshop data (RDY-361): people with a role, own hours, topics on of all (kind topics plus remembered ones), blocked questions. */
+export const tabFacts = (id: string, kind: KindKey) => {
+  const pd = platformDetail as any;
+  const topics = (pd.customer[kind === 'repair' ? 'repair_shop' : kind]?.topics ?? []) as { on: boolean }[];
+  const mem = (pd.memory as { platform: string }[]).filter((m) => m.platform === id).length;
+  return {
+    people: Object.keys((teamData as any).assign[id] ?? {}).length,
+    ownHours: pd.hoursValues[id]?.same === false,
+    topicsOn: topics.filter((t) => t.on).length + mem,
+    topicsAll: topics.length + mem,
+    blocked: (pd.blocked[id] ?? []).length,
+  };
+};
