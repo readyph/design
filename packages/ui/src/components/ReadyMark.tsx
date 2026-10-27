@@ -1,5 +1,5 @@
-import { useInsertionEffect, type CSSProperties } from 'react';
-import { FALCON, FALCON_MONO, FALCON_TILE, LOCKUP_MARK_COLOR, LOCKUP_MARK_MONO, LOCKUP_WORDMARK } from './ReadyMark.geo';
+import { useId, useInsertionEffect, type CSSProperties } from 'react';
+import { FALCON, FALCON_EYE, FALCON_MONO, FALCON_TILE, LOCKUP_MARK_COLOR, LOCKUP_MARK_MONO, LOCKUP_WORDMARK } from './ReadyMark.geo';
 import { cn } from '../utils/cn';
 import { ready } from '../tokens';
 
@@ -8,9 +8,13 @@ import { ready } from '../tokens';
  * Inline SVG; the vermilion tones come from the themed `--rd-*` tokens, so the mark follows light and dark with the rest of the UI.
  * The brand name is exactly "Ready". Leda's mark is separate (see Leda.tsx).
  *
- * `animate` runs the designer's swoop-assemble (animation/README.md): the facets fly in along the dive one by one, head first, 70 ms
- * apart (1.32 s), then swap back to the static paths, so the rest frame is the static mark. SVG and CSS only. With
- * `prefers-reduced-motion` it is a 400 ms fade. The motion never moves the layout: the SVG clips to its own box.
+ * `animate` plays one of the designer's two moves (animation/README.md), chosen by `effect`:
+ * - `assemble` (default; swoop-assemble): the facets fly in along the dive one by one, head first, 70 ms apart (1.32 s), then swap back to
+ *   the static paths. With `prefers-reduced-motion` it is a 400 ms fade.
+ * - `shine` (RDY-365, the rail's): one light sweep along the 60 degree cut, 1.9 s, plus a pale eye flash (visible on dark). Two bands clipped
+ *   to the lit and mid planes slide over the static paths; the silhouette never moves. With `prefers-reduced-motion` it is one brightness
+ *   step: a full lit and mid overlay at 0.9 that fades out over 900 ms.
+ * Either way the rest frame is the static mark, SVG and CSS only, and the motion never moves the layout: the SVG clips to its own box.
  */
 
 export type ReadyMarkTone = 'color' | 'black' | 'white' | 'tile';
@@ -30,6 +34,8 @@ export interface ReadyMarkProps {
    * so a parent can replay on hover or focus by counting up.
    */
   animate?: boolean | number;
+  /** Which move `animate` plays. Default `assemble` (swoop-assemble); `shine` is the rail's (one sweep, never loops). */
+  effect?: 'assemble' | 'shine';
   /** Use one theme's tones whatever the page theme is (a mark on a surface that does not follow the theme). Default: follow the page. */
   scheme?: 'light' | 'dark';
   /** Accessible name. Default "Ready". Ignored when `decorative`. */
@@ -57,7 +63,18 @@ const CSS = `
 @media (prefers-reduced-motion:reduce){
 .rd-play .rd-facets{display:none}
 .rd-play .rd-static{animation:rd-fade 400ms ease-out}
+.rd-shine .rd-band,.rd-shine .rd-eye{animation:none}
+.rd-shine .rd-step{animation:rd-step 900ms ease-out}
 }
+.rd-mark .rd-gleam{visibility:hidden}
+.rd-mark .rd-band{transform:translateX(-400px)}
+.rd-mark .rd-step,.rd-mark .rd-eye{opacity:0}
+.rd-shine .rd-gleam{visibility:visible}
+.rd-shine .rd-band{animation:rd-band 1900ms linear}
+.rd-shine .rd-eye{animation:rd-eye 1900ms linear}
+@keyframes rd-band{0%{transform:translateX(-110px);animation-timing-function:cubic-bezier(.45,.05,.3,1)}100%{transform:translateX(100px)}}
+@keyframes rd-eye{0%{opacity:0}56.842%{opacity:0}65.263%{opacity:1}84.211%{opacity:0}100%{opacity:0}}
+@keyframes rd-step{0%{opacity:0}30%{opacity:.9}100%{opacity:0}}
 .rd-lockup .rd-ink{fill:var(--rd-ink)}
 `;
 
@@ -79,6 +96,8 @@ function useReadyStyles() {
 export const READY_MARK_CSS = CSS;
 /** Length of the assemble, in ms. */
 export const READY_ASSEMBLE_MS = 1320;
+/** Length of the shine sweep, in ms (the reduced-motion step is 900 ms). */
+export const READY_SHINE_MS = 1900;
 
 const CLS = { deep: 'rd-d', lit: 'rd-l', mid: 'rd-m' } as const;
 const MONO = { black: '#000000', white: '#FFFFFF' } as const;
@@ -87,18 +106,41 @@ function a11y(decorative: boolean | undefined, label: string) {
   return decorative ? { 'aria-hidden': true as const, focusable: 'false' as const } : { role: 'img' as const, 'aria-label': label };
 }
 
-export function ReadyMark({ size = 32, tone = 'color', cut = 'auto', animate = false, scheme, label = 'Ready', decorative, className }: ReadyMarkProps) {
+export function ReadyMark({ size = 32, tone = 'color', cut = 'auto', animate = false, effect = 'assemble', scheme, label = 'Ready', decorative, className }: ReadyMarkProps) {
   useReadyStyles();
+  const uid = useId().replace(/:/g, '');
   const small = cut === 'small' || (cut === 'auto' && size <= 32);
   const geo = small ? FALCON.small : FALCON.full;
   const playKey = typeof animate === 'number' ? animate : animate ? 1 : 0;
   const play = tone === 'color' && playKey > 0;
+  const shine = play && effect === 'shine';
   let body;
   if (tone === 'color') {
     body = (
       <>
         <g className="rd-static">{geo.order.map((t) => <path key={t} className={CLS[t]} fillRule="evenodd" d={geo[t]} />)}</g>
-        {play ? (
+        {shine ? (
+          <>
+            <defs>
+              <clipPath id={`${uid}-l`}><path d={geo.lit} /></clipPath>
+              <clipPath id={`${uid}-m`}><path clipRule="evenodd" d={geo.mid} /></clipPath>
+            </defs>
+            <g className="rd-gleam" aria-hidden="true">
+              {(['l', 'm'] as const).map((p) => (
+                <g key={p} clipPath={`url(#${uid}-${p})`}>
+                  <rect className="rd-step" width="256" height="256" fill={`var(--rd-shine-${p === 'l' ? 'lit' : 'mid'})`} />
+                  <g transform="translate(128 128) rotate(-30)">
+                    <g className="rd-band">
+                      <rect x="-30" y="-300" width="60" height="600" fill={`var(--rd-shine-${p === 'l' ? 'lit' : 'mid'})`} />
+                      <rect x="-9" y="-300" width="13" height="600" fill={`var(--rd-shine-${p === 'l' ? 'lit' : 'mid'}-core)`} />
+                    </g>
+                  </g>
+                </g>
+              ))}
+              <path className="rd-eye" fill="var(--rd-shine-eye)" d={small ? FALCON_EYE.small : FALCON_EYE.full} />
+            </g>
+          </>
+        ) : play ? (
           <g className="rd-facets" aria-hidden="true">
             {geo.facets.map((f) => <path key={f.i} className={CLS[f.tone]} fillRule="evenodd" style={{ '--i': f.i } as CSSProperties} d={f.d} />)}
           </g>
@@ -122,7 +164,7 @@ export function ReadyMark({ size = 32, tone = 'color', cut = 'auto', animate = f
       height={size}
       viewBox="0 0 256 256"
       {...a11y(decorative, label)}
-      className={cn('rd-mark', scheme && `rd-scheme-${scheme}`, play && 'rd-play', className)}
+      className={cn('rd-mark', scheme && `rd-scheme-${scheme}`, play && (shine ? 'rd-shine' : 'rd-play'), className)}
     >
       {body}
     </svg>

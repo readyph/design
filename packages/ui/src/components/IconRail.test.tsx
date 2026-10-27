@@ -19,6 +19,36 @@ const rail = (extra = {}) =>
     </IconRail>,
   );
 
+describe('IconRailMark (RDY-365)', () => {
+  it('plays the shine once on mount with the full cut at 36px, not swoop-assemble; re-renders do not replay; no loop', () => {
+    const { container, rerender } = rail();
+    const svg = container.querySelector('a[aria-label="Ready"] svg')!;
+    expect(svg.getAttribute('class')).toContain('rd-shine');
+    expect(svg.getAttribute('class')).not.toContain('rd-play');
+    expect(svg.getAttribute('width')).toBe('36');
+    expect(svg.querySelector('.rd-facets')).toBeNull();
+    expect(svg.querySelector('.rd-static path')?.getAttribute('d')).toContain('M189.36 144.04');
+    rerender(
+      <IconRail>
+        <IconRailMark href="/home" />
+      </IconRail>,
+    );
+    expect(container.querySelector('a[aria-label="Ready"] svg')).toBe(svg);
+    expect(container.querySelector('a[aria-label="Ready"]')?.className).toContain('size-9');
+  });
+
+  it('a hover during the run does not stack or restart it; animate={false} is static', async () => {
+    const { container, unmount } = rail();
+    const svg = container.querySelector('a[aria-label="Ready"] svg')!;
+    await userEvent.hover(screen.getByRole('link', { name: 'Ready' }));
+    expect(container.querySelector('a[aria-label="Ready"] svg')).toBe(svg);
+    expect(container.querySelectorAll('.rd-gleam')).toHaveLength(1);
+    unmount();
+    const r = render(<IconRailMark animate={false} />);
+    expect(r.container.querySelector('.rd-gleam')).toBeNull();
+  });
+});
+
 describe('IconRail', () => {
   it('is a labelled nav with named items, aria-current only on the current one, and no Settings', () => {
     rail();
