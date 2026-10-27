@@ -4,6 +4,7 @@ import { AccountMenu } from '../components/AccountMenu';
 import { IconRailContent, IconRailFoot, IconRailItem, IconRailMark, IconRailSpacer, CountBadge } from '../components/IconRail';
 import { Menu } from '../components/Menu';
 import { PlatformShell, type PlatformShellProps } from '../components/PlatformShell';
+import { ReadyLogo } from '../components/ReadyMark';
 import { cn, focusRing } from '../utils/cn';
 import { focusIfLost } from '../utils/focusIfLost';
 import { arrivedByNav, clearHandoff, type Dest } from './protoNav';
@@ -12,7 +13,7 @@ import { arrivedByNav, clearHandoff, type Dest } from './protoNav';
  * Portal frame (prototype composition, NOT exported from the package index): the one chrome every Portal
  * prototype page wraps its content in. It fills PlatformShell's rail and phone slots so pages do not each
  * carry their own: the icon rail (Home, Platforms, Reports, Team, Memory, account), the phone top bar
- * (ReadyPH, page name, Leda entry, account avatar) and the phone nav (Home, Platforms, Reports, Team, More).
+ * (the Ready logo, page name, Leda entry, account avatar) and the phone nav (Home, Platforms, Reports, Team, More).
  * Everything else (place, sheetBar, sheetLabel, status, detail, actionBar, heading, children) is PlatformShell's own prop and passes straight through.
  */
 export type PortalPage = 'home' | 'platforms' | 'reports' | 'team' | 'memory';
@@ -45,7 +46,7 @@ export interface PortalFrameProps extends Omit<PlatformShellProps, 'rail' | 'rai
   /** "Add a platform" in the rail and under More. Omit to hide it. */
   onAddPlatform?: () => void;
   /**
-   * Called with the destination when a rail item, phone tab, More entry, the ReadyPH mark or an account menu entry is chosen
+   * Called with the destination when a rail item, phone tab, More entry, the Ready mark or an account menu entry is chosen
    * (RDY-357, prototype navigation). Optional and additive: omitted, the links keep their plain `#` hrefs and nothing else changes.
    * A plain click on a link calls it instead of following the href; Ctrl/Cmd/Shift-click and middle-click keep the href.
    */
@@ -83,7 +84,7 @@ export function PortalFrame({ current, pageName, leda, topBar, teamCount = 0, on
   );
   const bar = topBar ?? (
     <>
-      <span className="font-semibold">ReadyPH</span>
+      <ReadyLogo size={28} />
       <span className="min-w-0 flex-1 truncate text-ui leading-5 text-muted">{name}</span>
       {leda}
       <AccountMenu name={account.name} email={account.email} role={account.role} initials={account.initials} applyToDocument={false} {...acct} />

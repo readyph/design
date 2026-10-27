@@ -2,6 +2,7 @@ import { useEffect, type ReactNode } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { userEvent, within } from '@storybook/test';
 import { AccountMenu } from './AccountMenu';
+import { ReadyLogo } from './ReadyMark';
 
 const meta: Meta<typeof AccountMenu> = {
   title: 'Components/Navigation/AccountMenu',
@@ -107,7 +108,7 @@ export const OpenOverBusyBackground: Story = {
 const PhoneBar = ({ children }: { children: ReactNode }) => (
   <div className="h-[640px] w-full bg-bg">
     <div className="flex h-12 items-center justify-between border-b border-border bg-surface px-3 text-ui font-semibold text-text">
-      <span>ReadyPH</span>
+      <ReadyLogo size={28} />
       {children}
     </div>
     <div className="p-4 text-ui text-muted">Phone page content.</div>

@@ -80,6 +80,10 @@
     --hl1: #DCE4FF;
     --hl2: #3ED3BE;
     --hl3: #7DF5DF;
+    --rd-lit: #FF8A5C;
+    --rd-mid: #F24A2C;
+    --rd-deep: #C42E16;
+    --rd-ink: #FFFFFF;
     --shadow-float: 0 16px 40px rgba(0,0,0,.5), 0 2px 6px rgba(0,0,0,.3);
   }
 }
@@ -156,6 +160,10 @@
   --hl1: #DCE4FF;
   --hl2: #3ED3BE;
   --hl3: #7DF5DF;
+  --rd-lit: #FF8A5C;
+  --rd-mid: #F24A2C;
+  --rd-deep: #C42E16;
+  --rd-ink: #FFFFFF;
   --shadow-float: 0 16px 40px rgba(0,0,0,.5), 0 2px 6px rgba(0,0,0,.3);
 }
 
