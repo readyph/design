@@ -250,7 +250,7 @@ export function ChatHeader({ busy = false, empty = false, onNewConversation, onC
           onClick={() => {
             if (!empty) setAsking(true);
           }}
-          className={cn('shrink-0 max-[640px]:h-11 max-[640px]:w-11 max-[640px]:px-0 max-[640px]:[&_svg]:size-[18px]', empty && 'cursor-default text-muted opacity-50 hover:bg-transparent hover:text-muted')}
+          className={cn('shrink-0 max-[640px]:h-11 max-[640px]:w-11 max-[640px]:px-0 max-[640px]:[&_svg]:size-[18px]', empty && 'aria-disabled:cursor-default aria-disabled:opacity-50 aria-disabled:hover:bg-transparent aria-disabled:hover:text-muted')}
         >
           <span className="max-[640px]:sr-only">New conversation</span>
         </Button>
