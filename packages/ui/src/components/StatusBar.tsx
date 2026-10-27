@@ -93,7 +93,7 @@ const dot: Record<StatusBarHealth, string> = {
 
 // Full class names so Tailwind can see them. `@max-[Npx]/status:` is a container query on the bar's own width.
 const item =
-  'inline-flex h-[26px] min-w-0 items-center gap-1.5 whitespace-nowrap rounded-chip px-1.5 text-small text-muted';
+  'inline-flex h-[26px] min-w-0 items-center gap-2 whitespace-nowrap rounded-chip px-[9px] text-small leading-5 text-muted';
 const interactive =
   'cursor-pointer hover:bg-frame-hover hover:text-text aria-pressed:bg-frame-active aria-[current=true]:bg-frame-active ' +
   'outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-frame forced-colors:outline-0 forced-colors:focus-visible:outline forced-colors:focus-visible:outline-2 forced-colors:focus-visible:outline-[Highlight]';
@@ -134,7 +134,7 @@ function Item({ href, onSelect, selected, 'aria-label': label, title, className,
   );
 }
 
-const Divider = () => <span aria-hidden="true" className="mr-1 h-3 w-px shrink-0 bg-control" />;
+const Divider = () => <span aria-hidden="true" className="ml-1.5 mr-2 h-3 w-px shrink-0 bg-control" />;
 
 const plural = (n: number, one: string, many: string) => `${n.toLocaleString('en-US')} ${n === 1 ? one : many}`;
 
@@ -203,11 +203,11 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
                   {bad ? (
                     <>
                       <span className={cn('size-[7px] shrink-0 rounded-full', dot[p.health!])} aria-hidden="true" />
-                      <span className="max-w-[16ch] truncate text-text">{p.name}</span>
+                      <span className={cn('max-w-[16ch] truncate text-text', ledaFirst && 'text-ui font-medium')}>{p.name}</span>
                       <span>{words(p)}</span>
                     </>
                   ) : (
-                    namesAlways && <span className="max-w-[16ch] truncate">{p.name}</span>
+                    namesAlways && <span className={cn('max-w-[16ch] truncate', ledaFirst && 'text-ui font-medium text-text')}>{p.name}</span>
                   )}
                 </Item>
               </li>
@@ -232,16 +232,22 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
       ) });
   }
 
+  const mergeInvites = ledaFirst && !!people && !!invites && invites.count > 0;
   if (people) {
     sections.push({ key: 'people', cls: "flex shrink-0", node: (
-        <Item href={people.href} onSelect={people.onSelect} aria-label={plural(people.count, 'person', 'people')}>
+        <Item
+          href={people.href}
+          onSelect={people.onSelect}
+          aria-label={mergeInvites ? `${plural(people.count, 'person', 'people')}, ${plural(invites!.count, 'invite', 'invites')} pending` : plural(people.count, 'person', 'people')}
+        >
           <Users size={14} aria-hidden="true" />
           <span className="tabular-nums">{plural(people.count, 'person', 'people')}</span>
+          {mergeInvites && <span className={cn('tabular-nums', dropInviteWord)}>· {invites!.count} {invites!.count === 1 ? 'invite' : 'invites'} pending</span>}
         </Item>
       ) });
   }
 
-  if (invites && invites.count > 0) {
+  if (invites && invites.count > 0 && !mergeInvites) {
     sections.push({ key: 'invites', cls: "flex shrink-0", node: (
         <Item href={invites.href} onSelect={invites.onSelect} aria-label={`${plural(invites.count, 'invite', 'invites')} waiting`}>
           <EnvelopeSimple size={14} aria-hidden="true" />
@@ -257,7 +263,7 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
     sections.push({ key: 'leda', cls: "flex shrink-0", node: (
         <Item href={leda.href} onSelect={leda.onSelect}>
           <LedaMark size={16} decorative />
-          <span>Leda</span>
+          {ledaFirst ? <b className="text-ui font-medium text-text">Leda</b> : <span>Leda</span>}
           <ProgressBar value={leda.used} max={leda.max} warnAt={warnAt} aria-label={text} />
           <span className="tabular-nums">
             {leda.used.toLocaleString('en-US')} / {leda.max.toLocaleString('en-US')}
@@ -286,7 +292,7 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
 
   return (
     <div ref={ref} className={cn(className, '@container/status flex h-full w-full min-w-0 items-center')}>
-      <ul role="list" aria-label={ariaLabel} className="m-0 flex min-w-0 flex-1 list-none items-center gap-1 p-0">
+      <ul role="list" aria-label={ariaLabel} className="m-0 flex min-w-0 flex-1 list-none items-center gap-0.5 p-0">
         {sections.map((s, i) => (
           <li key={s.key} className={cn('items-center', s.cls)}>
             {i > 0 && s.key !== 'updated' && <Divider />}

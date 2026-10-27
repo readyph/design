@@ -141,8 +141,8 @@ function LedaFact({ mode }: { mode: TodayLedaMode }) {
   const Icon = mode === 'acts' ? CheckCircle : mode === 'reads' ? Eye : Prohibit;
   const text = mode === 'acts' ? 'Leda acts here' : mode === 'reads' ? 'Leda reads only' : "Leda can't read while offline";
   return (
-    <Fact className={cn(mode === 'acts' ? 'text-ok-ink' : 'text-muted')}>
-      <span className="inline-flex items-baseline gap-1">
+    <Fact className={cn(mode === 'acts' ? 'text-ok' : 'text-muted')}>
+      <span className="inline-flex items-baseline gap-1.5">
         <Icon aria-hidden size={14} className="shrink-0 translate-y-[2px]" />
         {text}
       </span>
@@ -189,7 +189,7 @@ function Row({ item, platform, label, layout, flash }: { item: TodayItem; platfo
   const title = <span className="font-medium">{item.title}</span>;
   const hasMeta = Boolean(item.state || item.qty || item.at);
   return (
-    <ListRow rowId={`${platform}:${item.id}`} label={label} onActivate={item.onActivate} flash={flash} className="!py-[7px] gap-x-2.5 gap-y-0.5 text-ui" data-ref={item.ref}>
+    <ListRow rowId={`${platform}:${item.id}`} label={label} onActivate={item.onActivate} flash={flash} className="-mx-1.5 border-x-[6px] pb-[7px] pt-2 gap-x-2.5 gap-y-0.5 text-ui leading-[18px] after:hidden before:pointer-events-none before:absolute before:-inset-x-1.5 before:top-0 before:h-px before:bg-rule before:content-['']" data-ref={item.ref}>
       {wide ? <span className="overflow-hidden text-ellipsis whitespace-nowrap pt-px font-mono text-small text-muted">{item.ref}</span> : null}
       <div className="flex min-w-0 flex-col">
         <div>
@@ -206,13 +206,13 @@ function Row({ item, platform, label, layout, flash }: { item: TodayItem; platfo
             title
           )}
         </div>
-        {item.detail ? <div className="text-small text-muted">{item.detail}</div> : null}
+        {item.detail ? <div className="text-small leading-[18px] text-muted">{item.detail}</div> : null}
       </div>
       {hasMeta ? (
         <div className={cn('flex items-center gap-2 whitespace-nowrap', layout === 'narrow' && 'flex-wrap justify-start gap-y-0.5')}>
           {item.qty ? <b className="text-ui font-medium tabular-nums">{item.qty}</b> : null}
           {item.state ? <Badge tone={item.tone ?? 'neutral'}>{item.state}</Badge> : null}
-          {item.at ? <span className={cn('text-small tabular-nums text-muted', layout === 'wide' && 'min-w-[38px] text-right')}>{item.at}</span> : null}
+          {item.at ? <span className={cn('text-small leading-[18px] tabular-nums text-muted', layout === 'wide' && 'min-w-[38px] text-right')}>{item.at}</span> : null}
         </div>
       ) : wide || layout === 'phone' ? <span /> : null}
       {item.link ? <Chip link={item.link} from={platform} layout={layout} /> : null}
@@ -296,7 +296,7 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
               title={l.title}
               count={l.total}
               level={listLevel}
-              className="[&>div:first-child]:gap-x-1 [&>div:first-child]:pb-1 [&>div:first-child]:pt-3.5 [&>div:first-child>*]:leading-5 [&>div:first-child>span]:text-ui"
+              className="[&>div:first-child]:gap-x-[7.25px] [&>div:first-child]:pb-1 [&>div:first-child]:pt-3.5 [&>div:first-child>*]:leading-5 [&>div:first-child>span]:text-ui"
             >
               {rows.map((it) => (
                 <Row key={flashRow && it.ref === flashRow.ref ? `${it.id}:${flashRow.n}` : it.id} item={it} platform={platform.name} layout={rowLayout} flash={!!flashRow && it.ref === flashRow.ref} label={`${l.title}: ${typeof it.title === 'string' ? it.title : it.ref ?? ''}`} />
@@ -356,7 +356,7 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
             onClick={onOpen}
             rightIcon={ArrowSquareOut}
             aria-label={`Open ${platform.name}`}
-            className="-mr-2 !h-7 shrink-0 text-muted hover:text-text"
+            className="!h-7 shrink-0 !gap-2 !px-2 !font-medium text-text"
           >
             <span className="@max-[330px]/today:sr-only">Open</span>
           </Button>

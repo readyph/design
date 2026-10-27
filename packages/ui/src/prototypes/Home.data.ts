@@ -248,16 +248,16 @@ export const cases: Record<string, HomeCase> = {
 
 const liveItems: QueueItem[] = [
   { id: 'q1', platform: { id: 'autoworks', name: 'Dela Cruz Auto Works', index: 8, src: logoAutoworks }, due: 'Order by 9:45', urgent: true, title: 'Alternator needed for 11:00 Vios pickup', detail: 'None in stock · rush PO arrives 10:30', action: 'Order alternator' },
-  { id: 'q2', platform: { id: 'stockroom', name: 'Parts Stockroom', index: 1 }, due: 'Order by 12:00', title: 'Oil filters at 4, reorder level 20', detail: '6 maintenance jobs today · draft PO ₱18,450', action: 'Confirm PO' },
+  { id: 'q2', platform: { id: 'stockroom', name: 'Parts Stockroom', index: 1 }, due: 'Order by 12:00', severity: 'soon', title: 'Oil filters at 4, reorder level 20', detail: '6 maintenance jobs today · draft PO ₱18,450', action: 'Confirm PO' },
   { id: 'q3', platform: { id: 'stockroom', name: 'Parts Stockroom', index: 1 }, due: 'Dispute by Fri 23 Oct', title: 'Petron delivery 6 bottles short', detail: 'PO-0214 · 6 × ₱465 not received', action: 'Dispute or accept' },
-  { id: 'q4', platform: { id: 'hq', name: 'HQ', hq: true }, source: 'HQ · Team', due: 'Today', title: 'Approve Rico Lim as mechanic', detail: 'Invited by Jun · write access to Auto Works', action: 'Approve invite' },
+  { id: 'q4', platform: { id: 'hq', name: 'HQ', hq: true }, source: 'HQ · Team', title: 'Approve Rico Lim as mechanic', detail: 'Invited by Jun · write access to Auto Works', action: 'Approve invite' },
 ];
 const watching: QueueWatchItem[] = [
   { id: 'w1', platform: { id: 'stockroom', name: 'Parts Stockroom', index: 1 }, title: 'Brake pads reorder point in 2 days', detail: 'Leda will draft when it hits 6 left' },
   { id: 'w2', platform: { id: 'autoworks', name: 'Dela Cruz Auto Works', index: 8, src: logoAutoworks }, title: 'Fortuner PMS ready for pickup', detail: 'Leda tells Dr. Uy at 10:00' },
 ];
-const snoozed: QueueSnoozedItem[] = [{ id: 's1', platform: { id: 'stockroom', name: 'Parts Stockroom', index: 1 }, title: 'Cycle count off by 3', until: 'Later today · 13:00' }];
-const done: QueueDoneItem[] = [{ id: 'd1', platform: { id: 'autoworks', name: 'Dela Cruz Auto Works', index: 8, src: logoAutoworks }, title: 'Oil filter order sent to Banawe Autoparts Supply', at: '8:12' }];
+const snoozed: QueueSnoozedItem[] = [];
+const done: QueueDoneItem[] = [];
 
 const common = { cases, next: 'Next: PO-0221 from Banawe Autoparts Supply arrives at 10:30 · 12 lines.', yesterdayDate: 'Sun 25 Oct', plan: { used: 1742, max: 2000 } };
 

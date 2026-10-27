@@ -184,7 +184,7 @@ export function PlatformShell({
           hiddenWins,
         )}
       >
-        {sheetBar != null && <div className="shrink-0 border-b border-border">{sheetBar}</div>}
+        {sheetBar != null && <div className="shrink-0">{sheetBar}</div>}
         <div tabIndex={0} className="min-h-0 flex-1 overflow-y-auto overscroll-contain focus-visible:outline focus-visible:-outline-offset-2">
           {!placeIsMain && h1}
           {children}
@@ -200,7 +200,7 @@ export function PlatformShell({
         <footer
           aria-label={statusLabel}
           className={cn(
-            'col-span-full row-start-2 flex h-status min-w-0 items-center overflow-hidden px-2 text-small text-muted',
+            'col-span-full row-start-2 flex h-status min-w-0 items-center overflow-hidden pl-3 pr-2 text-small text-muted',
             'max-[640px]:hidden',
             hiddenWins,
           )}

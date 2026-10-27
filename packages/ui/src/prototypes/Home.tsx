@@ -322,9 +322,9 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
   })();
 
   const todayView = (
-    <div className="px-pad pb-10 pt-6">
-      <div className="mb-6 flex flex-wrap items-baseline gap-x-4 gap-y-1">
-        <h2 ref={headingRef} tabIndex={-1} className="m-0 text-title text-text outline-none focus-visible:ring-2 focus-visible:ring-accent">Today</h2>
+    <div className="px-pad pb-8 pt-5">
+      <div className="mb-5 flex flex-wrap items-baseline gap-x-3.5">
+        <h2 ref={headingRef} tabIndex={-1} className="m-0 text-case text-text outline-none focus-visible:ring-2 focus-visible:ring-accent">Today</h2>
         <p className="m-0 text-ui text-muted">{shown.length} {filter === 'hq' ? 'block' : shown.length === 1 ? 'platform' : 'platforms'}{set === 'live' && !filter ? ' · Stockroom → Auto Works, parts for jobs' : ''} · {clock()}</p>
       </div>
       <div className="grid grid-cols-1 gap-x-10 gap-y-12 @min-[720px]/sheet:grid-cols-2 @min-[720px]/sheet:gap-x-14">
