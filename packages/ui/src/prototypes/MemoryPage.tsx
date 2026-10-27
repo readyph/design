@@ -164,7 +164,7 @@ function Head({ title, sub, extra, h = "h2" }: { title: ReactNode; sub?: ReactNo
   const H = h;
   return (
     <div className="flex items-start gap-4 max-[640px]:flex-wrap max-[640px]:gap-2.5">
-      <div className="min-w-0">
+      <div>
         <H className="m-0 text-[20px] font-semibold leading-7 tracking-[-0.01em] max-[640px]:text-[18px] max-[640px]:leading-[25px]">{title}</H>
         {sub ? <p className="m-0 mt-0.5 text-[14px] leading-5 text-muted">{sub}</p> : null}
       </div>
@@ -591,7 +591,7 @@ export function MemoryPage(props: MemoryPageProps) {
   const curFolder: "" | MemSrc | undefined = phone && !phoneSheet ? undefined : doc && curTopic ? curTopic.src : folder;
   const lrow = (on0: boolean) =>
     cn(
-      "flex w-full items-center rounded-[6px] border px-3 py-[9px] text-left max-[640px]:min-h-11 max-[640px]:rounded-none max-[640px]:border-0 max-[640px]:px-4 max-[640px]:py-3 max-[640px]:[button+&]:mt-0.5 max-[640px]:[button+&]:border-t max-[640px]:[button+&]:border-rule max-[640px]:[div+div_&]:border-t max-[640px]:[div+div_&]:border-rule",
+      "flex w-full items-center rounded-[6px] border px-3 py-[9px] text-left max-[640px]:min-h-11 max-[640px]:rounded-none max-[640px]:border-0 max-[640px]:px-4 max-[640px]:py-3 max-[640px]:[button+&]:mt-0.5 max-[640px]:[button+&]:border-t max-[640px]:[button+&]:border-rule max-[640px]:[div:not(:first-child)>&]:border-t max-[640px]:[div:not(:first-child)>&]:border-rule",
       on0 ? "border-border bg-surface" : "border-transparent hover:bg-frame-hover",
       focusRing,
     );
@@ -618,10 +618,12 @@ export function MemoryPage(props: MemoryPageProps) {
           platforms={error ? [null, null, null, null] : empty ? [null, null, null, mapSlots[3]] : mapSlots}
           caption={caption}
           loading={loading}
+          fadeOthers
           onAddPlatform={() => navGo({ to: "platforms", add: true })}
           hqLabel={() => `Company, ${onCount("company")} of ${topicsOf("company").length} topics on`}
+          hqSub={() => `HQ · ${onCount("company")} of ${topicsOf("company").length} on`}
           selected={shown ? BUILDING[shown] : null}
-          highlight={hover ? [hover] : null}
+          focus={hover ?? (shown ? BUILDING[shown] : null)}
           onSelect={(id) => (id ? pickFolder(mapOf(id) as MemSrc) : pickFolder(""))}
         />
       </div>
@@ -636,7 +638,7 @@ export function MemoryPage(props: MemoryPageProps) {
         </div>
         <p className="m-0 mt-1.5 flex gap-2 text-[14px] leading-5">
           <LedaMark size={16} decorative className="mt-0.5 shrink-0" />
-          {loading ? <span className="mt-[3px] block h-[13px] w-[88%] rounded-[3px] bg-skeleton" /> : <span>{headline}</span>}
+          {loading ? <span className="flex-1"><span className="mt-[3px] block h-[13px] w-[88%] rounded-[3px] bg-skeleton" /></span> : <span>{headline}</span>}
         </p>
         {phone ? (
           <div className="mt-3 max-[640px]:[&_[data-ph]]:text-[15px] max-[640px]:[&_[data-ask-leda]_svg]:!size-6">
@@ -648,7 +650,7 @@ export function MemoryPage(props: MemoryPageProps) {
         <>
           {ghead("Folders")}
           {[0, 1, 2, 3].map((i) => (
-            <div key={i} aria-hidden="true" className={cn("flex items-center border border-transparent px-3 py-[9px] max-[640px]:min-h-11 max-[640px]:border-0 max-[640px]:px-4 max-[640px]:py-3", i > 0 && "mt-0.5 max-[640px]:border-t max-[640px]:border-rule")}>
+            <div key={i} aria-hidden="true" className={cn("block border border-transparent px-3 py-[9px] text-[14px] leading-5 max-[640px]:min-h-11 max-[640px]:border-0 max-[640px]:px-4 max-[640px]:py-3", i > 0 && "mt-0.5 max-[640px]:border-t max-[640px]:border-rule")}>
               <span className="block h-[13px] w-[70%] rounded-[3px] bg-skeleton" />
             </div>
           ))}
@@ -1077,7 +1079,7 @@ export function MemoryPage(props: MemoryPageProps) {
       return (
         <>
           <div className="mb-2.5 flex h-3"><span className="block h-3 w-[140px] rounded-[3px] bg-skeleton" /></div>
-          <Head h={hh} title="All topics" sub={<span className="inline-block h-[13px] w-[220px] rounded-[3px] bg-skeleton align-middle" />} />
+          <Head h={hh} title="All topics" sub={<span className="inline-block h-[13px] w-[220px] rounded-[3px] bg-skeleton" />} />
           <div className="mt-5"><span className="block h-10 w-full rounded-[3px] bg-skeleton" /></div>
           <div className="mt-4">
             {[0, 1, 2, 3, 4, 5].map((i) => (

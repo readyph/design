@@ -109,6 +109,8 @@ export interface TownMapProps {
   platformLabel?: (p: TownMapPlatform) => string;
   /** Overrides the accessible name of the HQ button (default "HQ, your team and plan"). */
   hqLabel?: (p: TownMapPlatform) => string;
+  /** A second line under the HQ label (shown when selected or hovered), like "HQ · 6 of 7 on". Without it the HQ label is one line. */
+  hqSub?: (p: TownMapPlatform) => string;
   className?: string;
 }
 
@@ -184,6 +186,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
     label = 'Platform map',
     platformLabel = defaultLabel,
     hqLabel = defaultLabel,
+    hqSub,
     className,
   },
   ref,
@@ -400,11 +403,11 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
             <g ref={glowRef} />
             <g ref={objectsRef} />
           </svg>
-          <ul ref={hostRef} aria-label="Platforms" className="pointer-events-none absolute inset-0 m-0 list-none overflow-hidden p-0">
+          <ul ref={hostRef} aria-label="Platforms" className={cn('pointer-events-none absolute inset-0 m-0 list-none overflow-hidden p-0', loading && 'invisible')}>
             {real.map((p) => {
               const sel = selected === p.id;
               const hl = focus ? focus === p.id : !!highlight?.includes(p.id);
-              const dimFocus = fadeOthers && !sel && !hl && !!focus && focus !== p.id;
+              const dimFocus = fadeOthers && !sel && !hl && ((!!focus && focus !== p.id) || (!focus && selected !== null && dimOthers));
               const dim = dimFocus || (!sel && !hl && ((!!focus && focus !== p.id) || (selected !== null && dimOthers)));
               const alert = !loading && (p.status !== 'ACTIVE' || !!p.error);
               const short = p.shortName ?? p.name;
@@ -435,12 +438,13 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
                     onFocus={() => onHover?.(p.id)}
                     onBlur={() => onHover?.(null)}
                     className={cn(
-                      'group/lbl pointer-events-auto absolute left-0 top-0 z-[1] flex max-w-[calc(100%-16px)] flex-col gap-px whitespace-nowrap rounded-control border bg-surface py-0.5 pl-[5px] pr-1.5 text-left opacity-0 transition-colors duration-hover [transform:translate(var(--lx,0px),var(--ly,0px))_translateY(-100%)] will-change-transform data-[placed]:opacity-100',
+                      'group/lbl pointer-events-auto absolute left-0 top-0 z-[1] flex max-w-[calc(100%-16px)] flex-col items-center gap-px whitespace-nowrap rounded-control border bg-surface py-0.5 pl-[5px] pr-1.5 text-left opacity-0 transition-colors duration-hover [transform:translate(var(--lx,0px),var(--ly,0px))_translateY(-100%)] will-change-transform data-[placed]:opacity-100',
                       'after:pointer-events-none after:absolute after:left-[var(--stem-x,50%)] after:top-full after:h-[var(--stem,10px)] after:w-px after:bg-control after:content-[""] forced-colors:after:hidden',
                       focusRing,
                       'focus-visible:z-[3] hover:z-[3]',
                       sel || hl ? 'border-accent after:bg-accent' : dimFocus ? 'border-border data-[placed]:opacity-55 data-[placed]:hover:opacity-100 hover:border-control' : dim ? 'border-rule' : 'border-border hover:border-control',
                       sel && 'z-[3] shadow-[inset_0_0_0_1px_var(--accent)] forced-colors:border-[Highlight] forced-colors:border-2',
+                      hl && 'gap-1.5',
                       p.hq && 'border-dashed',
                       loading && 'cursor-default',
                       '@max-[400px]/town:px-1.5 @max-[400px]/town:py-[3px] max-[640px]:px-1.5 max-[640px]:py-[3px]',
@@ -467,7 +471,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
                         </span>
                       ) : null}
                     </span>
-                    {!p.hq ? (
+                    {!p.hq || hqSub ? (
                       <span
                         className={cn(
                           'items-center gap-[5px] text-tiny leading-[14px]',
@@ -483,8 +487,8 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
                           <span aria-hidden="true" className="my-0.5 block h-2.5 w-[76px] rounded-chip bg-skeleton" />
                         ) : (
                           <>
-                            {alert ? <StatusMark status={p.status} error={p.error} filled={!!p.sub} /> : p.sub ? <StatusMark status={p.status} /> : null}
-                            {sub}
+                            {p.hq ? null : alert ? <StatusMark status={p.status} error={p.error} filled={!!p.sub} /> : p.sub ? <StatusMark status={p.status} /> : null}
+                            {p.hq ? hqSub?.(p) : sub}
                           </>
                         )}
                       </span>
