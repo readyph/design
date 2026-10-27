@@ -3,7 +3,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { PlatformShell } from './PlatformShell';
-import { SheetBar } from './SheetBar';
 import { StatusBar } from './StatusBar';
 import { Switch } from './Switch';
 import { Tabs } from './Tabs';
@@ -14,20 +13,6 @@ import { sampleAbouts, sampleAsk, sampleQuestions } from './TryIt.sample';
 afterEach(() => {
   cleanup();
   vi.useRealTimers();
-});
-
-describe('SheetBar flatActions', () => {
-  it('makes the actions direct items of the wrapping bar between 641 and 1100px, first in order', () => {
-    const { container } = render(<SheetBar actions={<button>Try it</button>} flatActions>tabs</SheetBar>);
-    const actions = screen.getByText('Try it').parentElement!;
-    expect(actions.className).toContain('min-[641px]:max-[1100px]:contents');
-    expect(actions.className).toContain('[&>*]:order-first');
-    expect(container.firstElementChild!.className).toContain('min-[641px]:max-[1100px]:flex-wrap');
-  });
-  it('is off by default', () => {
-    render(<SheetBar actions={<button>Try it</button>}>tabs</SheetBar>);
-    expect(screen.getByText('Try it').parentElement!.className).not.toContain('contents');
-  });
 });
 
 describe('StatusBar', () => {

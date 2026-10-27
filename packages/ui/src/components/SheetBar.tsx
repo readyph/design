@@ -8,20 +8,21 @@ export interface SheetBarProps {
   actions?: ReactNode;
   /** From 641 to 1100px put the children on their own row under the actions (tabs). `false` keeps a short breadcrumb beside the Leda bar, as the prototype's `.where` does. Default true. */
   wrapChildren?: boolean;
-  /** From 641 to 1100px the `actions` become direct items of the wrapping bar (display: contents), first in order, so each can wrap onto its own row (the Memory page's Try it right, the Ask Leda bar on its own row). Default off. */
-  flatActions?: boolean;
   className?: string;
 }
 
 /** From 641 to 1100px the bar wraps (actions first, tabs or breadcrumb on a second row) so the tabs never collapse next to the Ask Leda bar (shell.css 354 in the prototype). */
 const W = 'min-[641px]:max-[1100px]:h-auto min-[641px]:max-[1100px]:flex-wrap min-[641px]:max-[1100px]:gap-y-0.5 min-[641px]:max-[1100px]:pt-2';
 
+/** In that band the actions' own children join the bar's wrapping row (the prototype's .cmd-wrap / .sb-try are direct children of .sbar): first, centred. Between siblings: the bar's 16px gap + 8px (memory.css 219). */
+const TABLET_FLAT = 'min-[641px]:max-[1100px]:contents min-[641px]:max-[1100px]:[&>*]:order-[-1] min-[641px]:max-[1100px]:[&>*]:shrink-0 min-[641px]:max-[1100px]:[&>*]:self-center';
+
 /** Sheet bar (C5): 48px with the border PlatformShell draws under it, 24px side padding; tabs or breadcrumb left, Leda bar and buttons right. */
-export function SheetBar({ children, actions, flatActions, wrapChildren = true, className }: SheetBarProps) {
+export function SheetBar({ children, actions, wrapChildren = true, className }: SheetBarProps) {
   return (
     <div className={cn('flex h-[calc(var(--sheet-bar)-1px)] items-stretch gap-4 bg-surface px-pad', W, className)}>
       <div className={cn('flex min-w-0 flex-1 items-center [&_[role=tablist]]:border-b-0', actions && wrapChildren && 'min-[641px]:max-[1100px]:order-last min-[641px]:max-[1100px]:h-10 min-[641px]:max-[1100px]:basis-full')}>{children}</div>
-      {actions && <div className={cn('flex shrink-0 items-center gap-2 min-[641px]:max-[1100px]:order-first', flatActions && 'min-[641px]:max-[1100px]:contents min-[641px]:max-[1100px]:[&>*]:order-first')}>{actions}</div>}
+      {actions && <div className={cn('flex shrink-0 items-center gap-4 [&>*+*]:ml-2', TABLET_FLAT)}>{actions}</div>}
     </div>
   );
 }
