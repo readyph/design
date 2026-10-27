@@ -1,5 +1,6 @@
 import { Fragment, useCallback, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ArrowRight, ArrowSquareOut, CalendarBlank, CaretDown, CaretLeft, CheckCircle, Clock, Prohibit, Gauge, House, SquaresFour, Users } from '@phosphor-icons/react';
+import type { Icon } from '@phosphor-icons/react';
+import { Bank, Calculator, CircleNotch, DeviceMobile, Gift, Graph, Hash, Moon, Package, PencilSimple, PlusSquare, Storefront, Table, Truck, WarningCircle, Wrench, ArrowRight, ArrowSquareOut, CalendarBlank, CaretDown, CaretLeft, CheckCircle, Clock, Prohibit, Gauge, SquaresFour, Users } from '@phosphor-icons/react';
 import { AskLedaBar } from '../components/AskLedaBar';
 import { Badge } from '../components/Badge';
 import { Button } from '../components/Button';
@@ -388,47 +389,39 @@ export function Home({ set = 'live', state = 'live', startChat = false, filter: 
   const setBlockProposal = (blockId: string, st: ChatProposalData['state'], extra: Partial<ChatProposalData> = {}) =>
     setMessages((ms) => ms.map((m) => ({ ...m, blocks: m.blocks.map((b) => (b.type === 'proposal' && b.blockId === blockId ? { ...b, proposal: { ...b.proposal, state: st, ...extra } } : b)) })));
 
+  const KIND_ICON: Record<string, Icon> = { Inventory: Package, 'Repair shop': Wrench, POS: Bank, Storefront, 'Mobile app': DeviceMobile, Accounting: Calculator, Delivery: Truck, Loyalty: Gift };
+  const statusText = (p: HomePlatform) => (p.status === 'ACTIVE' ? 'Active' : `${p.status === 'OFFLINE' ? 'Offline' : 'Degraded'}${p.statusSince ? ` since ${p.statusSince}` : ''}`);
+  const gotoState = (args: string) => { const u = new URL(window.location.href); u.searchParams.set('args', args); window.location.href = u.toString(); };
   const palGroups: CommandPaletteGroup[] = useMemo(
     () => [
-      { id: 'ask', label: 'Ask Leda', items: [suggestions[0]!, suggestions[1]!].map((q) => ({ id: `ask:${q}`, label: q, leda: true })) },
-      {
-        id: 'do',
-        label: 'Tell Leda to do',
-        items: [
-          { id: `ask:${suggestions[2]}`, label: suggestions[2]!, leda: true },
-          { id: `ask:${suggestions[3]}`, label: suggestions[3]!, leda: true },
-          { id: 'ask:Disconnect Parts Stockroom', label: 'Disconnect Parts Stockroom', leda: true, refused: true },
-        ],
-      },
-      {
-        id: 'needs',
-        label: 'Needs you',
-        items: open.map((i) => ({ id: `case:${i.id}`, label: i.title, leading: <PlatformLogo name={i.platform.name} src={i.platform.src} index={i.platform.index} hq={i.platform.hq} size={16} decorative />, meta: i.platform.hq ? 'HQ' : (platformById(i.platform.id)?.shortName ?? '') })),
-      },
+      { id: 'ask', label: 'Ask Leda', items: (data.leda?.answers ?? []).map((a) => ({ id: `ask:${a.q}`, label: a.q, icon: a.kind === 'table' ? Table : Hash })) },
+      { id: 'do', label: 'Tell Leda to do', items: (data.leda?.commands ?? []).map((c) => ({ id: `ask:${c.q}`, label: c.q, icon: PencilSimple, meta: c.allowed ? 'you confirm' : `${platformById(c.platformId)?.kind ?? ''} · read only` })) },
       {
         id: 'go',
         label: 'Go to',
         items: [
-          { id: 'go:today', label: 'Today at your platforms', icon: SquaresFour, meta: 'Go' },
-          { id: 'go:overview', label: 'Overview', icon: House, meta: 'Go' },
-          ...data.platforms.map((p) => ({ id: `filter:${p.id}`, label: `Only ${p.shortName}`, leading: <PlatformLogo name={p.name} src={p.logo} index={p.index} size={16} decorative />, meta: 'Filter' })),
+          ...data.platforms.map((p) => ({ id: `filter:${p.id}`, label: p.name, icon: KIND_ICON[p.kind] ?? SquaresFour, meta: `${p.kind} · ${statusText(p)}` })),
+          { id: 'nav:platforms', label: 'Platforms', icon: Graph, meta: 'add, rename, data links' },
+          { id: 'nav:team', label: 'Team', icon: Users, meta: `9 people${(data.hq.lists.find((l) => l.id === 'invites')?.total ?? 0) ? ' · 1 invite' : ''}` },
+          { id: 'nav:plan', label: 'Plan and AI usage', icon: Gauge, meta: `${Math.round((data.plan.used / data.plan.max) * 100)}% used` },
+          { id: 'nav:add', label: 'Add a platform', icon: PlusSquare, meta: 'Platforms' },
         ],
       },
+      ...(phone ? [] : [{ id: 'states', label: 'Prototype states', items: [{ id: 'state:quiet', label: 'Quiet day', icon: Moon, meta: 'nothing needs you' }, { id: 'state:loading', label: 'Loading', icon: CircleNotch }, { id: 'state:error', label: 'A platform fails to load', icon: WarningCircle }] }]),
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [open.map((i) => i.id).join(','), data],
+    [data, phone],
   );
   const onPalette = (item: CommandPaletteItem) => {
     if (item.id.startsWith('ask:')) ask(item.id.slice(4));
-    else if (item.id.startsWith('case:')) openCase(item.id.slice(5), 'heading');
-    else if (item.id === 'go:today') showToday();
-    else if (item.id === 'go:overview') {
-      setTabs([]);
-      setTab(null);
-      setPhoneDetail(true);
-      pendingFocus.current = 'heading';
-    } else if (item.id.startsWith('filter:')) setFilterTo(item.id.slice(7));
+    else if (item.id.startsWith('filter:')) setFilterTo(item.id.slice(7));
+    else if (item.id === 'nav:platforms') go({ to: 'platforms' });
+    else if (item.id === 'nav:team') go({ to: 'team' });
+    else if (item.id === 'nav:plan') go({ to: 'plan' });
+    else if (item.id === 'nav:add') go({ to: 'platforms', add: true });
+    else if (item.id.startsWith('state:')) gotoState(`state:${item.id.slice(6)}`);
   };
+
 
   const askBar = (variant: 'bar' | 'overview', shortcuts: boolean) => (
     <AskLedaBar variant={variant} scope={filter ? scopeName : undefined} paused={palette || chat} shortcuts={shortcuts} onOpen={() => { opener.current = document.activeElement as HTMLElement | null; setPalette(true); }} />

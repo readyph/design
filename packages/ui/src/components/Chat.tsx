@@ -266,7 +266,7 @@ export function ChatHeader({ busy = false, empty = false, onNewConversation, onC
           }}
           leftIcon={inline ? NotePencil : undefined}
           aria-label={inline ? 'New conversation' : undefined}
-          className={cn('shrink-0', inline && '!px-[7px] max-[640px]:h-11 max-[640px]:w-11 max-[640px]:justify-center max-[640px]:!px-0 max-[640px]:[&_svg]:size-[18px]', empty && 'cursor-default opacity-50 hover:bg-transparent')}
+          className={cn('shrink-0', inline && '!px-[7px] max-[640px]:h-11 max-[640px]:w-11 max-[640px]:justify-center max-[640px]:!px-0 max-[640px]:[&_svg]:size-[18px]', empty && 'cursor-default !opacity-50 hover:bg-transparent')}
         >
           {inline ? <span className="max-[640px]:hidden">New conversation</span> : 'New conversation'}
         </Button>

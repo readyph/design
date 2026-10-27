@@ -255,7 +255,7 @@ export function CommandPalette({
           )}
         >
           <Dialog.Title className="sr-only">{ariaLabel}</Dialog.Title>
-          <div className="flex h-[48px] shrink-0 items-center gap-2.5 border-b border-border px-3.5 max-sm:h-14">
+          <div className="flex h-[48px] shrink-0 items-center gap-2.5 border-b border-border px-3.5">
             <span aria-hidden className="grid shrink-0 place-items-center">
               <span className="max-sm:hidden"><LedaMark size={20} decorative effect="aurora" active={loading} /></span>
               <span className="hidden max-sm:block"><LedaMark size={22} decorative effect="aurora" active={loading} /></span>
@@ -279,8 +279,9 @@ export function CommandPalette({
               onKeyDown={onKeyDown}
               onCompositionStart={() => { composing.current = true; }}
               onCompositionEnd={() => { composing.current = false; }}
-              className="min-w-0 flex-1 border-0 bg-transparent text-[15px] leading-[20px] text-text outline-none placeholder:text-muted max-sm:text-[16px]"
+              className="min-w-0 flex-1 border-0 bg-transparent text-[15px] leading-[20px] text-text outline-none placeholder:text-faint"
             />
+            <kbd aria-hidden className="inline-block min-w-[18px] shrink-0 rounded-[3px] bg-raised-2 px-1 text-center font-sans text-[11px] leading-4 text-text max-sm:hidden">esc</kbd>
           </div>
 
           {/* tabIndex=0 is kept on purpose: axe `scrollable-region-focusable` fails a scroller with no focusable content (options are display-only; the input drives them). */}
@@ -289,7 +290,7 @@ export function CommandPalette({
               <div id={listId} role="listbox" aria-label="Results" aria-busy={loading || undefined}>
                 {shown.map((g) => (
                   <div key={g.id} role="group" aria-labelledby={`${uid}-g-${g.id}`}>
-                    <div id={`${uid}-g-${g.id}`} className="px-2.5 pb-1 pt-2 text-[12px] leading-[16px] text-muted">{g.label}</div>
+                    <div id={`${uid}-g-${g.id}`} className="px-2.5 pb-1 pt-2 text-[12px] leading-5 text-muted">{g.label}</div>
                     {g.items.map((item) => {
                       const domId = `${uid}-o-${g.id}-${item.id}`;
                       const selected = active?.domId === domId;
@@ -322,7 +323,7 @@ export function CommandPalette({
                               <Ico size={16} />
                             ) : null}
                           </span>
-                          <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                          <span className="min-w-0 flex-1 [overflow-wrap:anywhere]">{item.label}</span>
                           {item.meta != null && <span className="ml-auto shrink-0 whitespace-nowrap pl-2 text-[12px] leading-[16px] text-muted">{item.meta}</span>}
                         </div>
                       );
