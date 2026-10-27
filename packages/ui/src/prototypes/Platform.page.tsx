@@ -4,7 +4,6 @@ import {
   ShieldCheck, UploadSimple, UserPlus, Users, X,
 } from '@phosphor-icons/react';
 import { AskLedaBar } from '../components/AskLedaBar';
-import { Badge } from '../components/Badge';
 import { BlockedQuestions, type BlockedQuestionItem } from '../components/BlockedQuestions';
 import { Breadcrumbs } from '../components/Breadcrumbs';
 import { Button } from '../components/Button';
@@ -13,13 +12,13 @@ import { ConnectionsEditor, type Connection, type ConnectionOption, type Connect
 import { DataList } from '../components/DataList';
 import { ErrorBlock } from '../components/ErrorBlock';
 import { Fact, FactsLine } from '../components/FactsLine';
-import { IconButton } from '../components/IconButton';
 import { LedaMark } from '../components/Leda';
 import { LedaNote } from '../components/LedaNote';
 import { Modal } from '../components/Modal';
 import { OnboardingStepper, type StepperStep } from '../components/OnboardingStepper';
 import { OpeningHours, type OpeningHoursValue } from '../components/OpeningHours';
 import { PlatformLogo } from '../components/PlatformLogo';
+import { RolePicker } from '../components/RolePicker';
 import { Select } from '../components/Select';
 import { SheetBar } from '../components/SheetBar';
 import { Skeleton } from '../components/Skeleton';
@@ -609,47 +608,29 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
     const others = people.filter((x) => !team[x.id]);
     const elsewhere = (id: string) => {
       const o = platforms.filter((q) => q.id !== p.id && details[q.id]?.team[id]).map((q) => `${kinds[q.kind].roles.find((r) => r.id === details[q.id].team[id])?.name} at ${shortName({ label: nameOf(q.id) })}`);
-      return o.length ? ` · also ${andList(o)}` : '';
+      return o.length ? andList(o) : '';
     };
     const pending = invites.filter((v) => v.platformId === p.id);
     return (
       <>
-        {ids.length ? (
-          <ul className="m-0 list-none divide-y divide-rule p-0">
-            {ids.map((id) => {
+        {ids.length || pending.length ? (
+          <RolePicker
+            mode="by-role"
+            hideActions
+            roleLines={false}
+            platformName={nameOf(p.id)}
+            roles={rs}
+            value={team}
+            onChange={(next) => setDraft('team', Object.fromEntries(Object.entries(next).filter(([, r]) => r)) as Record<string, string>)}
+            onOpenPerson={() => go({ to: 'team' })}
+            onRemovePerson={setUnteam}
+            people={ids.map((id) => {
               const x = person(id);
-              return (
-                <li key={id} data-person={id} className="flex flex-wrap items-center gap-x-3 gap-y-2 py-3">
-                  <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-full bg-raised text-small font-semibold text-muted">{x.initials}</span>
-                  <span className="min-w-0 flex-1 basis-40">
-                    <a href="#team" onClick={(e) => { e.preventDefault(); go({ to: 'team' }); }} className={cn(link, 'text-body font-medium no-underline hover:underline')}>{x.name}</a>
-                    <span className="block text-small text-muted">
-                      {x.access === 'member' ? x.title : <Badge tone="neutral">{x.access === 'owner' ? 'Admin · Owner' : 'Admin'}</Badge>}{elsewhere(id)}
-                    </span>
-                  </span>
-                  <Select
-                    size="sm"
-                    className="w-44"
-                    aria-label={`${x.name}’s role at ${nameOf(p.id)}`}
-                    value={team[id]}
-                    onValueChange={(v) => setDraft('team', { ...team, [id]: v })}
-                    options={rs.map((r) => ({ value: r.id, label: r.name }))}
-                  />
-                  <IconButton icon={X} label={`Take ${x.name} off ${nameOf(p.id)}`} onClick={() => setUnteam(id)} />
-                </li>
-              );
+              const e = elsewhere(id);
+              return { id, name: x.name, initials: x.initials, title: x.title, access: x.access, href: '#team', elsewhere: e || undefined };
             })}
-            {pending.map((v) => (
-              <li key={v.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-3">
-                <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-full border border-dashed border-control bg-surface text-small font-semibold text-muted">{v.name.split(' ').map((w) => w[0]).join('')}</span>
-                <span className="min-w-0 flex-1 basis-40">
-                  <a href="#team" onClick={(e) => { e.preventDefault(); go({ to: 'team' }); }} className={cn(link, 'text-body font-medium no-underline hover:underline')}>{v.name}</a>
-                  <span className="block text-small text-muted">{v.sent ? 'Invited, not joined yet' : 'Invite not sent yet'}</span>
-                </span>
-                <span className="text-ui text-muted">{rs.find((r) => r.id === v.roleId)?.name} when they join</span>
-              </li>
-            ))}
-          </ul>
+            invites={pending.map((v) => ({ id: v.id, name: v.name, initials: v.name.split(' ').map((w) => w[0]).join(''), status: v.sent ? 'Invited, not joined yet' : 'Invite not sent yet', roleId: v.roleId, href: '#team' }))}
+          />
         ) : (
           <p className="m-0 text-ui text-muted">Nobody works here yet. Add the people who run {nameOf(p.id)}.</p>
         )}
