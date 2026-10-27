@@ -128,9 +128,9 @@ describe('SheetBar', () => {
   it('is 48px with side padding and a bottom border', () => {
     render(<SheetBar actions={<button>Invite</button>}>left</SheetBar>);
     const bar = screen.getByText('left').parentElement!;
-    expect(bar.className).toContain('h-[calc(var(--sheet-bar)-1px)]');
+    expect(bar.className).toContain('h-sheet-bar');
     expect(bar.className).toContain('px-pad');
-    expect(bar.className).not.toContain('border-b');
+    expect(bar.className).toContain('border-b');
     expect(screen.getByText('Invite')).toBeTruthy();
   });
 });

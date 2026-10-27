@@ -213,7 +213,16 @@ function Row({ item, platform, label, layout, flash }: { item: TodayItem; platfo
             title
           )}
         </div>
-        {item.detail ? <div className="text-small leading-[18px] text-muted">{item.detail}</div> : null}
+        {item.detail ? (
+          item.link && !item.link.text && item.link.onSelect ? (
+            <button type="button" onClick={item.link.onSelect} data-from={platform} title={`In ${item.link.platform.name}`} className={cn('m-0 cursor-pointer self-start border-0 bg-transparent p-0 text-left font-[inherit] text-small leading-[18px] text-muted hover:text-accent hover:underline hover:underline-offset-2', focusRing)}>
+              {item.detail}
+              <span className="sr-only"> in {item.link.platform.name}</span>
+            </button>
+          ) : (
+            <div className="text-small leading-[18px] text-muted">{item.detail}</div>
+          )
+        ) : null}
       </div>
       {hasMeta ? (
         <div className={cn('flex items-center gap-2 whitespace-nowrap', layout === 'narrow' && 'flex-wrap justify-start gap-y-0.5')}>
@@ -222,7 +231,7 @@ function Row({ item, platform, label, layout, flash }: { item: TodayItem; platfo
           {item.at ? <span className={cn('text-small leading-[18px] tabular-nums text-muted', layout === 'wide' && 'min-w-[38px] text-right')}>{item.at}</span> : null}
         </div>
       ) : wide || layout === 'phone' ? <span /> : null}
-      {item.link ? <Chip link={item.link} from={platform} layout={layout} /> : null}
+      {item.link && item.link.text ? <Chip link={item.link} from={platform} layout={layout} /> : null}
     </ListRow>
   );
 }
