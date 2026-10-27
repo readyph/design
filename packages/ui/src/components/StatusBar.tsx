@@ -50,6 +50,8 @@ export interface StatusBarLeda {
   onSelect?: () => void;
 }
 
+export type StatusBarItemKey = 'platforms' | 'people' | 'invites' | 'leda' | 'plan' | 'updated';
+
 export interface StatusBarProps {
   platforms?: StatusBarPlatform[];
   /** Platforms shown as items before "+N". Default 8. */
@@ -63,6 +65,12 @@ export interface StatusBarProps {
   leda?: StatusBarLeda;
   /** Plan name, e.g. "Starter". Shown as "Starter plan". */
   plan?: string;
+  /** Plan detail after the name, e.g. "10 of 15 seats". Renders "Starter · 10 of 15 seats" (the word "plan" is dropped). */
+  planDetail?: string;
+  /** `bad` colours the plan item for an over-seat plan. The detail text carries the meaning, colour is never alone. */
+  planTone?: 'default' | 'bad';
+  /** Hide single items. `noaccess` hides only `people` (with the invites folded into it); Leda usage and plan stay. */
+  hide?: StatusBarItemKey[];
   /** Makes the plan item a link (Plan and billing). */
   planHref?: string;
   /** Makes the plan item a button, or runs on a link click. */
@@ -161,16 +169,20 @@ const plural = (n: number, one: string, many: string) => `${n.toLocaleString('en
  * Items are plain text unless given `href` (link) or `onSelect` (button). A hidden live region announces health changes only.
  */
 export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function StatusBar(
-  { platforms = [], maxPlatforms = 8, moreHref, onMore, people, invites, leda, plan, planHref, onPlanSelect, ledaFirst = true, updatedAt, summary, note, 'aria-label': ariaLabel, className },
+  { platforms = [], maxPlatforms = 8, moreHref, onMore, people, invites, leda, plan, planHref, onPlanSelect, planDetail, planTone, hide, ledaFirst = true, updatedAt, summary, note, 'aria-label': ariaLabel, className },
   ref,
 ) {
+  const hidden = new Set<StatusBarItemKey>(hide);
   const shown = platforms.slice(0, maxPlatforms);
   const rest = platforms.length - shown.length;
   const namesAlways = platforms.length <= 3 || ledaFirst;
   const problems = platforms.filter((p) => p.health && p.health !== 'ok');
   const allRunning = platforms.length > 0 && problems.length === 0;
   const showSummary = allRunning && !namesAlways;
-  const portalSummary = ledaFirst && problems.length === 0;
+  // Workshop order: the summary stays, and its "all running" half goes when a platform is not running.
+  const portalSummary = ledaFirst;
+  // With a platform not running, the healthy ones collapse to a logo so the one that needs attention reads first.
+  const collapseHealthy = ledaFirst && problems.length > 0;
   const words = (p: StatusBarPlatform) => p.healthText ?? healthWord[p.health ?? 'ok'];
 
   const announce = platforms.length === 0 ? '' : problems.length ? problems.map((p) => `${p.name} ${words(p)}`).join(', ') : 'All platforms running';
@@ -185,11 +197,12 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
     }
   }, [healthKey, announce]);
 
+  const inviteWord = ledaFirst ? 'pending' : 'waiting';
   const sections: { key: string; cls: string; node: ReactNode }[] = [];
 
   if (note) {
     sections.push({ key: 'note', cls: 'flex min-w-0 shrink', node: <Item>{note}</Item> });
-  } else if (platforms.length > 0 || portalSummary) {
+  } else if (!hidden.has('platforms') && (platforms.length > 0 || portalSummary)) {
     sections.push({ key: 'platforms', cls: 'flex min-w-0 shrink', node: (
         <ul role="list" aria-label="Platforms" className="flex min-w-0 items-center gap-0.5 overflow-hidden">
           {(summary !== undefined ? summary : portalSummary) && (
@@ -198,7 +211,7 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
                 {summary !== undefined ? summary : (
                   <>
                     <span className="tabular-nums">{plural(platforms.length, 'platform', 'platforms')}</span>
-                    <span>· all running</span>
+                    {problems.length === 0 && <span>· all running</span>}
                   </>
                 )}
               </Item>
@@ -227,7 +240,7 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
                       <span>{words(p)}</span>
                     </>
                   ) : (
-                    namesAlways && !(ledaFirst && platforms.length > 3) && <span className={cn('max-w-[16ch] truncate', ledaFirst && 'text-ui font-medium text-text')}>{p.name}</span>
+                    namesAlways && !collapseHealthy && !(ledaFirst && platforms.length > 3) && <span className={cn('max-w-[16ch] truncate', ledaFirst && 'text-ui font-medium text-text')}>{p.name}</span>
                   )}
                 </Item>
               </li>
@@ -252,7 +265,7 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
       ) });
   }
 
-  if (people) {
+  if (people && !hidden.has('people')) {
     sections.push({ key: 'people', cls: "flex shrink-0", node: (
         <Item href={people.href} onSelect={people.onSelect} aria-label={plural(people.count, 'person', 'people') + (ledaFirst && invites && invites.count > 0 ? `, ${plural(invites.count, 'invite', 'invites')} pending` : '')}>
           <Users size={14} aria-hidden="true" />
@@ -264,17 +277,17 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
       ) });
   }
 
-  if (invites && invites.count > 0 && !(ledaFirst && people)) {
+  if (invites && invites.count > 0 && !hidden.has('invites') && !(ledaFirst && people)) {
     sections.push({ key: 'invites', cls: "flex shrink-0", node: (
-        <Item href={invites.href} onSelect={invites.onSelect} aria-label={`${plural(invites.count, 'invite', 'invites')} waiting`}>
+        <Item href={invites.href} onSelect={invites.onSelect} aria-label={`${plural(invites.count, 'invite', 'invites')} ${inviteWord}`}>
           <EnvelopeSimple size={14} aria-hidden="true" />
           <span className="tabular-nums">{invites.count.toLocaleString('en-US')}</span>
-          <span className={dropInviteWord}>{invites.count === 1 ? 'invite' : 'invites'} waiting</span>
+          <span className={dropInviteWord}>{invites.count === 1 ? 'invite' : 'invites'} {inviteWord}</span>
         </Item>
       ) });
   }
 
-  if (leda) {
+  if (leda && !hidden.has('leda')) {
     const warnAt = leda.warnAt ?? leda.max * 0.8;
     const text = `Leda usage, ${leda.used.toLocaleString('en-US')} of ${leda.max.toLocaleString('en-US')}`;
     sections.push({ key: 'leda', cls: "flex shrink-0", node: (
@@ -290,13 +303,15 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
       ) });
   }
 
-  if (plan) {
+  if (plan && !hidden.has('plan')) {
     sections.push({ key: 'plan', cls: cn('flex shrink-0', ledaFirst ? wsMid : dropPlan), node: (
-        <Item href={planHref} onSelect={onPlanSelect}>{plan} plan</Item>
+        <Item href={planHref} onSelect={onPlanSelect} className={planTone === 'bad' ? 'text-bad' : undefined}>
+          {planDetail ? <span className="tabular-nums">{plan} · {planDetail}</span> : `${plan} plan`}
+        </Item>
       ) });
   }
 
-  if (updatedAt) {
+  if (updatedAt && !hidden.has('updated')) {
     sections.push({ key: 'updated', cls: cn('ml-auto flex shrink-0', ledaFirst ? wsMid : dropUpdated), node: (
         <Item className="tabular-nums">Updated {updatedAt}</Item>
       ) });

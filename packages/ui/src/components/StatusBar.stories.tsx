@@ -79,6 +79,20 @@ export const Overflow: Story = {
   name: '12 platforms (+N)',
   render: () => <InShell {...base} platforms={Array.from({ length: 12 }, (_, i) => ({ id: String(i), name: `Platform ${i + 1}` }))} onMore={() => {}} />,
 };
+/** RDY-315: the strip as the Team and Home prototypes show it. Check at 1280, 641 and 375 with the viewport toolbar. */
+const seats = { plan: 'Starter', planDetail: '10 of 15 seats', invites: { count: 1 } };
+export const TextAllRunning: Story = { name: 'Text: all running', render: () => <InShell {...base} {...seats} platforms={make(3)} /> };
+export const TextOneOffline: Story = {
+  name: 'Text: one offline',
+  render: () => <InShell {...base} {...seats} platforms={make(3).map((p, i) => (i === 1 ? { ...p, health: 'bad' as const } : p))} />,
+};
+export const TextOverSeat: Story = {
+  name: 'Text: over seats (bad tone)',
+  render: () => <InShell {...base} plan="Free" planDetail="4 of 3 seats" planTone="bad" invites={{ count: 2 }} platforms={make(3)} />,
+};
+export const TextInvitePending: Story = { name: 'Text: 1 invite pending', render: () => <InShell {...base} {...seats} platforms={make(2)} /> };
+export const NoAccess: Story = { name: 'People hidden (no access)', render: () => <InShell {...base} {...seats} hide={['people']} platforms={make(3)} /> };
+
 export const LedaNearLimit: Story = { name: 'Leda usage warn / full', render: () => <InShell {...base} platforms={make(2)} leda={{ used: 1650, max: 2000 }} /> };
 
 export const Interactive: Story = {
