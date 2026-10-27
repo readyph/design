@@ -35,6 +35,10 @@ export interface TownMapPlatform {
   hq?: boolean;
   /** This platform's data did not load: label says "no data", the building keeps its lights. */
   error?: boolean;
+  /** Whole sub line of the label (replaces the generated one), e.g. "Repair shop · slow since 7:40". */
+  sub?: string;
+  /** Show the sub line without hover even for a running platform. */
+  subAlways?: boolean;
 }
 
 /** A grid slot: a platform, or `null` for an empty lot. Order is the layout order (row by row). */
@@ -93,6 +97,10 @@ export interface TownMapProps {
   onRetry?: () => void;
   /** Plain text above the map, e.g. "2 platforms + HQ". */
   caption?: ReactNode;
+  /** Dim the other labels by fading them (the workshop Platforms page, `.blabel.dim`) instead of the muted text. Fading lowers contrast, so use it where the dimming follows the pointer. */
+  fadeOthers?: boolean;
+  /** Show the "The map did not load" notice when `error` is set (default true). The workshop Platforms page dims the map and says "No data" in its caption instead. */
+  errorNotice?: boolean;
   /** Adds the workshop's "Add platform" button to the map controls (label hidden at 960px and below, and on a narrow map). */
   onAddPlatform?: () => void;
   /** Accessible name of the whole map (a group of buttons, one per platform). */
@@ -125,12 +133,16 @@ const defaultLabel = (p: TownMapPlatform): string => {
 };
 
 /** Shape-coded status mark (never colour alone): slow = filled dot, offline = ring, no data = dashed ring. */
-function StatusMark({ status, error, className }: { status: TownStatus; error?: boolean; className?: string }) {
+function StatusMark({ status, error, filled, className }: { status: TownStatus; error?: boolean; filled?: boolean; className?: string }) {
   const shape = error
     ? 'border border-dashed border-faint'
-    : status === 'OFFLINE'
+    : status === 'OFFLINE' && filled
+      ? 'bg-bad-dot'
+      : status === 'OFFLINE'
       ? 'border-2 border-bad-dot'
-      : 'bg-warn-dot forced-colors:bg-[CanvasText]';
+      : status === 'ACTIVE'
+        ? 'bg-ok-dot forced-colors:bg-[CanvasText]'
+        : 'bg-warn-dot forced-colors:bg-[CanvasText]';
   return <span aria-hidden="true" className={cn('inline-block size-[7px] shrink-0 rounded-full', shape, className)} />;
 }
 
@@ -167,6 +179,8 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
     onRetry,
     caption,
     onAddPlatform,
+    errorNotice = true,
+    fadeOthers = false,
     label = 'Platform map',
     platformLabel = defaultLabel,
     hqLabel = defaultLabel,
@@ -222,6 +236,14 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
   }, []);
   const layoutRef = useRef(layout);
   layoutRef.current = layout;
+  // labels are measured in the page font: place them again once it has loaded (the prototype does the same)
+  useEffect(() => {
+    let on = true;
+    if (typeof document !== 'undefined' && document.fonts?.ready) void document.fonts.ready.then(() => on && layoutRef.current());
+    return () => {
+      on = false;
+    };
+  }, []);
 
   // scene lifetime: created on mount, destroyed on unmount; observers and listeners released with it
   useEffect(() => {
@@ -298,6 +320,13 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
   useLayoutEffect(() => {
     layout();
   }, [labelSig, layout]);
+  // a label that changes size on its own (the page font arrives after first paint) is placed again
+  useEffect(() => {
+    if (typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => layoutRef.current());
+    labelEls.current.forEach((el) => ro.observe(el));
+    return () => ro.disconnect();
+  }, [labelSig]);
 
   useImperativeHandle(
     ref,
@@ -375,13 +404,14 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
             {real.map((p) => {
               const sel = selected === p.id;
               const hl = focus ? focus === p.id : !!highlight?.includes(p.id);
-              const dim = !sel && !hl && ((!!focus && focus !== p.id) || (selected !== null && dimOthers));
+              const dimFocus = fadeOthers && !sel && !hl && !!focus && focus !== p.id;
+              const dim = dimFocus || (!sel && !hl && ((!!focus && focus !== p.id) || (selected !== null && dimOthers)));
               const alert = !loading && (p.status !== 'ACTIVE' || !!p.error);
               const short = p.shortName ?? p.name;
               const n = loading ? 0 : (p.count ?? 0);
-              const sub = p.error
+              const sub = p.sub ?? (p.error
                 ? `${p.kind} · no data`
-                : `${p.kind}${p.status === 'DEGRADED' && p.statusSince ? ` · since ${p.statusSince}` : p.status === 'OFFLINE' ? ' · offline' : ''}`;
+                : `${p.kind}${p.status === 'DEGRADED' && p.statusSince ? ` · since ${p.statusSince}` : p.status === 'OFFLINE' ? ' · offline' : ''}`);
               return (
                 <li key={p.id} className="contents">
                   <button
@@ -409,11 +439,11 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
                       'after:pointer-events-none after:absolute after:left-[var(--stem-x,50%)] after:top-full after:h-[var(--stem,10px)] after:w-px after:bg-control after:content-[""] forced-colors:after:hidden',
                       focusRing,
                       'focus-visible:z-[3] hover:z-[3]',
-                      sel || hl ? 'border-accent after:bg-accent' : dim ? 'border-rule' : 'border-border hover:border-control',
+                      sel || hl ? 'border-accent after:bg-accent' : dimFocus ? 'border-border data-[placed]:opacity-55 data-[placed]:hover:opacity-100 hover:border-control' : dim ? 'border-rule' : 'border-border hover:border-control',
                       sel && 'z-[3] shadow-[inset_0_0_0_1px_var(--accent)] forced-colors:border-[Highlight] forced-colors:border-2',
                       p.hq && 'border-dashed',
                       loading && 'cursor-default',
-                      'max-[640px]:px-1.5 max-[640px]:py-[3px]',
+                      '@max-[400px]/town:px-1.5 @max-[400px]/town:py-[3px] max-[640px]:px-1.5 max-[640px]:py-[3px]',
                     )}
                   >
                     <span className="flex items-center gap-[5px]">
@@ -421,16 +451,16 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
                       <span
                         className={cn(
                           'max-w-[190px] truncate text-ui font-medium leading-4',
-                          dim ? 'text-muted' : 'text-text',
+                          dim && !dimFocus ? 'text-muted' : 'text-text',
                           many ? 'hidden' : '@max-[400px]/town:hidden',
                         )}
                       >
                         {p.name}
                       </span>
-                      <span className={cn('max-w-[120px] truncate text-ui font-medium leading-4', dim ? 'text-muted' : 'text-text', many ? 'inline' : 'hidden @max-[400px]/town:inline')}>
+                      <span className={cn('max-w-[120px] truncate text-ui font-medium leading-4', dim && !dimFocus ? 'text-muted' : 'text-text', many ? 'inline' : 'hidden @max-[400px]/town:inline')}>
                         {p.hq ? (p.shortName ?? 'HQ') : short}
                       </span>
-                      {alert && !sel ? <StatusMark status={p.status} error={p.error} className="hidden @max-[400px]/town:inline-block" /> : null}
+                      {alert && !sel ? <StatusMark status={p.status} error={p.error} filled={!!p.sub} className="hidden @max-[400px]/town:inline-block max-[640px]:inline-block" /> : null}
                       {n ? (
                         <span className="ml-0.5 h-4 min-w-4 rounded-[3px] bg-text px-1 text-center text-tiny font-medium tabular-nums text-surface forced-colors:border forced-colors:border-[CanvasText]">
                           {n}
@@ -444,16 +474,16 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
                           p.error ? 'text-muted' : p.status === 'DEGRADED' ? 'text-warn' : p.status === 'OFFLINE' ? 'text-bad' : 'text-muted',
                           sel
                             ? 'flex'
-                            : alert
-                              ? 'flex @max-[400px]/town:hidden'
-                              : 'hidden group-hover/lbl:flex group-focus-visible/lbl:flex @max-[400px]/town:hidden @max-[400px]/town:group-hover/lbl:hidden @max-[400px]/town:group-focus-visible/lbl:hidden',
+                            : alert || p.subAlways
+                              ? 'flex @max-[400px]/town:hidden max-[640px]:hidden'
+                              : 'hidden group-hover/lbl:flex group-focus-visible/lbl:flex @max-[400px]/town:hidden @max-[400px]/town:group-hover/lbl:hidden @max-[400px]/town:group-focus-visible/lbl:hidden max-[640px]:hidden max-[640px]:group-hover/lbl:hidden max-[640px]:group-focus-visible/lbl:hidden',
                         )}
                       >
                         {loading ? (
                           <span aria-hidden="true" className="my-0.5 block h-2.5 w-[76px] rounded-chip bg-skeleton" />
                         ) : (
                           <>
-                            {alert ? <StatusMark status={p.status} error={p.error} /> : null}
+                            {alert ? <StatusMark status={p.status} error={p.error} filled={!!p.sub} /> : p.sub ? <StatusMark status={p.status} /> : null}
                             {sub}
                           </>
                         )}
@@ -465,7 +495,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
             })}
           </ul>
         </div>
-        {error ? (
+        {error && errorNotice ? (
           <div
             role="alert"
             className="absolute inset-x-2 top-2 flex items-center justify-between gap-3 rounded-control border border-border bg-surface px-2 py-1 text-small text-muted"

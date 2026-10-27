@@ -71,6 +71,10 @@ export interface StatusBarProps {
   ledaFirst?: boolean;
   /** Last refresh, already formatted, e.g. "9:12 AM". Shown as "Updated 9:12 AM". */
   updatedAt?: string;
+  /** Text before the platform chips. Overrides the default "N platforms · all running" (`null` hides it). */
+  summary?: ReactNode;
+  /** One plain note instead of the platform chips ("Loading platforms", "No platforms yet"). */
+  note?: string;
   /** Names the list. The `PlatformShell` `status` footer already carries `aria-label="Status"`; set this only outside the shell. */
   'aria-label'?: string;
   /** Merged under the component classes: add colour or margin, it cannot move the layout. */
@@ -157,7 +161,7 @@ const plural = (n: number, one: string, many: string) => `${n.toLocaleString('en
  * Items are plain text unless given `href` (link) or `onSelect` (button). A hidden live region announces health changes only.
  */
 export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function StatusBar(
-  { platforms = [], maxPlatforms = 8, moreHref, onMore, people, invites, leda, plan, planHref, onPlanSelect, ledaFirst = true, updatedAt, 'aria-label': ariaLabel, className },
+  { platforms = [], maxPlatforms = 8, moreHref, onMore, people, invites, leda, plan, planHref, onPlanSelect, ledaFirst = true, updatedAt, summary, note, 'aria-label': ariaLabel, className },
   ref,
 ) {
   const shown = platforms.slice(0, maxPlatforms);
@@ -183,14 +187,20 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
 
   const sections: { key: string; cls: string; node: ReactNode }[] = [];
 
-  if (platforms.length > 0 || portalSummary) {
+  if (note) {
+    sections.push({ key: 'note', cls: 'flex min-w-0 shrink', node: <Item>{note}</Item> });
+  } else if (platforms.length > 0 || portalSummary) {
     sections.push({ key: 'platforms', cls: 'flex min-w-0 shrink', node: (
         <ul role="list" aria-label="Platforms" className="flex min-w-0 items-center gap-0.5 overflow-hidden">
-          {portalSummary && (
+          {(summary !== undefined ? summary : portalSummary) && (
             <li className={cn('flex shrink-0', wsTab)}>
               <Item>
-                <span className="tabular-nums">{plural(platforms.length, 'platform', 'platforms')}</span>
-                <span>· all running</span>
+                {summary !== undefined ? summary : (
+                  <>
+                    <span className="tabular-nums">{plural(platforms.length, 'platform', 'platforms')}</span>
+                    <span>· all running</span>
+                  </>
+                )}
               </Item>
             </li>
           )}
@@ -209,12 +219,15 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
                   <PlatformLogo name={p.name} src={p.logoSrc} color={p.color} initials={p.initials} index={i + 1} decorative />
                   {bad ? (
                     <>
+                      {ledaFirst ? (
+                        <span className={cn('max-w-[16ch] truncate text-ui font-medium text-text', platforms.length > 3 && wsMid)}>{p.name}</span>
+                      ) : null}
                       <span className={cn('size-[7px] shrink-0 rounded-full', dot[p.health!])} aria-hidden="true" />
-                      <span className="max-w-[16ch] truncate text-ui font-medium text-text">{p.name}</span>
+                      {ledaFirst ? null : <span className="max-w-[16ch] truncate text-ui font-medium text-text">{p.name}</span>}
                       <span>{words(p)}</span>
                     </>
                   ) : (
-                    namesAlways && <span className={cn('max-w-[16ch] truncate', ledaFirst && 'text-ui font-medium text-text', ledaFirst && platforms.length > 3 && wsMid)}>{p.name}</span>
+                    namesAlways && !(ledaFirst && platforms.length > 3) && <span className={cn('max-w-[16ch] truncate', ledaFirst && 'text-ui font-medium text-text')}>{p.name}</span>
                   )}
                 </Item>
               </li>

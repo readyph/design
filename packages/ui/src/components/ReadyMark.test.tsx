@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
-import { ReadyLogo, ReadyMark, READY_MARK_CSS } from './ReadyMark';
-import { FALCON } from './ReadyMark.geo';
+import { ReadyLogo, ReadyMark, READY_MARK_CSS, READY_SHINE_MS } from './ReadyMark';
+import { FALCON, FALCON_EYE } from './ReadyMark.geo';
 
 afterEach(cleanup);
 
@@ -80,6 +80,66 @@ describe('ReadyMark', () => {
   });
 });
 
+describe('ReadyMark shine (RDY-365)', () => {
+  it('keeps the static paths as the rest frame and adds a hidden gleam: two clipped bands and the eye, no facet group', () => {
+    for (const [size, cut] of [[16, 'small'], [36, 'full'], [256, 'full']] as const) {
+      const { container, unmount } = render(<ReadyMark size={size} animate effect="shine" />);
+      const svg = container.querySelector('svg')!;
+      expect(svg.getAttribute('class')).toContain('rd-shine');
+      expect(svg.getAttribute('class')).not.toContain('rd-play');
+      expect(paths(svg.querySelector('.rd-static'))).toEqual(FALCON[size <= 32 ? 'small' : 'full'].order.map((t) => FALCON[size <= 32 ? 'small' : 'full'][t]));
+      expect(svg.querySelector('.rd-facets')).toBeNull();
+      const gleam = svg.querySelector('.rd-gleam')!;
+      expect(gleam.getAttribute('aria-hidden')).toBe('true');
+      expect(gleam.querySelectorAll('.rd-band')).toHaveLength(2);
+      expect(gleam.querySelectorAll('.rd-step')).toHaveLength(2);
+      expect(gleam.querySelector('.rd-eye')?.getAttribute('d')).toBe(FALCON_EYE[cut === 'small' ? 'small' : 'full']);
+      expect(svg.querySelectorAll('clipPath')).toHaveLength(2);
+      expect(svg.getAttribute('width')).toBe(String(size));
+      unmount();
+    }
+  });
+
+  it('is off at rest: no gleam without animate, and the default effect stays swoop-assemble', () => {
+    const { container, rerender } = render(<ReadyMark effect="shine" />);
+    expect(container.querySelector('.rd-gleam')).toBeNull();
+    rerender(<ReadyMark animate />);
+    expect(container.querySelector('.rd-facets')).not.toBeNull();
+    expect(container.querySelector('.rd-gleam')).toBeNull();
+  });
+
+  it('replays by number without stacking: one svg, one gleam', () => {
+    const { container, rerender } = render(<ReadyMark animate={1} effect="shine" />);
+    rerender(<ReadyMark animate={2} effect="shine" />);
+    expect(container.querySelectorAll('svg')).toHaveLength(1);
+    expect(container.querySelectorAll('.rd-gleam')).toHaveLength(1);
+  });
+
+  it('one sweep, no loop; reduced motion becomes one 900 ms brightness step with no travel; the clip ids are unique per mark', () => {
+    const { container } = render(
+      <>
+        <ReadyMark animate effect="shine" />
+        <ReadyMark animate effect="shine" />
+      </>,
+    );
+    expect(READY_SHINE_MS).toBe(1900);
+    expect(READY_MARK_CSS).toContain('.rd-shine .rd-band{animation:rd-band 1900ms linear}');
+    expect(READY_MARK_CSS).not.toContain('infinite');
+    const block = READY_MARK_CSS.slice(READY_MARK_CSS.indexOf('@media (prefers-reduced-motion:reduce)'));
+    expect(block).toContain('.rd-shine .rd-band,.rd-shine .rd-eye{animation:none}');
+    expect(block).toContain('.rd-shine .rd-step{animation:rd-step 900ms ease-out}');
+    expect(READY_MARK_CSS).toContain('@keyframes rd-step{0%{opacity:0}30%{opacity:.9}100%{opacity:0}}');
+    const ids = Array.from(container.querySelectorAll('clipPath')).map((c) => c.id);
+    expect(new Set(ids).size).toBe(4);
+  });
+
+  it('the band colours come from the --rd-shine tokens', () => {
+    const { container } = render(<ReadyMark animate effect="shine" />);
+    const fills = Array.from(container.querySelectorAll('.rd-gleam rect, .rd-eye')).map((e) => e.getAttribute('fill'));
+    expect(fills.every((f) => f?.startsWith('var(--rd-shine-'))).toBe(true);
+  });
+});
+
 describe('ReadyLogo', () => {
   it('lockup is named Ready; the tagline is optional live text', () => {
     const { container, rerender } = render(<ReadyLogo />);
@@ -87,5 +147,12 @@ describe('ReadyLogo', () => {
     expect(container.textContent).not.toContain('Are you ready?');
     rerender(<ReadyLogo tagline />);
     expect(container.textContent).toBe('Are you ready?');
+  });
+
+  it('reduced motion switches the shine bands off after the rule that starts them (cascade order)', () => {
+    const start = READY_MARK_CSS.indexOf('.rd-shine .rd-band{animation:rd-band');
+    const off = READY_MARK_CSS.indexOf('.rd-shine .rd-band,.rd-shine .rd-eye{animation:none}');
+    expect(start).toBeGreaterThan(-1);
+    expect(off).toBeGreaterThan(start);
   });
 });

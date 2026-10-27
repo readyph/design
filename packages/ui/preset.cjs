@@ -114,7 +114,12 @@ const preset = {
         "rd-lit": "var(--rd-lit)",
         "rd-mid": "var(--rd-mid)",
         "rd-deep": "var(--rd-deep)",
-        "rd-ink": "var(--rd-ink)"
+        "rd-ink": "var(--rd-ink)",
+        "rd-shine-lit": "var(--rd-shine-lit)",
+        "rd-shine-lit-core": "var(--rd-shine-lit-core)",
+        "rd-shine-mid": "var(--rd-shine-mid)",
+        "rd-shine-mid-core": "var(--rd-shine-mid-core)",
+        "rd-shine-eye": "var(--rd-shine-eye)"
       },
       "fontFamily": {
         "sans": [

@@ -47,7 +47,7 @@ const sizes: Record<ModalSize, string> = {
   sm: 'max-w-sm max-h-[calc(100vh-48px)]',
   md: 'max-w-md max-h-[calc(100vh-48px)]',
   lg: 'max-w-lg max-h-[calc(100vh-48px)]',
-  confirm: 'w-[min(420px,calc(100vw-48px))] max-h-[calc(100vh-48px)]',
+  confirm: 'w-[min(420px,calc(100vw-32px))] max-h-[calc(100vh-48px)]',
   panel: 'h-[min(640px,calc(100vh-48px))] w-[min(720px,calc(100vw-48px))]',
   marketplace: 'h-[min(744px,calc(100vh-48px))] w-[min(904px,calc(100vw-48px))]',
 };
@@ -91,17 +91,21 @@ export interface ModalHeaderProps extends Omit<HTMLAttributes<HTMLDivElement>, '
   icon?: PhosphorIcon;
   iconNode?: ReactNode;
   description?: ReactNode;
+  /** Replaces the title's type style (default `text-dialog`). */
+  titleClassName?: string;
+  /** Replaces the description's type style (default 13/18 muted). */
+  descriptionClassName?: string;
 }
 
 /** Header region: optional icon well, title (accessible name), description and close button. */
-export function ModalHeader({ icon, iconNode, description, className, children, ...rest }: ModalHeaderProps) {
+export function ModalHeader({ icon, iconNode, description, titleClassName, descriptionClassName, className, children, ...rest }: ModalHeaderProps) {
   const { hideClose } = useContext(ModalContext);
   return (
     <div className={cn('flex shrink-0 items-start gap-3 border-b border-rule px-pad py-4 max-[640px]:px-4', className)} {...rest}>
       {(icon || iconNode) && <ModalIconWell icon={icon}>{iconNode}</ModalIconWell>}
       <div className="min-w-0 flex-1">
-        <Dialog.Title className="text-dialog text-text">{children}</Dialog.Title>
-        {description && <Dialog.Description className="mt-0.5 text-[13px] leading-[18px] text-muted">{description}</Dialog.Description>}
+        <Dialog.Title className={cn(titleClassName ?? 'text-dialog', 'text-text')}>{children}</Dialog.Title>
+        {description && <Dialog.Description className={cn('mt-0.5 text-muted', descriptionClassName ?? 'text-[13px] leading-[18px]')}>{description}</Dialog.Description>}
       </div>
       {!hideClose && <CloseButton label={typeof children === 'string' ? children : undefined} />}
     </div>

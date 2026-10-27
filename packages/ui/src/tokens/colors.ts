@@ -76,6 +76,12 @@ export const ready: Record<string, Pair> = {
   'rd-mid': ['#E4371C', '#F24A2C'],
   'rd-deep': ['#B3240F', '#C42E16'],
   'rd-ink': ['#16110F', '#FFFFFF'],
+  /** The shine's light band (RDY-365): each plane's band and its brighter core, and the eye flash (white on light, where the eye is already white). */
+  'rd-shine-lit': ['#FF9067', '#FFA781'],
+  'rd-shine-lit-core': ['#FFBE9E', '#FFD2BC'],
+  'rd-shine-mid': ['#F2563A', '#FF6A4C'],
+  'rd-shine-mid-core': ['#FF8463', '#FF9B7E'],
+  'rd-shine-eye': ['#FFFFFF', '#FFE6D8'],
 };
 
 /** Leda palette: separate from the UI; paints only Leda's marks and animations. */
