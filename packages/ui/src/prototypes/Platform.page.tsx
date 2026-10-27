@@ -25,6 +25,7 @@ import { SheetBar } from '../components/SheetBar';
 import { Skeleton } from '../components/Skeleton';
 import { StatusBar } from '../components/StatusBar';
 import { StatusDot, type StatusTone } from '../components/StatusDot';
+import { TextField, Textarea } from '../components/TextField';
 import { Switch } from '../components/Switch';
 import { Tabs, type TabItem } from '../components/Tabs';
 import { TownMap, type TownMapHandle, type TownMapLink, type TownMapSlot } from '../components/TownMap';
@@ -81,47 +82,11 @@ const lowerName = (n: string) => (/^Leda/.test(n) ? n : n.toLowerCase());
 const saveName = (id: SectionId) => SECTIONS.find((s) => s.id === id)?.save ?? sectionName(id);
 const sectionNames: Record<SectionId, string> = { general: 'General info', system: 'System', team: 'Team', connections: 'Connections', leda: 'Leda & Memory' };
 
-const field =
-  'block w-full min-w-0 rounded-control border bg-surface px-3 text-body text-text placeholder:text-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent focus-visible:border-accent';
 const link = 'text-accent underline underline-offset-2 hover:text-accent-hover';
 
 const healthTone: Record<Health, StatusTone> = { ok: 'ok', slow: 'warn', offline: 'bad', setup: 'neutral', 'setting-up': 'accent' };
 
 /* ---------- small pieces ---------- */
-function Field({ id, label, value, onChange, hint, error, unit, type = 'text', required, wide, max = 120, className }: {
-  id: string; label: string; value: string | number; onChange: (v: string) => void; hint?: string; error?: string; unit?: string; type?: 'text' | 'tel' | 'number'; required?: boolean; wide?: boolean; max?: number; className?: string;
-}) {
-  const d = hint || error ? `${id}-d` : undefined;
-  const box = (
-    <input
-      id={id}
-      type={type}
-      inputMode={type === 'number' ? 'numeric' : undefined}
-      min={type === 'number' ? 0 : undefined}
-      maxLength={type === 'number' ? undefined : max}
-      value={value}
-      required={required}
-      autoComplete="off"
-      aria-invalid={error ? true : undefined}
-      aria-describedby={d}
-      onChange={(e) => onChange(e.target.value)}
-      className={cn(field, 'h-[var(--ctl-dropdown)]', error ? 'border-bad' : 'border-control', unit && 'rounded-r-none')}
-    />
-  );
-  return (
-    <div className={cn('min-w-0', wide && 'sm:col-span-2', className)}>
-      <label htmlFor={id} className="mb-1 block text-ui font-medium text-text">{label}</label>
-      {unit ? (
-        <div className="flex">
-          {box}
-          <span className="grid shrink-0 place-items-center rounded-r-control border border-l-0 border-control bg-raised px-3 text-ui text-muted">{unit}</span>
-        </div>
-      ) : box}
-      {error ? <p id={d} className="mt-1 text-small text-bad-ink">{error}</p> : hint ? <p id={d} className="mt-1 text-small text-muted">{hint}</p> : null}
-    </div>
-  );
-}
-
 function SwitchField({ label, hint, checked, onChange }: { label: string; hint?: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <div className="min-w-0 self-end pb-2">
@@ -551,7 +516,7 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
     return (
       <>
         <div className="grid gap-x-4 gap-y-4 sm:grid-cols-2">
-          <Field id={`${uid}-name`} label="Name" value={general.label} required hint="Give this a clear name, like a branch name." error={genErr || undefined} onChange={(v) => { setGenErr(''); setDraft('general', { ...general, label: v }); }} />
+          <TextField size="large" requiredMark={false} id={`${uid}-name`} label="Name" value={general.label} required maxLength={120} autoComplete="off" hint="Give this a clear name, like a branch name." error={genErr || undefined} onChange={(e) => { setGenErr(''); setDraft('general', { ...general, label: e.target.value }); }} />
           <div className="min-w-0">
             <span id={`${uid}-logo`} className="mb-1 block text-ui font-medium text-text">Logo</span>
             <div role="group" aria-labelledby={`${uid}-logo`} className="flex flex-wrap items-center gap-3">
@@ -566,7 +531,7 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
             </div>
           </div>
           {kind.basics.map((b) => (
-            <Field key={b} id={`${uid}-b-${b}`} label={basicLabels[b][0]} hint={basicLabels[b][1]} type={b === 'phone' ? 'tel' : 'text'} wide={b === 'address'} value={general.basics[b] ?? ''} onChange={(v) => setDraft('general', { ...general, basics: { ...general.basics, [b]: v } })} />
+            <TextField size="large" key={b} id={`${uid}-b-${b}`} label={basicLabels[b][0]} hint={basicLabels[b][1]} type={b === 'phone' ? 'tel' : 'text'} className={b === 'address' ? 'sm:col-span-2' : undefined} maxLength={120} autoComplete="off" value={general.basics[b] ?? ''} onChange={(e) => setDraft('general', { ...general, basics: { ...general.basics, [b]: e.target.value } })} />
           ))}
         </div>
       </>
@@ -616,7 +581,7 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
           {f.hint ? <p className="mt-1 text-small text-muted">{f.hint}</p> : null}
         </div>
       );
-    return <Field key={f.key} id={id} label={f.label} unit={f.unit} hint={f.hint} type={f.type === 'number' ? 'number' : 'text'} value={String(v ?? '')} onChange={(nv) => set(f.type === 'number' ? (nv === '' ? '' : Number(nv)) : nv)} />;
+    return <TextField size="large" key={f.key} id={id} label={f.label} unit={f.unit} hint={f.hint} type={f.type === 'number' ? 'number' : 'text'} min={f.type === 'number' ? 0 : undefined} maxLength={f.type === 'number' ? undefined : 120} autoComplete="off" value={String(v ?? '')} onChange={(e) => { const nv = e.target.value; set(f.type === 'number' ? (nv === '' ? '' : Number(nv)) : nv); }} />;
   };
   const systemBody = () => (
     <>
@@ -743,11 +708,8 @@ export function PlatformPage({ platformId: platformId0 = 'autoworks', tab: tab00
         onSubmit={(e) => { e.preventDefault(); saveTopic(); }}
         noValidate
       >
-        <label htmlFor={`${uid}-tt`} className="mb-1 block text-ui font-medium text-text">Title</label>
-        <input ref={topicTitle} id={`${uid}-tt`} value={m.title} maxLength={60} autoComplete="off" aria-invalid={m.err ? true : undefined} aria-describedby={m.err ? `${uid}-te` : undefined} onChange={(e) => setMemEdit({ ...m, title: e.target.value, err: undefined })} className={cn(field, 'h-[var(--ctl-dropdown)]', m.err ? 'border-bad' : 'border-control')} />
-        <label htmlFor={`${uid}-tc`} className="mb-1 mt-3 block text-ui font-medium text-text">What Leda should know</label>
-        <textarea id={`${uid}-tc`} rows={3} value={m.content} maxLength={600} onChange={(e) => setMemEdit({ ...m, content: e.target.value, err: undefined })} className={cn(field, 'resize-none py-2', m.err ? 'border-bad' : 'border-control')} />
-        {m.err ? <p id={`${uid}-te`} role="alert" className="mt-1 text-small text-bad-ink">{m.err}</p> : null}
+        <TextField size="large" ref={topicTitle} id={`${uid}-tt`} label="Title" value={m.title} maxLength={60} autoComplete="off" invalid={!!m.err} aria-describedby={m.err ? `${uid}-tc-error` : undefined} onChange={(e) => setMemEdit({ ...m, title: e.target.value, err: undefined })} />
+        <Textarea size="large" className="mt-3" id={`${uid}-tc`} label="What Leda should know" error={m.err} rows={3} value={m.content} maxLength={600} onChange={(e) => setMemEdit({ ...m, content: e.target.value, err: undefined })} />
         <div className="mt-3 flex flex-wrap gap-2">
           <Button type="submit" variant="primary">Save topic</Button>
           <Button type="button" variant="text" onClick={() => { const wasNew = m.id === 'new'; setMemEdit(null); refocus(wasNew ? 'topic-add' : 'panel'); }}>Cancel</Button>
