@@ -1,5 +1,5 @@
 /**
- * Container-query variants for the ReadyPH preset (no extra dependency).
+ * Container-query variants for the Ready preset (no extra dependency).
  *   @container            -> container-type: inline-size   (named: @container/list)
  *   @[760px]:  / @min-[760px]:   -> @container (min-width: 760px)
  *   @max-[760px]:                -> @container (max-width: 760px)
