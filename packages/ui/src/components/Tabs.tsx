@@ -28,7 +28,7 @@ export interface TabItem {
  * - `editor`: closable tabs in the sheet bar (Home). 96-180px, shrink before the strip scrolls.
  * - `fixed`: no close, natural width up to 16rem then ellipsis (Memory, Home "Today"). 48px with its own bottom border; inside a `SheetBar` the bar supplies the border.
  * - `vertical`: left list with icon, name and a status word (platform.html).
- * - `chips`: the phone form; 44px chips, the chosen chip scrolls into view.
+ * - `chips`: the phone form; 36px icon-less chips (the workshop .snavp), the chosen chip scrolls into view.
  * - `underline` / `pill`: legacy names, kept as aliases of `fixed` / `chips` (desktop height).
  */
 export type TabsVariant = 'editor' | 'fixed' | 'vertical' | 'chips' | 'underline' | 'pill';
@@ -89,7 +89,7 @@ const listCls: Record<ReturnType<typeof toSurface>, string> = {
   editor: 'flex h-full min-w-0 items-stretch gap-1 overflow-x-auto overflow-y-hidden',
   fixed: 'flex min-h-0 min-w-0 flex-1 items-stretch gap-1 overflow-x-auto overflow-y-hidden border-b border-border',
   vertical: 'flex flex-col gap-1 pb-3 pt-1',
-  chips: 'flex min-w-0 items-center gap-2 overflow-x-auto overflow-y-hidden py-0.5',
+  chips: 'flex min-w-0 items-center gap-2 overflow-x-auto overflow-y-hidden py-0.5 max-[640px]:gap-1.5 max-[640px]:py-0',
 };
 
 /** Keyboard-navigable tabs (arrows, Home, End; roving tabindex) built on Radix Tabs. */
@@ -185,10 +185,10 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
                 v === 'vertical' &&
                   'group grid w-full grid-cols-[20px_minmax(0,1fr)_auto] items-center gap-x-2.5 gap-y-0.5 rounded-card border border-transparent px-3 py-2.5 text-left text-[14px] leading-5 text-text hover:bg-frame-hover data-[state=active]:border-border data-[state=active]:bg-surface',
                 v === 'chips' &&
-                  'inline-flex h-[30px] shrink-0 items-center gap-2 whitespace-nowrap rounded-control border border-border px-3 hover:bg-raised hover:text-text max-[640px]:h-11 data-[state=active]:border-accent data-[state=active]:bg-accent-tint data-[state=active]:font-medium data-[state=active]:text-text',
+                  'inline-flex h-[30px] shrink-0 items-center gap-2 whitespace-nowrap rounded-control border border-border px-3 hover:bg-raised hover:text-text max-[640px]:h-9 max-[640px]:rounded-[18px] max-[640px]:text-[13px] max-[640px]:text-text data-[state=active]:border-accent data-[state=active]:bg-accent-tint data-[state=active]:font-medium data-[state=active]:text-text max-[640px]:data-[state=active]:bg-transparent max-[640px]:data-[state=active]:font-normal max-[640px]:data-[state=active]:text-accent',
               )}
             >
-              {Lead && <Lead size={v === 'editor' || v === 'fixed' ? 14 : 16} aria-hidden className={cn('shrink-0', v === 'vertical' && 'text-muted group-data-[state=active]:text-accent')} />}
+              {Lead && v !== 'chips' && <Lead size={v === 'editor' || v === 'fixed' ? 14 : 16} aria-hidden className={cn('shrink-0', v === 'vertical' && 'text-muted group-data-[state=active]:text-accent')} />}
               {item.leading && <span aria-hidden className="inline-flex shrink-0">{item.leading}</span>}
               <span className={cn('min-w-0', v === 'editor' || v === 'fixed' ? 'truncate' : v === 'vertical' ? 'truncate font-medium' : '', item.preview && 'italic')}>
                 {item.label}
