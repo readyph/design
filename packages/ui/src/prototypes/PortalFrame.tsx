@@ -27,8 +27,8 @@ const PAGES: { id: PortalPage; label: string; icon: Icon; href: string }[] = [
 ];
 const DEST: Record<PortalPage, Dest> = { home: { to: 'home' }, platforms: { to: 'platforms' }, reports: { to: 'reports' }, team: { to: 'team' }, memory: { to: 'memory' } };
 const byId = (id: PortalPage) => PAGES.find((p) => p.id === id)!;
-/** Rail order: Memory before Team. */
-const RAIL = ['home', 'platforms', 'reports', 'memory', 'team'].map((id) => byId(id as PortalPage));
+/** Rail order as in the workshop shell.js: Home, Platforms, Reports, Team, Memory. */
+const RAIL = ['home', 'platforms', 'reports', 'team', 'memory'].map((id) => byId(id as PortalPage));
 /** Phone nav shows these four; Memory lives under More. */
 const PHONE_TABS = PAGES.filter((p) => p.id !== 'memory');
 
@@ -55,9 +55,9 @@ export interface PortalFrameProps extends Omit<PlatformShellProps, 'rail' | 'rai
   account?: { name: string; email: string; role: string };
 }
 
-const defaultAccount = { name: 'Maria Santos', email: 'mon@delacruz.ph', role: 'Owner' };
+const defaultAccount = { name: 'Ramon Dela Cruz', email: 'mon@delacruzauto.ph', role: 'Owner' };
 const tabClass = cn(
-  'relative flex min-h-11 flex-col items-center justify-center gap-[3px] rounded-control text-small text-muted',
+  'relative flex min-h-11 flex-col items-center justify-center gap-[3px] rounded-control text-tiny text-muted',
   focusRing,
   'focus-visible:ring-offset-frame',
 );
@@ -87,17 +87,17 @@ export function PortalFrame({ current, pageName, leda, topBar, teamCount = 0, on
       <ReadyLogo size={28} />
       <span className="min-w-0 flex-1 truncate text-muted">{name}</span>
       {leda}
-      <AccountMenu name={account.name} email={account.email} role={account.role} applyToDocument={false} {...acct} />
+      <span className="contents [&>button]:size-11"><AccountMenu name={account.name} email={account.email} role={account.role} applyToDocument={false} {...acct} /></span>
     </>
   );
   const moreCurrent = current === 'memory';
   const phoneNav = (
-    <div className="grid h-[60px] w-full grid-cols-5 items-stretch px-1">
+    <div className="grid h-[60px] w-full grid-cols-5 items-stretch">
       {PHONE_TABS.map((p) => {
         const on = p.id === current;
         const n = p.id === 'team' ? teamCount : 0;
         return (
-          <a key={p.id} href={p.href} {...link(DEST[p.id])} aria-current={on ? 'page' : undefined} aria-label={n ? `${p.label}, ${n}` : undefined} className={cn(tabClass, on && 'bg-frame-active font-medium text-text')}>
+          <a key={p.id} href={p.href} {...link(DEST[p.id])} aria-current={on ? 'page' : undefined} aria-label={n ? `${p.label}, ${n}` : undefined} className={cn(tabClass, on && 'font-medium text-text')}>
             <p.icon size={20} aria-hidden />
             <span aria-hidden={n ? true : undefined}>{p.label}</span>
             <CountBadge count={n} />
@@ -108,7 +108,7 @@ export function PortalFrame({ current, pageName, leda, topBar, teamCount = 0, on
         side="top"
         align="end"
         trigger={
-          <button type="button" aria-current={moreCurrent ? "page" : undefined} className={cn(tabClass, moreCurrent && 'bg-frame-active font-medium text-text')}>
+          <button type="button" aria-current={moreCurrent ? "page" : undefined} className={cn(tabClass, moreCurrent && 'font-medium text-text')}>
             <List size={20} aria-hidden />
             <span>More</span>
           </button>

@@ -100,9 +100,12 @@ describe('TownMap', () => {
 
   it('a caller className cannot change the map height or overflow', () => {
     const { container } = render(<TownMap platforms={three} className="h-4 overflow-visible" />);
-    const inner = container.querySelector('.h-map-h')!;
-    expect(inner.className).toContain('overflow-hidden');
+    const frame = container.querySelector('.h-map-h')!;
+    expect(frame.className).toContain('h-map-h');
+    const inner = container.querySelector('.overflow-hidden')!;
+    expect(inner).toBeTruthy();
     expect(inner.className).not.toContain('h-4');
+    expect(inner.className).not.toContain('overflow-visible');
   });
 
   it('long names are truncated in the label, full in the accessible name', () => {

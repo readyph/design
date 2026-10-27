@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useEffect, useId, useImperativeHandle, useLayoutEffect, useMemo, useRef } from 'react';
+import { forwardRef, type ReactNode, useCallback, useEffect, useId, useImperativeHandle, useLayoutEffect, useMemo, useRef } from 'react';
 import { ArrowClockwise, ArrowCounterClockwise, MagnifyingGlassMinus, MagnifyingGlassPlus } from '@phosphor-icons/react';
 import { identity } from '../tokens/colors';
 import { cn, focusRing } from '../utils/cn';
@@ -92,7 +92,7 @@ export interface TownMapProps {
   error?: boolean;
   onRetry?: () => void;
   /** Plain text above the map, e.g. "2 platforms + HQ". */
-  caption?: string;
+  caption?: ReactNode;
   /** Accessible name of the whole map (a group of buttons, one per platform). */
   label?: string;
   /** Overrides the accessible name of a platform button. */
@@ -318,7 +318,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
       role="group"
       aria-label={label}
       aria-busy={loading || undefined}
-      className={cn('group/town flex min-w-0 flex-col', className)}
+      className={cn(className, 'group/town mt-1 flex h-map-h min-w-0 flex-col max-[640px]:mt-0')}
       onKeyDown={(e) => {
         if (e.key === 'Escape' && selected !== null && !loading) {
           e.stopPropagation();
@@ -327,7 +327,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
       }}
     >
       {caption ? <p className="m-0 flex h-5 flex-none items-center px-3 text-small text-muted max-[640px]:hidden">{caption}</p> : null}
-      <div className="@container/town relative mt-1 flex h-map-h flex-none flex-col overflow-hidden rounded-card max-[640px]:mt-0 max-[640px]:rounded-none">
+      <div className="@container/town relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-card max-[640px]:rounded-none">
         <div ref={mountRef} className="relative min-h-0 flex-1 overflow-hidden">
           <svg
             ref={svgRef}

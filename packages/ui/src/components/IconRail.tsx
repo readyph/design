@@ -111,7 +111,7 @@ export interface IconRailMarkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorE
 }
 
 /**
- * The Ready falcon (RDY-363): 28px mark in a 32px link to Home. Sits above the items with 12px of air.
+ * The Ready falcon (RDY-363): 28px mark in a 36px link (the workshop `.rail a` rule, RDY-364) to Home. Sits above the items with 12px of air.
  * Swoop-assemble plays once when the rail mounts (not on re-renders) and again on hover or keyboard focus, never in a loop, and only
  * after the last run has finished. `prefers-reduced-motion` turns it into a 400ms fade (see ReadyMark).
  */
@@ -148,7 +148,7 @@ export const IconRailMark = forwardRef<HTMLAnchorElement, IconRailMarkProps>(fun
         if (visible) replay();
       }}
       className={cn(
-        'mb-3 grid size-8 shrink-0 place-items-center rounded-control transition-colors motion-reduce:transition-none hover:bg-frame-hover',
+        'mb-3 grid size-9 shrink-0 place-items-center rounded-control transition-colors motion-reduce:transition-none hover:bg-frame-hover',
         frameRing,
         className,
       )}

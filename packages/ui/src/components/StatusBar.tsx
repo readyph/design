@@ -40,6 +40,8 @@ export interface StatusBarCount {
 export interface StatusBarLeda {
   /** Requests used this period. */
   used: number;
+  /** Text after the count, e.g. "7 days left" (shown with `ledaFirst`). */
+  daysLeft?: string;
   /** Plan limit. */
   max: number;
   /** Warn from this value. Defaults to 80% of `max`. */
@@ -61,6 +63,8 @@ export interface StatusBarProps {
   leda?: StatusBarLeda;
   /** Plan name, e.g. "Starter". Shown as "Starter plan". */
   plan?: string;
+  /** Workshop shell order (RDY-358): Leda first, then "N platforms · all running" and a named logo per platform, people, plan. Default false keeps the earlier order. */
+  ledaFirst?: boolean;
   /** Last refresh, already formatted, e.g. "9:12 AM". Shown as "Updated 9:12 AM". */
   updatedAt?: string;
   /** Names the list. The `PlatformShell` `status` footer already carries `aria-label="Status"`; set this only outside the shell. */
@@ -89,7 +93,7 @@ const dot: Record<StatusBarHealth, string> = {
 
 // Full class names so Tailwind can see them. `@max-[Npx]/status:` is a container query on the bar's own width.
 const item =
-  'inline-flex h-[26px] min-w-0 items-center gap-1.5 whitespace-nowrap rounded-chip px-1.5 text-small text-muted';
+  'inline-flex h-[26px] min-w-0 items-center gap-2 whitespace-nowrap rounded-chip px-[9px] text-small text-muted';
 const interactive =
   'cursor-pointer hover:bg-frame-hover hover:text-text aria-pressed:bg-frame-active aria-[current=true]:bg-frame-active ' +
   'outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-frame forced-colors:outline-0 forced-colors:focus-visible:outline forced-colors:focus-visible:outline-2 forced-colors:focus-visible:outline-[Highlight]';
@@ -130,7 +134,7 @@ function Item({ href, onSelect, selected, 'aria-label': label, title, className,
   );
 }
 
-const Divider = () => <span aria-hidden="true" className="mr-1 h-3 w-px shrink-0 bg-control" />;
+const Divider = () => <span aria-hidden="true" className="mx-1.5 h-3 w-px shrink-0 bg-control" />;
 
 const plural = (n: number, one: string, many: string) => `${n.toLocaleString('en-US')} ${n === 1 ? one : many}`;
 
@@ -146,15 +150,16 @@ const plural = (n: number, one: string, many: string) => `${n.toLocaleString('en
  * Items are plain text unless given `href` (link) or `onSelect` (button). A hidden live region announces health changes only.
  */
 export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function StatusBar(
-  { platforms = [], maxPlatforms = 8, moreHref, onMore, people, invites, leda, plan, updatedAt, 'aria-label': ariaLabel, className },
+  { platforms = [], maxPlatforms = 8, moreHref, onMore, people, invites, leda, plan, ledaFirst = false, updatedAt, 'aria-label': ariaLabel, className },
   ref,
 ) {
   const shown = platforms.slice(0, maxPlatforms);
   const rest = platforms.length - shown.length;
-  const namesAlways = platforms.length <= 3;
+  const namesAlways = platforms.length <= 3 || ledaFirst;
   const problems = platforms.filter((p) => p.health && p.health !== 'ok');
   const allRunning = platforms.length > 0 && problems.length === 0;
   const showSummary = allRunning && !namesAlways;
+  const portalSummary = ledaFirst && allRunning;
   const words = (p: StatusBarPlatform) => p.healthText ?? healthWord[p.health ?? 'ok'];
 
   const announce = platforms.length === 0 ? '' : problems.length ? problems.map((p) => `${p.name} ${words(p)}`).join(', ') : 'All platforms running';
@@ -174,6 +179,14 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
   if (platforms.length > 0) {
     sections.push({ key: 'platforms', cls: 'flex min-w-0 shrink', node: (
         <ul role="list" aria-label="Platforms" className="flex min-w-0 items-center gap-0.5 overflow-hidden">
+          {portalSummary && (
+            <li className="flex shrink-0">
+              <Item>
+                <span className="tabular-nums">{plural(platforms.length, 'platform', 'platforms')}</span>
+                <span>· all running</span>
+              </Item>
+            </li>
+          )}
           {shown.map((p, i) => {
             const bad = !!p.health && p.health !== 'ok';
             return (
@@ -190,11 +203,11 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
                   {bad ? (
                     <>
                       <span className={cn('size-[7px] shrink-0 rounded-full', dot[p.health!])} aria-hidden="true" />
-                      <span className="max-w-[16ch] truncate text-text">{p.name}</span>
+                      <span className="max-w-[16ch] truncate text-ui font-medium text-text">{p.name}</span>
                       <span>{words(p)}</span>
                     </>
                   ) : (
-                    namesAlways && <span className="max-w-[16ch] truncate">{p.name}</span>
+                    namesAlways && <span className={cn('max-w-[16ch] truncate', ledaFirst && 'text-ui font-medium text-text')}>{p.name}</span>
                   )}
                 </Item>
               </li>
@@ -244,11 +257,12 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
     sections.push({ key: 'leda', cls: "flex shrink-0", node: (
         <Item href={leda.href} onSelect={leda.onSelect}>
           <LedaMark size={16} decorative />
-          <span>Leda</span>
+          <span className={cn(ledaFirst && 'text-ui font-medium text-text')}>Leda</span>
           <ProgressBar value={leda.used} max={leda.max} warnAt={warnAt} aria-label={text} />
           <span className="tabular-nums">
             {leda.used.toLocaleString('en-US')} / {leda.max.toLocaleString('en-US')}
           </span>
+          {ledaFirst && leda.daysLeft ? <span className="tabular-nums">{leda.daysLeft}</span> : null}
         </Item>
       ) });
   }
@@ -263,6 +277,11 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
     sections.push({ key: 'updated', cls: cn('ml-auto flex shrink-0', dropUpdated), node: (
         <Item className="tabular-nums">Updated {updatedAt}</Item>
       ) });
+  }
+
+  if (ledaFirst) {
+    const i = sections.findIndex((x) => x.key === 'leda');
+    if (i > 0) sections.unshift(...sections.splice(i, 1));
   }
 
   return (

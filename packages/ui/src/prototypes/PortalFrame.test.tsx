@@ -13,7 +13,7 @@ describe('PortalFrame', () => {
   it('rail has Home, Platforms, Reports, Team, Memory and the account; the current page is marked', () => {
     frame();
     const rail = within(screen.getAllByRole('navigation', { hidden: true })[0]!);
-    expect(rail.getAllByRole('link', { hidden: true }).map((a) => a.getAttribute('aria-label')).slice(1)).toEqual(['Home', 'Platforms', 'Reports', 'Memory', 'Team, 2']);
+    expect(rail.getAllByRole('link', { hidden: true }).map((a) => a.getAttribute('aria-label')).slice(1)).toEqual(['Home', 'Platforms', 'Reports', 'Team, 2', 'Memory']);
     for (const n of ['Home', 'Platforms', 'Reports', 'Memory']) expect(rail.getByRole('link', { name: n, hidden: true })).toBeTruthy();
     expect(rail.getByRole('link', { name: 'Team, 2', hidden: true })).toBeTruthy();
     expect(rail.getByRole('link', { name: 'Platforms', hidden: true }).getAttribute('aria-current')).toBe('page');

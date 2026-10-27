@@ -179,9 +179,9 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
                   ),
                 v === 'fixed' &&
                   cn(
-                    'relative inline-flex h-full min-h-[47px] max-w-[16rem] shrink-0 items-center gap-2 whitespace-nowrap px-3 hover:bg-raised hover:text-text',
+                    'relative inline-flex h-full min-h-[47px] max-w-[16rem] shrink-0 items-center gap-[7px] whitespace-nowrap rounded-t-chip px-2 text-[13px] hover:bg-raised hover:text-text',
                     'data-[state=active]:font-medium data-[state=active]:text-text',
-                    'after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 data-[state=active]:after:bg-accent',
+                    'after:absolute after:inset-x-2 after:-bottom-px after:h-0.5 data-[state=active]:after:bg-accent',
                   ),
                 v === 'vertical' &&
                   'flex w-full items-center gap-2 rounded-control p-2.5 text-left hover:bg-raised hover:text-text data-[state=active]:bg-accent-tint data-[state=active]:font-medium data-[state=active]:text-text',

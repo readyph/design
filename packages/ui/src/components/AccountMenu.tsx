@@ -39,7 +39,7 @@ export const AccountButton = forwardRef<HTMLButtonElement, ComponentPropsWithout
       >
         <span
           aria-hidden
-          className="grid size-7 place-items-center rounded-full bg-accent-tint text-small font-semibold text-accent"
+          className="grid size-7 place-items-center rounded-full bg-accent-tint text-[11px] font-semibold text-accent"
         >
           {initialsOf(name)}
         </span>
