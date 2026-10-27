@@ -219,6 +219,18 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
   }, []);
   const layoutRef = useRef(layout);
   layoutRef.current = layout;
+  // labels are measured in the page font: place them again once it has loaded (the prototype does the same)
+  useEffect(() => {
+    let on = true;
+    const fonts = typeof document !== 'undefined' ? document.fonts : undefined;
+    const again = () => on && layoutRef.current();
+    if (fonts?.ready) void fonts.ready.then(again);
+    fonts?.addEventListener?.('loadingdone', again);
+    return () => {
+      on = false;
+      fonts?.removeEventListener?.('loadingdone', again);
+    };
+  }, []);
 
   // scene lifetime: created on mount, destroyed on unmount; observers and listeners released with it
   useEffect(() => {
@@ -405,7 +417,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
                     onFocus={() => onHover?.(p.id)}
                     onBlur={() => onHover?.(null)}
                     className={cn(
-                      'group/lbl pointer-events-auto absolute left-0 top-0 z-[1] flex max-w-[calc(100%-16px)] flex-col gap-px whitespace-nowrap rounded-control border bg-surface px-1.5 py-0.5 text-left opacity-0 transition-colors duration-hover [transform:translate(var(--lx,0px),var(--ly,0px))_translateY(-100%)] will-change-transform data-[placed]:opacity-100',
+                      'group/lbl pointer-events-auto absolute left-0 top-0 z-[1] flex max-w-[calc(100%-16px)] flex-col gap-px whitespace-nowrap rounded-control border bg-surface py-0.5 pl-[5px] pr-1.5 text-left opacity-0 transition-colors duration-hover [transform:translate(var(--lx,0px),var(--ly,0px))_translateY(-100%)] will-change-transform data-[placed]:opacity-100',
                       'after:pointer-events-none after:absolute after:left-[var(--stem-x,50%)] after:top-full after:h-[var(--stem,10px)] after:w-px after:bg-control after:content-[""] forced-colors:after:hidden',
                       focusRing,
                       'focus-visible:z-[3] hover:z-[3]',
@@ -420,19 +432,19 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
                       <PlatformLogo name={p.name} src={p.logo} index={p.index} color={p.color} initials={p.initials} hq={p.hq} decorative size={16} />
                       <span
                         className={cn(
-                          'max-w-[190px] truncate text-ui font-medium',
+                          'max-w-[190px] truncate text-ui font-medium leading-4',
                           dim ? 'text-muted' : 'text-text',
                           many ? 'hidden' : '@max-[400px]/town:hidden',
                         )}
                       >
                         {p.name}
                       </span>
-                      <span className={cn('max-w-[120px] truncate text-ui font-medium', dim ? 'text-muted' : 'text-text', many ? 'inline' : 'hidden @max-[400px]/town:inline')}>
+                      <span className={cn('max-w-[120px] truncate text-ui font-medium leading-4', dim ? 'text-muted' : 'text-text', many ? 'inline' : 'hidden @max-[400px]/town:inline')}>
                         {p.hq ? 'HQ' : short}
                       </span>
                       {alert && !sel ? <StatusMark status={p.status} error={p.error} className="hidden @max-[400px]/town:inline-block" /> : null}
                       {n ? (
-                        <span className="ml-0.5 h-4 min-w-4 rounded-chip bg-text px-1 text-center text-tiny font-medium tabular-nums text-surface forced-colors:border forced-colors:border-[CanvasText]">
+                        <span className="ml-0.5 h-4 min-w-4 rounded-[3px] bg-text px-1 text-center text-tiny font-medium leading-4 tabular-nums text-surface forced-colors:border forced-colors:border-[CanvasText]">
                           {n}
                         </span>
                       ) : null}

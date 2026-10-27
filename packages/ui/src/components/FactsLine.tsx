@@ -55,7 +55,7 @@ export const Fact = forwardRef<HTMLLIElement, FactProps>(function Fact(
   const v = value != null && <strong className={cn('font-semibold', valueFirst && 'mr-[2.75px]', valueTone[tone])}>{value}</strong>;
   return (
     <li ref={ref} className={cn('relative min-w-0 pl-[23px] [overflow-wrap:anywhere]', className)} {...rest}>
-      <span aria-hidden className="absolute left-[10px] top-1/2 h-[3px] -translate-y-1/2 w-[3px] rounded-full bg-faint" />
+      <span aria-hidden className="absolute left-[10px] top-1/2 h-[3px] -translate-y-1/2 w-[3px] rounded-full bg-control" />
       {valueFirst && v}
       {valueFirst && children != null && ' '}
       {children}

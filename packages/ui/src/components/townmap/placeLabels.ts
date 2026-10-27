@@ -48,9 +48,9 @@ export function placeLabels(boxes: readonly LabelBox[], width: number, height: n
   for (const b of order) {
     const x0 = fitX(b.ax - b.w / 2, b.w);
     const y0 = b.ay - b.h - 12;
-    // wider search than the prototype's first pass: nine labels fit the phone strip
-    const dys = [0, -0.5, -1, -1.5, -2, -3, 0.5, 1, 1.5, 2, -4, -5, 2.5, 3, 4, 5].map((k) => k * (b.h + GAP));
-    const dxs = [0, -0.3, 0.3, -0.55, 0.55, -0.8, 0.8, -1.1, 1.1, -1.5, 1.5, -2, 2, -2.6, 2.6, -3.2, 3.2].map((k) => k * b.w);
+    // the workshop's search (map.js placeLabels), unchanged: the same free spot for the same map
+    const dys = [0, -0.5, -1, -1.5, -2, -3, 0.5, 1, 1.5, 2].map((k) => k * (b.h + GAP));
+    const dxs = [0, -0.3, 0.3, -0.55, 0.55, -0.8, 0.8, -1.1, 1.1, -1.5, 1.5].map((k) => k * b.w);
     let best: { x: number; y: number; cost: number; o: number } | null = null;
     for (const dy of dys) {
       for (const dx of dxs) {
