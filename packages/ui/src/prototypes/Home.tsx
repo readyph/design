@@ -862,15 +862,16 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
       />
       {chat && (
         <Chat onClose={() => setChat(false)} returnFocusTo={opener}>
-          <ChatHeader busy={busy} empty={messages.length === 0} onNewConversation={() => setMessages([])} onClose={() => setChat(false)} />
+          <ChatHeader layout="inline" busy={busy} empty={messages.length === 0} onNewConversation={() => setMessages([])} onClose={() => setChat(false)} />
           {messages.length === 0 ? (
-            <div className="min-h-0 flex-1 overflow-y-auto"><ChatEmpty scope={scopeName} chips={suggestions.map((q) => ({ id: q, label: q }))} onPick={(c) => send(c.label)} /></div>
+            <div className="min-h-0 flex-1 overflow-y-auto"><ChatEmpty layout="workshop" scope={scopeName} chips={suggestions.map((q) => ({ id: q, label: q }))} onPick={(c) => send(c.label)} /></div>
           ) : (
             <ChatThread>
               {messages.map((m) => (
                 <ChatMessage
                   key={m.id}
                   message={m}
+                  layout="workshop"
                   onChip={(c) => send(c.label)}
                   onAction={(a) => { if (a.href) go(destFromHash(a.href)); }}
                   onConfirm={(bid) => {
@@ -888,7 +889,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
               ))}
             </ChatThread>
           )}
-          <ChatComposer value={text} onChange={setText} onSend={send} busy={busy} scope={`About ${scopeName}`} />
+          <ChatComposer layout="workshop" label="Message Leda" placeholder="Reply to Leda" value={text} onChange={setText} onSend={send} busy={busy} scope={`About ${scopeName}`} />
         </Chat>
       )}
       <Toaster />

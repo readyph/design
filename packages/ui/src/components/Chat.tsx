@@ -12,7 +12,7 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
-import { PaperPlaneTilt, X } from '@phosphor-icons/react';
+import { NotePencil, PaperPlaneRight, PaperPlaneTilt, X } from '@phosphor-icons/react';
 import { cn, focusRing } from '../utils/cn';
 import { focusIfLost } from '../utils/focusIfLost';
 import { useMatchMedia } from '../utils/useMatchMedia';
@@ -221,20 +221,23 @@ export interface ChatHeaderProps extends Omit<HTMLAttributes<HTMLElement>, 'titl
   /** Where focus goes when the confirm dialog closes after "Start new conversation" (the old thread is gone). Default: the composer. */
   newFocusRef?: RefObject<HTMLElement | null>;
   tagline?: string;
+  /** The workshop's header: title and tagline on one line, "New conversation" with its pencil (icon only on a phone). Default: stacked. */
+  layout?: 'stacked' | 'inline';
 }
 
 /** Header (48px): Leda mark 20px, "Leda", tagline, "New conversation" (asks first through `ConfirmDialog`), close. */
-export function ChatHeader({ busy = false, empty = false, onNewConversation, onClose, newFocusRef, tagline = 'Ask Leda', className, ...rest }: ChatHeaderProps) {
+export function ChatHeader({ busy = false, empty = false, onNewConversation, onClose, newFocusRef, tagline = 'Ask Leda', layout = 'stacked', className, ...rest }: ChatHeaderProps) {
+  const inline = layout === 'inline';
   const [asking, setAsking] = useState(false);
   const ranNew = useRef(false);
   return (
-    <header {...rest} className={cn(className, 'flex h-12 shrink-0 items-center gap-2 border-b border-border px-3')}>
+    <header {...rest} className={cn(className, 'flex h-12 shrink-0 items-center border-b border-border', inline ? 'gap-2.5 pl-4 pr-2 max-[640px]:pr-1' : 'gap-2 px-3')}>
       <span aria-hidden className="grid h-6 w-6 shrink-0 place-items-center">
         <LedaMark size={20} effect="aurora" active={busy} decorative />
       </span>
-      <div className="min-w-0 flex-1 leading-none">
+      <div className={cn('min-w-0 flex-1', inline ? 'flex items-baseline gap-2' : 'leading-none')}>
         <h2 className="truncate text-[15px] font-semibold leading-5">Leda</h2>
-        <p className="truncate text-small text-muted">
+        <p className={cn('text-small text-muted', inline ? 'whitespace-nowrap' : 'truncate')}>
           <span className={busy ? 'motion-reduce:hidden' : undefined}>{tagline}</span>
           {busy && <span aria-hidden className="hidden motion-reduce:inline">Thinking…</span>}
         </p>
@@ -248,9 +251,11 @@ export function ChatHeader({ busy = false, empty = false, onNewConversation, onC
           onClick={() => {
             if (!empty) setAsking(true);
           }}
-          className={cn('shrink-0', empty && 'cursor-not-allowed opacity-60 hover:bg-transparent')}
+          leftIcon={inline ? NotePencil : undefined}
+          aria-label={inline ? 'New conversation' : undefined}
+          className={cn('shrink-0', inline && 'text-muted hover:text-text max-[640px]:h-11 max-[640px]:w-11 max-[640px]:justify-center max-[640px]:!px-0 max-[640px]:[&_svg]:size-[18px]', empty && 'cursor-not-allowed opacity-60 hover:bg-transparent')}
         >
-          New conversation
+          {inline ? <span className="max-[640px]:hidden">New conversation</span> : 'New conversation'}
         </Button>
       )}
       {onClose && (
@@ -259,7 +264,7 @@ export function ChatHeader({ busy = false, empty = false, onNewConversation, onC
           aria-label="Close Leda"
           onClick={onClose}
           className={cn(
-            'inline-grid h-8 w-8 shrink-0 place-items-center rounded-control text-muted hover:bg-raised hover:text-text max-[640px]:h-11 max-[640px]:w-11',
+            'inline-grid h-8 w-8 shrink-0 place-items-center rounded-control text-muted hover:bg-raised hover:text-text max-[640px]:h-11 max-[640px]:w-11 max-[640px]:[&_svg]:size-[18px]',
             focusRing,
           )}
         >
@@ -396,7 +401,7 @@ export function ChatScopeChip({ children, className }: { children: ReactNode; cl
  * Word-by-word reveal. Every word is in the layout from the start (opacity only, nothing reflows). Assistive tech gets the full text once;
  * the animated words are hidden from it. Reduced motion: the reply shows at once.
  */
-function StreamedText({ text, onDone }: { text: string; onDone?: () => void }) {
+function StreamedText({ text, onDone, step = 32 }: { text: string; onDone?: () => void; step?: number }) {
   const reduced = useMatchMedia(REDUCED);
   const parts = useMemo(() => text.split(/(\s+)/), [text]);
   const total = useMemo(() => parts.filter((p) => p.trim()).length, [parts]);
@@ -409,9 +414,9 @@ function StreamedText({ text, onDone }: { text: string; onDone?: () => void }) {
       done.current?.();
       return;
     }
-    const t = setInterval(() => setShown((n) => n + 1), 32);
+    const t = setInterval(() => setShown((n) => n + 1), step);
     return () => clearInterval(t);
-  }, [finished]);
+  }, [finished, step]);
   let w = 0;
   return (
     <p className="text-body text-text [overflow-wrap:anywhere]">
@@ -450,6 +455,8 @@ export interface ChatBlocksProps {
   onOpenPage?: (blockId: string) => void;
   /** A streamed text block finished revealing. */
   onStreamed?: () => void;
+  /** `workshop`: streamed words land every 24 ms like the workshop's (default 32). */
+  layout?: 'default' | 'workshop';
 }
 
 function Actions({ actions, onAction, secondary }: { actions: ChatActionItem[]; onAction?: (a: ChatActionItem) => void; secondary?: boolean }) {
@@ -467,13 +474,14 @@ function Actions({ actions, onAction, secondary }: { actions: ChatActionItem[]; 
 }
 
 /** Renders a message's blocks: text, meta, table, figure, refusal, actions, proposal card, chips. */
-export function ChatBlocks({ blocks, onChip, onAction, onConfirm, onDiscard, onProposalAction, onOpenPage, onStreamed }: ChatBlocksProps) {
+export function ChatBlocks({ blocks, onChip, onAction, onConfirm, onDiscard, onProposalAction, onOpenPage, onStreamed, layout = 'default' }: ChatBlocksProps) {
+  const bodyText = 'text-body';
   return (
     <div className="flex min-w-0 flex-col gap-2">
       {blocks.map((b, i) => {
         switch (b.type) {
           case 'text':
-            return b.stream ? <StreamedText key={i} text={b.text} onDone={onStreamed} /> : <p key={i} className="text-body text-text [overflow-wrap:anywhere]">{b.text}</p>;
+            return b.stream ? <StreamedText key={i} text={b.text} onDone={onStreamed} step={layout === 'workshop' ? 24 : 32} /> : <p key={i} className={cn(bodyText, 'text-text [overflow-wrap:anywhere]')}>{b.text}</p>;
           case 'meta':
             return <p key={i} className="text-small text-muted [overflow-wrap:anywhere]">{b.text}</p>;
           case 'table':
@@ -550,6 +558,8 @@ export interface ChatMessageProps extends Omit<ChatBlocksProps, 'blocks'> {
   message: ChatMessageData;
   /** Initials for the owner's avatar. Default: from `message.name`. */
   initials?: string;
+  /** The workshop's row: 28px avatar column with a 10px gap, 16px sides, the scope chip under what was said. Default: chip above. */
+  layout?: 'default' | 'workshop';
 }
 
 const initialsFrom = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]!.toUpperCase()).join('');
@@ -558,30 +568,32 @@ const initialsFrom = (name: string) => name.split(/\s+/).filter(Boolean).slice(0
  * One flat row: 28px avatar column (owner initials; Leda the bare 16px shard, no tile), name 13px 600 and time 12px tabular, then the blocks.
  * Hover `--raised`. The owner's row carries its scope chip. While `thinking`, the avatar plays Aurora above a reserved "Thinking…" line.
  */
-export function ChatMessage({ message: m, initials, ...handlers }: ChatMessageProps) {
+export function ChatMessage({ message: m, initials, layout = 'default', ...handlers }: ChatMessageProps) {
   const leda = m.from === 'leda';
+  const ws = layout === 'workshop';
   return (
-    <article aria-label={`${m.name}${m.time ? `, ${m.time}` : ''}`} className="group/msg flex gap-2 px-3 py-2 hover:bg-raised" aria-busy={m.thinking || undefined}>
+    <article aria-label={`${m.name}${m.time ? `, ${m.time}` : ''}`} className={cn('group/msg flex py-2 hover:bg-raised', ws ? 'gap-2.5 px-4 max-[640px]:hover:bg-transparent' : 'gap-2 px-3')} aria-busy={m.thinking || undefined}>
       <div className="grid h-7 w-7 shrink-0 place-items-center">
         {leda ? (
           <span aria-hidden className="grid h-7 w-7 place-items-center">
-            <LedaMark size={16} effect="aurora" active={!!m.thinking} decorative />
+            <LedaMark size={ws ? 30 : 16} effect="aurora" active={!!m.thinking} decorative />
           </span>
         ) : (
           <span aria-hidden className="grid h-7 w-7 place-items-center rounded-full bg-avatar-bg text-small font-semibold text-avatar-text">{initials ?? initialsFrom(m.name)}</span>
         )}
       </div>
-      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-        <p className="flex flex-wrap items-baseline gap-x-2 leading-5">
+      <div className={cn('flex min-w-0 flex-1 flex-col', ws ? 'gap-0' : 'gap-1.5')}>
+        <p className={cn('flex flex-wrap items-baseline gap-x-2', ws ? 'leading-[18px]' : 'leading-5')}>
           <span className="text-[13px] font-semibold text-text">{m.name}</span>
           {m.time && <time className="text-small tabular-nums text-muted">{m.time}</time>}
         </p>
-        {m.scope && <ChatScopeChip className="self-start">{m.scope}</ChatScopeChip>}
+        {m.scope && !ws && <ChatScopeChip className="self-start">{m.scope}</ChatScopeChip>}
         {m.thinking ? (
           <p className="min-h-5 text-ui text-muted">Thinking…</p>
         ) : (
-          <ChatBlocks blocks={m.blocks} {...handlers} />
+          <ChatBlocks blocks={m.blocks} layout={ws ? 'workshop' : 'default'} {...handlers} />
         )}
+        {m.scope && ws && <ChatScopeChip className="mt-2 self-start">{m.scope}</ChatScopeChip>}
       </div>
     </article>
   );
@@ -596,6 +608,8 @@ export interface ChatEmptyProps extends HTMLAttributes<HTMLDivElement> {
   onPick?: (chip: ChatChip) => void;
   /** The one explanatory line. */
   description?: string;
+  /** `workshop`: the workshop's spacing (24px sides, 16px title, 13px line, chips 14px below). */
+  layout?: 'default' | 'workshop';
 }
 
 /** Empty thread: 32px bare shard, "Ask Leda about {scope}", one line, this page's questions as chips. */
@@ -604,15 +618,17 @@ export function ChatEmpty({
   chips = [],
   onPick,
   description = 'She reads your platforms and answers here. When she drafts a change, you see exactly what it writes, and nothing is written until you confirm.',
+  layout = 'default',
   className,
   ...rest
 }: ChatEmptyProps) {
+  const ws = layout === 'workshop';
   return (
-    <div {...rest} className={cn(className, 'flex flex-col items-start gap-2 px-4 py-6')}>
+    <div {...rest} className={cn(className, 'flex flex-col items-start', ws ? 'px-6 pb-2 pt-7' : 'gap-2 px-4 py-6')}>
       <LedaMark size={32} decorative />
-      <h3 className="text-[15px] font-semibold leading-5 text-text">Ask Leda about {scope}</h3>
-      <p className="text-ui text-muted">{description}</p>
-      {chips.length > 0 && <ChatChips chips={chips} onPick={onPick} label={`Questions about ${scope}`} className="mt-1" />}
+      <h3 className={cn('font-semibold text-text', ws ? 'mt-3 text-dialog' : 'text-[15px] leading-5')}>Ask Leda about {scope}</h3>
+      <p className={cn('text-ui text-muted', ws && 'mt-1')}>{description}</p>
+      {chips.length > 0 && <ChatChips chips={chips} onPick={onPick} label={`Questions about ${scope}`} className={ws ? 'mt-3.5' : 'mt-1'} />}
     </div>
   );
 }
@@ -632,6 +648,8 @@ export interface ChatComposerProps extends Omit<HTMLAttributes<HTMLFormElement>,
   label?: string;
   maxLength?: number;
   placeholder?: string;
+  /** The workshop's composer: the box floats 12px in from the panel (8px on a phone) with no rule above it, the textarea is 14px with a faint placeholder, send is quiet until there is text. Default: ruled footer. */
+  layout?: 'default' | 'workshop';
 }
 
 /**
@@ -639,9 +657,10 @@ export interface ChatComposerProps extends Omit<HTMLAttributes<HTMLFormElement>,
  * bottom row: scope chip, hint (hidden under 1100px), 32px accent send button (40px phone).
  */
 export const ChatComposer = forwardRef<HTMLTextAreaElement, ChatComposerProps>(function ChatComposer(
-  { value, onChange, onSend, busy = false, scope, label = 'Ask Leda', maxLength, placeholder = 'Ask Leda…', className, ...rest },
+  { value, onChange, onSend, busy = false, scope, label = 'Ask Leda', maxLength, placeholder = 'Ask Leda…', layout = 'default', className, ...rest },
   ref,
 ) {
+  const ws = layout === 'workshop';
   const id = useId();
   const ta = useRef<HTMLTextAreaElement | null>(null);
   const empty = value.trim().length === 0;
@@ -671,9 +690,9 @@ export const ChatComposer = forwardRef<HTMLTextAreaElement, ChatComposerProps>(f
         e.preventDefault();
         send();
       }}
-      className={cn(className, 'shrink-0 border-t border-border p-3')}
+      className={cn(className, 'shrink-0', ws ? 'mx-3 mb-3 max-[640px]:mx-2 max-[640px]:mb-2' : 'border-t border-border p-3')}
     >
-      <div className="flex min-w-0 flex-col rounded-card border border-control bg-surface focus-within:border-accent focus-within:ring-2 focus-within:ring-accent">
+      <div className={cn('flex min-w-0 flex-col rounded-card border border-control bg-surface focus-within:border-accent', ws ? 'focus-within:outline focus-within:outline-1 focus-within:outline-accent' : 'focus-within:ring-2 focus-within:ring-accent')}>
         <label htmlFor={id} className={sr}>{label}</label>
         <textarea
           id={id}
@@ -689,11 +708,11 @@ export const ChatComposer = forwardRef<HTMLTextAreaElement, ChatComposerProps>(f
           placeholder={placeholder}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={onKey}
-          className="block max-h-[136px] min-h-10 w-full resize-none rounded-card bg-transparent px-2.5 py-2 text-ui text-text outline-0 placeholder:text-muted max-[640px]:text-[16px]"
+          className={cn('block max-h-[136px] min-h-10 w-full resize-none rounded-card bg-transparent text-ui text-text outline-0 max-[640px]:text-[16px]', ws ? 'px-3 pb-1 pt-2.5 placeholder:text-faint' : 'px-2.5 py-2 placeholder:text-muted')}
         />
-        <div className="flex min-w-0 items-center gap-2 px-2 pb-2">
-          <ChatScopeChip className="min-w-0 shrink">{scope}</ChatScopeChip>
-          <span className="hidden min-w-0 flex-1 truncate text-small text-muted min-[1100px]:block max-[1099px]:hidden">Shift+Enter for a new line</span>
+        <div className={cn('flex min-w-0 items-center gap-2', ws ? 'pb-1.5 pl-2.5 pr-1.5 pt-1' : 'px-2 pb-2')}>
+          <ChatScopeChip className={cn('min-w-0 shrink', ws && 'min-h-6')}>{scope}</ChatScopeChip>
+          <span className={cn('hidden min-w-0 flex-1 truncate min-[1100px]:block max-[1099px]:hidden', ws ? 'text-right text-[11px] text-faint' : 'text-small text-muted')}>Shift+Enter for a new line</span>
           <span className="flex-1 min-[1100px]:hidden" />
           <button
             type="submit"
@@ -701,14 +720,16 @@ export const ChatComposer = forwardRef<HTMLTextAreaElement, ChatComposerProps>(f
             aria-disabled={blocked || undefined}
             aria-busy={busy || undefined}
             className={cn(
-              'inline-grid h-8 w-8 shrink-0 place-items-center rounded-control bg-accent text-accent-ink transition-colors duration-hover hover:bg-accent-hover motion-reduce:transition-none max-[640px]:h-10 max-[640px]:w-10',
+              'inline-grid h-8 w-8 shrink-0 place-items-center rounded-control transition-colors duration-hover motion-reduce:transition-none max-[640px]:h-10 max-[640px]:w-10',
+              ws && blocked ? 'cursor-default bg-raised-2 text-faint' : 'bg-accent text-accent-ink hover:bg-accent-hover',
               'forced-colors:border forced-colors:border-[ButtonText]',
-              blocked && 'cursor-not-allowed opacity-50 hover:bg-accent',
+              blocked && !ws && 'cursor-not-allowed opacity-50 hover:bg-accent',
               focusRing,
               'focus-visible:ring-offset-surface',
             )}
           >
-            <PaperPlaneTilt aria-hidden size={16} weight="fill" />
+            <PaperPlaneTilt aria-hidden size={16} weight="fill" className={ws ? 'hidden' : undefined} />
+            {ws ? <PaperPlaneRight aria-hidden size={16} /> : null}
           </button>
         </div>
       </div>
