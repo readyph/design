@@ -526,6 +526,7 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
       <div className="mt-7 w-full max-w-[560px] max-[640px]:hidden">{askBar('overview', true)}</div>
       <ChatChips
         className="mt-3 max-w-[780px] justify-center"
+        variant="overview"
         label="Ask Leda"
         chips={[...suggestions].sort((a, b) => a.length - b.length).map((q) => ({ id: q, label: q }))}
         onPick={(c: ChatChip) => ask(c.label)}
@@ -537,10 +538,10 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
       {hero}
       {visible.length ? (
         <div className="mt-12 px-pad">
-          <div className="mb-4 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+          <div className="mb-4 flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
             <h3 id="ov7" className="m-0 text-section text-text">Last 7 days</h3>
-            <span className="text-ui text-muted">{data.weekRange ?? 'Thu 15 – Wed 21 Oct'}</span>
-            <Button variant="text" leftIcon={SquaresFour} rightIcon={ArrowRight} className="ml-auto" onClick={showToday}>Today at your platforms</Button>
+            <span className="text-ui leading-5 text-muted">{data.weekRange ?? 'Thu 15 – Wed 21 Oct'}</span>
+            <Button variant="text" leftIcon={SquaresFour} rightIcon={ArrowRight} className="ml-auto self-center !h-8" onClick={showToday}>Today at your platforms</Button>
           </div>
           <OverviewCharts
             variant="home"
@@ -561,35 +562,39 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
           />
         </div>
       ) : null}
-      <div className="mt-8 border-t border-rule px-pad pt-5">
-        {quiet ? (
-          <p className="m-0 mb-5 flex items-center gap-2 text-ui text-muted">
-            <CalendarBlank size={14} aria-hidden />
-            <span>{data.next}</span>
-          </p>
-        ) : null}
-        {!loading && visible.length ? (
-          <section aria-labelledby="yday">
-            <h3 id="yday" className="m-0 mb-2 text-ui font-semibold text-text">Yesterday, {data.yesterdayDate}</h3>
-            <table className="w-full border-collapse text-ui">
-              <tbody>
-                {visible.map((p) => (
-                  <tr key={p.id} className="border-t border-rule">
-                    <th scope="row" className="w-1/3 py-2 pr-3 text-left font-normal text-text">
-                      <span className="inline-flex items-center gap-2"><PlatformLogo name={p.name} src={p.logo} index={p.index} size={16} decorative />{p.name}</span>
-                    </th>
-                    <td className="py-2 text-muted">
-                      {p.yesterday.map((k, i) => (
-                        <span key={String(k.label)}>{i ? ' · ' : ''}<b className="font-medium tabular-nums text-text">{k.value}</b> {k.label}</span>
-                      ))}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
-        ) : null}
-      </div>
+      {(quiet && data.next) || (!loading && visible.length) ? (
+        <div className="px-pad">
+          <div className="mt-9 border-t border-border pt-5">
+            {quiet ? (
+              <p className="m-0 mb-6 flex items-center gap-2 text-body text-text">
+                <CalendarBlank size={14} aria-hidden className="text-muted" />
+                <span>{data.next}</span>
+              </p>
+            ) : null}
+            {!loading && visible.length ? (
+              <section aria-labelledby="yday">
+                <h3 id="yday" className="m-0 mb-1 text-ui font-semibold leading-5 text-text">Yesterday, {data.yesterdayDate}</h3>
+                <table className="w-full border-collapse text-ui">
+                  <tbody>
+                    {visible.map((p) => (
+                      <tr key={p.id} className="border-t border-rule">
+                        <th scope="row" className="py-[9px] pr-2 text-left font-normal text-text">
+                          <span className="inline-flex items-center gap-2"><PlatformLogo name={p.name} src={p.logo} index={p.index} size={16} decorative />{p.name}</span>
+                        </th>
+                        <td className="whitespace-nowrap py-[9px] pl-3 text-right tabular-nums">
+                          {p.yesterday.map((k, i) => (
+                            <span key={String(k.label)}>{i ? <span className="text-muted"> · </span> : null}<b className="font-medium tabular-nums text-text">{k.value}</b> <span className="text-muted">{k.label}</span></span>
+                          ))}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </section>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 
@@ -606,6 +611,34 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
   );
 
   const sheetBody = overview ? overviewView : tab === 'today' ? (inlineToday ? null : todayView) : caseView(tab);
+
+  const phoneOverview = phone && quiet && !filter ? (
+    <div className="-mx-1 mt-4 border-b border-border px-1 pb-6">
+      <ChatChips
+        className="-mx-4 mb-5 px-4"
+        variant="strip"
+        label="Ask Leda"
+        chips={[...suggestions].sort((a, b) => a.length - b.length).map((q) => ({ id: q, label: q }))}
+        onPick={(c: ChatChip) => ask(c.label)}
+      />
+      <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+        <h3 className="m-0 text-section text-text">Last 7 days</h3>
+        <span className="text-ui leading-5 text-muted">{data.weekRange ?? 'Thu 15 – Wed 21 Oct'}</span>
+      </div>
+      <OverviewCharts
+        variant="home-phone"
+        locale="en-PH"
+        aria-label="Last 7 days, by platform"
+        platforms={data.platforms.map((p) => ({
+          ...p.week,
+          name: p.name,
+          chart: p.week.chart ? { ...p.week.chart, labels: p.week.chart.labels.map((l) => l.split(' ')[0]!) } : p.week.chart,
+          state: 'ready' as const,
+          onOpen: () => setFilterTo(p.id),
+        }))}
+      />
+    </div>
+  ) : null;
 
   const queueHeadline =
     filter || loading
@@ -648,7 +681,9 @@ export function Home({ set = 'live', state = 'live', startChat = false }: HomePr
         headline={queueHeadline}
         title={quiet && !filter ? 'All clear' : undefined}
         hideEmpty={quiet && data.watching.length > 0}
-        belowHeadline={phone ? askBar('overview', false) : undefined}
+        flushGroups={!!phoneOverview}
+        footer={phoneOverview ? data.next : undefined}
+        belowHeadline={phone ? <>{askBar('overview', false)}{phoneOverview}</> : undefined}
         defaultOpenGroups={quiet ? ['watching'] : []}
         retryLabel="Retry"
         errors={failed ? [{ platform: { id: failed, name: platformById(failed)!.name, index: platformById(failed)!.index }, lastLoaded: '9:10 AM' }] : []}

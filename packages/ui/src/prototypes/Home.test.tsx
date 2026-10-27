@@ -80,7 +80,7 @@ describe('Home', () => {
   it('quiet: opens on the overview, says nothing needs you, shows next and yesterday', () => {
     render(<Home state="quiet" />);
     expect(screen.getByText(/Both platforms are running\. Nothing needs you right now\./)).toBeTruthy();
-    expect(screen.getByText(/Next: PO-0221/)).toBeTruthy();
+    expect(screen.getByText(/Next: Banawe delivery/)).toBeTruthy();
     expect(screen.getByRole('heading', { name: /Yesterday/ })).toBeTruthy();
     expect(screen.queryByRole('tab')).toBeNull();
   });

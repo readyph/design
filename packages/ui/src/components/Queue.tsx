@@ -94,6 +94,10 @@ export interface QueueProps {
   title?: string;
   /** Leaves out the "Nothing open" empty state (a quiet day that still lists what Leda is watching). */
   hideEmpty?: boolean;
+  /** Drops the rule above the pinned groups (the content above brings its own). */
+  flushGroups?: boolean;
+  /** A line after the groups (a quiet day's "Next: ..." on a phone). */
+  footer?: ReactNode;
   /** Heading level of the title (pinned groups sit one level below). Default 1. */
   headingLevel?: 1 | 2;
   /** Leda's one-line summary. Defaults to "4 decisions. First: …". */
@@ -323,6 +327,8 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
     onFilterChange,
     title = 'Needs you',
     hideEmpty = false,
+    flushGroups = false,
+    footer,
     headingLevel = 1,
     headline,
     loading = false,
@@ -543,7 +549,8 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
           data-more={more ? 'true' : undefined}
           className={cn(
             // While loading the skeletons are not focusable, so the box must not scroll (axe scrollable-region-focusable).
-            'min-h-0 flex-initial overscroll-contain scroll-pb-8 px-0 pb-3 pt-0',
+            'min-h-0 flex-initial overscroll-contain scroll-pb-8 px-0 pt-0',
+            hideEmpty && isEmpty ? 'pb-0' : 'pb-3',
             loading ? 'overflow-hidden' : 'overflow-y-auto',
             'data-[more=true]:[mask-image:linear-gradient(to_bottom,#000_calc(100%-28px),transparent)]',
           )}
@@ -610,10 +617,10 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
         </div>
 
         {hasPinned ? (
-          <div className="flex max-h-[45%] shrink-0 flex-col gap-2.5 overflow-y-auto overscroll-contain border-t border-rule pb-2.5 pt-1">
+          <div className={cn('flex max-h-[45%] shrink-0 flex-col gap-2.5 overflow-y-auto overscroll-contain pb-2.5 pt-1', !flushGroups && 'border-t border-rule')}>
             {vWatching.length ? (
               <PinnedGroup kind="watching" count={vWatching.length} level={pinnedLevel} open={open.has('watching')} onToggle={() => toggle('watching')}>
-                <ul className="m-0 flex list-none flex-col gap-1 p-0 pb-1">
+                <ul className="m-0 flex list-none flex-col gap-2 p-0 pb-1">
                   {vWatching.map((w) => (
                     <Row key={w.id} data={w} current={current === w.id} className="pb-[9px] pt-2" {...rowProps}>
                       <SeverityDot kind="watch" />
@@ -659,6 +666,7 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
             ) : null}
           </div>
         ) : null}
+        {footer ? <p className="m-0 shrink-0 px-3 pb-4 pt-3 text-body font-medium text-text">{footer}</p> : null}
 
         {shortcuts ? (
           <span role="status" aria-live="polite" className="sr-only">

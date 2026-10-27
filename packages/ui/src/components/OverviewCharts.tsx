@@ -141,7 +141,7 @@ export interface OverviewChartsProps {
   /** Own width below which the platforms stack. Default 760. */
   stackBelow?: number;
   /** `home`: the Home overview's exact layout (name and kind on one line, charts drawn with the overview geometry, share legend with square swatches). */
-  variant?: 'default' | 'home';
+  variant?: 'default' | 'home' | 'home-phone';
   /** Merged on the wrapper only. */
   className?: string;
 }
@@ -160,7 +160,7 @@ function StatusPart({ status }: { status: OverviewPlatformStatus }) {
 
 interface BlockProps {
   p: OverviewPlatform;
-  layout: 'col' | 'row' | 'stack-row';
+  layout: 'col' | 'row' | 'stack-row' | 'phone';
   locale?: string;
 }
 
@@ -307,7 +307,8 @@ function HomeBlock({ p, layout, locale }: BlockProps) {
   const sectionRef = useRef<HTMLElement | null>(null);
   const retried = useRef(false);
   const state = p.state ?? 'ready';
-  const row = layout !== 'col';
+  const phone = layout === 'phone';
+  const row = layout === 'row' || layout === 'stack-row';
   useLayoutEffect(() => {
     if (state !== 'error' && retried.current) {
       retried.current = false;
@@ -326,7 +327,7 @@ function HomeBlock({ p, layout, locale }: BlockProps) {
     <div className="min-w-0">
       <p className={cn('m-0 flex', row ? 'flex-col' : 'flex-wrap items-baseline gap-x-2.5 gap-y-0.5')}>
         <span className={cn('tabular-nums text-text', row ? 'text-overview-figure-sm' : 'text-overview-figure')}>{p.figure.value}</span>
-        <span className={cn('text-muted', row ? 'text-small' : 'text-ui')}>{p.figure.label}</span>
+        <span className={cn('text-muted', row ? 'text-small' : 'text-ui leading-5')}>{p.figure.label}</span>
       </p>
       {p.sub && <p className="m-0 mt-0.5 text-small tabular-nums text-muted">{p.sub}</p>}
     </div>
@@ -338,7 +339,7 @@ function HomeBlock({ p, layout, locale }: BlockProps) {
   ) : !p.chart ? (
     <p className="m-0 mt-3 text-ui text-muted">No 7-day history yet</p>
   ) : (
-    <WeekChart {...p.chart} variant="overview" locale={p.chart.locale ?? locale} height={p.chart.height ?? (row ? (p.chart.kind === 'diverging' ? 104 : 88) : 132)} tickCount={p.chart.tickCount ?? (row ? 1 : 3)} />
+    <WeekChart {...p.chart} variant="overview" locale={p.chart.locale ?? locale} height={p.chart.height ?? (row ? (p.chart.kind === 'diverging' ? 104 : 88) : phone ? 116 : 132)} tickCount={p.chart.tickCount ?? (row ? 1 : 3)} />
   );
   if (row) {
     return (
@@ -359,32 +360,32 @@ function HomeBlock({ p, layout, locale }: BlockProps) {
     );
   }
   return (
-    <section ref={sectionRef} aria-labelledby={nameId} aria-busy={state === 'loading' || undefined} className="min-w-0">
+    <section ref={sectionRef} aria-labelledby={nameId} aria-busy={state === 'loading' || undefined} className={cn('min-w-0', phone && 'mt-5')}>
       <header className="flex items-center gap-2.5 border-b border-control pb-2.5 pt-0.5">
-        <PlatformLogo name={p.name} {...p.logo} size={24} decorative />
+        <PlatformLogo name={p.name} {...p.logo} size={phone ? 20 : 24} decorative />
         <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2.5">
           {name}
-          {p.kind && <span className="whitespace-nowrap text-small text-muted">{p.kind}</span>}
+          {p.kind && <span className="whitespace-nowrap text-small leading-5 text-muted">{p.kind}</span>}
         </div>
         {p.status && state !== 'error' && <StatusPart status={p.status} />}
       </header>
       {figure && <div className="mt-3.5">{figure}</div>}
-      <div className={cn(p.chart || state !== 'ready' ? 'mt-4' : '')}>
+      <div className={cn(p.chart || state !== 'ready' ? (phone ? 'mt-2.5' : 'mt-4') : '')}>
         {state === 'ready' && p.chart && (
           <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-            <h4 className="m-0 text-ui font-medium text-text">{p.chart.title}</h4>
-            {p.chart.note && <span className="text-small text-faint">{p.chart.note}</span>}
+            <h4 className="m-0 text-ui font-medium leading-5 text-text">{p.chart.title}</h4>
+            {p.chart.note && <span className="text-small leading-5 text-faint">{p.chart.note}</span>}
           </div>
         )}
         {plot}
       </div>
-      {state === 'ready' && p.shares && p.shares.length > 0 && (
+      {state === 'ready' && !phone && p.shares && p.shares.length > 0 && (
         <div className="mt-5 grid gap-3">
-          <h4 className="m-0 text-ui font-medium text-text">{p.sharesTitle ?? 'Today so far'}</h4>
+          <h4 className="m-0 text-ui font-medium leading-5 text-text">{p.sharesTitle ?? 'Today so far'}</h4>
           {p.shares.map((s) => <HomeShare key={s.title} {...s} />)}
         </div>
       )}
-      {state === 'ready' && p.facts && <div className="mt-3.5">{p.facts}</div>}
+      {state === 'ready' && !phone && p.facts && <div className="mt-3.5">{p.facts}</div>}
     </section>
   );
 }
@@ -426,6 +427,14 @@ export const OverviewCharts = forwardRef<HTMLDivElement, OverviewChartsProps>(fu
 
   const stacked = width > 0 && width < (stackBelow * Math.max(16, rem)) / 16;
   const many = platforms.length >= 4;
+  if (variant === 'home-phone') {
+    return (
+      <div ref={setRefs} role="region" aria-label={ariaLabel} className={cn('relative block w-full min-w-0 max-w-full', className)}>
+        <span ref={probe} aria-hidden className="pointer-events-none invisible absolute left-0 top-0 h-0 w-4" />
+        {platforms.map((p) => <HomeBlock key={p.id} p={p} layout="phone" locale={locale} />)}
+      </div>
+    );
+  }
   if (variant === 'home') {
     return (
       <div ref={setRefs} role="region" aria-label={ariaLabel} className={cn('relative block w-full min-w-0 max-w-full', className)}>

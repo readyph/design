@@ -346,10 +346,12 @@ export interface ChatChipsProps extends Omit<HTMLAttributes<HTMLDivElement>, 'on
   onPick?: (chip: ChatChip) => void;
   /** Name of the group. Default "Suggestions". */
   label?: string;
+  /** `overview`: the Home hero's chips (30px, 13px / 20px). */
+  variant?: 'default' | 'overview' | 'strip';
 }
 
 /** Follow-up chips (28px, 13px, 5px radius; 40px on a phone). Wrap, never cut. */
-export function ChatChips({ chips, onPick, label = 'Suggestions', className, ...rest }: ChatChipsProps) {
+export function ChatChips({ chips, onPick, label = 'Suggestions', className, variant = 'default', ...rest }: ChatChipsProps) {
   const box = useRef<HTMLDivElement>(null);
   const had = useRef(false);
   // A picked chip usually disappears (the empty state or the follow-ups are replaced by the thread). If focus was in the chips
@@ -370,10 +372,10 @@ export function ChatChips({ chips, onPick, label = 'Suggestions', className, ...
       {...rest}
       onFocus={(e) => { had.current = true; rest.onFocus?.(e); }}
       onBlur={(e) => { if (e.relatedTarget) had.current = false; rest.onBlur?.(e); }}
-      className={cn(className, 'flex flex-wrap gap-1.5')}
+      className={cn(className, 'flex flex-wrap', variant === 'overview' ? 'gap-2' : 'gap-1.5', variant === 'strip' && 'flex-nowrap gap-2 overflow-x-auto [scrollbar-width:none]')}
     >
       {chips.map((c) => (
-        <button key={c.id} type="button" onClick={() => onPick?.(c)} className={cn(chipBase, focusRing, '[overflow-wrap:anywhere]')}>
+        <button key={c.id} type="button" onClick={() => onPick?.(c)} className={cn(chipBase, focusRing, '[overflow-wrap:anywhere]', variant === 'overview' && 'min-h-[30px] leading-5 hover:bg-raised', variant === 'strip' && 'shrink-0 whitespace-nowrap !min-h-9 leading-5')}>
           {c.label}
         </button>
       ))}

@@ -112,13 +112,13 @@ const VARIANT = {
   bar: {
     outer: 'inline-flex w-auto max-w-full shrink-0 basis-auto',
     wrap: 'w-leda-w shrink-0 max-[640px]:w-[var(--ctl-touch)]',
-    bar: 'h-[var(--ctl-leda-bar)] max-[640px]:h-[var(--ctl-touch)] max-[640px]:justify-center max-[640px]:px-0',
+    bar: 'text-ui h-[var(--ctl-leda-bar)] max-[640px]:h-[var(--ctl-touch)] max-[640px]:justify-center max-[640px]:px-0',
     mark: 20,
   },
   overview: {
     outer: 'flex w-full max-w-leda-w-overview shrink basis-auto',
     wrap: 'w-full max-w-leda-w-overview',
-    bar: 'h-[var(--ctl-touch)] max-[640px]:pl-3 max-[640px]:pr-3 max-[640px]:text-[15px]',
+    bar: 'text-body h-[var(--ctl-touch)] gap-3 pl-3.5 pr-2 max-[640px]:pl-3 max-[640px]:pr-3 max-[640px]:text-[15px]',
     mark: 22,
   },
 } as const;
@@ -173,7 +173,7 @@ export const AskLedaBar = forwardRef<HTMLButtonElement, AskLedaBarProps>(functio
         onClick={() => open.current?.('click')}
         {...rest}
         className={cn(
-          'group/ask relative z-[1] flex w-full items-center gap-2.5 rounded-control border border-control bg-surface pl-2.5 pr-1.5 text-left text-ui leading-5 text-text transition-colors duration-hover hover:border-accent motion-reduce:transition-none',
+          'group/ask relative z-[1] flex w-full items-center gap-2.5 rounded-control border border-control bg-surface pl-2.5 pr-1.5 text-left leading-5 text-text transition-colors duration-hover hover:border-accent motion-reduce:transition-none',
           focusRing,
           v.bar,
         )}
