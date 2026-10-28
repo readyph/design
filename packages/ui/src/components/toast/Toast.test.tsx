@@ -274,4 +274,27 @@ describe('Toast', () => {
     expect(toast.runAction()).toBe(false);
     expect(undo).toHaveBeenCalledTimes(1);
   });
+
+  it('shows several actions in order; each runs once and closes the toast', () => {
+    const undo = vi.fn(); const cart = vi.fn();
+    render(<Toaster actionStyle="inventory" />);
+    show(() => toast({ description: 'Added.', duration: 8000, actions: [{ label: 'Undo', onClick: undo }, { label: 'View order lists', onClick: cart }] }));
+    const btns = screen.getAllByRole('button');
+    expect(btns.map((b) => b.textContent)).toEqual(['Undo', 'View order lists']);
+    expect(btns[0].className).toContain('text-lk-inv');
+    expect(btns[0].className).toContain('no-underline');
+    fireEvent.click(btns[1]);
+    expect(cart).toHaveBeenCalledTimes(1);
+    expect(undo).not.toHaveBeenCalled();
+    expect(screen.queryByRole('button')).toBeNull();
+  });
+
+  it('keeps a single action working as before (Mod+Z runs the first action)', () => {
+    const undo = vi.fn();
+    render(<Toaster />);
+    show(() => toast.undo('Saved.', undo));
+    expect(screen.getByRole('button').className).toContain('underline');
+    let ran = false; show(() => { ran = toast.runAction(); });
+    expect(ran).toBe(true); expect(undo).toHaveBeenCalledTimes(1);
+  });
 });

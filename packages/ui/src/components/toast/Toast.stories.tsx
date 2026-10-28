@@ -58,7 +58,7 @@ const PhoneNav = () => (
 );
 
 /** The real shell: the Toaster finds the sheet and phone nav by itself. `fire` shows a toast once on mount. */
-function Stage({ fire, children }: { fire?: ToastOptions | ToastOptions[]; children?: ReactNode }) {
+function Stage({ fire, children, actionStyle }: { fire?: ToastOptions | ToastOptions[]; children?: ReactNode; actionStyle?: 'link' | 'inventory' }) {
   useEffect(() => {
     clearToasts();
     if (fire) for (const f of ([] as ToastOptions[]).concat(fire)) toast(f);
@@ -81,7 +81,7 @@ function Stage({ fire, children }: { fire?: ToastOptions | ToastOptions[]; child
           {children}
         </div>
       </PlatformShell>
-      <Toaster />
+      <Toaster actionStyle={actionStyle} />
     </>
   );
 }
@@ -120,3 +120,10 @@ export const WithTitle: Story = { render: () => <Stage fire={{ title: 'Export re
 const phone = { viewport: { defaultViewport: 'mobile1' } };
 export const PhoneUndo: Story = { name: 'Phone, Undo', render: () => <Stage fire={withUndo} />, parameters: phone };
 export const PhoneLeda: Story = { name: 'Phone, Leda + long', render: () => <Stage fire={{ ...long, leda: true }} />, parameters: phone };
+
+const invUndo = undo('Added 12 Rice 25kg to Stockroom.');
+const invCart = { description: 'Rice 25kg added to the order list.', tone: 'success', duration: 8000, actions: [{ label: 'Undo', onClick: () => {} }, { label: 'View order lists', onClick: () => {} }] } as ToastOptions;
+export const InventoryUndo: Story = { name: 'Inventory, Undo', render: () => <Stage fire={invUndo} actionStyle="inventory" /> };
+export const InventoryUndoAndOrderLists: Story = { name: 'Inventory, Undo + View order lists (8s)', render: () => <Stage fire={invCart} actionStyle="inventory" /> };
+export const InventoryLeda: Story = { name: 'Inventory, Leda tile + Undo', render: () => <Stage fire={{ ...invUndo, leda: true }} actionStyle="inventory" /> };
+export const InventoryPhone: Story = { name: 'Inventory, phone', render: () => <Stage fire={invCart} actionStyle="inventory" />, parameters: phone };

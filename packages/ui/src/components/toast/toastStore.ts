@@ -18,8 +18,10 @@ export interface ToastMessage {
   tone: ToastTone;
   /** Visible time in ms (default 5000). 0 keeps it until dismissed. */
   duration: number;
-  /** Optional action (Undo). */
+  /** Optional action (Undo). Same as the first entry of `actions`. */
   action?: ToastAction;
+  /** Action buttons, in order: "Undo", then e.g. "View order lists". */
+  actions: ToastAction[];
   /** Written by Leda: shows the 16px Leda tile. */
   leda: boolean;
 }
@@ -30,6 +32,8 @@ export interface ToastOptions {
   tone?: ToastTone;
   duration?: number;
   action?: ToastAction;
+  /** Several action buttons (Inventory: "Undo", "View order lists"). Takes the place of `action`. */
+  actions?: ToastAction[];
   leda?: boolean;
 }
 
@@ -69,7 +73,8 @@ export function addToast(opts: ToastOptions | string): string {
     description: o.description,
     tone: o.tone ?? 'info',
     duration: o.duration ?? TOAST_DURATION,
-    action: o.action,
+    action: o.actions?.[0] ?? o.action,
+    actions: o.actions ?? (o.action ? [o.action] : []),
     leda: o.leda ?? false,
   };
   toasts = [msg];
@@ -89,8 +94,8 @@ export function dismissToast(id: string) {
  */
 export function runToastAction(): boolean {
   const t = toasts[0];
-  if (!t?.action) return false;
-  const { onClick } = t.action;
+  if (!t?.actions[0]) return false;
+  const { onClick } = t.actions[0];
   dismissToast(t.id);
   onClick();
   return true;

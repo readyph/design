@@ -12,6 +12,11 @@ export interface ToasterProps {
    * shell's bottom nav (`[data-shell="phone-nav"]`; other `<nav>` elements are ignored). With no anchor on the page it sits 16px from the viewport corner.
    */
   anchor?: string | HTMLElement | RefObject<HTMLElement | null>;
+  /**
+   * Look of the action buttons. `link` (default): underlined text. `inventory` (I22): `lk-inv` colour, 600 weight,
+   * 2px x 6px padding, 4px radius, no underline; hover swaps to `lk-inv-hover` with no background; focus ring `lk-inv`.
+   */
+  actionStyle?: 'link' | 'inventory';
   /** Merged under the component classes: add a margin or colour, it cannot move the toast. */
   className?: string;
 }
@@ -93,7 +98,7 @@ function place(el: HTMLElement, anchor: ToasterProps['anchor']) {
  * - Ink surface (`bg-text`, `text-surface`) so it inverts with the theme; 13px, 5px radius, float shadow; optional Leda tile.
  * - One line on desktop (truncated with a tooltip; the live region still reads it all); two lines on phone.
  */
-export function Toaster({ anchor, className }: ToasterProps) {
+export function Toaster({ anchor, actionStyle = 'link', className }: ToasterProps) {
   const toasts = useToasts();
   const current = toasts[0];
   const ref = useRef<HTMLDivElement>(null);
@@ -132,13 +137,13 @@ export function Toaster({ anchor, className }: ToasterProps) {
         'pointer-events-none fixed z-[60] left-[var(--toast-x,16px)] bottom-[var(--toast-b,16px)] data-[top]:bottom-auto data-[top]:top-[var(--toast-t,56px)] w-[var(--toast-w,620px)] max-w-[calc(100vw-16px)]',
       )}
     >
-      {current && <ToastItem key={current.id} toast={current} />}
+      {current && <ToastItem key={current.id} toast={current} actionStyle={actionStyle} />}
     </div>,
     document.body,
   );
 }
 
-function ToastItem({ toast: t }: { toast: ToastMessage }) {
+function ToastItem({ toast: t, actionStyle }: { toast: ToastMessage; actionStyle: 'link' | 'inventory' }) {
   const [entered, setEntered] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const fired = useRef(false);
@@ -219,24 +224,26 @@ function ToastItem({ toast: t }: { toast: ToastMessage }) {
         {t.title && <span className="font-medium">{t.title} </span>}
         {t.description}
       </span>
-      {t.action && (
+      {t.actions.map((a) => (
         <button
+          key={a.label}
           type="button"
           onClick={() => {
             if (fired.current) return;
             fired.current = true;
             dismissToast(t.id);
-            t.action!.onClick();
+            a.onClick();
           }}
           className={cn(
-            '-my-1 shrink-0 rounded-chip px-2 py-1 font-medium underline underline-offset-2',
-            'hover:no-underline max-[640px]:min-h-[44px] max-[640px]:min-w-[44px]',
-            'outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-surface',
+            'shrink-0 max-[640px]:min-h-[44px] max-[640px]:min-w-[44px]',
+            actionStyle === 'inventory'
+              ? 'rounded-[4px] px-1.5 py-0.5 font-semibold text-lk-inv no-underline hover:bg-transparent hover:text-lk-inv-hover active:bg-transparent active:text-lk-inv-hover outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-lk-inv'
+              : '-my-1 rounded-chip px-2 py-1 font-medium underline underline-offset-2 hover:no-underline outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-surface',
           )}
         >
-          {t.action.label}
+          {a.label}
         </button>
-      )}
+      ))}
     </div>
   );
 }
