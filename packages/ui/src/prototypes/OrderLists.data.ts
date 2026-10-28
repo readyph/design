@@ -3,7 +3,7 @@ export interface OLProduct { id: string; sku: string; name: string; unit: string
 export interface OLSupplier { id: string; name: string; leadTime: string; cutoff?: string; sameDayArrival?: string }
 export interface OLContact { who: string; phone: string; email: string; addr: string }
 export interface OLPoLine { p: string; ordered: number; received: number; cost: number }
-export interface OLPo { no: string; supplier: string; status: 'DRAFT' | 'PARTIAL' | 'ORDERED'; ordered: string | null; expected: string; draftedBy?: string; lines: OLPoLine[] }
+export interface OLPo { no: string; supplier: string; status: 'DRAFT' | 'PARTIAL' | 'ORDERED'; ordered: string | null; expected: string; sentAt?: string; draftedBy?: string; lines: OLPoLine[] }
 export interface OLCart { id: string; sup: string; by: string; at: string; lines: { p: string; qty: number; by: string }[] }
 export interface OLTenant { key: 'a' | 'b'; company: string; platform: string; place: string; hoursLabel: string; suppliers: OLSupplier[]; contacts: Record<string, OLContact>; products: OLProduct[]; people: { id: string; short: string; initials: string }[]; pos: OLPo[]; carts: OLCart[] }
 export const OL_NOW = { date: "Thu 22 Oct 2026", short: "Thu 22 Oct", time: "9:12 AM", lastLoaded: "9:10 AM" };
