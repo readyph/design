@@ -202,4 +202,13 @@ describe('Marketplace', () => {
     expect(btn.querySelector('span.truncate')?.textContent).toBe(`Install ${name}`);
     expect(screen.getByRole('button', { name: 'Cancel' }).className).toMatch(/\bshrink-0\b/);
   });
+
+  it('Tab to a filter segment scrolls it into view (inline nearest)', async () => {
+    await openIt();
+    const spy = vi.fn();
+    const btn = filter('Marketing');
+    btn.scrollIntoView = spy;
+    btn.focus();
+    expect(spy).toHaveBeenCalledWith({ inline: 'nearest', block: 'nearest' });
+  });
 });

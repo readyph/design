@@ -115,4 +115,10 @@ describe('ConfirmDialog', () => {
     await new Promise((r) => setTimeout(r, 50));
     expect(document.activeElement).not.toBe(screen.getByText('Open'));
   });
+
+  it('opened already loading: focus lands on the dialog, not behind the scrim', async () => {
+    render(<Demo loading />);
+    await userEvent.click(screen.getByText('Open'));
+    expect(document.activeElement).toBe(screen.getByRole('alertdialog'));
+  });
 });

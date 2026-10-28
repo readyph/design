@@ -250,7 +250,7 @@ function MarketplaceContent({
     <>
       <ModalHeader icon={icon} description={description} titleClassName="text-[20px] font-semibold leading-7 tracking-[-0.01em]" descriptionClassName="text-body max-[640px]:text-[13px]" className="border-b-0 pb-0 pt-5 max-[640px]:gap-4 max-[640px]:pb-0 max-[640px]:pl-4 max-[640px]:pr-2 max-[640px]:pt-3">{title}</ModalHeader>
       {ledaNote && <div className="mx-pad mt-3.5 shrink-0 max-[640px]:mx-4">{ledaNote}</div>}
-      <div className="mx-pad mt-4 shrink-0 max-[640px]:mx-4 max-[640px]:mt-3 max-[640px]:overflow-x-auto max-[640px]:[&_button]:h-9 [&_button]:leading-5">
+      <div className="mx-pad mt-4 shrink-0 max-[640px]:mx-4 max-[640px]:mt-3 max-[640px]:overflow-x-auto max-[640px]:[&_button]:h-9 [&_button]:leading-5" onFocus={(e) => e.target.scrollIntoView?.({ inline: 'nearest', block: 'nearest' })}>
         <SegmentedControl
           aria-label="Category"
           options={categories}

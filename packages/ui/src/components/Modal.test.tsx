@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Buildings } from '@phosphor-icons/react';
 import { useState } from 'react';
@@ -101,5 +101,17 @@ describe('Modal', () => {
     expect(screen.getByRole('dialog')).toBeTruthy();
     await userEvent.keyboard('{Escape}');
     expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('close puts focus on the opener in the same task, with no body-focused frame', async () => {
+    render(<Demo />);
+    const opener = screen.getByText('Open');
+    await userEvent.click(opener);
+    const frames: Element[] = [];
+    document.addEventListener('focusout', () => queueMicrotask(() => frames.push(document.activeElement as Element)));
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
+    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+    expect(document.activeElement).toBe(opener);
+    expect(frames).not.toContain(document.body);
   });
 });

@@ -129,4 +129,47 @@ describe('focusIfLost', () => {
     expect(focusIfLost(card, r)).toBe(true);
     expect(sr.activeElement).toBe(r);
   });
+
+  it('nested shadow roots: a disabled target in the inner root counts as lost', () => {
+    const outerHost = document.createElement('div');
+    document.body.appendChild(outerHost);
+    const outer = outerHost.attachShadow({ mode: 'open' });
+    const innerHost = document.createElement('div');
+    outer.appendChild(innerHost);
+    const inner = innerHost.attachShadow({ mode: 'open' });
+    inner.innerHTML = '<button id="d">x</button>';
+    const dead = inner.getElementById('d') as HTMLButtonElement;
+    dead.focus();
+    dead.disabled = true;
+    const next = document.createElement('button');
+    document.body.appendChild(next);
+    expect(focusIfLost(null, next)).toBe(true);
+    expect(document.activeElement).toBe(next);
+  });
+
+  it('nested shadow roots: an inert ancestor in the outer root counts as lost', () => {
+    const outerHost = document.createElement('div');
+    document.body.appendChild(outerHost);
+    const outer = outerHost.attachShadow({ mode: 'open' });
+    outer.innerHTML = '<section id="s"><div id="h"></div></section>';
+    const inner = (outer.getElementById('h') as HTMLElement).attachShadow({ mode: 'open' });
+    inner.innerHTML = '<input id="i" />';
+    (inner.getElementById('i') as HTMLElement).focus();
+    (outer.getElementById('s') as HTMLElement).setAttribute('inert', '');
+    const next = document.createElement('button');
+    document.body.appendChild(next);
+    expect(focusIfLost(null, next)).toBe(true);
+  });
+
+  it('null container: leaves a live focused control alone, rescues focus from body', () => {
+    const live = document.createElement('input');
+    const next = document.createElement('button');
+    document.body.append(live, next);
+    live.focus();
+    expect(focusIfLost(null, next)).toBe(false);
+    expect(document.activeElement).toBe(live);
+    live.blur();
+    expect(focusIfLost(null, next)).toBe(true);
+    expect(document.activeElement).toBe(next);
+  });
 });
