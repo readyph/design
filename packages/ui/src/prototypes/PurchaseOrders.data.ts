@@ -13,7 +13,7 @@ export type POStatus = 'DRAFT' | 'ORDERED' | 'PARTIAL' | 'SHORT' | 'RECEIVED' | 
 export type POFilter = 'all' | 'draft' | 'sent' | 'part' | 'short' | 'received' | 'cancelled';
 export type POSort = 'attn' | 'date' | 'new' | 'sup';
 export type POTone = 'dash' | 'info' | 'warn' | 'ok' | 'off';
-export interface POProduct { id: string; sku: string; name: string; cat: string; unit: string; onHand: number; reorder: number; cost: number; price?: number; supplier: string; loc: string; barcode?: string }
+export interface POProduct { id: string; sku: string; name: string; cat: string; unit: string; onHand: number; reorder: number; cost: number; price?: number; supplier: string; loc: string; barcode?: string; usePerDay?: number; expires?: ({ qty: number } & Record<string, unknown>) | null }
 export interface POLine { p: string; product: POProduct; ordered: number; received: number; extra: number; cost: number; total: number }
 export interface PODispute { id?: string; reason?: string; note?: string; ref?: string; status: 'open' | 'resolved'; by?: string; at?: string; outcome?: 'credit' | 'replacement' | 'refused'; credit?: string; eta?: string; rnote?: string; rby?: string; rat?: string }
 export interface POInfo { by?: string; at?: string; why?: string; note?: string }
@@ -27,7 +27,7 @@ export interface PurchaseOrder {
 }
 export interface POTenantData {
   all: PurchaseOrder[];
-  business: { key: string; name: string; logo: string };
+  business: { key: string; name?: string; logo: string };
   now: { date: string; short: string; time: string; hm: string; lastLoaded: string } & Record<string, unknown>;
   suppliers: ({ id: string; name: string } & Record<string, unknown>)[];
   people: { id: string; short: string; name: string; initials: string }[];
