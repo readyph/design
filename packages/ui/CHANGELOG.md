@@ -1,5 +1,11 @@
 # @readyph/ui
 
+## 0.16.0
+
+### Minor Changes
+
+- 227fc13: RDY-471 StepLine (new): props-driven phone inline runway step line (points, now, open, close, end, width, height), exported from @readyph/ui. InventoryHome prototype now uses it.
+
 ## 0.15.0
 
 ### Minor Changes
