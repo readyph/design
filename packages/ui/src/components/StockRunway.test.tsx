@@ -50,4 +50,26 @@ describe('StockRunway', () => {
     const r = await axe.run(container, { rules: { 'color-contrast': { enabled: false } } });
     expect(r.violations).toEqual([]);
   });
+  describe('lane variant', () => {
+    const lane = { ...base, variant: 'lane' as const, caption: 'Projected from booked jobs, as of 9:12 AM' };
+    it('is 128px tall and draws only what the workshop lane draws, with tokens only', () => {
+      const { container, getByRole } = render(<StockRunway {...lane} />);
+      expect(getByRole('img').getAttribute('height')).toBe('128');
+      expect((container.firstChild as HTMLElement).className).toContain('h-[128px]');
+      expect(container.innerHTML).not.toMatch(/style=|#[0-9a-f]{3,6}/i);
+      expect(container.querySelector('rect.fill-bad-bg')).toBeTruthy();
+      expect(container.querySelector('line.stroke-control')).toBeTruthy();
+      expect(container.textContent).not.toContain('Now 9:12');
+      expect(container.textContent).toContain('3 short by close');
+    });
+    it('swaps the end text for the fix chip when given', () => {
+      const { container, getByText } = render(<StockRunway {...lane} endAction={<button type="button">Fix</button>} />);
+      expect(getByText('Fix')).toBeTruthy();
+      expect(container.textContent).not.toContain('short by close');
+    });
+    it('has no axe violations', async () => {
+      const { container } = render(<StockRunway {...lane} />);
+      expect((await axe.run(container)).violations).toEqual([]);
+    });
+  });
 });
