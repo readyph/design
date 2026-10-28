@@ -37,6 +37,8 @@ function Sb({ primary, className, children, ...rest }: { primary?: boolean; clas
 function Va({ className, children, ...rest }: { className?: string; children: ReactNode } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return <button type="button" {...rest} className={cn('inline-flex min-h-[var(--tap)] items-center gap-1.5 rounded-[4px] px-1 text-[15px] font-semibold text-accent hover:text-lk-hover [&_svg]:h-3.5 [&_svg]:w-3.5', ring, className)}>{children}</button>;
 }
+/** shell.css:70 .id (13px) as used in the page lead, where stocker.css has no 12px override. */
+const LeadId = ({ children }: { children: ReactNode }) => <span className="font-mono text-[13px] tracking-[0]">{children}</span>;
 const Note = ({ children }: { children: ReactNode }) => <p className="mt-2 text-[13px] leading-[19px] text-muted [&_b]:font-semibold [&_b]:text-text">{children}</p>;
 const Lbl = ({ htmlFor, children }: { htmlFor?: string; children: ReactNode }) => <label htmlFor={htmlFor} className="mt-5 block text-[15px] font-semibold [&_small]:text-[13px] [&_small]:font-normal [&_small]:text-muted">{children}</label>;
 const tin = 'min-h-[var(--tap-big)] w-full rounded-[8px] border-[1.5px] border-control bg-surface px-[14px] text-[16px] text-text placeholder:text-faint focus-visible:border-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent';
@@ -101,7 +103,7 @@ function Line({ s, l, st, kind, set }: { s: Stocker; l: CLine; st: LineState; ki
     <section aria-label={p.name} className="border-b border-rule py-[14px]">
       <div className="text-[16px] font-semibold leading-[22px]">{p.name}</div>
       <div className="mt-px text-[13px] leading-[19px] text-muted"><span className="font-mono text-[12px]">{p.sku}</span> · {kind === 'po' ? 'Put in ' + s.loc(p) : s.loc(p)}</div>
-      <div className="mt-px text-[13px] leading-[19px] text-muted">{sub}{kind === 'po' ? <>, <b className="font-semibold">{out} still due</b></> : null}</div>
+      <div className="mt-px text-[13px] leading-[19px] text-muted">{sub}{kind === 'po' ? <>, <b>{out} still due</b></> : null}</div>
       {st.mode === 'unset' ? (
         <div className="mt-2.5 grid grid-cols-[2fr_1fr] gap-2.5">
           <Sb primary onClick={() => set({ mode: 'all', got: 0, bad: 0, badWhy: BADW[0] })}>All {out} here</Sb>
@@ -135,11 +137,11 @@ function Line({ s, l, st, kind, set }: { s: Stocker; l: CLine; st: LineState; ki
 const goesInL = (s: Stocker, rows: { product: SProduct; n: number }[]) => { const ls = rows.filter((r) => r.n > 0), one = ls.length === 1 && ls[0].n === 1; return `${s.unitWords(ls)} ${one ? 'goes' : 'go'} into stock`; };
 
 /** .bar contents: the plain sentence and the one button. */
-function BarBody({ sum, label, disabled, onClick }: { sum: ReactNode; label: ReactNode; disabled: boolean; onClick: () => void }) {
+function BarBody({ sum, label, disabled, onClick, span }: { sum: ReactNode; label: ReactNode; disabled: boolean; onClick: () => void; span?: boolean }) {
   return (
     <>
       <p role="status" aria-live="polite" className="mb-2 text-[14px] leading-5 text-text [&_.mut]:text-muted [&_b]:font-semibold [&_.bad]:text-bad">{sum}</p>
-      <Sb primary disabled={disabled} onClick={onClick}><Check aria-hidden="true" />{label}</Sb>
+      <Sb primary disabled={disabled} onClick={onClick}><Check aria-hidden="true" />{span ? <span>{label}</span> : label}</Sb>
     </>
   );
 }
@@ -262,7 +264,7 @@ function Other({ s }: { s: Stocker }) {
     <>
       <StockerPageFrame s={s} page="in" title={p ? 'How many arrived?' : 'Which product arrived?'} back={p ? { href: s.href('stocker-in.html', { via: 'other' }), label: 'Which product' } : { href: s.href('stocker-in.html'), label: 'What arrived' }}
         steps={{ n: p ? 3 : 2, of: 3, label: p ? 'Count them' : 'Find the product' }} lead={p ? 'Count what is in front of you. Not what the paper says.' : 'Scan the barcode on the box, or type it.'}
-        bar={p ? <BarBody sum={sum} disabled={!ok} onClick={() => setDone(true)} label={ok ? `Put ${pl.q} into stock` : 'Put into stock'} /> : undefined}>
+        bar={p ? <BarBody span sum={sum} disabled={!ok} onClick={() => setDone(true)} label={ok ? `Put ${pl.q} into stock` : 'Put into stock'} /> : undefined}>
         {!p ? (
           <StockerSection id="prod" title="Product" help="Only products that are already set up can be stocked in. If the barcode is new, you send it to your manager to set up.">
             <div className="mt-2.5 grid gap-2"><Sb primary onClick={() => setOpen(true)}><Barcode aria-hidden="true" />Scan or type a barcode</Sb></div>
@@ -301,7 +303,7 @@ function Counting({ s, kind }: { s: Stocker; kind: 'po' | 'tr' }) {
   if (!ok) {
     const msg = kind === 'po' ? `${s.params.po} is not open any more. It may be received already.` : t ? `${t.id} is ${t.status === 'received' ? 'checked in already' : t.out ? 'on its way out, not in' : 'not on its way yet'}.` : 'That transfer is not here.';
     return (
-      <StockerPageFrame s={s} page="in" title={kind === 'po' ? 'Order' : 'Transfer'} back={back} lead={t ? <><StockerId>{t.id}</StockerId> · a transfer</> : ''}>
+      <StockerPageFrame s={s} page="in" title={kind === 'po' ? 'Order' : 'Transfer'} back={back} lead={t ? <><LeadId>{t.id}</LeadId> · a transfer</> : ''}>
         <p className="border-b border-rule py-[14px] text-[15px] leading-[22px] text-muted">{msg}</p>
         <StockerActs><StockerButton href={s.href('stocker.html')}>Back to Home</StockerButton></StockerActs>
       </StockerPageFrame>
@@ -329,7 +331,7 @@ function Counting({ s, kind }: { s: Stocker; kind: 'po' | 'tr' }) {
   if (done) return <StockerDone s={s} fl={fl} />;
   return (
     <StockerPageFrame s={s} page="in" title={po ? `What arrived from ${po.supplierName}?` : `What arrived from ${t!.other.name}?`} back={back} steps={{ n: 3, of: 3, label: kind === 'po' ? 'Count each line' : 'Count each part' }}
-      lead={po ? <><StockerId>{po.no}</StockerId> · {s.when(po)}</> : <><StockerId>{t!.id}</StockerId> · a transfer</>}
+      lead={po ? <><LeadId>{po.no}</LeadId> · {s.when(po)}</> : <><LeadId>{t!.id}</LeadId> · a transfer</>}
       bar={<BarBody sum={sum} disabled={!enabled} label={label} onClick={() => setDone(true)} />}>
       <Note>{kind === 'po' ? <>Count what is on the truck. Tap <b>All here</b> when a line is complete. Tap <b>Not all</b> for short, damaged or extra.</> : <>Count each part against the transfer paper. Tap <b>All here</b>, or <b>Not all</b> if some are missing.</>}</Note>
       <div id="lines" className="mt-1">{lines.map((l) => <Line key={l.p} s={s} l={l} st={L[l.p] ?? fresh()} kind={kind} set={set(l.p)} />)}</div>
