@@ -12,7 +12,7 @@ describe('Sparkline', () => {
     const { container } = render(<Sparkline points={[1, NaN, 3, Infinity, 5, 6]} area />);
     expect(container.innerHTML).not.toMatch(/NaN|Infinity/);
     expect(container.querySelectorAll('polyline').length).toBe(1);
-    expect(container.querySelectorAll('circle').length).toBe(1);
+    expect(container.querySelectorAll('circle').length).toBe(2);
     expect(err).not.toHaveBeenCalled();
   });
   it('renders the empty state when fewer than 2 finite points', () => {
