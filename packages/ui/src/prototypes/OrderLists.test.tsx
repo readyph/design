@@ -39,6 +39,7 @@ describe('axe', () => {
   const cases: [string, OrderListsPageProps][] = [
     ['lists', {}],
     ['sent', { tab: 'sent' }],
+    ['sent, one PO', { tab: 'sent', po: 'PO-0222' }],
     ['empty', { empty: true }],
     ['clerk', { as: 'clerk' }],
     ['tenant B', { tenant: 'b' }],
@@ -69,5 +70,9 @@ describe('axe', () => {
     render(<OrderListsPage />);
     expect(screen.getByText('List')).toBeTruthy();
     expect(screen.getAllByRole('button', { name: 'Discard this list' }).length).toBe(2);
+  });
+  it('has a phone sent-order picker on Sent orders (RDY-446)', () => {
+    render(<OrderListsPage tab="sent" po="PO-0222" />);
+    expect(screen.getByText('List')).toBeTruthy();
   });
 });

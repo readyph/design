@@ -115,6 +115,8 @@ export interface DayTimelineProps {
   /** Week view: a closed day (hatched band). */
   closedBand?: { x: number; w: number };
   lanes: DayTimelineLane[];
+  /** `case`: the strip inside a decision (home.html 308, 311, 341): 148px lane heads, centred header; compacts with the surrounding container named `dt` (the case sheet), not its own width. Default `panel`. */
+  variant?: "panel" | "case";
   className?: string;
 }
 
@@ -556,6 +558,7 @@ export function DayTimeline({
   dayLines,
   closedBand,
   lanes,
+  variant = "panel",
   className,
 }: DayTimelineProps) {
   const axisEl = useRef<HTMLDivElement | null>(null);
@@ -619,10 +622,10 @@ export function DayTimeline({
   return (
     <section
       aria-label={title}
-      className={cn("@container/dt flex min-w-0 flex-col", className)}
+      className={cn("flex min-w-0 flex-col", variant === "case" ? "" : "@container/dt", className)}
       data-compact={compact}
     >
-      <div className="flex min-h-8 items-baseline gap-2.5 pb-1">
+      <div className={cn("flex min-h-8 gap-2.5 pb-1", variant === "case" ? "items-center" : "items-baseline")}>
         <span
           aria-hidden="true"
           className="flex self-center text-[18px] text-muted"
@@ -658,7 +661,7 @@ export function DayTimeline({
       <CompactCtx.Provider value={compact}>
         <div
           aria-busy={state === "loading" || undefined}
-          className="grid grid-cols-[168px_minmax(0,1fr)] border-b border-rule @max-[900px]/dt:grid-cols-[120px_minmax(0,1fr)]"
+          className={cn("grid border-b border-rule @max-[900px]/dt:grid-cols-[120px_minmax(0,1fr)]", variant === "case" ? "grid-cols-[148px_minmax(0,1fr)]" : "grid-cols-[168px_minmax(0,1fr)]")}
         >
           <div />
           <div ref={axisEl} className="relative h-[30px] min-w-0">
