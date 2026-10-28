@@ -52,6 +52,19 @@ export const layout = {
   'ctl-leda-bar': '34px',
   'ctl-chip': '30px',
   'ctl-touch': '44px',
+  /** Inventory layout helpers (RDY-379; products.css 7/105, home.html 28). Phone uses literal 32px gaps. */
+  'lane-h': '168px',
+  'panel': 'var(--surface)',
+  'zone-gap': '48px',
+  'col-gap': '40px',
+  /** Stocker sizing (stocker.css 6; --pad: 20px there is not added, it would override the global --pad). */
+  'tabh': '56px',
+  'tap': '44px',
+  'tap-big': '52px',
+  'col': '520px',
+  /** Barcode sheet sizing (barcode.css 4). */
+  'bt': '44px',
+  'bb': '52px',
 };
 
 /** Responsive overrides on :root (max-width media queries). */

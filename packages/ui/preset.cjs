@@ -119,7 +119,12 @@ const preset = {
         "rd-shine-lit-core": "var(--rd-shine-lit-core)",
         "rd-shine-mid": "var(--rd-shine-mid)",
         "rd-shine-mid-core": "var(--rd-shine-mid-core)",
-        "rd-shine-eye": "var(--rd-shine-eye)"
+        "rd-shine-eye": "var(--rd-shine-eye)",
+        "lv-fill": "var(--lv-fill)",
+        "lv-track": "var(--lv-track)",
+        "lk-hover": "var(--lk-hover)",
+        "lk-inv": "var(--lk-inv)",
+        "lk-inv-hover": "var(--lk-inv-hover)"
       },
       "fontFamily": {
         "sans": [
