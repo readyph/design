@@ -124,7 +124,7 @@ export function PlatformShell({
       {...rest}
       className={cn(
         className,
-        'grid h-dvh w-full min-w-0 overflow-hidden bg-frame font-sans text-text',
+        'grid h-dvh w-full min-w-0 overflow-hidden bg-frame font-sans text-text print:block print:h-auto print:overflow-visible print:bg-white print:text-black',
         cols,
         rows,
         phoneRows,
@@ -135,7 +135,7 @@ export function PlatformShell({
       {hasTop && (
         <header
           className={cn(
-            'hidden',
+            'hidden print:hidden',
             'max-[640px]:col-start-1 max-[640px]:row-start-1 max-[640px]:flex max-[640px]:min-w-0 max-[640px]:items-center max-[640px]:gap-2 max-[640px]:bg-frame max-[640px]:pl-pad max-[640px]:pr-1',
             hiddenWins,
           )}
@@ -147,7 +147,7 @@ export function PlatformShell({
       {hasRail && (
         <nav
           aria-label={railLabel}
-          className={cn('col-start-1 row-start-1 flex min-h-0 min-w-0 flex-col', 'max-[640px]:hidden', hiddenWins)}
+          className={cn('col-start-1 row-start-1 flex min-h-0 min-w-0 flex-col print:hidden', 'max-[640px]:hidden', hiddenWins)}
         >
           {rail}
         </nav>
@@ -162,7 +162,7 @@ export function PlatformShell({
           data-surface="frame"
           data-shell-place=""
           className={cn(
-            'row-start-1 flex min-h-0 min-w-0 flex-col pb-0 pl-1 pr-3 pt-inset',
+            'row-start-1 flex min-h-0 min-w-0 flex-col pb-0 pl-1 pr-3 pt-inset print:hidden',
             placeCol,
             'max-[640px]:col-start-1 max-[640px]:pl-0 max-[640px]:pr-0 max-[640px]:pt-0',
             phoneRegionRow,
@@ -186,7 +186,7 @@ export function PlatformShell({
         hidden={placeIsMain || undefined}
         aria-label={sheetLabel}
         className={cn(
-          '@container/sheet row-start-1 flex min-h-0 min-w-0 flex-col overflow-hidden border border-border bg-surface rounded-sheet',
+          '@container/sheet row-start-1 flex min-h-0 min-w-0 flex-col overflow-hidden border border-border bg-surface rounded-sheet print:block print:overflow-visible print:border-0 print:bg-white',
           'mr-inset mt-inset',
           sheetCol,
           'max-[640px]:col-start-1 max-[640px]:m-0 max-[640px]:rounded-none max-[640px]:border-0',
@@ -196,13 +196,13 @@ export function PlatformShell({
           hiddenWins,
         )}
       >
-        {sheetBar != null && <div className={cn('shrink-0 border-b border-border', hideSheetBarOnPhone && 'max-[640px]:hidden')}>{sheetBar}</div>}
-        <div tabIndex={0} className="min-h-0 flex-1 overflow-y-auto overscroll-contain focus-visible:outline focus-visible:-outline-offset-2">
+        {sheetBar != null && <div className={cn('shrink-0 border-b border-border print:hidden', hideSheetBarOnPhone && 'max-[640px]:hidden')}>{sheetBar}</div>}
+        <div tabIndex={0} className="min-h-0 flex-1 overflow-y-auto overscroll-contain focus-visible:outline focus-visible:-outline-offset-2 print:h-auto print:overflow-visible">
           {!placeIsMain && h1}
           {children}
         </div>
         {actionBar != null && (
-          <div className={cn('hidden shrink-0', 'max-[640px]:flex max-[640px]:items-center max-[640px]:gap-2 max-[640px]:bg-frame max-[640px]:px-4 max-[640px]:pt-2 max-[640px]:pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] max-[640px]:[&>*]:h-11 max-[640px]:[&>*]:flex-1 max-[640px]:[&>*]:text-[14px]', hiddenWins)}>
+          <div className={cn('hidden shrink-0 print:hidden', 'max-[640px]:flex max-[640px]:items-center max-[640px]:gap-2 max-[640px]:bg-frame max-[640px]:px-4 max-[640px]:pt-2 max-[640px]:pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] max-[640px]:[&>*]:h-11 max-[640px]:[&>*]:flex-1 max-[640px]:[&>*]:text-[14px]', hiddenWins)}>
             {actionBar}
           </div>
         )}
@@ -212,7 +212,7 @@ export function PlatformShell({
         <footer
           aria-label={statusLabel}
           className={cn(
-            'col-span-full row-start-2 flex h-status min-w-0 items-center overflow-hidden pl-3 pr-2 text-small text-muted',
+            'col-span-full row-start-2 flex h-status min-w-0 items-center overflow-hidden pl-3 pr-2 text-small text-muted print:hidden',
             'max-[640px]:hidden',
             hiddenWins,
           )}
@@ -226,7 +226,7 @@ export function PlatformShell({
           data-shell="phone-nav"
           aria-label={phoneNavLabel}
           className={cn(
-            'hidden',
+            'hidden print:hidden',
             'max-[640px]:col-start-1 max-[640px]:flex max-[640px]:min-w-0 max-[640px]:items-stretch max-[640px]:bg-frame',
             phoneNavRow,
             hiddenWins,

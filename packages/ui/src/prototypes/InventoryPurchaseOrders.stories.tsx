@@ -4,7 +4,7 @@ import { PurchaseOrdersPage } from './PurchaseOrders.page';
 /**
  * [For Review] RDY-426. Prototype only: stories are not exported from the package. Purchase orders, list view (handover 2.5; slice b of 5).
  * Source: inventory-home FINAL purchase-orders.html, purchase-orders.js 150-238, purchase-orders.css. Data: PurchaseOrders.data.ts (RDY-425).
- * RDY-427 (slice c) appends the one-order view: purchase-orders.js 239-333, 371-394, 585-600, 631-635. RDY-428 (slice d) appends Receive and the short-delivery block. The final assembly follows.
+ * RDY-427 (slice c) appends the one-order view: purchase-orders.js 239-333, 371-394, 585-600, 631-635. RDY-428 (slice d) appends Receive and the short-delivery block. RDY-406 (slice e, final assembly 5/5): quiet, empty store and print stories; print rules (purchase-orders.css 295-326) on the shell and the order view.
  */
 const meta: Meta<typeof PurchaseOrdersPage> = { title: 'Prototypes/Inventory/Purchase orders', component: PurchaseOrdersPage, parameters: { layout: 'fullscreen' } };
 export default meta;
@@ -57,3 +57,9 @@ export const ShortClerk: Story = { name: 'Short delivery: clerk (tell the manage
 export const ShortClerkTold: Story = { name: 'Short delivery: clerk told the manager', args: { po: 'PO-0221', as: 'clerk', records: { told: { 'PO-0221': { by: 'nonoy', at: 'Thu 22 Oct 9:14 AM', note: 'Six short on the 10W-40.' } } } } };
 export const ShortError: Story = { name: 'Short delivery: error (buttons disabled)', args: { po: 'PO-0221', state: 'error' } };
 export const ShortPhone: Story = { name: 'Phone 390 short delivery', args: { po: 'PO-0221' }, parameters: { viewport: { defaultViewport: 'mobile1' } } };
+
+/* RDY-406, final assembly: remaining states (purchase-orders.js 55, 123, 136, 217) and print (purchase-orders.css 295-326: use the browser print preview) */
+export const Quiet: Story = { name: 'Quiet (?state=quiet)', args: { state: 'quiet' } };
+export const EmptyStore: Story = { name: 'Empty store (?state=empty)', args: { state: 'empty' } };
+export const PrintOrder: Story = { name: 'Print: one order on one page, no supplier panel (?po=PO-0223)', args: { po: 'PO-0223' } };
+export const PrintReceive: Story = { name: 'Print: Receive as a tally sheet (?po=PO-0222&receive=1)', args: { po: 'PO-0222', receive: true } };
