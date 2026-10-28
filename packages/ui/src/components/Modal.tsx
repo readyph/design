@@ -1,4 +1,4 @@
-import { createContext, useContext, useRef, type HTMLAttributes, type ReactNode, type RefObject } from 'react';
+import { createContext, useContext, useLayoutEffect, useRef, type HTMLAttributes, type ReactNode, type RefObject } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X, type Icon as PhosphorIcon } from '@phosphor-icons/react';
 import { cn, focusRing } from '../utils/cn';
@@ -62,6 +62,24 @@ const sheet =
   'max-[640px]:inset-0 max-[640px]:h-full max-[640px]:max-h-none max-[640px]:w-full max-[640px]:max-w-none max-[640px]:translate-x-0 max-[640px]:translate-y-0 max-[640px]:rounded-none max-[640px]:border-0';
 
 const ModalContext = createContext({ hideClose: false });
+
+/**
+ * Radix FocusScope returns focus to the opener in a `setTimeout 0` after the content unmounts, which leaves a frame
+ * with focus on `body`. This sits inside the content and, once it is removed, puts focus back in the same task
+ * (a microtask, before paint). Skipped when the page handles `onCloseAutoFocus` itself.
+ */
+function RestoreFocus({ opener }: { opener: RefObject<HTMLElement | null> }) {
+  useLayoutEffect(
+    () => () => {
+      queueMicrotask(() => {
+        const a = document.activeElement;
+        if ((!a || a === document.body) && opener.current?.isConnected) opener.current.focus();
+      });
+    },
+    [opener],
+  );
+  return null;
+}
 
 function CloseButton({ className, label }: { className?: string; label?: string }) {
   return (
@@ -179,6 +197,8 @@ function ModalRoot({
             if (initialFocus?.current) {
               e.preventDefault();
               initialFocus.current.focus();
+              // A disabled initial target (e.g. Cancel while `loading`) cannot take focus: use the dialog itself.
+              if (document.activeElement !== initialFocus.current && e.currentTarget instanceof HTMLElement) e.currentTarget.focus();
             }
           }}
           onEscapeKeyDown={(e) => {
@@ -196,6 +216,7 @@ function ModalRoot({
             }
           }}
         >
+          {!onCloseAutoFocus && <RestoreFocus opener={opener} />}
           <ModalContext.Provider value={{ hideClose }}>
             {quick ? (
               <>
