@@ -1,4 +1,7 @@
+import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
+import { TownMap } from './TownMap';
+import { autoWorks as mapAuto, stockroom as mapStock, two as mapTwo, twoLinks as mapLinks } from './TownMap.data';
 import { PlatformToday } from './PlatformToday';
 import { ProgressBar } from './ProgressBar';
 import { autoWorks, cafe, jobs, longName, stock, stockroom, unbreakable } from './PlatformToday.data';
@@ -86,4 +89,37 @@ export const ActivatableRows: Story = {
       },
     ],
   },
+};
+
+/**
+ * Home Today (RDY-326). Clicking the chip "ALT-NCP150 0 on hand" focuses and flashes only that row in the stockroom block
+ * (`onLinkActivate`); hovering or focusing the chip lights both buildings and the road on the map (`onLinkHover` into
+ * `TownMap.highlight`). Reduced motion: no flash animation.
+ */
+export const HomeTodayLinkChip: Story = {
+  decorators: [
+    () => {
+      const [hl, setHl] = useState<string[] | null>(null);
+      const stockroomToday = { ...stockroom, id: 'stockroom' };
+      const autoToday = { ...autoWorks, id: 'autoworks' };
+      const chipLink = { platform: stockroomToday, ref: 'ALT-NCP150', text: '0 on hand', onSelect: () => {} };
+      const ids: Record<string, string> = { stockroom: mapStock.id, autoworks: mapAuto.id };
+      return (
+        <div className="flex flex-col gap-4">
+          <TownMap platforms={mapTwo} links={mapLinks} highlight={hl} />
+          <PlatformToday
+            platform={autoToday}
+            kind="Auto repair"
+            lists={[{ ...jobs, items: [{ ...jobs.items[0], link: chipLink }] }]}
+            onLinkHover={(l, from) => setHl(l ? [ids[from ?? ''] ?? '', ids[l.platform.id ?? ''] ?? ''].filter(Boolean) : null)}
+          />
+          <PlatformToday
+            platform={stockroomToday}
+            kind="Inventory"
+            lists={[{ id: 'stock', title: 'Stock', total: 2, items: [{ id: 'p1', ref: 'ALT-NCP150', title: 'Alternator NCP150', state: 'Out', tone: 'bad' }, { id: 'p2', ref: 'OIL-5W30', title: 'Oil 5W-30', qty: '24' }] }]}
+          />
+        </div>
+      );
+    },
+  ],
 };
