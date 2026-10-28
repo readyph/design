@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useRef, useState, type ReactNode } from 'react';
-import { EnvelopeSimple, Users } from '@phosphor-icons/react';
+import { EnvelopeSimple, LinkSimple, Users } from '@phosphor-icons/react';
 import { LedaMark } from './Leda';
 import { PlatformLogo, type PlatformLogoProps } from './PlatformLogo';
 import { ProgressBar } from './ProgressBar';
@@ -338,3 +338,68 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
     </div>
   );
 });
+
+export interface InventoryStatusBarProps {
+  /** The platform: logo, name, and "Running". */
+  platform: Pick<StatusBarPlatform, 'name' | 'logoSrc' | 'color' | 'initials'>;
+  /** The data link with another platform (tenant A only): "Link with {with}", "Linked" or "Slow since {since}". */
+  dataLink?: { with: string; status: 'linked' | 'slow'; since?: string; title?: string };
+  /** Viewer short name and role label, hidden below 1180px. `avatar` is an optional leading node (home.js 704). */
+  viewer?: { name: string; role: string; avatar?: ReactNode };
+  /** Leda text: "Leda acts here", or "Leda drafts for {managerName}" when the viewer can decide nothing. */
+  leda: { canDecide: boolean; managerName?: string };
+  /** "Updated {updatedAt}", e.g. "9:12 AM". */
+  updatedAt: string;
+  /** While loading: shows "Loading… last loaded {lastLoadedAt}" instead of Updated. */
+  lastLoadedAt?: string;
+  className?: string;
+}
+
+const invItem = 'inline-flex h-[26px] items-center gap-2 whitespace-nowrap rounded-chip px-[9px] hover:bg-frame-hover hover:text-text';
+const invDiv = 'mx-1.5 h-3 w-px shrink-0 bg-control';
+const invMid = 'max-[1180px]:hidden';
+
+/**
+ * Inventory status bar (RDY-382; shell.css 315-328, home.js 701-705). Drop it into `PlatformShell`'s `status` slot (the shell supplies the `footer`).
+ * Order: platform logo + name + "Running", the data link, viewer, Leda, then "Updated" at the right. The viewer drops below 1180px.
+ */
+export function InventoryStatusBar({ platform, dataLink, viewer, leda, updatedAt, lastLoadedAt, className }: InventoryStatusBarProps) {
+  const slow = dataLink?.status === 'slow';
+  return (
+    <div className={cn('flex h-full w-full min-w-0 items-center gap-0.5 overflow-hidden text-small text-muted', className)}>
+      <span className={invItem}>
+        <PlatformLogo name={platform.name} src={platform.logoSrc} color={platform.color} initials={platform.initials} size={16} decorative />
+        <b className="text-[13px] font-medium text-text">{platform.name}</b>
+        <span aria-hidden="true" className="size-[7px] shrink-0 rounded-full bg-ok-dot" />
+        <span>Running</span>
+      </span>
+      {dataLink && (
+        <>
+          <span aria-hidden="true" className={invDiv} />
+          <span title={dataLink.title} className={invItem}>
+            <LinkSimple size={14} aria-hidden="true" />
+            <span>Link with {dataLink.with}</span>
+            <span aria-hidden="true" className={cn('size-[7px] shrink-0 rounded-full', slow ? 'bg-warn-dot' : 'bg-ok-dot')} />
+            <span>{slow ? `Slow since ${dataLink.since}` : 'Linked'}</span>
+          </span>
+        </>
+      )}
+      <span aria-hidden="true" className={invDiv} />
+      {viewer && (
+        <>
+          <span className={cn(invItem, invMid)}>
+            {viewer.avatar}
+            {viewer.name} · {viewer.role}
+          </span>
+          <span aria-hidden="true" className={cn(invDiv, invMid)} />
+        </>
+      )}
+      <span className={invItem}>
+        <LedaMark size={16} decorative />
+        <span>{leda.canDecide ? 'Leda acts here' : `Leda drafts for ${leda.managerName ?? ''}`}</span>
+      </span>
+      <span aria-hidden="true" className="flex-1" />
+      <span className={invItem}>{lastLoadedAt ? `Loading… last loaded ${lastLoadedAt}` : `Updated ${updatedAt}`}</span>
+    </div>
+  );
+}

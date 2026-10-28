@@ -39,6 +39,11 @@ export interface PlatformShellProps extends Omit<HTMLAttributes<HTMLDivElement>,
    * Pass 'null' to opt out: no 'h1' is rendered at all (no 'placeLabel' fallback), for content that has its own 'h1'.
    */
   heading?: string | null;
+  /**
+   * Rail width from 641px up. `default` is the token (--rail, 52px). `wide` is 64px (Inventory, RDY-382: cart.css 116, so a word under an icon keeps
+   * 16px to the screen edge). Phone has no rail, so it does not change there.
+   */
+  railWidth?: 'default' | 'wide';
   /** Sheet body. */
   children?: ReactNode;
 }
@@ -73,6 +78,7 @@ export function PlatformShell({
   detail = false,
   sheetLabel,
   heading,
+  railWidth = 'default',
   className,
   children,
   ...rest
@@ -123,6 +129,7 @@ export function PlatformShell({
         rows,
         phoneRows,
         'max-[640px]:grid-cols-[minmax(0,1fr)] max-[640px]:bg-surface',
+        railWidth === 'wide' && 'min-[641px]:[--rail:64px]',
       )}
     >
       {hasTop && (
