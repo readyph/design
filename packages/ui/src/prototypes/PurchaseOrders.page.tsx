@@ -13,9 +13,11 @@ import { cn } from '../utils/cn';
 import { InventoryChrome } from './Products.chrome';
 import { PRODUCTS } from './Products.data';
 import { OL_A, OL_B } from './OrderLists.data';
+import { PickDelivery, ReceiveView, SettleSection, canReceive, owes } from './PurchaseOrders.receive';
+import type { ShortDeliveryConfirm } from '../components/ShortDeliveryBlock';
 import { PurchaseOrderView, type OrderConfirm } from './PurchaseOrders.order';
 import { AFTER_RECEIPT, ORDER_EXTRAS } from './PurchaseOrders.order.data';
-import { STW, flag, plural, purchaseOrdersModel, type POFilter, type POQuery, type POSort, type POTone, type PurchaseOrder } from './PurchaseOrders.data';
+import { STW, flag, plural, settle as applySettle, type POSettleRecords, purchaseOrdersModel, type POFilter, type POQuery, type POSort, type POTone, type PurchaseOrder } from './PurchaseOrders.data';
 
 /* RDY-426. Page: Purchase orders, 2/5 (b): the list region. Source: inventory-home FINAL purchase-orders.js 150-238 (statusLine, expectedCell, actionOf, rowHTML,
    resultsHTML, segHTML, filtersHTML, emptyHTML, loadingHTML, topActions, listHTML), purchase-orders.css 1-70 (list), 133-143 and 186-217 (tablet, phone);
@@ -41,6 +43,14 @@ export interface PurchaseOrdersPageProps {
   receipt?: boolean;
   /** Story only: the Undo this receipt question is open. */
   undoOpen?: boolean;
+  /** `&receive=1`: the Receive form (slice d). */
+  receive?: boolean;
+  /** Story only: the Which delivery arrived? question is open. */
+  pick?: boolean;
+  /** `?settle=accept|dispute|resolve`: that short-delivery form starts open. */
+  settle?: ShortDeliveryConfirm;
+  /** Story only: records on the order (accepted, disputed, told), as the workshop store would hold them after the action. */
+  records?: POSettleRecords;
   /** Story only: the error block has already been retried (purchase-orders.js 224, `S.retried`). */
   retried?: boolean;
 }
@@ -70,8 +80,12 @@ const COLS_M = 'grid-cols-[minmax(0,1.5fr)_150px_170px_150px_110px_112px] max-[1
 const COLS_C = 'grid-cols-[minmax(0,1.5fr)_150px_170px_150px_112px] max-[1099px]:grid-cols-[minmax(0,1.4fr)_130px_150px_100px]';
 const PHONE_COLS = 'max-[640px]:grid-cols-[minmax(0,1fr)_auto] max-[640px]:gap-x-3 max-[640px]:gap-y-1';
 
-export function PurchaseOrdersPage({ tenant = 'a', as = 'manager', state, pos, asof, f, sup, qs, group, retried: retriedProp, po: poProp, confirm: confirmProp, receipt, undoOpen }: PurchaseOrdersPageProps) {
+export function PurchaseOrdersPage({ tenant = 'a', as = 'manager', state, pos, asof, f, sup, qs, group, retried: retriedProp, po: poProp, confirm: confirmProp, receipt, undoOpen, receive, pick: pickProp, settle: settleProp, records }: PurchaseOrdersPageProps) {
   const [confirm, setConfirm] = useState<OrderConfirm>(confirmProp ?? null);
+  const [openNo, setOpenNo] = useState<string | null>(poProp ?? null);
+  const [rcv, setRcv] = useState(!!receive);
+  const [pick, setPick] = useState(!!pickProp);
+  const [rerr, setRerr] = useState('');
   const [filter, setFilter] = useState<POFilter>(f ?? 'all');
   const [supplier, setSupplier] = useState(sup ?? 'all');
   const [query, setQuery] = useState(qs ?? '');
@@ -79,7 +93,7 @@ export function PurchaseOrdersPage({ tenant = 'a', as = 'manager', state, pos, a
   const [sort, setSort] = useState<POSort>('attn');
   const [fopen, setFopen] = useState(false);
   const [retried, setRetried] = useState(!!retriedProp);
-  const M = useMemo(() => purchaseOrdersModel({ tenant, as, state, pos, asof, po: poProp, f: filter, sup: supplier, qs: query, group: grouped, retried }), [tenant, as, state, pos, asof, poProp, filter, supplier, query, grouped, retried]);
+  const M = useMemo(() => purchaseOrdersModel({ tenant, as, state, pos, asof, po: openNo ?? undefined, f: filter, sup: supplier, qs: query, group: grouped, retried }), [tenant, as, state, pos, asof, openNo, filter, supplier, query, grouped, retried]);
   const P = PRODUCTS[tenant], V = P.viewers[as], contacts = (tenant === 'a' ? OL_A : OL_B).contacts;
   const { can, money, flags: F, now, todayLabel } = M;
   const poErr = F.error && !retried;
@@ -135,7 +149,7 @@ export function PurchaseOrdersPage({ tenant = 'a', as = 'manager', state, pos, a
         <span className="flex justify-end justify-self-end text-right max-[640px]:col-start-2 max-[640px]:[grid-row:2/4] max-[640px]:self-center">
           {kind === 'open' && o.status === 'DRAFT'
             ? <ActionLink caret href="#order-list" aria-label={aria} className="min-h-7 max-[640px]:min-h-11">{verb}</ActionLink>
-            : <ActionLink caret aria-label={aria} className="min-h-7 max-[640px]:min-h-11">{verb}</ActionLink>}
+            : <ActionLink caret aria-label={aria} className="min-h-7 max-[640px]:min-h-11" onClick={kind === 'receive' ? () => startReceive(o.no) : undefined}>{verb}</ActionLink>}
         </span>
       </div>
     );
@@ -175,6 +189,7 @@ export function PurchaseOrdersPage({ tenant = 'a', as = 'manager', state, pos, a
     return <>{headRow()}<div className="flex flex-col">{list.map((x) => row(x, false))}</div></>;
   };
 
+  const startReceive = (no: string) => { setOpenNo(no); setRcv(true); setRerr(''); setPick(false); };
   const counts = M.counts();
   const hide = loading || poErr;
   const nFilt = (supplier !== 'all' ? 1 : 0) + (sort !== 'attn' ? 1 : 0) + (grouped === 'sup' ? 1 : 0);
@@ -249,7 +264,7 @@ export function PurchaseOrdersPage({ tenant = 'a', as = 'manager', state, pos, a
   const topActions = (
     <>
       <Button variant="secondary" leftIcon={ListChecks} className="max-[640px]:hidden">Order lists</Button>
-      {can('receive') ? <Button leftIcon={Truck} disabled={poErr || loading || !nOpen} className="max-[640px]:h-11 max-[640px]:flex-[1_1_auto]">Receive a delivery</Button> : null}
+      {can('receive') ? <Button leftIcon={Truck} disabled={poErr || loading || !nOpen} onClick={() => setPick(true)} className="max-[640px]:h-11 max-[640px]:flex-[1_1_auto]">Receive a delivery</Button> : null}
     </>
   );
   /* 230-238 listHTML */
@@ -269,20 +284,36 @@ export function PurchaseOrdersPage({ tenant = 'a', as = 'manager', state, pos, a
   const sheetBar = <SheetBar wrapChildren={false} actionsFirst={false} actions={<AskLedaBar variant="bar" scope="Purchase orders" />}><SheetBarWhere platform={platform} page="Purchase orders" note={as !== 'manager' ? `Viewing as ${V.viewer.short}, ${V.roleLabel.toLowerCase()}` : undefined} /></SheetBar>;
   /* purchase-orders.js 382-394 detailHTML, 479-484 sbarHTML (order), 490-498 paintPbar */
   const swap = receipt && poProp === 'PO-0222' ? AFTER_RECEIPT : null;
-  const openPo = !loading && poProp ? (swap ? (swap.po as unknown as PurchaseOrder) : M.byNo(poProp)) : null;
+  const base = !loading && openNo ? (swap ? (swap.po as unknown as PurchaseOrder) : M.byNo(openNo)) : null;
+  const openPo = base && records ? applySettle(structuredClone(base), records) : base;
+  const pickModal = <PickDelivery M={M} open={pick} onOpenChange={setPick} onPick={startReceive} />;
   if (openPo) {
     const X = swap ? (swap.extras as typeof ORDER_EXTRAS.a[string]) : ORDER_EXTRAS[tenant][openPo.no];
     const mg = can('confirm_po'), s = openPo.status;
+    const badge = <POState tone={STONE_OF[M.stKey(openPo)]}>{STW[M.stKey(openPo)]}</POState>;
+    const status = <InventoryStatusBar platform={platform} dataLink={dataLink} viewer={{ name: V.viewer.short, role: V.roleLabel }} leda={{ canDecide: can('confirm_po'), managerName: P.viewers.manager.viewer.short }} updatedAt={poErr ? `Last loaded ${now.lastLoaded}` : now.time} />;
+    /* purchase-orders.js 743: Receive is only open on an open order, for someone who may receive, once the orders loaded */
+    if (rcv && canReceive(M, openPo, poErr)) {
+      return (
+        <InventoryChrome tenant={tenant} as={as} nav="pos" page="Orders" lists={nLists} detail status={status}
+          sheetBar={<SheetBar wrapChildren={false} actionsFirst={false} actions={<AskLedaBar variant="bar" scope={openPo.no} />}><BackLink onClick={() => setRcv(false)}>{openPo.no}</BackLink><span className="self-center text-[13px] text-muted">/ Receive</span></SheetBar>}>
+          <div className="min-w-0 px-pad pb-8 pt-5 max-[640px]:px-4 max-[640px]:pb-0 max-[640px]:pt-4">
+            <ReceiveView M={M} po={openPo} extras={X} stateBadge={badge} error={rerr} onConfirm={() => setRcv(false)} onCancel={() => setRcv(false)} />
+          </div>
+        </InventoryChrome>
+      );
+    }
     const paperBtn = (pri: boolean) => <Button variant={pri ? 'primary' : 'secondary'} actionBar fullWidth leftIcon={Printer}>Open paper</Button>;
     const bar = s === 'DRAFT' ? (mg ? <><Button actionBar fullWidth leftIcon={PaperPlaneTilt} onClick={() => setConfirm('send')}>Mark as sent</Button>{paperBtn(false)}</> : paperBtn(true))
-      : M.isOpen(openPo) && can('receive') ? <Button actionBar fullWidth leftIcon={Truck} disabled={poErr}>Receive delivery</Button> : undefined;
+      : M.isOpen(openPo) && can('receive') ? <Button actionBar fullWidth leftIcon={Truck} disabled={poErr} onClick={() => setRcv(true)}>Receive delivery</Button> : undefined;
     return (
       <InventoryChrome tenant={tenant} as={as} nav="pos" page="Orders" lists={nLists} detail actionBar={bar}
         sheetBar={<SheetBar wrapChildren={false} actionsFirst={false} actions={<AskLedaBar variant="bar" scope={openPo.no} />}><BackLink>Purchase orders</BackLink><span className="self-center text-[13px] text-muted">/ {openPo.no}</span></SheetBar>}
-        status={<InventoryStatusBar platform={platform} dataLink={dataLink} viewer={{ name: V.viewer.short, role: V.roleLabel }} leda={{ canDecide: can('confirm_po'), managerName: P.viewers.manager.viewer.short }} updatedAt={poErr ? `Last loaded ${now.lastLoaded}` : now.time} />}>
+        status={status}>
         <div className="min-w-0 px-pad pb-8 pt-5 max-[640px]:px-4 max-[640px]:pb-[112px] max-[640px]:pt-4">
-          <PurchaseOrderView M={M} po={openPo} extras={X} confirm={confirm} onConfirm={setConfirm} disabled={poErr} undoOpen={undoOpen}
-            stateBadge={<POState tone={STONE_OF[M.stKey(openPo)]}>{STW[M.stKey(openPo)]}</POState>} />
+          <PurchaseOrderView M={M} po={openPo} extras={X} confirm={confirm} onConfirm={setConfirm} disabled={poErr} undoOpen={undoOpen} onReceive={() => setRcv(true)}
+            settle={owes(openPo) ? <SettleSection M={M} po={openPo} poErr={poErr} settleForm={settleProp} /> : undefined}
+            stateBadge={badge} />
         </div>
       </InventoryChrome>
     );
@@ -297,6 +328,7 @@ export function PurchaseOrdersPage({ tenant = 'a', as = 'manager', state, pos, a
         </div>
         <div className="mt-8 max-[640px]:mt-6">{body}</div>
       </div>
+      {pickModal}
     </InventoryChrome>
   );
 }
