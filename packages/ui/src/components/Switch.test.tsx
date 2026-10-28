@@ -90,3 +90,15 @@ describe('Switch behaviour', () => {
     expect(screen.getByRole('switch').tagName).toBe('BUTTON');
   });
 });
+
+describe('Switch look settings', () => {
+  it('shows On/Off, sets aria-checked and toggles with Enter', () => {
+    render(<Switch look="settings" aria-label="Email" />);
+    const sw = screen.getByRole('switch', { name: 'Email' });
+    expect(sw.getAttribute('aria-checked')).toBe('false');
+    expect(sw.textContent).toBe('Off');
+    fireEvent.keyDown(sw, { key: 'Enter' });
+    expect(sw.getAttribute('aria-checked')).toBe('true');
+    expect(sw.textContent).toBe('On');
+  });
+});
