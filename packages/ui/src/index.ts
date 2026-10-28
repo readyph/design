@@ -73,3 +73,4 @@ export * from './components/TryIt';
 export * from './components/Chat';
 export * from './components/QuantityStepper';
 export * from './components/MovementLedger';
+export * from './components/DayTimeline';
