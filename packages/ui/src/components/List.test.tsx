@@ -159,4 +159,76 @@ describe('List forced-colors (RDY-321)', () => {
     expect(cls).toContain('forced-colors:mx-0');
     expect(cls).toContain('forced-colors:data-[current=true]:outline-[Highlight]');
   });
+
+  describe('one j / k owner per page', () => {
+    const two = () =>
+      render(
+        <>
+          <List aria-label="One"><ListRow rowId="a1"><ListCell><button>a</button></ListCell></ListRow><ListRow rowId="a2"><ListCell>a2</ListCell></ListRow></List>
+          <List aria-label="Two"><ListRow rowId="b1"><ListCell><button>b</button></ListCell></ListRow><ListRow rowId="b2"><ListCell>b2</ListCell></ListRow></List>
+        </>,
+      );
+    const cursor = () => Array.from(document.querySelectorAll('[aria-current="true"]')).map((el) => el.getAttribute('data-row-id'));
+
+    it('moves only the active list, and focusing the other hands over', () => {
+      two();
+      fireEvent.keyDown(document.body, { key: 'j' });
+      expect(cursor()).toEqual(['a1']);
+      fireEvent.focusIn(screen.getByText('b'));
+      fireEvent.keyDown(document.body, { key: 'j' });
+      expect(cursor()).toEqual(['a1', 'b1']);
+      fireEvent.keyDown(document.body, { key: 'j' });
+      expect(cursor()).toEqual(['a1', 'b2']);
+      fireEvent.pointerDown(screen.getByText('a'));
+      fireEvent.keyDown(document.body, { key: 'j' });
+      expect(cursor()).toEqual(['a2', 'b2']);
+    });
+
+    it('still ignores keys in an input or a menu', () => {
+      render(
+        <>
+          <input aria-label="q" />
+          <div role="menu"><button>m</button></div>
+          <List aria-label="One"><ListRow rowId="a1"><ListCell>a</ListCell></ListRow></List>
+          <List aria-label="Two"><ListRow rowId="b1"><ListCell>b</ListCell></ListRow></List>
+        </>,
+      );
+      fireEvent.keyDown(screen.getByLabelText('q'), { key: 'j' });
+      fireEvent.keyDown(screen.getByText('m'), { key: 'j' });
+      expect(cursor()).toEqual([]);
+    });
+
+    it('a list with shortcuts off never takes the keys, even when touched', () => {
+      render(
+        <>
+          <List aria-label="One"><ListRow rowId="a1"><ListCell>a</ListCell></ListRow></List>
+          <List aria-label="Off" shortcuts={false}><ListRow rowId="o1"><ListCell><button>o</button></ListCell></ListRow></List>
+        </>,
+      );
+      fireEvent.focusIn(screen.getByText('o'));
+      fireEvent.keyDown(document.body, { key: 'j' });
+      expect(cursor()).toEqual(['a1']);
+    });
+
+    it('falls back to the remaining list when the active one unmounts', () => {
+      const { rerender } = render(
+        <>
+          <List aria-label="One"><ListRow rowId="a1"><ListCell>a</ListCell></ListRow></List>
+          <List aria-label="Two"><ListRow rowId="b1"><ListCell><button>b</button></ListCell></ListRow></List>
+        </>,
+      );
+      fireEvent.focusIn(screen.getByText('b'));
+      rerender(<List aria-label="One"><ListRow rowId="a1"><ListCell>a</ListCell></ListRow></List>);
+      fireEvent.keyDown(document.body, { key: 'j' });
+      expect(cursor()).toEqual(['a1']);
+    });
+  });
+
+  it('cells are button-tall and centre one line; stacked rows drop the minimum', () => {
+    plain();
+    const cell = document.querySelector('[data-row-id="a"] > div') as HTMLElement;
+    expect(cell.className).toContain('min-h-[var(--ctl-button)]');
+    expect(cell.className).toContain('content-center');
+    expect(cell.className).toContain('@max-[760px]/list:min-h-0');
+  });
 });

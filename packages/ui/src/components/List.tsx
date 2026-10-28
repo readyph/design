@@ -31,9 +31,9 @@ const ListContext = createContext<ListContextValue>({ mode: 'list', stack: 760, 
  * Every class below is written out in full so Tailwind can see it. `@max-[Npx]/list:` is a container query on
  * the nearest ancestor named "list" (the List root), so stacking follows the list's own width.
  */
-const stackClasses: Record<ListStackBelow, { header: string; row: string; lead: string; actions: string; body: string; flush: string; hide: string; only: string }> = {
+const stackClasses: Record<ListStackBelow, { header: string; row: string; lead: string; actions: string; body: string; flush: string; hide: string; only: string; tall: string }> = {
   /* 0: never stack. The caller sets `--list-cols` itself (`PlatformToday` does, to follow the sheet's width). */
-  0: { header: '', row: '', lead: '', actions: '', body: '', flush: '', hide: '', only: 'hidden' },
+  0: { header: '', row: '', lead: '', actions: '', body: '', flush: '', hide: '', only: 'hidden', tall: '' },
   600: {
     header: '@max-[600px]/list:hidden',
     row: '@max-[600px]/list:grid-cols-[minmax(0,1fr)_auto] @max-[600px]/list:gap-y-2',
@@ -43,6 +43,7 @@ const stackClasses: Record<ListStackBelow, { header: string; row: string; lead: 
     flush: '@max-[600px]/list:col-span-full',
     hide: '@max-[600px]/list:hidden',
     only: 'hidden @max-[600px]/list:block',
+    tall: '@max-[600px]/list:min-h-0',
   },
   760: {
     header: '@max-[760px]/list:hidden',
@@ -53,6 +54,7 @@ const stackClasses: Record<ListStackBelow, { header: string; row: string; lead: 
     flush: '@max-[760px]/list:col-span-full',
     hide: '@max-[760px]/list:hidden',
     only: 'hidden @max-[760px]/list:block',
+    tall: '@max-[760px]/list:min-h-0',
   },
   sheet760: {
     header: '@max-[760px]/sheet:hidden',
@@ -63,6 +65,7 @@ const stackClasses: Record<ListStackBelow, { header: string; row: string; lead: 
     flush: '@max-[760px]/sheet:col-span-full',
     hide: '@max-[760px]/sheet:hidden',
     only: 'hidden @max-[760px]/sheet:block',
+    tall: '@max-[760px]/sheet:min-h-0',
   },
   880: {
     header: '@max-[880px]/list:hidden',
@@ -73,6 +76,7 @@ const stackClasses: Record<ListStackBelow, { header: string; row: string; lead: 
     flush: '@max-[880px]/list:col-span-full',
     hide: '@max-[880px]/list:hidden',
     only: 'hidden @max-[880px]/list:block',
+    tall: '@max-[880px]/list:min-h-0',
   },
 };
 
@@ -89,6 +93,37 @@ export const listRowSurface =
 const INTERACTIVE = 'button,a[href],input,select,textarea,summary,[role="button"],[role="menuitem"],[role="menu"],[role="switch"],[role="checkbox"],[role="combobox"]';
 // Any contenteditable value except "false" is editable ("", "true", "plaintext-only").
 const EDITABLE = 'input,textarea,select,[contenteditable]:not([contenteditable="false"])';
+
+/*
+ * One j / k owner per page. Every list that listens registers its root here; the one that last received focus or a
+ * pointer press owns the keys. Before anything has been touched, the first list mounted owns them.
+ */
+const listeners: HTMLElement[] = [];
+let activeRoot: HTMLElement | null = null;
+/** True when `root` should handle page-level keys: it is the only listener, or it was touched last. */
+export function ownsPageKeys(root: HTMLElement): boolean {
+  if (listeners.length < 2) return true;
+  const owner = activeRoot && listeners.includes(activeRoot) ? activeRoot : listeners[0];
+  return owner === root;
+}
+function useRegisterKeys(rootRef: { current: HTMLElement | null }, enabled: boolean) {
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!enabled || !root) return;
+    const claim = () => {
+      activeRoot = root;
+    };
+    listeners.push(root);
+    root.addEventListener('focusin', claim);
+    root.addEventListener('pointerdown', claim);
+    return () => {
+      root.removeEventListener('focusin', claim);
+      root.removeEventListener('pointerdown', claim);
+      listeners.splice(listeners.indexOf(root), 1);
+      if (activeRoot === root) activeRoot = null;
+    };
+  }, [enabled]);
+}
 
 export interface ListCursorOptions {
   shortcuts?: boolean;
@@ -114,6 +149,7 @@ export function useListCursor(
   const onChangeRef = useRef(onCursorChange);
   onChangeRef.current = onCursorChange;
 
+  useRegisterKeys(rootRef, shortcuts);
   const moveCursor = useCallback(
     (id: string) => {
       if (!controlled) setInner(id);
@@ -126,7 +162,7 @@ export function useListCursor(
     if (!shortcuts) return;
     const onKey = (e: KeyboardEvent) => {
       const root = rootRef.current;
-      if (!root || e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (!root || e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey || !ownsPageKeys(root)) return;
       const t = e.target instanceof HTMLElement ? e.target : null;
       if (t) {
         if (t.closest(EDITABLE)) return;
@@ -171,7 +207,7 @@ export interface ListProps extends Omit<HTMLAttributes<HTMLElement>, 'onChange'>
   /** Start with this row as the cursor (uncontrolled). */
   defaultCursorId?: string | null;
   onCursorChange?: (id: string) => void;
-  /** j / k move the cursor and Enter opens the cursor row, from anywhere on the page. Default true. With several Lists on one page, leave it on for the primary list only; Lists inside a `ListGroups` do not listen, the group does. */
+  /** j / k move the cursor and Enter opens the cursor row, from anywhere on the page. Default true. With several Lists on one page, the one that last received focus or a pointer press owns the keys (the first one before any); set `false` to opt a list out. Lists inside a `ListGroups` do not listen, the group does. */
   shortcuts?: boolean;
   children?: ReactNode;
 }
@@ -352,7 +388,9 @@ export const ListCell = forwardRef<HTMLDivElement, ListCellProps>(function ListC
       ref={ref}
       role={mode === 'table' ? 'cell' : undefined}
       className={cn(
-        'min-w-0 [overflow-wrap:anywhere]',
+        // One-line text sits level with a control: the cell is as tall as a button and centres its content; a taller (multi-line) cell is not affected, so its text stays at the top.
+        'min-h-[var(--ctl-button)] min-w-0 content-center [overflow-wrap:anywhere]',
+        s.tall,
         kind === 'lead' && s.lead,
         kind === 'actions' && cn(s.actions, 'flex items-center justify-end gap-0.5'),
         kind === 'body' && !flush && s.body,
