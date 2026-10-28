@@ -12,6 +12,8 @@ import { Skeleton } from './Skeleton';
 
 /** The identity of a platform, as `PlatformLogo` takes it. */
 export type TodayPlatform = Pick<PlatformLogoProps, 'src' | 'index' | 'color' | 'hq' | 'initials'> & {
+  /** Stable id of the platform, passed to `onLinkActivate` / `onLinkHover`. Falls back to `name`. */
+  id?: string;
   /** Full name. It wraps, it is never cut. */
   name: string;
 };
@@ -28,6 +30,37 @@ export interface TodayLink {
 }
 
 /** One row of a list. The same shape for every kind of platform. */
+/** What a chip click targets: the other platform and the reference of its row. */
+export interface TodayLinkTarget {
+  platformId: string;
+  ref?: string;
+}
+
+const platformKey = (p: TodayPlatform) => p.id ?? p.name;
+const FLASH_CLASS = 'motion-safe:animate-row-flash';
+const FLASH_MS = 1600;
+
+/**
+ * Focus the row `ref` of platform `platformId` (a `PlatformToday` block on the page) and flash that one row, not the
+ * block. Does nothing when the row is not on the page. The flash class is `motion-safe:`, so reduced motion has none.
+ */
+function flashTargetRow({ platformId, ref }: TodayLinkTarget) {
+  if (!ref || typeof document === 'undefined') return;
+  const esc = (v: string) => (typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(v) : v.replace(/["\\]/g, '\\$&'));
+  const row = document.querySelector<HTMLElement>(`[data-platform-id="${esc(platformId)}"] [data-row-id][data-ref="${esc(ref)}"]`);
+  if (!row) return;
+  if (!row.hasAttribute('tabindex')) row.setAttribute('tabindex', '-1');
+  row.focus({ preventScroll: false });
+  row.classList.remove(FLASH_CLASS);
+  void row.offsetWidth;
+  row.classList.add(FLASH_CLASS);
+  row.dataset.flash = 'true';
+  window.setTimeout(() => {
+    row.classList.remove(FLASH_CLASS);
+    delete row.dataset.flash;
+  }, FLASH_MS);
+}
+
 export interface TodayItem {
   id: string;
   /** Short reference ("JO-0412"). Muted, before the title. */
@@ -120,6 +153,10 @@ export interface PlatformTodayProps extends Omit<HTMLAttributes<HTMLElement>, 't
   rowLayout?: TodayRowLayout;
   /** Reference of one row to flash once (`n` changes to flash again), e.g. after its link chip was used. */
   flashRow?: { ref: string; n: number } | null;
+  /** A link chip was used: the target platform and row. The row is focused and flashed (the row, not the block) before this is called. */
+  onLinkActivate?: (target: TodayLinkTarget) => void;
+  /** Pointer or keyboard focus entered a chip (the link, and this block's platform id as the second argument) or left it (`null`). The page calls `TownMap.highlight` with both buildings. */
+  onLinkHover?: (link: TodayLink | null, fromPlatformId?: string) => void;
   /** Heading level of the platform name. Default 3. */
   level?: 2 | 3 | 4;
   /**
@@ -170,7 +207,12 @@ const COLUMNS: Record<TodayRowLayout, string> = {
   phone: 'minmax(0,1fr) auto',
 };
 
-function Chip({ link, from, layout, flashId }: { link: TodayLink; from: string; layout: TodayRowLayout; flashId?: string }) {
+interface ChipHandlers {
+  onLinkActivate?: PlatformTodayProps['onLinkActivate'];
+  onLinkHover?: PlatformTodayProps['onLinkHover'];
+}
+
+function Chip({ link, from, layout, flashId, onLinkActivate, onLinkHover }: { link: TodayLink; from: string; layout: TodayRowLayout; flashId?: string } & ChipHandlers) {
   const body = (
     <>
       <PlatformLogo {...link.platform} decorative size={14} />
@@ -187,7 +229,22 @@ function Chip({ link, from, layout, flashId }: { link: TodayLink; from: string; 
     focusRing,
   );
   return link.onSelect ? (
-    <button type="button" onClick={link.onSelect} className={cls} data-from={from} data-flash-id={flashId}>
+    <button
+      type="button"
+      onClick={() => {
+        const target = { platformId: platformKey(link.platform), ref: link.ref };
+        flashTargetRow(target);
+        onLinkActivate?.(target);
+        link.onSelect?.();
+      }}
+      onMouseEnter={() => onLinkHover?.(link, from)}
+      onMouseLeave={() => onLinkHover?.(null)}
+      onFocus={() => onLinkHover?.(link, from)}
+      onBlur={() => onLinkHover?.(null)}
+      className={cls}
+      data-from={from}
+      data-flash-id={flashId}
+    >
       {body}
     </button>
   ) : (
@@ -195,7 +252,7 @@ function Chip({ link, from, layout, flashId }: { link: TodayLink; from: string; 
   );
 }
 
-function Row({ item, platform, label, layout, flash }: { item: TodayItem; platform: string; label: string; layout: TodayRowLayout; flash?: boolean }) {
+function Row({ item, platform, label, layout, flash, onLinkActivate, onLinkHover }: { item: TodayItem; platform: string; label: string; layout: TodayRowLayout; flash?: boolean } & ChipHandlers) {
   const wide = layout === 'wide';
   const title = <span className="font-medium">{item.title}</span>;
   const hasMeta = Boolean(item.state || item.qty || item.at);
@@ -235,7 +292,7 @@ function Row({ item, platform, label, layout, flash }: { item: TodayItem; platfo
           {item.at ? <span className={cn('text-small leading-[18px] tabular-nums text-muted', layout === 'wide' && 'min-w-[38px] text-right')}>{item.at}</span> : null}
         </div>
       ) : wide || layout === 'phone' ? <span /> : null}
-      {item.link && item.link.text ? <Chip link={item.link} from={platform} layout={layout} /> : null}
+      {item.link && item.link.text ? <Chip link={item.link} from={platform} layout={layout} onLinkActivate={onLinkActivate} onLinkHover={onLinkHover} /> : null}
     </ListRow>
   );
 }
@@ -289,6 +346,8 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
     level = 3,
     rowLayout = 'narrow',
     flashRow = null,
+    onLinkActivate,
+    onLinkHover,
     shortcuts = false,
     bare = false,
     className,
@@ -323,7 +382,7 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
               className="[&>div:first-child]:gap-x-[7.25px] [&>div:first-child]:pb-1 [&>div:first-child]:pt-3.5 [&>div:first-child>*]:leading-5 [&>div:first-child>span]:text-ui"
             >
               {rows.map((it) => (
-                <Row key={flashRow && it.ref === flashRow.ref ? `${it.id}:${flashRow.n}` : it.id} item={it} platform={platform.name} layout={rowLayout} flash={!!flashRow && it.ref === flashRow.ref} label={`${l.title}: ${typeof it.title === 'string' ? it.title : it.ref ?? ''}`} />
+                <Row key={flashRow && it.ref === flashRow.ref ? `${it.id}:${flashRow.n}` : it.id} item={it} platform={platform.name} layout={rowLayout} flash={!!flashRow && it.ref === flashRow.ref} onLinkActivate={onLinkActivate} onLinkHover={onLinkHover} label={`${l.title}: ${typeof it.title === 'string' ? it.title : it.ref ?? ''}`} />
               ))}
             </ListGroup>
             {more ? (
@@ -366,6 +425,7 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
       aria-labelledby={bare ? undefined : nameId}
       aria-busy={loading || undefined}
       data-surface={surface}
+      data-platform-id={platformKey(platform)}
       className={cn('@container/today relative min-w-0', className)}
       {...rest}
     >

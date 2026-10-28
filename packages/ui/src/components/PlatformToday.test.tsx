@@ -115,4 +115,50 @@ describe('PlatformToday', () => {
     expect(screen.getByText('JO-0412').className).toContain('whitespace-nowrap');
     expect(screen.getByText('ALT-NCP150').className).toContain('whitespace-nowrap');
   });
+
+  describe('link chips (RDY-326)', () => {
+    const linked = { ...jobs, items: [{ ...jobs.items[0], link: { platform: stockroom, ref: 'ALT-NCP150', text: '0 on hand', onSelect: vi.fn() } }] };
+    const target = { ...stock, items: [{ id: 'm9', ref: 'ALT-NCP150', title: 'Alternator', tone: 'bad' as const }, { id: 'm8', ref: 'OTHER-1', title: 'Other' }] };
+
+    it('click focuses and flashes only the target row and calls onLinkActivate; a missing row does nothing', () => {
+      const onLinkActivate = vi.fn();
+      render(
+        <>
+          <PlatformToday platform={autoWorks} lists={[linked]} onLinkActivate={onLinkActivate} />
+          <PlatformToday platform={stockroom} lists={[target]} />
+        </>,
+      );
+      const block = document.querySelector('[data-platform-id="Cebu Parts Stockroom"]') as HTMLElement;
+      const row = block.querySelector('[data-ref="ALT-NCP150"]') as HTMLElement;
+      const other = block.querySelector('[data-ref="OTHER-1"]') as HTMLElement;
+      fireEvent.click(screen.getByRole('button', { name: /ALT-NCP150\s+0 on hand/ }));
+      expect(onLinkActivate).toHaveBeenCalledWith({ platformId: 'Cebu Parts Stockroom', ref: 'ALT-NCP150' });
+      expect(row.className).toContain('animate-row-flash');
+      expect(document.activeElement).toBe(row);
+      expect(other.className).not.toContain('animate-row-flash');
+      expect(block.className).not.toContain('animate-row-flash');
+    });
+
+    it('a missing row does nothing but still reports the activation', () => {
+      const onLinkActivate = vi.fn();
+      render(<PlatformToday platform={autoWorks} lists={[linked]} onLinkActivate={onLinkActivate} />);
+      fireEvent.click(screen.getByRole('button', { name: /ALT-NCP150\s+0 on hand/ }));
+      expect(onLinkActivate).toHaveBeenCalledOnce();
+      expect(document.querySelector('.motion-safe\\:animate-row-flash')).toBeNull();
+    });
+
+    it('hover and focus fire onLinkHover with the link; leaving fires null', () => {
+      const onLinkHover = vi.fn();
+      render(<PlatformToday platform={autoWorks} lists={[linked]} onLinkHover={onLinkHover} />);
+      const chip = screen.getByRole('button', { name: /ALT-NCP150\s+0 on hand/ });
+      fireEvent.mouseEnter(chip);
+      expect(onLinkHover).toHaveBeenLastCalledWith(linked.items[0].link, 'Auto Works Quezon City');
+      fireEvent.mouseLeave(chip);
+      expect(onLinkHover).toHaveBeenLastCalledWith(null);
+      fireEvent.focus(chip);
+      expect(onLinkHover).toHaveBeenLastCalledWith(linked.items[0].link, 'Auto Works Quezon City');
+      fireEvent.blur(chip);
+      expect(onLinkHover).toHaveBeenLastCalledWith(null);
+    });
+  });
 });
