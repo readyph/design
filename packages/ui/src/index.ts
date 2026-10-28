@@ -7,6 +7,7 @@ export * from './components/LogoUpload';
 export * from './components/SegmentedControl';
 export * from './components/StatusDot';
 export * from './components/StockStatus';
+export * from './components/StockerFrame';
 export * from './components/Avatar';
 export * from './components/Select';
 export * from './components/Modal';
