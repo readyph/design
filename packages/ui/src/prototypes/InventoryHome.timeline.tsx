@@ -190,23 +190,25 @@ export function homeTimelineProps(M: HomeModel, pickRunway: (id: string) => void
     const endTxt = main.end < 0 ? `${Math.abs(main.end)} short by close` : main.rate && main.tz != null ? 'out by close' : `${main.end} left by close`;
     const fix = (D.decisions as any[]).find((x) => x.p === pid && x.kind === 'reorder');
     const showFix = bad && fix && !isDone(fix.id) && S.open !== fix.id;
+    const later = main.rate && main.later ? (() => {
+      const a: any = arrival(main.later), firm = poStatus(main.later) !== 'DRAFT', l = main.later.lines.find((x: any) => x.p === pid);
+      const dec: any = (D.decisions as any[]).find((x) => x.action && x.action.ref === main.later.no) || { due: {} };
+      return `${main.later.no}: +${l.ordered - l.received} ${dayLabel(a.day)}${a.t != null ? ' ' + hm(a.t) : ''}${firm ? '' : `, if sent by ${dec.due.at || (sup(main.later.supplier) as any).cutoff || ''}`}`;
+    })() : undefined;
+    const endAction = showFix ? (
+      <button type="button" title={tip([fix.title, fix.detail], 'open the fix')} className="group/chip inline-flex h-[26px] cursor-pointer items-center gap-[5px] whitespace-nowrap rounded-control border border-control bg-surface pl-2 pr-[5px] text-[12px] leading-4 text-text hover:border-text hover:bg-raised">
+        <WarningCircle size={13} aria-hidden="true" />
+        <span className="font-semibold text-bad">{endTxt}</span><span>· {fix.canDecide ? 'Fix' : 'See fix'}</span>
+      </button>
+    ) : undefined;
     const rw = (
-      <>
-        <StockRunway
-          name={p.name} hours={hours} now={NOW} formatTime={hm} aria-label={ariaRun(main, alt)}
-          points={main.pts} rate={main.rate ? { vNow: main.vNow, tz: main.tz, end: main.end } : undefined}
-          alt={altDel ? { no: altDel.ref, left: altDel.v, at: altDel.t } : undefined}
-          caption={main.rate ? `Projected at about ${main.p.usePerDay} a day, as of ${D.now.time}` : `Projected from booked jobs, as of ${D.now.time}`}
-        />
-        {showFix && (
-          <div className="absolute bottom-1.5 right-0 z-[3]">
-            <button type="button" title={tip([fix.title, fix.detail], 'open the fix')} className="group/chip inline-flex h-[26px] cursor-pointer items-center gap-[5px] whitespace-nowrap rounded-control border border-control bg-surface pl-2 pr-[5px] text-[12px] leading-4 text-text hover:border-text hover:bg-raised">
-              <i aria-hidden="true" className="h-[7px] w-[7px] flex-none rounded-full bg-bad" />
-              <span className="font-semibold text-bad">{endTxt}</span><span>· {fix.canDecide ? 'Fix' : 'See fix'}</span>
-            </button>
-          </div>
-        )}
-      </>
+      <StockRunway
+        variant="lane" confirmed={conf} laterLabel={later} endAction={endAction}
+        name={p.name} hours={hours} now={NOW} formatTime={hm} aria-label={ariaRun(main, alt)}
+        points={main.pts} rate={main.rate ? { vNow: main.vNow, tz: main.tz, end: main.end } : undefined}
+        alt={alt ? { no: altDel.ref, left: altDel.v, at: altDel.t, points: alt.pts } : undefined}
+        caption={main.rate ? `Projected at about ${main.p.usePerDay} a day, as of ${D.now.time}` : `Projected from booked jobs, as of ${D.now.time}`}
+      />
     );
     return { id: 'run', icon: <ChartLineDown size={18} />, title: 'Stock left', sub, headExtra: pick, runway: rw };
   }
