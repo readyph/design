@@ -55,3 +55,11 @@ export const ChangeDraft: Story = { name: 'Change draft (&tr=TR-0032&edit=1)', a
 export const NewTransferWarning: Story = { name: 'New transfer, part another draft needs (warning line)', args: { newTr: true, newP: 'p16' } };
 export const PhoneTransfers: Story = { name: 'Phone 390 transfers', args: { view: 'transfers' }, parameters: { viewport: { defaultViewport: 'mobile1' } } };
 export const PhoneTransferPaper: Story = { name: 'Phone 390 transfer paper', args: { tr: 'TR-0032' }, parameters: { viewport: { defaultViewport: 'mobile1' } } };
+
+/* RDY-440 (e): Receive transfer. movements.js 368-397, 564-572, 680; movements.css 141-145, 162, 253-255. */
+export const ReceiveTransfer: Story = { name: 'Receive transfer, all arrived (&tr=TR-0030&rcv=1)', args: { tr: 'TR-0030', rcv: true } };
+export const ReceiveTransferShort: Story = { name: 'Receive transfer, short count (&tr=TR-0013&rcv=1, tenant b)', args: { tenant: 'b', tr: 'TR-0013', rcv: true, rcvStart: { b11: 9 } } };
+export const ReceiveTransferNothing: Story = { name: 'Receive transfer, nothing arrived (&tr=TR-0013&rcv=1, tenant b)', args: { tenant: 'b', tr: 'TR-0013', rcv: true, rcvStart: { b11: 0 } } };
+export const ReceiveTransferMixedUnits: Story = { name: 'Receive transfer, mixed units, one short (&tr=TR-0030&rcv=1)', args: { tr: 'TR-0030', rcv: true, rcvStart: { p05: 6, p15: 1 } } };
+export const ReceiveTransferError: Story = { name: 'Receive transfer, receiving off (error)', args: { tr: 'TR-0030', state: 'error' } };
+export const PhoneReceiveTransfer: Story = { name: 'Phone 390 receive transfer', args: { tr: 'TR-0030', rcv: true }, parameters: { viewport: { defaultViewport: 'mobile1' } } };

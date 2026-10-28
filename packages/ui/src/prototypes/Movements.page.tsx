@@ -18,6 +18,7 @@ import { Toaster } from '../components/toast/Toaster';
 import { addToast } from '../components/toast/toastStore';
 import type { RecordEntry, RecordProduct } from '../components/RecordMovementForm';
 import { RecordView } from './Movements.record';
+import { ReceiveTransferView, type ReceiveTransferResult } from './Movements.receive';
 import { TransferDetailView, TransferFormView, TransfersList } from './Movements.transfers';
 import type { TransferFilter } from '../components/TransferList';
 import type { TransferFormValue } from '../components/TransferForm';
@@ -69,6 +70,10 @@ export interface MovementsPageProps {
   cancelOpen?: boolean;
   /** Story only: the draft was just marked sent, so the in transit state shows (movements.js 549-555). */
   sent?: boolean;
+  /** `&tr=<TR>&rcv=1` (RDY-440, slice e): Receive transfer, the count screen. */
+  rcv?: boolean;
+  /** Story only: where each box starts instead of what was sent, by product id (a short count). */
+  rcvStart?: Record<string, number>;
 }
 
 const NAV: { id: string; label: string; short?: string; icon: PhosphorIcon; needs?: string }[] = [
@@ -83,8 +88,8 @@ const link = 'cursor-pointer border-0 bg-transparent p-0 text-left font-semibold
 const idCls = 'text-[12px]';
 const first = 'py-10';
 
-export function MovementsPage({ tenant = 'a', as = 'manager', state = 'live', view, io, reason, prod, who: whoP, range, from, to, qs, mv, jo, record, p: recP, landed, undoOpen, tf, tr: trP, edit, newTr, newP, sendOpen, cancelOpen, sent }: MovementsPageProps) {
-  const params = useMemo<MovementsParams>(() => ({ view, io, reason, prod, who: whoP, range, from: from != null ? String(from) : undefined, to: to != null ? String(to) : undefined, qs, mv, record: record ? '1' : undefined, p: recP, tf, tr: trP, new: newTr ? '1' : undefined }), [view, io, reason, prod, whoP, range, from, to, qs, mv, record, recP, tf, trP, newTr]);
+export function MovementsPage({ tenant = 'a', as = 'manager', state = 'live', view, io, reason, prod, who: whoP, range, from, to, qs, mv, jo, record, p: recP, landed, undoOpen, tf, tr: trP, edit, newTr, newP, sendOpen, cancelOpen, sent, rcv, rcvStart }: MovementsPageProps) {
+  const params = useMemo<MovementsParams>(() => ({ view, io, reason, prod, who: whoP, range, from: from != null ? String(from) : undefined, to: to != null ? String(to) : undefined, qs, mv, record: record ? '1' : undefined, p: recP, tf, tr: trP, rcv: rcv ? '1' : undefined, new: newTr ? '1' : undefined }), [view, io, reason, prod, whoP, range, from, to, qs, mv, record, recP, tf, trP, rcv, newTr]);
   const M = useMemo(() => createMovementsModel(tenant, as, state, params), [tenant, as, state, params]);
   const [, tick] = useReducer((n: number) => n + 1, 0);
   const [jobOpen, setJobOpen] = useState<string | null>(jo ?? null);
@@ -169,6 +174,20 @@ export function MovementsPage({ tenant = 'a', as = 'manager', state = 'live', vi
     const snap = r.snap;
     M.refreshAll(); setConfirmSend(false);
     addToast({ description: `${t0.id} sent to ${t0.other.name}. ${one ? `${one.product.sku}: ${one.product.onHand} → ${one.product.onHand - one.qty}.` : `${M.qtyWords(t0)} left ${M.place(M.HERE).short}.`}`, actions: [{ label: 'Undo', onClick: () => { M.store.restore(snap); M.refreshAll(); addToast(`Undone. ${t0.id} is a draft again and the stock is back.`); tick(); } }] });
+    tick();
+  };
+  /* movements.js 680 startReceive, 564-572 confirmRcv, 660 cancelrcv */
+  const startReceive = () => { const t0 = trSel; if (!t0 || !can('receive') || err) return; S.rcv = true; S.confirm = null; tick(); };
+  const cancelRcv = () => { S.rcv = false; tick(); };
+  const confirmRcv = (r: ReceiveTransferResult) => {
+    const t0 = trSel; if (!t0 || !S.rcv || err) return;
+    const got = (l: object) => r.lines.find((x) => x.p === (l as { p: string }).p)?.got ?? 0;
+    const w = M.store.trSet(t0.id, { status: 'received', receivedAt: M.nowStamp(), recvHM: D.now.hm, receivedBy: r.by, receivedNote: r.note, lines: r.lines }, 'received'); if (!w) return;
+    const short = t0.units - r.lines.reduce((s, l) => s + l.got, 0);
+    const text = `${t0.id} received: ${M.goesInT(t0.lines, got)}.${short ? ` ${M.tallyT(t0, got)}.` : ''} ${M.STK.effectText(Object.fromEntries(r.lines.map((l) => [l.p, l.got])))}`.trim();
+    const snap = w.snap;
+    S.rcv = false; M.refreshAll();
+    addToast({ description: text, actions: [{ label: 'Undo', onClick: () => { M.store.restore(snap); M.refreshAll(); addToast(`Receipt undone. ${t0.id} is in transit again and the stock is back.`); tick(); } }] });
     tick();
   };
   const cancelTr = () => {
@@ -408,21 +427,23 @@ export function MovementsPage({ tenant = 'a', as = 'manager', state = 'live', vi
   if (S.form || trSel) {
     const f = S.form, t = trSel;
     const statusEl = <InventoryStatusBar platform={platform} dataLink={link_ ? { with: link_.with, status: link_.status === 'slow' ? 'slow' : 'linked', since: link_.since ?? '8:50', title: 'Parts and job orders' } : undefined} viewer={{ name: viewer.short, role: D.roleLabel }} leda={{ canDecide: can('adjust_stock'), managerName: (D.manager as { short: string }).short }} updatedAt={D.now.time} />;
-    const crumb = f ? (f.id ? `Change ${f.id}` : 'New transfer') : t!.id;
-    const bar = !f && t ? (
+    const rcvOn = !f && !!t && S.rcv;
+    const crumb = f ? (f.id ? `Change ${f.id}` : 'New transfer') : rcvOn ? `${t!.id} / Receive` : t!.id;
+    const bar = rcvOn ? undefined : !f && t ? (
       t.status === 'draft' && t.out && M.canSend(t) ? (confirmSend ? <Button actionBar fullWidth variant="secondary" leftIcon={Printer} onClick={() => window.print()}>Print</Button> : <><Button actionBar fullWidth leftIcon={PaperPlaneTilt} disabled={trDisabled} onClick={() => setConfirmSend(true)}>Mark as sent</Button><Button actionBar variant="secondary" leftIcon={Printer} onClick={() => window.print()}>Print</Button></>)
-        : t.status === 'transit' && !t.out && can('receive') ? <><Button actionBar fullWidth leftIcon={Truck}>Receive transfer</Button><Button actionBar variant="secondary" leftIcon={Printer} onClick={() => window.print()}>Print</Button></>
+        : t.status === 'transit' && !t.out && can('receive') ? <><Button actionBar fullWidth leftIcon={Truck} disabled={trDisabled} onClick={startReceive}>Receive transfer</Button><Button actionBar variant="secondary" leftIcon={Printer} onClick={() => window.print()}>Print</Button></>
           : <Button actionBar fullWidth variant="secondary" leftIcon={Printer} onClick={() => window.print()}>Print</Button>
     ) : undefined;
     return (
       <PlatformShell
         railWidth="wide" railLabel="Inventory" rail={rail} topBar={topBar} phoneNav={phoneNav} heading={platform.name} hideSheetBarOnPhone detail actionBar={bar}
-        sheetBar={<SheetBar wrapChildren={false} actionsFirst={false} actions={<AskLedaBar variant="bar" scope={t ? t.id : 'Movements'} shortcuts={false} />}><BackLink onClick={backTr}>{f && f.id ? f.id : 'Transfers'}</BackLink><span className="self-center text-[13px] font-semibold text-text">/ {crumb}</span></SheetBar>}
+        sheetBar={<SheetBar wrapChildren={false} actionsFirst={false} actions={<AskLedaBar variant="bar" scope={t ? t.id : 'Movements'} shortcuts={false} />}><BackLink onClick={rcvOn ? cancelRcv : backTr}>{rcvOn ? t!.id : f && f.id ? f.id : 'Transfers'}</BackLink><span className="self-center text-[13px] font-semibold text-text">/ {crumb}</span></SheetBar>}
         statusLabel="Status" status={statusEl}
       >
         <div id="vbody-tr" className="min-w-0 print:p-0 px-pad pb-8 pt-5 max-[640px]:px-4 max-[640px]:pb-[112px] max-[640px]:pt-4">
-          {f ? <TransferFormView M={M} tick={tick} editing={f.id ? M.trBy(f.id) : null} productId={S.recP} onSave={saveTr} onCancel={backTr} />
-            : <TransferDetailView M={M} tick={tick} t={t!} confirming={confirmSend && t!.status === 'draft'} disabled={trDisabled} onAskSend={() => setConfirmSend(true)} onNotYet={() => { setConfirmSend(false); setTimeout(() => [...document.querySelectorAll<HTMLButtonElement>('#vbody-tr button')].find((b) => b.textContent === 'Mark as sent')?.focus({ preventScroll: true }), 0); }} onSend={sendTr} onChange={() => startForm({ id: t!.id })} onCancelDraft={() => setCancelAsk(true)} onReceive={() => {}} onPrint={() => window.print()} />}
+          {rcvOn ? <ReceiveTransferView M={M} t={t!} start={rcvStart} onConfirm={confirmRcv} onCancel={cancelRcv} />
+            : f ? <TransferFormView M={M} tick={tick} editing={f.id ? M.trBy(f.id) : null} productId={S.recP} onSave={saveTr} onCancel={backTr} />
+            : <TransferDetailView M={M} tick={tick} t={t!} confirming={confirmSend && t!.status === 'draft'} disabled={trDisabled} onAskSend={() => setConfirmSend(true)} onNotYet={() => { setConfirmSend(false); setTimeout(() => [...document.querySelectorAll<HTMLButtonElement>('#vbody-tr button')].find((b) => b.textContent === 'Mark as sent')?.focus({ preventScroll: true }), 0); }} onSend={sendTr} onChange={() => startForm({ id: t!.id })} onCancelDraft={() => setCancelAsk(true)} onReceive={startReceive} onPrint={() => window.print()} />}
         </div>
         <ConfirmDialog open={cancelAsk && !!t} onOpenChange={(o) => { if (!o) setCancelAsk(false); }} onCancel={() => setCancelAsk(false)} tone="danger" icon={X} title="Cancel this draft?"
           name={t ? `${t.id} · to ${t.other.name}` : ''} description="Nothing has left stock, so no stock changes. The draft stays in the list as cancelled." confirmLabel="Cancel draft" onConfirm={cancelTr} />

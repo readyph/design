@@ -94,3 +94,28 @@ describe('axe', () => {
     expect(r.violations.map((v) => `${v.id}: ${v.nodes[0]?.html.slice(0, 120)}`)).toEqual([]);
   });
 });
+
+describe('Receive transfer (RDY-440)', () => {
+  it('starts at what was sent and labels the confirm button', () => {
+    render(<MovementsPage tr="TR-0030" rcv />);
+    expect(screen.getByRole('heading', { name: /Receive TR-0030/ })).toBeTruthy();
+    expect(screen.getAllByText('All in').length).toBe(2);
+    expect(screen.getAllByRole('button', { name: /Confirm: add to stock/ }).length).toBeTruthy();
+  });
+  it('a short count says how many are short', () => {
+    render(<MovementsPage tenant="b" tr="TR-0013" rcv rcvStart={{ b11: 9 }} />);
+    expect(screen.getByText('3 short')).toBeTruthy();
+    expect(screen.getAllByRole('status').map((e) => e.textContent).join(' ')).toMatch(/9 of 12 in, 3 short/);
+  });
+  it('nothing arrived asks for a count', () => {
+    render(<MovementsPage tenant="b" tr="TR-0013" rcv rcvStart={{ b11: 0 }} />);
+    expect(screen.getByText('Not arrived')).toBeTruthy();
+    fireEvent.click(screen.getAllByRole('button', { name: 'Confirm receipt' })[0]);
+    expect(screen.getByRole('alert').textContent).toMatch(/Nothing is counted yet/);
+  });
+  it('has no axe violations', async () => {
+    const { container } = render(<MovementsPage tr="TR-0030" rcv />);
+    const r = await axe.run(container, { rules: { 'color-contrast': { enabled: false }, region: { enabled: false } } });
+    expect(r.violations.map((v) => v.id)).toEqual([]);
+  });
+});
