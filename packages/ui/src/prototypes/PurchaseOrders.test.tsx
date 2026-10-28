@@ -34,10 +34,36 @@ describe('PurchaseOrdersPage list (RDY-426)', () => {
   });
 });
 
+describe('PurchaseOrdersPage one order (RDY-427)', () => {
+  it('part in: facts, steps, lines, history', () => {
+    render(<PurchaseOrdersPage po="PO-0223" />);
+    expect(screen.getByRole('heading', { name: /PO-0223/ })).toBeTruthy();
+    expect(screen.getByRole('list', { name: 'Where this order is' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'What was ordered' })).toBeTruthy();
+    expect(screen.getAllByRole('button', { name: 'Receive delivery' }).length).toBeGreaterThan(0);
+  });
+  it('Cancel this order asks first, Keep the order closes it', () => {
+    render(<PurchaseOrdersPage po="PO-0222" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel this order' }));
+    expect(screen.getByRole('group', { name: 'Confirm cancelling' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Keep the order' }));
+    expect(screen.queryByRole('group', { name: 'Confirm cancelling' })).toBeNull();
+  });
+  it('clerk cannot Mark as sent or Cancel and sees no totals', () => {
+    render(<PurchaseOrdersPage po="PO-0222" as="clerk" />);
+    expect(screen.queryByRole('button', { name: 'Cancel this order' })).toBeNull();
+    expect(screen.queryByText('Total')).toBeNull();
+  });
+  it('the last receipt offers Undo this receipt', () => {
+    render(<PurchaseOrdersPage po="PO-0222" receipt />);
+    expect(screen.getByRole('button', { name: 'Undo this receipt' })).toBeTruthy();
+  });
+});
+
 describe('axe', () => {
   const cases: [string, PurchaseOrdersPageProps][] = [
     ['list', {}], ['group by supplier', { group: 'sup' }], ['no POs', { pos: 'none' }], ['no results', { qs: 'zzz' }], ['loading', { state: 'loading' }],
-    ['error', { state: 'error' }], ['late', { asof: 2 }], ['clerk', { as: 'clerk' }], ['tenant B', { tenant: 'b' }],
+    ['error', { state: 'error' }], ['order draft', { po: 'PO-0224' }], ['order draft send question', { po: 'PO-0224', confirm: 'send' }], ['order sent', { po: 'PO-0222' }], ['order cancel question', { po: 'PO-0222', confirm: 'cancel' }], ['order part in', { po: 'PO-0223' }], ['order received', { po: 'PO-0221' }], ['order cancelled', { po: 'PO-0218' }], ['order short', { po: 'PO-0217' }], ['order undo', { po: 'PO-0222', receipt: true }], ['order clerk', { po: 'PO-0223', as: 'clerk' }], ['order tenant B', { po: 'PO-0046', tenant: 'b' }], ['late', { asof: 2 }], ['clerk', { as: 'clerk' }], ['tenant B', { tenant: 'b' }],
   ];
   it.each(cases)('%s has no violations', async (_n, props) => {
     const { container } = render(<PurchaseOrdersPage {...props} />);

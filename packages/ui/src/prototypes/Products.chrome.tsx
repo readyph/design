@@ -18,7 +18,7 @@ const NAV: { id: string; label: string; short?: string; icon: PhosphorIcon; need
   { id: 'setup', label: 'Setup', icon: SlidersHorizontal, needs: 'setup', soon: true },
 ];
 
-export function InventoryChrome({ tenant, as, nav, page, sheetBar, status, lists, onAsk, onLists, ledaActive, children }: { tenant: ProductsTenant; as: ProductsRole; nav: string; page: string; sheetBar: ReactNode; status: ReactNode; lists: number; onAsk?: () => void; onLists?: () => void; ledaActive?: boolean; children: ReactNode }) {
+export function InventoryChrome({ tenant, as, nav, page, sheetBar, status, lists, onAsk, onLists, ledaActive, detail, actionBar, children }: { tenant: ProductsTenant; as: ProductsRole; nav: string; page: string; sheetBar: ReactNode; status: ReactNode; lists: number; onAsk?: () => void; onLists?: () => void; ledaActive?: boolean; detail?: boolean; actionBar?: ReactNode; children: ReactNode }) {
   const D = PRODUCTS[tenant], V = D.viewers[as].viewer, roleLabel = D.viewers[as].roleLabel;
   const canSetup = D.viewers[as].can.includes('setup');
   const items = NAV.filter((n) => !n.needs || canSetup);
@@ -53,7 +53,7 @@ export function InventoryChrome({ tenant, as, nav, page, sheetBar, status, lists
     </>
   );
   return (
-    <PlatformShell railWidth="wide" railLabel="Inventory" rail={rail} topBar={topBar} phoneNav={phoneNav} heading={D.business.platform} hideSheetBarOnPhone sheetBar={sheetBar} statusLabel="Status" status={status}>
+    <PlatformShell railWidth="wide" railLabel="Inventory" rail={rail} topBar={topBar} phoneNav={phoneNav} heading={D.business.platform} hideSheetBarOnPhone sheetBar={sheetBar} detail={detail} actionBar={actionBar} statusLabel="Status" status={status}>
       {children}
     </PlatformShell>
   );
