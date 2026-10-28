@@ -5,6 +5,8 @@ import { AccountMenu } from '../components/AccountMenu';
 import { AskLedaBar } from '../components/AskLedaBar';
 import { Badge } from '../components/Badge';
 import { Button } from '../components/Button';
+import { LedaMark } from '../components/Leda';
+import { Select } from '../components/Select';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { Toaster } from '../components/toast/Toaster';
 import { toast } from '../components/toast/toastStore';
@@ -28,7 +30,7 @@ export type OrderListsRole = 'manager' | 'clerk' | 'owner';
 export interface OrderListsPageProps {
   tenant?: 'a' | 'b';
   as?: OrderListsRole;
-  state?: 'loading' | 'error';
+  state?: 'loading' | 'error' | 'empty';
   tab?: 'lists' | 'sent';
   po?: string;
   supplier?: string;
@@ -40,6 +42,8 @@ export interface OrderListsPageProps {
   confirm?: boolean;
   /** Clerk has already asked the manager. */
   asked?: boolean;
+  /** `?from=home`: the crumb gets a "Back to Home" link. */
+  from?: 'home';
 }
 
 const WHO: Record<OrderListsRole, { id: string; name: string; short: string; initials: string; label: string; email: string }> = {
@@ -65,7 +69,7 @@ const NOW = 9 * 60 + 12;
 
 interface ListModel { id: string; no: string | null; printed?: string; sup: string; by: string; at: string; lines: { p: string; qty: number; by: string; cost?: number }[] }
 
-export function OrderListsPage({ tenant = 'a', as = 'manager', state, tab = 'lists', po, supplier, empty, cart, confirm, asked }: OrderListsPageProps) {
+export function OrderListsPage({ tenant = 'a', as = 'manager', state, tab = 'lists', po, supplier, empty, cart, confirm, asked, from }: OrderListsPageProps) {
   const T: OLTenant = tenant === 'a' ? OL_A : OL_B;
   const me = WHO[as];
   const money = as !== 'clerk';
@@ -128,8 +132,24 @@ export function OrderListsPage({ tenant = 'a', as = 'manager', state, tab = 'lis
     setLists((ls) => ls.filter((y) => y.id !== l.id)); setSel(undefined); setDiscardOpen(false);
     toast({ description: `${l.no} for ${sup(l.sup).name} discarded.`, actions: [{ label: 'Undo', onClick: () => { setLists((ls) => [...ls, l]); setSel(l.sup); } }] });
   };
+  const allNeeds = () => T.products.filter((pr) => pr.onHand <= pr.reorder && !lists.some((l) => l.lines.some((x) => x.p === pr.id)) && !incoming(pr.id));
+  const draftAll = () => {
+    const items = allNeeds();
+    if (!items.length) { toast({ description: 'Every product that needs stock is on a list or an order already.' }); return; }
+    const before = lists;
+    const next = lists.map((l) => ({ ...l, lines: [...l.lines] }));
+    items.forEach((pr) => {
+      let tgt = next.find((l) => !l.no && l.sup === pr.supplier);
+      if (!tgt) { tgt = { id: `C-${pr.supplier}`, no: null, sup: pr.supplier, by: 'leda', at: OL_NOW.time, lines: [] }; next.push(tgt); }
+      tgt.lines.push({ p: pr.id, qty: suggest(pr), by: 'leda' });
+    });
+    const nSup = new Set(items.map((pr) => pr.supplier)).size;
+    setLists(next); setCurTab('lists');
+    toast({ description: `${unitsTxt(items.length)} added to ${nSup} order ${nSup === 1 ? 'list' : 'lists'} by Leda. Nothing is sent.`, leda: true, actions: [{ label: 'Undo', onClick: () => setLists(before) }, { label: 'View order lists', onClick: () => setCartOpen(true) }] });
+  };
   const doPrint = (l: ListModel | null) => { if (l && curTab === 'lists') patch(l.id, (y) => ({ ...y, printed: OL_NOW.time })); window.print(); };
   const loading = state === 'loading';
+  const firstRun = state === 'empty';
   const errored = state === 'error' && !retried;
   const hide = loading || errored;
 
@@ -172,6 +192,8 @@ export function OrderListsPage({ tenant = 'a', as = 'manager', state, tab = 'lis
   const nCarts = carts.length;
   const headline = (() => {
     if (curTab === 'sent') { const n = sent.length; return n ? `${n} open purchase ${n === 1 ? 'order' : 'orders'}. Receive each on the Purchase orders page when it arrives.` : 'No purchase order is open.'; }
+    if (errored) return 'Purchase orders did not load, so the order lists are not shown.';
+    if (firstRun) return 'No products yet, so there is nothing to order. Add products first.';
     if (!lists.length) return 'No order list is open. Nothing is waiting to be sent.';
     const n = lists.reduce((s, l) => s + l.lines.length, 0);
     const parts: string[] = [];
@@ -333,7 +355,7 @@ export function OrderListsPage({ tenant = 'a', as = 'manager', state, tab = 'lis
             <span className={soon ? 'text-bad' : undefined}>{c.arrive ? <>{short(cur.sup)} delivers the same day (by {c.arrive}) if ordered by <b className={cn('font-semibold', soon ? 'text-bad' : 'text-text')}>{c.at}</b>.</> : <>{short(cur.sup)}: {sup(cur.sup).leadTime}{/[.]$/.test(sup(cur.sup).leadTime) ? '' : '.'} Order by <b className={cn('font-semibold', soon ? 'text-bad' : 'text-text')}>{c.at}</b>.</>} {c.text} left.</span>
           </p>
         )}
-        <button type="button" className="mt-2 text-[13px] text-muted underline" onClick={() => setDiscardOpen(true)}>Discard this list</button>
+        <button type="button" className="mt-1 min-h-8 text-[13px] text-muted underline max-[640px]:hidden" onClick={() => setDiscardOpen(true)}>Discard this list</button>
       </aside>
     );
   })();
@@ -363,12 +385,13 @@ export function OrderListsPage({ tenant = 'a', as = 'manager', state, tab = 'lis
             <div>{nd.map((pr) => addRow(pr, false))}</div>
           </div>
         ) : <p className="mt-6 text-[13px] text-muted">Everything from {short(cur.sup)} that needs stock is on this list or on order.</p>}
+        <button type="button" className="mt-5 hidden min-h-11 items-center text-[13px] text-muted underline max-[640px]:inline-flex" onClick={() => setDiscardOpen(true)}>Discard this list</button>
       </section>
     );
   })();
 
-  const first = (head: string, body: string, action?: React.ReactNode) => (
-    <div className="py-10"><p className="text-[16px]"><b className="font-semibold">{head}</b></p><p className="mt-1.5 max-w-[560px] text-[14px] leading-[21px] text-muted">{body}</p>{action && <div className="mt-5 flex flex-wrap gap-2">{action}</div>}</div>
+  const first = (head: string, body: string, action?: React.ReactNode, extra?: string) => (
+    <div className="py-10"><p className="text-[16px]"><b className="font-semibold">{head}</b></p><p className="mt-1.5 max-w-[560px] text-[14px] leading-[21px] text-muted">{body}</p>{extra && <p className="mt-5 text-[14px]">{extra}</p>}{action && <div className="mt-5 flex flex-wrap gap-2">{action}</div>}</div>
   );
   const body = (() => {
     if (loading) {
@@ -389,16 +412,25 @@ export function OrderListsPage({ tenant = 'a', as = 'manager', state, tab = 'lis
       );
     }
     if (curTab === 'sent' && !curPo) return first('No purchase order is open', 'When you mark an order list as sent, it appears here until it is received.');
+    if (firstRun) return first('No products yet', 'Order lists gather products that need stock, one list per supplier. Add products first.', <a className="inline-flex h-8 items-center gap-1.5 rounded-control border border-control px-3 text-[13px] font-medium" href="#products"><Package size={14} aria-hidden />Go to Products</a>);
     if (curTab === 'lists' && !cur) {
       if (nCarts) return first('No purchase order is drafted yet', `${nCarts} order ${nCarts === 1 ? 'list is' : 'lists are'} in the cart. Press Proceed on one to make its purchase order, then print it${mgr ? ' and mark it sent' : '. Your manager marks it sent'}. Nothing is sent to the supplier.`, <Button variant="primary" leftIcon={ListChecks} onClick={() => setCartOpen(true)}>Open order lists</Button>);
-      const need = T.products.filter((p) => p.onHand <= p.reorder).length;
-      return first('No order lists are open', `When a product runs low, add it to its supplier's list on Products. The lists gather here as paper you can print and send.${mgr ? '' : ' Your manager marks each list sent.'}`, <>{need > 0 && <Button variant="primary">Let Leda draft the lists</Button>}<a className="inline-flex h-8 items-center gap-1.5 rounded-control border border-control px-3 text-[13px] font-medium" href="#products"><Package size={14} aria-hidden />Go to Products</a></>);
+      const need = allNeeds().length;
+      return first('No order lists are open', `When a product runs low, add it to its supplier's list on Products. The lists gather here as paper you can print and send.${mgr ? '' : ' Your manager marks each list sent.'}`, <>{need > 0 && <Button variant="primary" onClick={draftAll}><LedaMark size={16} decorative />Let Leda draft the lists</Button>}<a className="inline-flex h-8 items-center gap-1.5 rounded-control border border-control px-3 text-[13px] font-medium" href="#products"><Package size={14} aria-hidden />Go to Products</a></>, need > 0 ? `${need} ${need === 1 ? 'product needs' : 'products need'} stock and ${need === 1 ? 'is' : 'are'} on no list.` : undefined);
     }
     return (
       <div className="grid grid-cols-[248px_minmax(0,1fr)_224px] items-start gap-x-10 max-[1100px]:grid-cols-1 max-[1100px]:gap-y-6">
         <div className="max-[1100px]:order-2">
+          <div className="max-[640px]:hidden">
           {curTab === 'lists' && <div className="flex items-baseline gap-2 border-b border-border pb-2.5 text-[13px] font-semibold">Order lists <span className="font-medium tabular-nums text-muted">{lists.length}</span></div>}
           {indexRows}
+          </div>
+          {curTab === 'lists' && cur && (
+            <div className="hidden flex-col gap-1 max-[640px]:flex">
+              <span id="l-pick">List</span>
+              <Select aria-labelledby="l-pick" value={cur.sup} onValueChange={(v) => setSel(v)} options={po_.map((l) => ({ value: l.sup, label: sup(l.sup).name, meta: `${l.lines.length} ${l.lines.length === 1 ? 'product' : 'products'}` }))} className="w-full" />
+            </div>
+          )}
         </div>
         <div className="min-w-0 max-[1100px]:order-3">{paper}{addSection}</div>
         <div className="sticky top-4 max-h-[calc(100vh-32px)] min-w-0 overflow-y-auto overscroll-contain max-[1100px]:static max-[1100px]:order-1 max-[1100px]:max-h-none">{side}</div>
@@ -422,7 +454,7 @@ export function OrderListsPage({ tenant = 'a', as = 'manager', state, tab = 'lis
         phoneNav={phoneNav}
         heading={T.platform}
         hideSheetBarOnPhone
-        sheetBar={<SheetBar wrapChildren={false} actionsFirst={false} actions={<AskLedaBar variant="bar" scope="Order lists" shortcuts={false} />}><SheetBarWhere platform={platform} page="Order lists" note={as !== 'manager' ? `Viewing as ${me.short}, ${me.label.toLowerCase()}` : undefined} /></SheetBar>}
+        sheetBar={<SheetBar wrapChildren={false} actionsFirst={false} actions={<AskLedaBar variant="bar" scope="Order lists" shortcuts={false} />}><SheetBarWhere platform={platform} page="Order lists" parent={<a className="hover:text-text" href="#purchase-orders">Purchase orders</a>} note={from === 'home' || as !== 'manager' ? <>{from === 'home' && <a href="#home" className="underline">Back to Home</a>}{from === 'home' && as !== 'manager' && <span aria-hidden="true" className="mx-2 text-control">·</span>}{as !== 'manager' && `Viewing as ${me.short}, ${me.label.toLowerCase()}`}</> : undefined} /></SheetBar>}
         statusLabel="Status"
         status={<InventoryStatusBar platform={platform} dataLink={tenant === 'a' ? { with: T.company, status: 'linked', since: '8:50', title: 'Parts and job orders' } : undefined} viewer={{ name: me.short, role: me.label }} leda={{ canDecide: mgr, managerName: 'Berto' }} updatedAt={OL_NOW.time} />}
       >
@@ -430,7 +462,7 @@ export function OrderListsPage({ tenant = 'a', as = 'manager', state, tab = 'lis
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0">
               <h1 className="text-[22px] font-semibold">Order lists</h1>
-              <p className="mt-1 text-[14px] text-muted">{loading ? <Skeleton width={420} height={14} /> : headline}</p>
+              <p className="mt-2 flex items-start gap-2 text-[15px] leading-[22px] max-[640px]:text-[14px] max-[640px]:leading-[21px]"><LedaMark size={16} decorative active={loading} className="mt-[3px] shrink-0" />{loading ? <Skeleton width={420} height={14} className="max-w-full" /> : <span>{headline}</span>}</p>
             </div>
             <span className="text-[12px] text-muted">{OL_NOW.date} · {loading ? `Loading… last loaded ${OL_NOW.lastLoaded}` : `Updated ${OL_NOW.time}`}</span>
           </div>

@@ -25,7 +25,7 @@ describe('OrderListsPage (RDY-405)', () => {
   });
   it('Discard asks to confirm', () => {
     render(<OrderListsPage />);
-    fireEvent.click(screen.getByRole('button', { name: 'Discard this list' }));
+    fireEvent.click(screen.getAllByRole('button', { name: 'Discard this list' })[0]);
     expect(screen.getByText('Discard this list?')).toBeTruthy();
   });
   it('clerk sees "Your manager marks it sent"', () => {
@@ -52,4 +52,22 @@ describe('axe', () => {
       expect(r.violations.map((v) => v.id)).toEqual([]);
     });
   }
+  it('shows Back to Home with ?from=home', () => {
+    render(<OrderListsPage from="home" />);
+    expect(screen.getByRole('link', { name: 'Back to Home' })).toBeTruthy();
+  });
+  it('shows the first-run copy with ?state=empty', () => {
+    render(<OrderListsPage state="empty" />);
+    expect(screen.getAllByText('No products yet').length).toBeGreaterThan(0);
+  });
+  it('Let Leda draft the lists adds the products to the cart', () => {
+    render(<OrderListsPage empty />);
+    fireEvent.click(screen.getByRole('button', { name: /Let Leda draft the lists/ }));
+    expect(screen.queryByText('No order lists are open')).toBeNull();
+  });
+  it('has the phone list picker and the phone Discard', () => {
+    render(<OrderListsPage />);
+    expect(screen.getByText('List')).toBeTruthy();
+    expect(screen.getAllByRole('button', { name: 'Discard this list' }).length).toBe(2);
+  });
 });

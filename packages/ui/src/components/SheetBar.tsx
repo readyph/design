@@ -38,8 +38,10 @@ export interface SheetBarWhereProps {
   platform: Pick<PlatformLogoProps, 'name' | 'src' | 'color' | 'initials'>;
   /** Page name after the "/". */
   page: string;
+  /** Optional parent crumb before the page, e.g. a link to the section (adds a second "/"). */
+  parent?: ReactNode;
   /** Text after a "·", e.g. "Viewing as Ana, stocker" (shown when the viewer is not the manager). */
-  note?: string;
+  note?: ReactNode;
   className?: string;
 }
 
@@ -47,12 +49,18 @@ export interface SheetBarWhereProps {
  * The "where" crumb of the Inventory sheet bar (RDY-382; home.html 39-42): 18px platform logo, platform name (600, `--text`), "/" (`--control`),
  * page name, all 13px `--muted`, 8px apart. Pass it as the `SheetBar` children, with the Ask Leda bar in `actions` and `wrapChildren={false}`.
  */
-export function SheetBarWhere({ platform, page, note, className }: SheetBarWhereProps) {
+export function SheetBarWhere({ platform, page, parent, note, className }: SheetBarWhereProps) {
   return (
     <div className={cn('flex min-w-0 items-center gap-2 text-[13px] text-muted', className)}>
       <PlatformLogo name={platform.name} src={platform.src} color={platform.color} initials={platform.initials} size={18} decorative />
       <b className="font-semibold text-text">{platform.name}</b>
       <span aria-hidden="true" className="text-control">/</span>
+      {parent ? (
+        <>
+          {parent}
+          <span aria-hidden="true" className="text-control">/</span>
+        </>
+      ) : null}
       <span>{page}</span>
       {note ? (
         <>

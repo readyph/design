@@ -25,3 +25,5 @@ export const MarkAsSentConfirm: Story = { name: 'Mark as sent confirm', args: { 
 export const CartOpen: Story = { name: 'Cart offcanvas open (&cart=open)', args: { cart: true } };
 export const TenantB: Story = { name: 'Tenant B', args: { tenant: 'b' } };
 export const Phone: Story = { name: 'Phone 390', args: {}, parameters: { viewport: { defaultViewport: 'mobile1' } } };
+export const FromHome: Story = { name: 'From Home (&from=home)', args: { from: 'home' } };
+export const FirstRun: Story = { name: 'No products yet (?state=empty)', args: { state: 'empty' } };
