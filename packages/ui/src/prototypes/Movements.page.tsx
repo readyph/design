@@ -1,10 +1,11 @@
-import { useMemo, useReducer, useState, type ReactNode } from 'react';
-import { ArrowsDownUp, ArrowSquareOut, CalendarBlank, FileText, House, List, ListChecks, Package, Receipt, SlidersHorizontal, WarningCircle, X, ArrowClockwise } from '@phosphor-icons/react';
+import { useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react';
+import { ArrowsDownUp, ArrowSquareOut, CalendarBlank, FileText, House, List, ListChecks, Package, Receipt, SlidersHorizontal, WarningCircle, X, ArrowClockwise, ArrowCounterClockwise } from '@phosphor-icons/react';
 import type { Icon as PhosphorIcon } from '@phosphor-icons/react';
 import { AccountMenu } from '../components/AccountMenu';
-import { ActionLink } from '../components/ActionLink';
+import { ActionLink, BackLink } from '../components/ActionLink';
 import { AskLedaBar } from '../components/AskLedaBar';
 import { Button } from '../components/Button';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { LedaMark } from '../components/Leda';
 import { IconRailContent, IconRailFoot, IconRailItem, IconRailMark, IconRailSpacer } from '../components/IconRail';
 import { Modal } from '../components/Modal';
@@ -13,6 +14,10 @@ import { PlatformShell } from '../components/PlatformShell';
 import { SheetBar, SheetBarWhere } from '../components/SheetBar';
 import { Skeleton } from '../components/Skeleton';
 import { InventoryStatusBar } from '../components/StatusBar';
+import { Toaster } from '../components/toast/Toaster';
+import { addToast } from '../components/toast/toastStore';
+import type { RecordEntry, RecordProduct } from '../components/RecordMovementForm';
+import { RecordView } from './Movements.record';
 import { TransferStatusBadge, type TransferStatus } from '../components/TransferList';
 import { cn } from '../utils/cn';
 import { createMovementsModel, type LedgerRow, type MovementsParams, type MovementsRole, type MovementsState, type MovementsTenant, type TrView } from './Movements.data';
@@ -37,6 +42,14 @@ export interface MovementsPageProps {
   mv?: 'none';
   /** `&jo=JO-0413`: the job order note is open. */
   jo?: string;
+  /** `&record=1`: the Record movement sub-page (RDY-437, slice c). */
+  record?: boolean;
+  /** `&p=<id>`: the product the Record movement page starts with. */
+  p?: string;
+  /** Story only: a movement was just recorded, so the ledger shows the landed note with Undo (flash `moved`, stock.js 83-91). */
+  landed?: boolean;
+  /** Story only: the Undo question (movements.js 573-578) is open on the first row recorded here. */
+  undoOpen?: boolean;
 }
 
 const NAV: { id: string; label: string; short?: string; icon: PhosphorIcon; needs?: string }[] = [
@@ -51,8 +64,8 @@ const link = 'cursor-pointer border-0 bg-transparent p-0 text-left font-semibold
 const idCls = 'text-[12px]';
 const first = 'py-10';
 
-export function MovementsPage({ tenant = 'a', as = 'manager', state = 'live', view, io, reason, prod, who: whoP, range, from, to, qs, mv, jo }: MovementsPageProps) {
-  const params = useMemo<MovementsParams>(() => ({ view, io, reason, prod, who: whoP, range, from: from != null ? String(from) : undefined, to: to != null ? String(to) : undefined, qs, mv }), [view, io, reason, prod, whoP, range, from, to, qs, mv]);
+export function MovementsPage({ tenant = 'a', as = 'manager', state = 'live', view, io, reason, prod, who: whoP, range, from, to, qs, mv, jo, record, p: recP, landed, undoOpen }: MovementsPageProps) {
+  const params = useMemo<MovementsParams>(() => ({ view, io, reason, prod, who: whoP, range, from: from != null ? String(from) : undefined, to: to != null ? String(to) : undefined, qs, mv, record: record ? '1' : undefined, p: recP }), [view, io, reason, prod, whoP, range, from, to, qs, mv, record, recP]);
   const M = useMemo(() => createMovementsModel(tenant, as, state, params), [tenant, as, state, params]);
   const [, tick] = useReducer((n: number) => n + 1, 0);
   const [jobOpen, setJobOpen] = useState<string | null>(jo ?? null);
@@ -63,6 +76,37 @@ export function MovementsPage({ tenant = 'a', as = 'manager', state = 'live', vi
   const loading = !!F.loading;
   const hide = loading || err || !!F.empty;
   const set = (patch: Partial<typeof S>) => { Object.assign(S, patch, { limit: 40 }); tick(); };
+
+  const [undoRow, setUndoRow] = useState<string | null>(null);
+  const word = (t: string) => (t === 'count' ? 'Count saved' : t === 'damaged' ? 'Written off' : 'Stock out recorded');
+  /* movements.js 573-578 undoMv and stock.js 205-212 commit: the write, then the page reloads on the ledger with a note and Undo */
+  const afterWrite = (text: string, snap?: string, undone?: string) => {
+    Object.assign(S, { rec: false, recP: null, view: 'ledger' as const });
+    M.refreshAll();
+    addToast({ description: text, ...(snap ? { actions: [{ label: 'Undo', onClick: () => { M.store.restore(snap); Object.assign(S, { hl: null, rec: false, view: 'ledger' as const }); M.refreshAll(); addToast(undone ?? 'Undone. Stock is back as it was.'); tick(); } }] } : {}) });
+    tick();
+  };
+  const recordMovement = (e: RecordEntry, pr: RecordProduct) => {
+    const r = M.store.mvAdd({ at: D.now.hm, by: D.viewer.id, p: pr.id, type: e.type, qty: e.qty, ref: e.ref, note: e.note });
+    S.hl = r.row?.id ?? null;
+    afterWrite(`${pr.sku}: ${pr.onHand} → ${e.after}. ${word(e.type)}.`, r.snap, `Undone. ${pr.sku} is back to ${pr.onHand}.`);
+  };
+  const landedDone = useRef(false);
+  useEffect(() => {
+    if (!landed || landedDone.current) return;
+    landedDone.current = true;
+    const pr = D.products.find((x: { onHand: number }) => x.onHand >= 2);
+    if (pr) recordMovement({ reason: 'sold', type: 'sold', qty: -2, after: pr.onHand - 2, ref: null, note: '' }, { id: pr.id, name: pr.name, sku: pr.sku, onHand: pr.onHand, reorder: pr.reorder, unit: pr.unit });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const undoTarget = M.ledger().find((x) => x.id === (undoRow ?? (undoOpen ? (M.shown().find((x2) => String(x2.id).startsWith('V')) ?? M.shown()[0])?.id : null)));
+  const undoMv = () => {
+    const r = undoTarget; if (!r) return;
+    M.store.mvRemove(r.id);
+    setUndoRow(null);
+    afterWrite(`Movement undone. ${r.product.sku} is back to ${r.product.onHand - r.qty}.`);
+  };
+  const openRecord = (pid?: string) => { if (!can('stock_out') || err) return; Object.assign(S, { rec: true, recP: pid ?? null }); tick(); };
 
   const platform = { name: D.business.platform, initials: D.business.platform.split(' ').map((w: string) => w[0]).join('') };
   const items = NAV.filter((n) => !n.needs || can('setup'));
@@ -139,7 +183,7 @@ export function MovementsPage({ tenant = 'a', as = 'manager', state = 'live', vi
     const [w, t2] = whatOf(r), p = r.product;
     return {
       id: r.id, time: hm12(r.at), product: { name: p.name, sku: p.sku, location: M.loc(p.loc as string), href: `#products?open=${p.id}` }, what: w, detail: t2 || undefined, by: who(r.by),
-      qty: r.qty, unit: p.unit, left: r.after, undoable: String(r.id).startsWith('V') && can('stock_out') && (r.qty < 0 || p.onHand - r.qty >= 0),
+      qty: r.qty, unit: p.unit, left: r.after, highlighted: S.hl === r.id, undoable: String(r.id).startsWith('V') && can('stock_out') && (r.qty < 0 || p.onHand - r.qty >= 0),
     };
   };
   const all = M.shown();
@@ -205,7 +249,7 @@ export function MovementsPage({ tenant = 'a', as = 'manager', state = 'live', vi
     </div>
   );
   const goPO = <a className="inline-flex h-8 items-center gap-1.5 rounded-control border border-control px-3 text-[13px] font-medium text-text no-underline" href="#purchase-orders"><Receipt size={14} aria-hidden />Purchase orders</a>;
-  const recordBtn = (dis?: boolean) => can('stock_out') ? <Button variant="primary" leftIcon={ArrowsDownUp} disabled={dis}>Record movement</Button> : null;
+  const recordBtn = (dis?: boolean) => can('stock_out') ? <Button variant="primary" leftIcon={ArrowsDownUp} disabled={dis} onClick={() => openRecord()}>Record movement</Button> : null;
 
   const skRows = [0, 1, 2, 3, 4].map((i) => (
     <div key={i} className="-mx-2 grid min-h-[56px] w-[calc(100%+16px)] grid-cols-[76px_minmax(0,1.3fr)_minmax(0,1.6fr)_130px_104px_64px] items-start gap-x-5 border-t border-rule px-2 py-3 first:border-t-transparent max-[1099px]:grid-cols-[68px_minmax(0,1.2fr)_minmax(0,1.4fr)_110px_100px_56px] max-[640px]:grid-cols-[minmax(0,1fr)_auto]">
@@ -236,7 +280,7 @@ export function MovementsPage({ tenant = 'a', as = 'manager', state = 'live', vi
     if (F.empty) return <div className="flex flex-col gap-5">{firstBlock('No products yet', 'Stock movements start once there are products. Add products first, then receive an order to put stock on the shelf.', <a className="inline-flex h-8 items-center gap-1.5 rounded-control bg-accent px-3 text-[13px] font-medium text-on-accent no-underline" href="#products"><Package size={14} aria-hidden />Go to Products</a>)}</div>;
     if (!M.ledger().length) return <div className="flex flex-col gap-5">{firstBlock('Nothing has moved yet', 'Stock comes in when you receive a purchase order or a transfer, and goes out when it is sold, used on a job, sent to another place or written off. Each one shows here with a reason.', <>{recordBtn()}{goPO}</>, [['1 · Stock in', 'Receive an order on Purchase orders.'], ['2 · Stock out', 'Record what was sold or used.'], ['3 · Check', 'Every change keeps what was left.']])}</div>;
     const list = all.length ? (
-      <MovementLedger days={days} more={all.length - rowsShown.length} moreStep={40} onShowMore={() => { S.limit += 40; tick(); }} />
+      <MovementLedger days={days} onUndo={(r) => setUndoRow(String(r.id))} more={all.length - rowsShown.length} moreStep={40} onShowMore={() => { S.limit += 40; tick(); }} />
     ) : (
       <div className={first}>
         <p className="text-[16px]"><b className="font-semibold">No movement matches</b></p>
@@ -273,6 +317,20 @@ export function MovementsPage({ tenant = 'a', as = 'manager', state = 'live', vi
   const signed = (n: number) => (n > 0 ? '+' : '−') + num(Math.abs(n));
   const dis = err || loading || !!F.empty;
   const link_ = D.link as null | { with: string; status: string; since: string | null };
+
+  if (S.rec) {
+    return (
+      <PlatformShell
+        railWidth="wide" railLabel="Inventory" rail={rail} topBar={topBar} phoneNav={phoneNav} heading={platform.name} hideSheetBarOnPhone detail
+        sheetBar={<SheetBar wrapChildren={false} actionsFirst={false} actions={<AskLedaBar variant="bar" scope="Movements" shortcuts={false} />}><BackLink onClick={() => { S.rec = false; S.recP = null; tick(); }}>Movements</BackLink><span className="self-center text-[13px] font-semibold text-text">/ Record movement</span></SheetBar>}
+        statusLabel="Status"
+        status={<InventoryStatusBar platform={platform} dataLink={link_ ? { with: link_.with, status: link_.status === 'slow' ? 'slow' : 'linked', since: link_.since ?? '8:50', title: 'Parts and job orders' } : undefined} viewer={{ name: viewer.short, role: D.roleLabel }} leda={{ canDecide: can('adjust_stock'), managerName: (D.manager as { short: string }).short }} updatedAt={D.now.time} />}
+      >
+        <RecordView M={M} productId={S.recP} whatOf={whatOf} onCancel={() => { S.rec = false; S.recP = null; tick(); }} onTransfer={() => { S.rec = false; S.recP = null; S.view = 'transfers'; tick(); }} onRecord={recordMovement} />
+        <Toaster actionStyle="inventory" />
+      </PlatformShell>
+    );
+  }
 
   return (
     <PlatformShell
@@ -325,6 +383,11 @@ export function MovementsPage({ tenant = 'a', as = 'manager', state = 'live', vi
           ))}</ul>
         ) : <p className="text-[14px] text-muted">No part has left stock for this job yet.</p>}
       </Modal>
+      <ConfirmDialog open={!!undoTarget} onOpenChange={(o) => { if (!o) setUndoRow(null); }} onCancel={() => setUndoRow(null)} tone="danger" icon={ArrowCounterClockwise} title="Undo this movement?"
+        name={undoTarget ? `${undoTarget.product.sku} · ${signed(undoTarget.qty)}` : ''}
+        description={undoTarget ? `${Math.abs(undoTarget.qty)} ${undoTarget.qty < 0 ? 'go back into stock' : 'come back out of stock'}, so ${undoTarget.product.name} returns to ${undoTarget.product.onHand - undoTarget.qty}. Use this only if it was entered by mistake.` : ''}
+        confirmLabel="Undo movement" onConfirm={undoMv} />
+      <Toaster actionStyle="inventory" />
     </PlatformShell>
   );
 }
