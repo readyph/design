@@ -26,7 +26,7 @@ const isJO = (r: string) => /^JO-\d+$/.test(r || '');
 interface Opt { k: string; label: string; help: string }
 
 /** .rs / .r with the .h help line (stocker.css 136-143) and radioKeys (stocker.js 172-178). */
-function Radios({ labelledBy, items, value, onValue, flush }: { labelledBy: string; items: Opt[]; value: string | null; onValue: (k: string) => void; flush?: boolean }) {
+export function Radios({ labelledBy, items, value, onValue, flush }: { labelledBy: string; items: Opt[]; value: string | null; onValue: (k: string) => void; flush?: boolean }) {
   const onKey = (e: KeyboardEvent<HTMLButtonElement>, i: number) => {
     if (!['ArrowDown', 'ArrowUp', 'ArrowRight', 'ArrowLeft'].includes(e.key)) return;
     e.preventDefault();
@@ -42,7 +42,7 @@ function Radios({ labelledBy, items, value, onValue, flush }: { labelledBy: stri
           <span className={cn('relative mt-px h-5 w-5 rounded-full border-2 bg-surface', value === x.k ? 'border-accent after:absolute after:inset-[3px] after:rounded-full after:bg-accent' : 'border-control')} />
           <span>
             <b className="block text-[15px] font-semibold leading-[22px]">{x.label}</b>
-            <span className="mt-px block text-[13px] font-normal leading-[19px] text-muted">{x.help}</span>
+            {x.help ? <span className="mt-px block text-[13px] font-normal leading-[19px] text-muted">{x.help}</span> : null}
           </span>
         </button>
       ))}
@@ -51,10 +51,10 @@ function Radios({ labelledBy, items, value, onValue, flush }: { labelledBy: stri
 }
 
 /** .help (stocker.css 53). */
-const Help = ({ children, className }: { children: ReactNode; className?: string }) => <p className={cn('mt-2 text-[13px] leading-[19px] text-muted [&_b]:font-semibold [&_b]:text-text', className)}>{children}</p>;
+export const Help = ({ children, className }: { children: ReactNode; className?: string }) => <p className={cn('mt-2 text-[13px] leading-[19px] text-muted [&_b]:font-semibold [&_b]:text-text', className)}>{children}</p>;
 
 /** .chip (stocker.css 155-157 on shell.css 306-308). */
-function Chip({ pressed, onClick, children }: { pressed: boolean; onClick: () => void; children: ReactNode }) {
+export function Chip({ pressed, onClick, children }: { pressed: boolean; onClick: () => void; children: ReactNode }) {
   return (
     <button type="button" aria-pressed={pressed} onClick={onClick}
       className={cn('inline-flex h-[30px] min-h-[var(--tap)] items-center gap-1.5 rounded-[24px] border-[1.5px] bg-surface px-[14px] text-[15px] hover:border-muted hover:bg-raised', pressed ? 'border-accent font-semibold text-accent' : 'border-control font-medium text-text', ring)}>
