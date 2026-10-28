@@ -22,6 +22,8 @@ export interface SwitchProps {
   'aria-label'?: string;
   /** Id of the element naming the switch when there is no visible `label`. */
   'aria-labelledby'?: string;
+  /** `settings` look only (RDY-402): id of the helper text the switch is described by. */
+  'aria-describedby'?: string;
   className?: string;
   /** `workshop` (RDY-358): the prototype's track: off is the control grey with a white thumb, no hover change. `settings` (RDY-401, I21): 40x22 track with a visible On/Off word, needs `aria-label`. Default keeps the design-system look. */
   look?: 'default' | 'workshop' | 'settings';
@@ -34,7 +36,7 @@ export interface SwitchProps {
  * Stack rows with `gap-field-y`. Without a `label` it renders the bare switch.
  */
 export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(function Switch(
-  { checked, defaultChecked, onCheckedChange, disabled, name, id, label, description, example, lockNote, className, look = 'default', compact, 'aria-label': ariaLabel, 'aria-labelledby': ariaLabelledby },
+  { checked, defaultChecked, onCheckedChange, disabled, name, id, label, description, example, lockNote, className, look = 'default', compact, 'aria-label': ariaLabel, 'aria-labelledby': ariaLabelledby, 'aria-describedby': ariaDescribedbyProp },
   ref,
 ) {
   const auto = useId();
@@ -45,7 +47,7 @@ export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(function Switch
   const describedBy = [description || example ? descId : null, lockNote ? noteId : null].filter(Boolean).join(' ') || undefined;
 
   if (look === 'settings') {
-    return <SettingsSwitch ref={ref} id={switchId} checked={checked} defaultChecked={defaultChecked} onCheckedChange={onCheckedChange} disabled={disabled} name={name} compact={compact} className={className} aria-label={ariaLabel} aria-labelledby={ariaLabelledby} aria-describedby={describedBy} />;
+    return <SettingsSwitch ref={ref} id={switchId} checked={checked} defaultChecked={defaultChecked} onCheckedChange={onCheckedChange} disabled={disabled} name={name} compact={compact} className={className} aria-label={ariaLabel} aria-labelledby={ariaLabelledby} aria-describedby={ariaDescribedbyProp ?? describedBy} />;
   }
 
   const control = (
