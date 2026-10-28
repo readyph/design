@@ -73,6 +73,8 @@ export * from './components/TryIt';
 export * from './components/Chat';
 export * from './components/QuantityStepper';
 export * from './components/MovementLedger';
+export * from './components/RecordMovementForm';
 export * from './components/SettingsModal';
 export * from './components/DayTimeline';
 export * from './components/PaperDocument';
+export * from './components/NewProductRequest';
