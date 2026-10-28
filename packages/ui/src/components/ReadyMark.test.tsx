@@ -1,4 +1,3 @@
-// @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
 import { ReadyLogo, ReadyMark, READY_MARK_CSS, READY_SHINE_MS } from './ReadyMark';

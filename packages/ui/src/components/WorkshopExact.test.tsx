@@ -1,4 +1,3 @@
-// @vitest-environment jsdom
 // RDY-358: the additive props the Memory page uses to match the workshop prototype exactly.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
