@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { type } from '../tokens/scale';
+import * as ui from '../index';
 import { cn } from './cn';
 
 describe('cn', () => {
@@ -35,5 +36,17 @@ describe('cn preset width keys', () => {
     expect(cn('w-leda-w', 'w-96')).toBe('w-96');
     expect(cn('max-w-xs', 'max-w-leda-w-overview')).toBe('max-w-leda-w-overview');
     expect(cn('text-muted', 'w-leda-w')).toBe('text-muted w-leda-w');
+  });
+
+  it('registers the layout keys as widths and heights', () => {
+    expect(cn('w-rail', 'w-full')).toBe('w-full');
+    expect(cn('w-full', 'w-rail')).toBe('w-rail');
+    expect(cn('h-status', 'h-8')).toBe('h-8');
+    expect(cn('h-8', 'h-status')).toBe('h-status');
+  });
+
+  it('is exported from the package with focusRing', () => {
+    expect(ui.cn).toBe(cn);
+    expect(typeof ui.focusRing).toBe('string');
   });
 });

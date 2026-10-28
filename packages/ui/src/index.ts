@@ -58,6 +58,7 @@ export * from './components/Sparkline';
 export * from './components/RevenueChart';
 export * from './components/TopicLibrary';
 export * from './components/TopicDocument';
+export { cn, focusRing } from './utils/cn';
 export { focusIfLost } from './utils/focusIfLost';
 export * from './components/OpeningHours';
 export * from './components/TryIt';
