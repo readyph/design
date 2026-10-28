@@ -8,7 +8,7 @@ import { cn } from '../utils/cn';
  * stocker.js 78-95 (TABS, logo, stepsHTML, frame), 625-636 (signedOut).
  * GAP: stocker.css --pad is 20px here; the global `pad` token is not used (it would be 16px at <=640px). Literal 20px, 16px at <=360px.
  * GAP: stocker.css 44-45 (hasbar padding 140px) is overridden by line 212 (same specificity, later), so the computed main padding is tabh+16px with or without a bar; transcribed as computed.
- * GAP: nothing in the workshop sets body.notabbar (stocker.css 186); `flow` applies it as the ticket says, and .bar keeps bottom: tabh (line 184), so a flow leaves a 56px gap under the bar.
+ * Owner ruling: the workshop never sets body.notabbar (stocker.css 186), so the tab bar is always shown except signed out (stocker.css 219); .bar keeps bottom: tabh (line 184).
  * GAP: body background (frame colour at >=700px) is a wrapper background here, because a component cannot set body.
  */
 
@@ -36,13 +36,11 @@ export interface StockerFrameProps {
   account?: { initials: string; name: string; href: string; current?: boolean };
   /** Link for the logo (Home). */
   homeHref?: string;
-  /** Current tab; the bar is shown unless `flow` or `signedOut`. */
+  /** Current tab; the bar is shown unless `signedOut`. */
   tab?: StockerTab;
   /** Link per tab. */
   tabHrefs?: Partial<Record<StockerTab, string>>;
-  /** Inside a flow the tab bar is hidden and `bar` is pinned at the bottom. */
-  flow?: boolean;
-  /** The one primary action of a flow, pinned above the tab bar position (with its plain sentence). */
+  /** The one primary action of a flow, pinned above the tab bar (with its plain sentence). */
   bar?: ReactNode;
   /** Signed-out screen: logo only, no tabs. Children carry the content. */
   signedOut?: boolean;
@@ -79,7 +77,7 @@ function Logo({ platform, href }: { platform: string; href?: string }) {
 /**
  * Stocker app frame (I17): header (portal R mark + platform name, account initials, back chevron, step line, h1, lead),
  * scrolling main, pinned primary-action bar and bottom tab bar. Column max 520px, centred. Variants: page with tabs,
- * flow (`flow`, tabs hidden, `bar` pinned), signed out (`signedOut`).
+ * page with a pinned `bar` above the tabs, signed out (`signedOut`).
  */
 export function StockerFrame({
   platform,
@@ -91,14 +89,13 @@ export function StockerFrame({
   homeHref,
   tab,
   tabHrefs = {},
-  flow = false,
   bar,
   signedOut = false,
   snack,
   children,
   className,
 }: StockerFrameProps) {
-  const showTabs = !flow && !signedOut;
+  const showTabs = !signedOut;
   const hasBar = !!bar;
   const pad = 'px-5 max-[360px]:px-4';
   return (
