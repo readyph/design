@@ -19,7 +19,7 @@ type PillTone = 'neutral' | 'bad' | 'warn' | 'info' | 'ok' | 'accent' | 'dash';
 const dotCls: Record<PillTone, string> = {
   neutral: 'bg-faint', bad: 'bg-bad', warn: 'bg-warn', info: 'bg-info', ok: 'bg-ok', accent: 'bg-accent', dash: 'h-1.5 w-1.5 border-[1.5px] border-dashed border-muted bg-transparent',
 };
-function Pill({ children, tone = 'neutral' }: { children: ReactNode; tone?: PillTone }) {
+export function Pill({ children, tone = 'neutral' }: { children: ReactNode; tone?: PillTone }) {
   return (
     <span className={cn('inline-flex h-5 flex-none items-center gap-1.5 whitespace-nowrap p-0 text-[13px] font-medium', tone === 'bad' ? 'text-bad' : tone === 'dash' ? 'text-muted' : 'text-text')}>
       <span aria-hidden="true" className={cn('h-[7px] w-[7px] flex-none rounded-full', dotCls[tone])} />
@@ -91,7 +91,7 @@ const mvIc = (k: string): [ReactNode, string] => MV_IC[k] || [<ArrowsDownUp key=
 const Ref = ({ r, isId }: { r: string; isId: (s: string) => boolean }) => (isId(r) ? <span className={idCls}>{r}</span> : <>{r}</>);
 
 /* home.js 606-612: the runway shrunk to an inline step line (phone) */
-function StepLine({ M, pid, W = 220, H = 30 }: { M: HomeModel; pid: string; W?: number; H?: number }) {
+export function StepLine({ M, pid, W = 220, H = 30 }: { M: HomeModel; pid: string; W?: number; H?: number }) {
   const { runway, runConfirmed, NOW, OPEN, CLOSE, hm } = M;
   const r: any = runway(pid, runConfirmed(pid));
   const lo = Math.min(0, ...r.pts.map((p: any) => (p.kind === 'del' ? 0 : p.v))), hi = Math.max(6, ...r.pts.filter((p: any) => p.kind !== 'del').map((p: any) => p.v));
@@ -132,13 +132,14 @@ function ruleWords(M: HomeModel, ls: any[]) {
 }
 const noop = () => {};
 
-export interface HomeZonesProps { tenant?: HomeTenant; role?: HomeRole; state?: HomeState; view?: 'today' | 'week' }
+export interface HomeZonesProps { tenant?: HomeTenant; role?: HomeRole; state?: HomeState; view?: 'today' | 'week'; /** Phone only: sits between To do and the trio (home.html 362-364 order). */ mid?: ReactNode; /** home.js 826: data-open opens the case. */ onOpen?: (id: string) => void; /** home.js 847, 823: Retry shared with the page markers. */ retried?: boolean; onRetry?: () => void }
 
 /* home.js 448-577, composed as home.js 633-637: duo (To do, Leda is watching) then trio (Deliveries, Needs stock, Stock moved) */
-export function HomeZones({ tenant = 'a', role = 'manager', state = 'live', view = 'today' }: HomeZonesProps) {
+export function HomeZones({ tenant = 'a', role = 'manager', state = 'live', view = 'today', mid, onOpen, retried: retriedProp, onRetry }: HomeZonesProps) {
   const [watchOpen, setWatchOpen] = useState(false);
   const [yOpen, setYOpen] = useState(false);
-  const [retried, setRetried] = useState(false);
+  const [retriedLocal, setRetried] = useState(false);
+  const retried = retriedProp ?? retriedLocal;
   const M = useMemo(() => createHomeModel(homeData(tenant, role, state), { view }), [tenant, role, state, view]);
   const { D, F, can, hm, plr, NOW, toMin, left, isDone, isId, isA, arrival, poStatus, coming, decisions, openDecs, deliveries, todayMoves, sup, loc, todayPid, mgr, Mgr, peso, atWord } = M;
   const poErr = M.poErr && !retried;
@@ -159,7 +160,7 @@ export function HomeZones({ tenant = 'a', role = 'manager', state = 'live', view
       : t != null ? <span className={cn('text-[16px] font-semibold leading-5 tabular-nums', urgent ? 'text-bad' : '')}>{hm(t)}<small className={cn('mt-0.5 block whitespace-nowrap text-[12px] font-medium leading-4', urgent ? 'text-bad' : 'text-muted')}>{lf ? `${lf} left` : 'past due'}</small></span>
       : <span className="text-[13px] font-semibold leading-5 tabular-nums text-bad">Overdue<small className="mt-0.5 block whitespace-nowrap text-[12px] font-medium leading-4 text-muted">since yesterday</small></span>;
     return (
-      <button key={d.id} type="button" onClick={noop} aria-label={`${d.title}${d.due ? ', ' + d.due.label : ''}`}
+      <button key={d.id} type="button" onClick={() => onOpen?.(d.id)} aria-label={`${d.title}${d.due ? ', ' + d.due.label : ''}`}
         className={cn(rowCls, 'min-h-[68px] grid-cols-[112px_22px_minmax(0,1fr)_minmax(170px,max-content)] gap-y-0 @max-[760px]/sheet:grid-cols-[112px_minmax(0,1fr)_150px] max-[640px]:grid-cols-[76px_minmax(0,1fr)] max-[640px]:gap-y-2.5')}>
         {tm}
         <span className={cn(riCls, '@max-[760px]/sheet:hidden max-[640px]:hidden [&>svg]:block')}>{d.canDecide ? KIND_IC[d.kind] || <ClipboardText /> : <HourglassMedium />}</span>
@@ -233,7 +234,7 @@ export function HomeZones({ tenant = 'a', role = 'manager', state = 'live', view
         <Panel id="p-del" icon={<Truck />} title="Deliveries" sub="stock in" foot={foot}>
           <div role="alert" className="my-4 flex items-center gap-2.5 rounded-card border border-dashed border-control px-3.5 py-3 text-[13px] text-muted">
             <WarningCircle className="flex-none text-[18px] text-bad" /><span className="min-w-0 flex-1">Couldn&rsquo;t load deliveries. Last loaded {(F.error as any).lastLoaded}.</span>
-            <button type="button" onClick={() => setRetried(true)} className={btn('text')}>Retry</button>
+            <button type="button" onClick={() => { setRetried(true); onRetry?.(); }} className={btn('text')}>Retry</button>
           </div>
         </Panel>
       );
@@ -248,7 +249,7 @@ export function HomeZones({ tenant = 'a', role = 'manager', state = 'live', view
       const amtOf = (ls: any[]) => { const g = new Map<string, number>(); ls.forEach((l) => { const u = (l.product || D.products.find((x) => x.id === l.p) || { unit: '' }).unit; g.set(u, (g.get(u) || 0) + (l.ordered - l.received)); }); const parts = [...g].map(([u, n]) => `${n.toLocaleString('en-PH')} ${u === 'pc' ? 'pc' : n === 1 ? u : u + 's'}`); return parts.length < 3 ? parts.join(' and ') : `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`; };
       const unitsW = mixedU ? amtOf(dl) : plr(dl.reduce((s: number, l: any) => s + l.ordered - l.received, 0), 'unit');
       const shortAmt = (ls: any[]) => (new Set(ls.map((l: any) => (l.product || D.products.find((x) => x.id === l.p) || { unit: '' }).unit)).size > 1 ? amtOf(ls) : String(ls.reduce((s, l) => s + l.ordered - l.received, 0)));
-      let chip: ReactNode, line: string, act: ReactNode;
+      let chip: ReactNode, line: string, act: ReactNode, rcv = false;
       if (po.status === 'RECEIVED') {
         const dsp = po.dispute && po.dispute.status === 'open', shortW = shortAmt(po.lines.filter((l: any) => l.ordered > l.received));
         chip = dsp ? <Pill tone="warn">Disputed</Pill> : done || po.varianceState === 'settled' ? <Pill>{doneWord(po.no)}</Pill> : <Pill tone="bad">Short {shortW}</Pill>;
@@ -266,10 +267,11 @@ export function HomeZones({ tenant = 'a', role = 'manager', state = 'live', view
         const today = a && a.day === 0;
         chip = <Pill tone="info">{today ? `Arriving ${a && a.t != null ? hm(a.t) : 'today'}` : `Expected ${po.expected.split(' (')[0].replace(/ Oct$/, '')}`}</Pill>;
         line = `${unitsW} · ordered ${(po.ordered || 'today').replace(/^\w+ /, '')}`;
-        act = today && can('receive') ? <Alink>Receive</Alink> : <Alink>View</Alink>;
+        rcv = !!(today && can('receive'));
+        act = rcv ? <Alink>Receive</Alink> : <Alink>View</Alink>;
       }
       return (
-        <button key={po.no} type="button" onClick={noop} className={cn(rowCls, 'min-h-[66px] grid-cols-[minmax(0,1fr)_auto] py-4')}>
+        <button key={po.no} type="button" onClick={() => { if (d && !rcv) onOpen?.(d.id); }} className={cn(rowCls, 'min-h-[66px] grid-cols-[minmax(0,1fr)_auto] py-4')}>
           <span className="min-w-0"><span className={t1Cls}>{po.supplierName}<span className={cn(idCls, 'ml-1.5 font-normal text-muted')}>{po.no}</span></span>
             <span className={cn(t2Cls, 'flex items-center gap-2 max-[640px]:flex-wrap max-[640px]:gap-y-1 max-[640px]:overflow-visible max-[640px]:whitespace-normal')}>{chip}<span className="min-w-0 truncate max-[640px]:overflow-visible max-[640px]:whitespace-normal">{line}</span></span></span>
           <span className={rvCls}><span className="text-[14px] font-medium tabular-nums">{po.totalLabel}</span>{act}</span>
@@ -388,6 +390,7 @@ export function HomeZones({ tenant = 'a', role = 'manager', state = 'live', view
     <div className="@container/sheet w-full max-w-[1330px]">
       <div className="flex flex-col gap-12 max-[640px]:gap-8">
         <div className="grid grid-cols-3 items-start gap-x-10 gap-y-12 @max-[1100px]/sheet:grid-cols-1 max-[640px]:gap-8">{todo()}{watch()}</div>
+        {mid}
         <div className="grid grid-cols-3 items-start gap-x-10 gap-y-12 @max-[1100px]/sheet:grid-cols-2 @max-[760px]/sheet:grid-cols-1 max-[640px]:grid-cols-1 max-[640px]:gap-8">{deliveriesPanel()}{lowPanel()}{movedPanel()}</div>
       </div>
     </div>

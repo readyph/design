@@ -431,6 +431,12 @@ export function OrderListsPage({ tenant = 'a', as = 'manager', state, tab = 'lis
               <Select aria-labelledby="l-pick" value={cur.sup} onValueChange={(v) => setSel(v)} options={po_.map((l) => ({ value: l.sup, label: sup(l.sup).name, meta: `${l.lines.length} ${l.lines.length === 1 ? 'product' : 'products'}` }))} className="w-full" />
             </div>
           )}
+          {curTab === 'sent' && curPo && (
+            <div className="hidden flex-col gap-1 max-[640px]:flex">
+              <span id="l-pick">List</span>
+              <Select aria-labelledby="l-pick" value={curPo.no} onValueChange={(v) => setSelPo(v)} options={sent.map((p) => ({ value: p.no, label: sup(p.supplier).name, meta: p.no }))} className="w-full" />
+            </div>
+          )}
         </div>
         <div className="min-w-0 max-[1100px]:order-3">{paper}{addSection}</div>
         <div className="sticky top-4 max-h-[calc(100vh-32px)] min-w-0 overflow-y-auto overscroll-contain max-[1100px]:static max-[1100px]:order-1 max-[1100px]:max-h-none">{side}</div>

@@ -62,12 +62,50 @@ describe('PurchaseOrdersPage one order (RDY-427)', () => {
 
 describe('axe', () => {
   const cases: [string, PurchaseOrdersPageProps][] = [
-    ['list', {}], ['group by supplier', { group: 'sup' }], ['no POs', { pos: 'none' }], ['no results', { qs: 'zzz' }], ['loading', { state: 'loading' }],
+    ['list', {}], ['quiet', { state: 'quiet' }], ['empty store', { state: 'empty' }], ['order sent, print', { po: 'PO-0223' }], ['group by supplier', { group: 'sup' }], ['no POs', { pos: 'none' }], ['no results', { qs: 'zzz' }], ['loading', { state: 'loading' }],
     ['error', { state: 'error' }], ['order draft', { po: 'PO-0224' }], ['order draft send question', { po: 'PO-0224', confirm: 'send' }], ['order sent', { po: 'PO-0222' }], ['order cancel question', { po: 'PO-0222', confirm: 'cancel' }], ['order part in', { po: 'PO-0223' }], ['order received', { po: 'PO-0221' }], ['order cancelled', { po: 'PO-0218' }], ['order short', { po: 'PO-0217' }], ['order undo', { po: 'PO-0222', receipt: true }], ['order clerk', { po: 'PO-0223', as: 'clerk' }], ['order tenant B', { po: 'PO-0046', tenant: 'b' }], ['late', { asof: 2 }], ['clerk', { as: 'clerk' }], ['tenant B', { tenant: 'b' }],
   ];
   it.each(cases)('%s has no violations', async (_n, props) => {
     const { container } = render(<PurchaseOrdersPage {...props} />);
     const r = await axe.run(container, { rules: { 'color-contrast': { enabled: false }, region: { enabled: false } } });
     expect(r.violations.map((v) => `${v.id}: ${v.nodes[0]?.html.slice(0, 120)}`)).toEqual([]);
+  });
+});
+
+describe('PurchaseOrdersPage Receive and short delivery (RDY-428)', () => {
+  it('Receive shows the form and Cancel returns to the order', () => {
+    render(<PurchaseOrdersPage po="PO-0222" receive />);
+    expect(screen.getByRole('heading', { name: /Receive PO-0222/ })).toBeTruthy();
+    expect(screen.getAllByRole('button', { name: 'Cancel' }).length).toBeGreaterThan(0);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Cancel' })[0]);
+    expect(screen.getByRole('heading', { name: /PO-0222/ })).toBeTruthy();
+  });
+  it('Receive delivery opens Receive', () => {
+    render(<PurchaseOrdersPage po="PO-0222" />);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Receive delivery' })[0]);
+    expect(screen.getByText(/Count what is on the delivery/)).toBeTruthy();
+  });
+  it('Receive a delivery asks which delivery arrived', () => {
+    render(<PurchaseOrdersPage />);
+    fireEvent.click(screen.getByRole('button', { name: 'Receive a delivery' }));
+    expect(screen.getByText('Which delivery arrived?')).toBeTruthy();
+  });
+  it('short delivery: manager settles, clerk tells the manager, error disables', () => {
+    const { unmount } = render(<PurchaseOrdersPage po="PO-0221" />);
+    expect(screen.getByRole('button', { name: /Accept the shortage/ })).toBeTruthy();
+    unmount();
+    const c = render(<PurchaseOrdersPage po="PO-0221" as="clerk" />);
+    expect(screen.getByRole('button', { name: /Tell your manager/ })).toBeTruthy();
+    c.unmount();
+    render(<PurchaseOrdersPage po="PO-0221" state="error" />);
+    expect((screen.getByRole('button', { name: /Accept the shortage/ }) as HTMLButtonElement).disabled).toBe(true);
+  });
+  it('axe: receive and short delivery', async () => {
+    for (const p of [{ po: 'PO-0222', receive: true }, { po: 'PO-0221' }] as PurchaseOrdersPageProps[]) {
+      const { container, unmount } = render(<PurchaseOrdersPage {...p} />);
+      const r = await axe.run(container, { rules: { 'color-contrast': { enabled: false }, region: { enabled: false } } });
+      expect(r.violations.map((v) => v.id)).toEqual([]);
+      unmount();
+    }
   });
 });
