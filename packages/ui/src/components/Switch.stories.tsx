@@ -58,3 +58,16 @@ export const Settings: Story = {
 export const Bare: Story = {
   args: { label: undefined, description: undefined, 'aria-label': 'Lights, Main Lab' },
 };
+
+export const SettingsLook: Story = {
+  args: { look: 'settings', label: undefined, description: undefined, 'aria-label': 'Email me about low stock' },
+  render: function SettingsLookStory(args) {
+    return (
+      <div className="flex items-center gap-6">
+        <Switch {...args} aria-label="Off" />
+        <Switch {...args} defaultChecked aria-label="On" />
+        <Switch {...args} compact aria-label="Compact" />
+      </div>
+    );
+  },
+};
