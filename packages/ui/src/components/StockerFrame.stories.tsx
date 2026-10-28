@@ -36,7 +36,6 @@ export const Flow: Story = {
     title: 'Find the product',
     steps: { n: 2, of: 3, label: 'Find the product' },
     back: { href: '#', label: 'Stock out' },
-    flow: true,
     bar: (
       <>
         <p className="mb-2 text-[14px] leading-5 text-text">Stock goes from 4 to 3. It will be low stock.</p>

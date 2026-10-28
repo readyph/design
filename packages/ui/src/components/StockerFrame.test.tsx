@@ -16,9 +16,9 @@ describe('StockerFrame', () => {
     expect(screen.getByText('Stock out').closest('a')?.getAttribute('aria-current')).toBe('page');
     expect(screen.getByText('Home').closest('a')?.getAttribute('aria-current')).toBeNull();
   });
-  it('flow hides the tabs, shows back, step line and the pinned bar', () => {
-    render(<StockerFrame {...base} title="Find" flow back={{ href: '#', label: 'Stock out' }} steps={{ n: 2, of: 3, label: 'Find the product' }} bar={<p>Stock goes from 4 to 3.</p>} />);
-    expect(screen.queryByRole('navigation', { name: 'Stocker' })).toBeNull();
+  it('with back, steps and a bar the tabs stay visible', () => {
+    render(<StockerFrame {...base} title="Find" tab="out" back={{ href: '#', label: 'Stock out' }} steps={{ n: 2, of: 3, label: 'Find the product' }} bar={<p>Stock goes from 4 to 3.</p>} />);
+    expect(screen.getByRole('navigation', { name: 'Stocker' })).toBeTruthy();
     expect(screen.getByLabelText('Back to Stock out')).toBeTruthy();
     expect(screen.getByText('2 of 3')).toBeTruthy();
     expect(screen.getByText('Stock goes from 4 to 3.')).toBeTruthy();
