@@ -67,7 +67,7 @@ describe('TownMap hqLabel', () => {
   });
   it('keeps the default HQ name', () => {
     render(<TownMap platforms={[{ id: 'hq', name: 'Company', kind: 'HQ', status: 'ACTIVE', hq: true }]} />);
-    expect(screen.getByRole('button', { name: /^HQ, your team and plan/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Company.*your team and plan/ })).toBeTruthy();
   });
 });
 

@@ -248,7 +248,7 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
           })}
           {rest > 0 && (
             <li className="flex shrink-0">
-              <Item href={moreHref} onSelect={onMore} aria-label={`${rest} more platform${rest === 1 ? '' : 's'}`}>
+              <Item href={moreHref} onSelect={onMore} aria-label={`+${rest} more platform${rest === 1 ? '' : 's'}`}>
                 +{rest}
               </Item>
             </li>
@@ -267,7 +267,7 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
 
   if (people && !hidden.has('people')) {
     sections.push({ key: 'people', cls: "flex shrink-0", node: (
-        <Item href={people.href} onSelect={people.onSelect} aria-label={plural(people.count, 'person', 'people') + (ledaFirst && invites && invites.count > 0 ? `, ${plural(invites.count, 'invite', 'invites')} pending` : '')}>
+        <Item href={people.href} onSelect={people.onSelect} aria-label={plural(people.count, 'person', 'people') + (ledaFirst && invites && invites.count > 0 ? ` · ${plural(invites.count, 'invite', 'invites')} pending` : '')}>
           <Users size={14} aria-hidden="true" />
           <span className="tabular-nums">{plural(people.count, 'person', 'people')}</span>
           {ledaFirst && invites && invites.count > 0 ? (

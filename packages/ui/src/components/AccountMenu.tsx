@@ -38,7 +38,7 @@ export const AccountButton = forwardRef<HTMLButtonElement, ComponentPropsWithout
       <button
         ref={ref}
         type="button"
-        aria-label={`Account menu, ${name}`}
+        aria-label={`${initials ?? initialsOf(name)}, Account menu, ${name}`}
         {...rest}
         className={cn('grid size-9 shrink-0 place-items-center rounded-control max-[640px]:size-11', focusRing, className)}
       >

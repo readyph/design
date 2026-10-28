@@ -175,7 +175,7 @@ export const AskLedaBar = forwardRef<HTMLButtonElement, AskLedaBarProps>(functio
       <button
         ref={ref}
         type="button"
-        aria-label={placeholder}
+        aria-label={`${placeholder} ${kbd}`}
         onClick={() => open.current?.('click')}
         {...rest}
         className={cn(
