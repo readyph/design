@@ -49,6 +49,9 @@ export const RevenueChart = forwardRef<HTMLDivElement, RevenueChartProps>(functi
 ) {
   const max = Math.max(1, ...series.map((s) => s.amount));
   const colorAt = (s: RevenueSeries, i: number) => s.color ?? PALETTE[i % PALETTE.length];
+  /** Forced-colors: inline colours are overridden by system colours; series alternate Highlight / Canvas, both outlined, so they stay distinguishable. */
+  const forcedMark = (i: number) =>
+    cn('[forced-color-adjust:none] forced-colors:border-2 forced-colors:border-[CanvasText]', i % 2 === 0 ? 'forced-colors:!bg-[Highlight]' : 'forced-colors:!bg-[Canvas]');
   const sortItems: MenuItem[] = (sortOptions ?? []).map((o) => ({ label: o, onSelect: () => onSortChange?.(o) }));
 
   return (
@@ -99,7 +102,7 @@ export const RevenueChart = forwardRef<HTMLDivElement, RevenueChartProps>(functi
           <div className={cn('grid grid-cols-2 gap-x-4 gap-y-3', compact ? 'mt-4' : 'mt-auto pt-5')}>
             {series.map((s, i) => (
               <div key={s.label} className="flex items-center gap-2.5 text-sm text-text">
-                <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: colorAt(s, i) }} />
+                <span aria-hidden className={cn('h-2.5 w-2.5 shrink-0 rounded-full', forcedMark(i))} style={{ background: colorAt(s, i) }} />
                 <span className="truncate">{s.label}</span>
               </div>
             ))}
@@ -121,7 +124,7 @@ export const RevenueChart = forwardRef<HTMLDivElement, RevenueChartProps>(functi
                   {s.value}
                 </span>
                 <div
-                  className="w-full rounded-card"
+                  className={cn('w-full rounded-card', forcedMark(i))}
                   style={{
                     height: Math.round((s.amount / max) * (compact ? 104 : 180)),
                     minHeight: compact ? 26 : 40,

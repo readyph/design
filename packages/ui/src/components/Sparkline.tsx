@@ -22,18 +22,40 @@ const toneClass: Record<SparklineTone, string> = {
 
 /** A tiny, axis-less line chart for trends inside tiles and rows. */
 export function Sparkline({ points, width = 64, height = 20, tone = 'primary', area = false, className }: SparklineProps) {
-  if (points.length < 2) return null;
-  const max = Math.max(...points);
-  const min = Math.min(...points);
+  const finite = points.filter(Number.isFinite);
+  if (finite.length < 2) {
+    // Empty state: a flat dashed baseline instead of a path.
+    return (
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className={cn(toneClass.neutral, className)} fill="none" aria-hidden="true" data-empty="">
+        <line x1={0} x2={width} y1={height / 2} y2={height / 2} stroke="currentColor" strokeWidth="1.5" strokeDasharray="2 3" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  const max = Math.max(...finite);
+  const min = Math.min(...finite);
   const norm = (v: number) => (max === min ? height / 2 : height - ((v - min) / (max - min)) * height);
   const step = width / (points.length - 1);
-  const coords = points.map((p, i) => `${(i * step).toFixed(1)},${norm(p).toFixed(1)}`);
-  const line = coords.join(' ');
-  const areaPath = `${width},${height} 0,${height} ${line}`;
+  // Non-finite values leave gaps: split into runs of consecutive finite points.
+  const runs: string[][] = [[]];
+  points.forEach((p, i) => {
+    if (Number.isFinite(p)) runs[runs.length - 1]!.push(`${(i * step).toFixed(1)},${norm(p).toFixed(1)}`);
+    else if (runs[runs.length - 1]!.length) runs.push([]);
+  });
+  const drawn = runs.filter((r) => r.length > 0);
   return (
     <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className={cn(toneClass[tone], className)} fill="none" aria-hidden="true">
-      {area && <polygon points={areaPath} fill="currentColor" opacity={0.12} />}
-      <polyline points={line} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      {drawn.map((r, k) => (
+        <g key={k}>
+          {area && r.length > 1 && (
+            <polygon points={`${r[r.length - 1]!.split(',')[0]},${height} ${r[0]!.split(',')[0]},${height} ${r.join(' ')}`} fill="currentColor" opacity={0.12} />
+          )}
+          {r.length > 1 ? (
+            <polyline points={r.join(' ')} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          ) : (
+            <circle cx={r[0]!.split(',')[0]} cy={r[0]!.split(',')[1]} r={1} fill="currentColor" />
+          )}
+        </g>
+      ))}
     </svg>
   );
 }
