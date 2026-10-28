@@ -116,7 +116,7 @@ export function TransferDetailView({ M, t, confirming, disabled, onAskSend, onNo
   const one = t.lines.length === 1 ? t.lines[0] : null, ef = STK.effectText(ch);
   const confirmText = `${one ? `${one.product.sku} goes from ${one.product.onHand} to ${one.product.onHand - one.qty} here.` : `${qtyWords(t)} leave ${place(HERE).short}.`} ${t.other.short} checks it in on their side, and then it is stock there.${ef ? ` ${ef}` : ''}`;
   /* tdetailHTML 356-365 */
-  const facts: ReactNode[] = [<>From <b>{place(t.from).name}</b></>, <>To <b>{place(t.to).name}</b></>, qtyWords(t), ...(t.job ? [<>For <b className="font-mono text-[12px]">{t.job}</b></>] : [])];
+  const facts: ReactNode[] = [<>From <b>{place(t.from).name}</b></>, <>To <b>{place(t.to).name}</b></>, qtyWords(t), ...(t.job ? [<>For <b className="font-mono text-[13px]">{t.job}</b></>] : [])];
   const note = t.status === 'transit' && t.out ? { tone: 'transit' as const, title: `On its way to ${t.other.short}.`, text: `They check it in on their own screen; this page updates when they do. Stock already left ${place(HERE).short}.` }
     : t.status === 'received' && t.short ? { tone: 'short' as const, title: `${gotT(t)}.`, text: 'Only what arrived went into stock.' } : undefined;
   /* paperHTML 296-310 */
@@ -137,7 +137,7 @@ export function TransferDetailView({ M, t, confirming, disabled, onAskSend, onNo
         { label: 'Date', value: (t.sentAt || t.createdAt || '').replace(/ \d{1,2}:\d{2}$/, '') },
         { label: 'Status', value: M.TST[t.status], only: 'screen' },
         { label: 'Prepared by', value: who(t.createdBy) },
-        ...(t.job ? [{ label: 'For job', value: <span className="font-mono text-[12px]">{t.job}</span> }] : []),
+        ...(t.job ? [{ label: 'For job', value: <span className="font-mono text-[13px]">{t.job}</span> }] : []),
         { label: 'Items', value: qtyWords(t), only: 'print' },
       ]}
       parties={[{ heading: 'From', name: from.name, lines: [from.addr] }, { heading: 'To', name: to.name, lines: [to.addr] }]}
