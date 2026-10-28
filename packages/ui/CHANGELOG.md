@@ -1,5 +1,17 @@
 # @readyph/ui
 
+## 0.12.0
+
+### Minor Changes
+
+- 053202a: PlatformToday: link chips flash and focus only the target row, and report hover or focus (`onLinkActivate`, `onLinkHover`, `TodayPlatform.id`) so the page can light both buildings and the road on the map.
+- e345469: `cn` and `focusRing` are exported from the package, so consumers use the same class-merge rules instead of a local `twMerge`. `cn` knows the layout keys: `cn('w-rail', 'w-full')` and `cn('h-status', 'h-8')` keep only the last width or height. Tests run under a package-level vitest config (jsdom and jest-dom).
+
+### Patch Changes
+
+- a2cc23d: Overlay focus fixes: Modal returns focus to the opener without a body-focused frame; `focusIfLost` walks nested shadow roots (and documents the `null` container); ConfirmDialog/TryIt opened already `loading` focus the dialog; Marketplace filter segments scroll into view on focus.
+- 47317b4: Accessible names now start with the visible label (axe `label-content-name-mismatch`) on TownMap platform buttons, AccountButton, AskLedaBar and StatusBar items. TownMap's default name is the visible text plus visually hidden status; custom `platformLabel`/`hqLabel` should start with the visible label.
+
 ## 0.11.0
 
 ### Minor Changes
