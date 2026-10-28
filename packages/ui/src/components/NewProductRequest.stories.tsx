@@ -38,7 +38,6 @@ function Form({ initial, seen = [] }: { initial: NewProductDraft; seen?: string[
       back={{ href: '#', label: 'Find a product' }}
       account={{ initials: 'MR', name: 'Mara Reyes', href: '#' }}
       homeHref="#"
-      flow
       bar={<NewProductBar value={d} alreadyRequested={already} onSend={() => undefined} />}
     >
       <NewProductForm value={d} onChange={setD} locations={places} />
