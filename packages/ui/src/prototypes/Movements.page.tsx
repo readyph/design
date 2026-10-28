@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react';
-import { ArrowsDownUp, ArrowSquareOut, CalendarBlank, FileText, House, List, ListChecks, Package, Receipt, SlidersHorizontal, WarningCircle, X, ArrowClockwise, ArrowCounterClockwise } from '@phosphor-icons/react';
+import { PaperPlaneTilt, Printer, Truck, ArrowsDownUp, ArrowSquareOut, CalendarBlank, FileText, House, List, ListChecks, Package, Receipt, SlidersHorizontal, WarningCircle, X, ArrowClockwise, ArrowCounterClockwise } from '@phosphor-icons/react';
 import type { Icon as PhosphorIcon } from '@phosphor-icons/react';
 import { AccountMenu } from '../components/AccountMenu';
 import { ActionLink, BackLink } from '../components/ActionLink';
@@ -18,6 +18,9 @@ import { Toaster } from '../components/toast/Toaster';
 import { addToast } from '../components/toast/toastStore';
 import type { RecordEntry, RecordProduct } from '../components/RecordMovementForm';
 import { RecordView } from './Movements.record';
+import { TransferDetailView, TransferFormView, TransfersList } from './Movements.transfers';
+import type { TransferFilter } from '../components/TransferList';
+import type { TransferFormValue } from '../components/TransferForm';
 import { TransferStatusBadge, type TransferStatus } from '../components/TransferList';
 import { cn } from '../utils/cn';
 import { createMovementsModel, type LedgerRow, type MovementsParams, type MovementsRole, type MovementsState, type MovementsTenant, type TrView } from './Movements.data';
@@ -50,6 +53,22 @@ export interface MovementsPageProps {
   landed?: boolean;
   /** Story only: the Undo question (movements.js 573-578) is open on the first row recorded here. */
   undoOpen?: boolean;
+  /** `&tf=draft|transit|received|cancelled` (RDY-438, slice d): the Transfers list filter. */
+  tf?: TransferFilter;
+  /** `&tr=<TR>`: one transfer's detail. */
+  tr?: string;
+  /** `&tr=<TR>&edit=1`: change the draft. */
+  edit?: boolean;
+  /** `&new=1`: New transfer. */
+  newTr?: boolean;
+  /** `&new=1&p=<id>`: New transfer starting with a product. */
+  newP?: string;
+  /** Story only: the send question is open (movements.js 654 sendask). */
+  sendOpen?: boolean;
+  /** Story only: the cancel question is open (movements.js 657 cancelask). */
+  cancelOpen?: boolean;
+  /** Story only: the draft was just marked sent, so the in transit state shows (movements.js 549-555). */
+  sent?: boolean;
 }
 
 const NAV: { id: string; label: string; short?: string; icon: PhosphorIcon; needs?: string }[] = [
@@ -64,8 +83,8 @@ const link = 'cursor-pointer border-0 bg-transparent p-0 text-left font-semibold
 const idCls = 'text-[12px]';
 const first = 'py-10';
 
-export function MovementsPage({ tenant = 'a', as = 'manager', state = 'live', view, io, reason, prod, who: whoP, range, from, to, qs, mv, jo, record, p: recP, landed, undoOpen }: MovementsPageProps) {
-  const params = useMemo<MovementsParams>(() => ({ view, io, reason, prod, who: whoP, range, from: from != null ? String(from) : undefined, to: to != null ? String(to) : undefined, qs, mv, record: record ? '1' : undefined, p: recP }), [view, io, reason, prod, whoP, range, from, to, qs, mv, record, recP]);
+export function MovementsPage({ tenant = 'a', as = 'manager', state = 'live', view, io, reason, prod, who: whoP, range, from, to, qs, mv, jo, record, p: recP, landed, undoOpen, tf, tr: trP, edit, newTr, newP, sendOpen, cancelOpen, sent }: MovementsPageProps) {
+  const params = useMemo<MovementsParams>(() => ({ view, io, reason, prod, who: whoP, range, from: from != null ? String(from) : undefined, to: to != null ? String(to) : undefined, qs, mv, record: record ? '1' : undefined, p: recP, tf, tr: trP, new: newTr ? '1' : undefined }), [view, io, reason, prod, whoP, range, from, to, qs, mv, record, recP, tf, trP, newTr]);
   const M = useMemo(() => createMovementsModel(tenant, as, state, params), [tenant, as, state, params]);
   const [, tick] = useReducer((n: number) => n + 1, 0);
   const [jobOpen, setJobOpen] = useState<string | null>(jo ?? null);
@@ -107,6 +126,59 @@ export function MovementsPage({ tenant = 'a', as = 'manager', state = 'live', vi
     afterWrite(`Movement undone. ${r.product.sku} is back to ${r.product.onHand - r.qty}.`);
   };
   const openRecord = (pid?: string) => { if (!can('stock_out') || err) return; Object.assign(S, { rec: true, recP: pid ?? null }); tick(); };
+
+  /* ---------- transfers (movements.js 519-563 openTr, saveTr, sendTr, cancelTr) ---------- */
+  const [confirmSend, setConfirmSend] = useState<boolean>(!!sendOpen);
+  const [cancelAsk, setCancelAsk] = useState<boolean>(!!cancelOpen);
+  const formInit = useRef(false);
+  if (!formInit.current) {
+    formInit.current = true;
+    if (edit && trP) { const t0 = M.trBy(trP); if (t0) S.form = { id: t0.id, to: t0.to, lines: t0.lines.map((l) => ({ p: l.p, qty: l.qty })), note: t0.note, job: t0.job, q: '', err: '' }; }
+    if (newTr && newP) S.recP = newP;
+  }
+  const sentDone = useRef(false);
+  useEffect(() => {
+    if (!sent || sentDone.current || !trP) return;
+    sentDone.current = true;
+    const t0 = M.trBy(trP); if (!t0) return;
+    M.store.trSet(t0.id, { status: 'transit', sentAt: M.nowStamp(), sentHM: D.now.hm, sentBy: D.viewer.id }, 'sent');
+    M.refreshAll(); tick();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const trSel = S.tr && !loading ? M.trBy(S.tr) : null;
+  const trDisabled = !!err;
+  const openTr = (id: string) => { if (!M.trBy(id)) return; Object.assign(S, { tr: id, view: 'transfers' as const, rec: false, form: null, confirm: null }); setConfirmSend(false); tick(); };
+  const startForm = (o: { id?: string } = {}) => { const t0 = o.id ? M.trBy(o.id) : null; Object.assign(S, { form: { id: t0?.id ?? null, to: t0?.to ?? null, lines: t0 ? t0.lines.map((l) => ({ p: l.p, qty: l.qty })) : [], note: t0?.note ?? '', job: t0?.job ?? '', q: '', err: '' }, tr: t0 ? S.tr : null, rec: false, view: 'transfers' as const }); tick(); };
+  const backTr = () => { const was = S.tr; Object.assign(S, { rec: false, recP: null, tr: S.form && S.form.id ? was : null, form: null, confirm: null }); if (!S.form && !S.tr) S.tr = null; setConfirmSend(false); tick(); };
+  const saveTr = (v: TransferFormValue) => {
+    const f = S.form; if (!f) return;
+    const body = { to: v.to, lines: v.lines.map((l) => ({ p: l.productId, qty: l.qty })), note: v.note.trim(), job: v.job.trim().toUpperCase() };
+    let r, msg: string;
+    if (f.id) { r = M.store.trSet(f.id, body); msg = `${f.id} changed. Nothing has left stock.`; } else { r = M.store.trAdd({ from: M.HERE, ...body, createdBy: D.viewer.id, createdAt: M.nowStamp() }); msg = `${r.tr.id} saved as a draft. Nothing has left stock.`; }
+    if (!r) return;
+    const id = f.id || (r as { tr: { id: string } }).tr.id, undo = r.undo;
+    M.refreshAll(); Object.assign(S, { form: null, tr: id, view: 'transfers' as const, confirm: null }); setConfirmSend(false);
+    addToast({ description: msg, actions: [{ label: 'Undo', onClick: () => { undo(); M.refreshAll(); if (!M.trBy(id)) S.tr = null; tick(); } }] });
+    tick();
+  };
+  const sendTr = () => {
+    const t0 = trSel; if (!t0 || !M.canSend(t0)) return;
+    if (t0.lines.some((l) => l.product.onHand < l.qty)) return;
+    const one = t0.lines.length === 1 ? t0.lines[0] : null;
+    const r = M.store.trSet(t0.id, { status: 'transit', sentAt: M.nowStamp(), sentHM: D.now.hm, sentBy: D.viewer.id }, 'sent'); if (!r) return;
+    const snap = r.snap;
+    M.refreshAll(); setConfirmSend(false);
+    addToast({ description: `${t0.id} sent to ${t0.other.name}. ${one ? `${one.product.sku}: ${one.product.onHand} → ${one.product.onHand - one.qty}.` : `${M.qtyWords(t0)} left ${M.place(M.HERE).short}.`}`, actions: [{ label: 'Undo', onClick: () => { M.store.restore(snap); M.refreshAll(); addToast(`Undone. ${t0.id} is a draft again and the stock is back.`); tick(); } }] });
+    tick();
+  };
+  const cancelTr = () => {
+    const t0 = trSel; if (!t0) return;
+    const r = M.store.trSet(t0.id, { status: 'cancelled', cancelled: { by: D.viewer.id, at: M.nowStamp() } }); if (!r) return;
+    const undo = r.undo;
+    M.refreshAll(); setCancelAsk(false);
+    addToast({ description: `${t0.id} cancelled. Nothing had left stock.`, actions: [{ label: 'Undo', onClick: () => { undo(); M.refreshAll(); tick(); } }] });
+    tick();
+  };
 
   const platform = { name: D.business.platform, initials: D.business.platform.split(' ').map((w: string) => w[0]).join('') };
   const items = NAV.filter((n) => !n.needs || can('setup'));
@@ -249,7 +321,7 @@ export function MovementsPage({ tenant = 'a', as = 'manager', state = 'live', vi
     </div>
   );
   const goPO = <a className="inline-flex h-8 items-center gap-1.5 rounded-control border border-control px-3 text-[13px] font-medium text-text no-underline" href="#purchase-orders"><Receipt size={14} aria-hidden />Purchase orders</a>;
-  const recordBtn = (dis?: boolean) => can('stock_out') ? <Button variant="primary" leftIcon={ArrowsDownUp} disabled={dis} onClick={() => openRecord()}>Record movement</Button> : null;
+  const recordBtn = (dis?: boolean) => can('stock_out') ? <Button variant="primary" className="max-[640px]:px-3.5" leftIcon={ArrowsDownUp} disabled={dis} onClick={() => openRecord()}>Record movement</Button> : null;
 
   const skRows = [0, 1, 2, 3, 4].map((i) => (
     <div key={i} className="-mx-2 grid min-h-[56px] w-[calc(100%+16px)] grid-cols-[76px_minmax(0,1.3fr)_minmax(0,1.6fr)_130px_104px_64px] items-start gap-x-5 border-t border-rule px-2 py-3 first:border-t-transparent max-[1099px]:grid-cols-[68px_minmax(0,1.2fr)_minmax(0,1.4fr)_110px_100px_56px] max-[640px]:grid-cols-[minmax(0,1fr)_auto]">
@@ -309,6 +381,7 @@ export function MovementsPage({ tenant = 'a', as = 'manager', state = 'live', vi
   const transfers = (
     <div className="flex flex-col gap-5 max-[640px]:gap-3">
       {err ? blockErr(`Transfers did not load. This is the list from ${F.error?.lastLoaded}. Nothing can be sent or received until it loads, so nothing moves twice.`) : null}
+      {F.empty ? ledger : err ? <div {...{ inert: '' }} className="mt-1 opacity-60"><TransfersList M={M} tick={tick} filter={S.tf as TransferFilter} onFilter={(f) => { S.tf = f; tick(); }} onOpen={(id) => openTr(id)} onNew={() => startForm()} /></div> : <TransfersList M={M} tick={tick} filter={S.tf as TransferFilter} onFilter={(f) => { S.tf = f; tick(); }} onOpen={(id) => openTr(id)} onNew={() => startForm()} loading={loading} />}
     </div>
   );
 
@@ -327,6 +400,32 @@ export function MovementsPage({ tenant = 'a', as = 'manager', state = 'live', vi
         status={<InventoryStatusBar platform={platform} dataLink={link_ ? { with: link_.with, status: link_.status === 'slow' ? 'slow' : 'linked', since: link_.since ?? '8:50', title: 'Parts and job orders' } : undefined} viewer={{ name: viewer.short, role: D.roleLabel }} leda={{ canDecide: can('adjust_stock'), managerName: (D.manager as { short: string }).short }} updatedAt={D.now.time} />}
       >
         <RecordView M={M} productId={S.recP} whatOf={whatOf} onCancel={() => { S.rec = false; S.recP = null; tick(); }} onTransfer={() => { S.rec = false; S.recP = null; S.view = 'transfers'; tick(); }} onRecord={recordMovement} />
+        <Toaster actionStyle="inventory" />
+      </PlatformShell>
+    );
+  }
+
+  if (S.form || trSel) {
+    const f = S.form, t = trSel;
+    const statusEl = <InventoryStatusBar platform={platform} dataLink={link_ ? { with: link_.with, status: link_.status === 'slow' ? 'slow' : 'linked', since: link_.since ?? '8:50', title: 'Parts and job orders' } : undefined} viewer={{ name: viewer.short, role: D.roleLabel }} leda={{ canDecide: can('adjust_stock'), managerName: (D.manager as { short: string }).short }} updatedAt={D.now.time} />;
+    const crumb = f ? (f.id ? `Change ${f.id}` : 'New transfer') : t!.id;
+    const bar = !f && t ? (
+      t.status === 'draft' && t.out && M.canSend(t) ? (confirmSend ? <Button actionBar fullWidth variant="secondary" leftIcon={Printer} onClick={() => window.print()}>Print</Button> : <><Button actionBar fullWidth leftIcon={PaperPlaneTilt} disabled={trDisabled} onClick={() => setConfirmSend(true)}>Mark as sent</Button><Button actionBar variant="secondary" leftIcon={Printer} onClick={() => window.print()}>Print</Button></>)
+        : t.status === 'transit' && !t.out && can('receive') ? <><Button actionBar fullWidth leftIcon={Truck}>Receive transfer</Button><Button actionBar variant="secondary" leftIcon={Printer} onClick={() => window.print()}>Print</Button></>
+          : <Button actionBar fullWidth variant="secondary" leftIcon={Printer} onClick={() => window.print()}>Print</Button>
+    ) : undefined;
+    return (
+      <PlatformShell
+        railWidth="wide" railLabel="Inventory" rail={rail} topBar={topBar} phoneNav={phoneNav} heading={platform.name} hideSheetBarOnPhone detail actionBar={bar}
+        sheetBar={<SheetBar wrapChildren={false} actionsFirst={false} actions={<AskLedaBar variant="bar" scope={t ? t.id : 'Movements'} shortcuts={false} />}><BackLink onClick={backTr}>{f && f.id ? f.id : 'Transfers'}</BackLink><span className="self-center text-[13px] font-semibold text-text">/ {crumb}</span></SheetBar>}
+        statusLabel="Status" status={statusEl}
+      >
+        <div id="vbody-tr" className="min-w-0 print:p-0 px-pad pb-8 pt-5 max-[640px]:px-4 max-[640px]:pb-[112px] max-[640px]:pt-4">
+          {f ? <TransferFormView M={M} tick={tick} editing={f.id ? M.trBy(f.id) : null} productId={S.recP} onSave={saveTr} onCancel={backTr} />
+            : <TransferDetailView M={M} tick={tick} t={t!} confirming={confirmSend && t!.status === 'draft'} disabled={trDisabled} onAskSend={() => setConfirmSend(true)} onNotYet={() => { setConfirmSend(false); setTimeout(() => [...document.querySelectorAll<HTMLButtonElement>('#vbody-tr button')].find((b) => b.textContent === 'Mark as sent')?.focus({ preventScroll: true }), 0); }} onSend={sendTr} onChange={() => startForm({ id: t!.id })} onCancelDraft={() => setCancelAsk(true)} onReceive={() => {}} onPrint={() => window.print()} />}
+        </div>
+        <ConfirmDialog open={cancelAsk && !!t} onOpenChange={(o) => { if (!o) setCancelAsk(false); }} onCancel={() => setCancelAsk(false)} tone="danger" icon={X} title="Cancel this draft?"
+          name={t ? `${t.id} · to ${t.other.name}` : ''} description="Nothing has left stock, so no stock changes. The draft stays in the list as cancelled." confirmLabel="Cancel draft" onConfirm={cancelTr} />
         <Toaster actionStyle="inventory" />
       </PlatformShell>
     );
@@ -357,7 +456,7 @@ export function MovementsPage({ tenant = 'a', as = 'manager', state = 'live', vi
       <div className="p-pad">
         <div className="flex flex-wrap items-start justify-between gap-6 max-[640px]:grid max-[640px]:grid-cols-[minmax(0,1fr)_auto] max-[640px]:items-center max-[640px]:gap-x-3 max-[640px]:gap-y-1.5">
           <div className="min-w-0 flex-1 max-[640px]:contents">
-            <h1 className="text-[22px] font-semibold max-[640px]:col-start-1 max-[640px]:row-start-1">Movements</h1>
+            <h1 className="text-[22px] font-semibold leading-7 tracking-[-0.01em] max-[640px]:text-[20px] max-[640px]:leading-[26px] max-[640px]:col-start-1 max-[640px]:row-start-1">Movements</h1>
             <p className="mt-2 flex items-start gap-2 text-[15px] leading-[22px] max-[640px]:col-span-2 max-[640px]:row-start-2 max-[640px]:mt-0 max-[640px]:text-[14px] max-[640px]:leading-[21px]">
               <LedaMark size={16} decorative active={loading} className="mt-[3px] shrink-0" />
               {loading ? <Skeleton width={460} height={14} className="max-w-full" /> : <span>{headline}</span>}
@@ -365,7 +464,7 @@ export function MovementsPage({ tenant = 'a', as = 'manager', state = 'live', vi
           </div>
           <div className="flex flex-none items-center gap-2 max-[640px]:col-start-2 max-[640px]:row-start-1">
             <span className="mr-2 text-[12px] text-muted max-[640px]:hidden">{D.now.date} · {loading ? `Loading… last loaded ${D.now.lastLoaded}` : err ? `Last loaded ${F.error?.lastLoaded}` : `Updated ${D.now.time}`}</span>
-            {can('transfer') ? <Button variant="secondary" leftIcon={ArrowSquareOut} disabled={dis} className="max-[640px]:hidden">New transfer</Button> : null}
+            {can('transfer') ? <Button variant="secondary" leftIcon={ArrowSquareOut} disabled={dis} className="max-[640px]:hidden" onClick={() => startForm()}>New transfer</Button> : null}
             {recordBtn(dis)}
           </div>
         </div>

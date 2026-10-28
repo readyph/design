@@ -36,3 +36,22 @@ export const LandedWithUndo: Story = { name: 'Landed note with Undo (flash moved
 export const UndoAsksFirst: Story = { name: 'Undo asks first', args: { landed: true, undoOpen: true } };
 export const RecordingOff: Story = { name: 'Recording off (error)', args: { state: 'error' } };
 export const PhoneRecord: Story = { name: 'Phone 390 record', args: { record: true, p: 'p01' }, parameters: { viewport: { defaultViewport: 'mobile1' } } };
+
+/* RDY-438 (d): Transfers. movements.js 94, 230-260, 296-365, 400-455, 519-563; movements.css 88-139, 276-289. */
+export const Transfers: Story = { name: 'Transfers list (&view=transfers)', args: { view: 'transfers' } };
+export const TransfersDraft: Story = { name: 'Transfers filtered, draft (&tf=draft)', args: { view: 'transfers', tf: 'draft' } };
+export const TransfersInTransit: Story = { name: 'Transfers filtered, in transit (&tf=transit)', args: { view: 'transfers', tf: 'transit' } };
+export const TransfersReceived: Story = { name: 'Transfers filtered, received (&tf=received)', args: { view: 'transfers', tf: 'received' } };
+export const TransfersCancelled: Story = { name: 'Transfers filtered, cancelled (&tf=cancelled)', args: { view: 'transfers', tf: 'cancelled' } };
+export const TransferDraft: Story = { name: 'Transfer detail, draft (&tr=TR-0032)', args: { tr: 'TR-0032' } };
+export const TransferInTransit: Story = { name: 'Transfer detail, in transit (&tr=TR-0030)', args: { tr: 'TR-0030' } };
+export const TransferSentOut: Story = { name: 'Transfer detail, just sent, in transit out (&tr=TR-0032)', args: { tr: 'TR-0032', sent: true } };
+export const TransferReceived: Story = { name: 'Transfer detail, received (&tr=TR-0031)', args: { tr: 'TR-0031' } };
+export const TransferSendQuestion: Story = { name: 'Send question open (&tr=TR-0032)', args: { tr: 'TR-0032', sendOpen: true } };
+export const TransferWaitingForManager: Story = { name: 'Draft waiting for a manager, clerk (&tr=TR-0032)', args: { tr: 'TR-0032', as: 'clerk' } };
+export const TransferCancelAsks: Story = { name: 'Cancel asks first (&tr=TR-0032)', args: { tr: 'TR-0032', cancelOpen: true } };
+export const NewTransfer: Story = { name: 'New transfer (&new=1)', args: { newTr: true } };
+export const ChangeDraft: Story = { name: 'Change draft (&tr=TR-0032&edit=1)', args: { tr: 'TR-0032', edit: true } };
+export const NewTransferWarning: Story = { name: 'New transfer, part another draft needs (warning line)', args: { newTr: true, newP: 'p16' } };
+export const PhoneTransfers: Story = { name: 'Phone 390 transfers', args: { view: 'transfers' }, parameters: { viewport: { defaultViewport: 'mobile1' } } };
+export const PhoneTransferPaper: Story = { name: 'Phone 390 transfer paper', args: { tr: 'TR-0032' }, parameters: { viewport: { defaultViewport: 'mobile1' } } };

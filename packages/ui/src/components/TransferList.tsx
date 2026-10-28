@@ -150,7 +150,7 @@ export function TransferList({ transfers, filter, counts, onFilterChange, onOpen
           </button>
         ))}
       </div>
-      <div className="hidden max-[640px]:block">
+      <div className="hidden max-[640px]:block [&_button]:pl-2.5 [&_button]:pr-2 [&_button]:text-[13px]">
         <span id="transfer-filter-l" className="text-[12px] text-muted">Show</span>
         <Select
           id="transfer-filter"
@@ -210,7 +210,7 @@ export function TransferList({ transfers, filter, counts, onFilterChange, onOpen
                     <span className={t2}>{t.who}</span>
                   </span>
                   <span className="flex min-w-0 justify-end text-right max-[640px]:[grid-area:1/2/4/2] max-[640px]:self-center">
-                    <ActionLink caret aria-label={`${ACTION_LABEL[t.action]} ${nm}`} onClick={(e: React.MouseEvent) => { e.stopPropagation(); onOpen(t.id, t.action); }} className="min-h-7 max-[640px]:min-h-11 max-[640px]:px-1">
+                    <ActionLink caret aria-label={`${ACTION_LABEL[t.action]} ${nm}`} onClick={(e: React.MouseEvent) => { e.stopPropagation(); onOpen(t.id, t.action); }} className="max-[640px]:min-h-11 max-[640px]:px-1">
                       {ACTION_LABEL[t.action]}
                     </ActionLink>
                   </span>

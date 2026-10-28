@@ -50,8 +50,40 @@ describe('Record movement (RDY-437)', () => {
   });
 });
 
+describe('Transfers (RDY-438)', () => {
+  it('lists the transfers with their actions', () => {
+    render(<MovementsPage view="transfers" />);
+    expect(screen.getByRole('button', { name: /TR-0032 to Kapitolyo branch/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Send TR-0032, to Kapitolyo branch/ })).toBeTruthy();
+  });
+  it('the send question removes the top Mark as sent and Not yet brings it back', () => {
+    render(<MovementsPage tr="TR-0032" sendOpen />);
+    expect(screen.getByRole('group', { name: 'Confirm marking as sent' })).toBeTruthy();
+    expect(screen.getAllByRole('button', { name: /Mark as sent/ }).length).toBe(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Not yet' }));
+    expect(screen.queryByRole('group', { name: 'Confirm marking as sent' })).toBeNull();
+    expect(screen.getAllByRole('button', { name: /Mark as sent/ }).length).toBeGreaterThan(0);
+  });
+  it('a clerk sees Waiting for a manager and can print', () => {
+    render(<MovementsPage tr="TR-0032" as="clerk" />);
+    expect(screen.getByText(/Waiting for/)).toBeTruthy();
+    expect(screen.getAllByRole('button', { name: /Print/ }).length).toBeGreaterThan(0);
+  });
+  it('cancel asks first', () => {
+    render(<MovementsPage tr="TR-0032" cancelOpen />);
+    expect(screen.getByText('Cancel this draft?')).toBeTruthy();
+  });
+  it('a part another draft needs warns under the line', () => {
+    render(<MovementsPage newTr newP="p16" />);
+    expect(screen.getByText(/also needs 1 of this part/)).toBeTruthy();
+  });
+});
+
 describe('axe', () => {
   const cases: [string, MovementsPageProps][] = [
+    ['transfers', { view: 'transfers' }], ['transfers draft', { view: 'transfers', tf: 'draft' }], ['transfer draft', { tr: 'TR-0032' }], ['transfer transit', { tr: 'TR-0030' }], ['transfer received', { tr: 'TR-0031' }],
+    ['transfer sent out', { tr: 'TR-0032', sent: true }], ['send question', { tr: 'TR-0032', sendOpen: true }], ['transfer clerk', { tr: 'TR-0032', as: 'clerk' }], ['cancel asks', { tr: 'TR-0032', cancelOpen: true }],
+    ['new transfer', { newTr: true }], ['change draft', { tr: 'TR-0032', edit: true }], ['new transfer warning', { newTr: true, newP: 'p16' }],
     ['ledger', {}], ['filters', { io: 'out', reason: 'sold' }], ['custom dates', { range: 'custom', from: 20, to: 22 }], ['job note', { jo: 'JO-0413' }], ['loading', { state: 'loading' }],
     ['error', { state: 'error' }], ['none', { mv: 'none' }], ['no results', { qs: 'zzzz' }], ['quiet', { state: 'quiet' }], ['clerk', { as: 'clerk' }], ['tenant b', { tenant: 'b' }],
     ['record', { record: true }], ['record product', { record: true, p: 'p01' }], ['record clerk', { record: true, p: 'p01', as: 'clerk' }], ['landed', { landed: true }], ['undo asks', { landed: true, undoOpen: true }],

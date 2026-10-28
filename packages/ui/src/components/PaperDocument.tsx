@@ -146,10 +146,10 @@ export function PaperDocument({
 
   /* Column classes. th and td share width and alignment (order-list.css 59-69, movements.css 106-116). */
   const col = {
-    code: 'w-[88px] whitespace-nowrap @max-[900px]/sheet:w-24 max-[640px]:!w-auto',
+    code: 'w-[88px] whitespace-nowrap @max-[900px]/sheet:w-24 max-[640px]:!w-auto print:!w-[88px]',
     qty: cn(
       transfer ? 'w-[88px] text-right' : 'w-[112px] @max-[900px]/sheet:w-[104px]',
-      'print:w-[60pt] print:text-right',
+      transfer ? 'print:!w-[88px] print:text-right' : 'print:w-[60pt] print:text-right',
     ),
     unit: 'hidden w-[52px] text-muted print:table-cell print:w-[44pt] print:text-[#111] max-[640px]:!hidden',
     rec: 'w-12 text-right',
@@ -362,7 +362,7 @@ export function PaperDocument({
       )}
 
       {note ? (
-        <div className="pb-1 pt-6 print:break-inside-avoid print:pt-[14pt]">
+        <div className={cn("pb-1 pt-6 print:break-inside-avoid print:pt-[14pt]", !note.onChange && !note.text && "hidden")}>
           {note.onChange ? (
             <label htmlFor="paper-note" className={cn('mb-[6px] block text-[12px] text-muted', printLabel)}>
               {note.label}
