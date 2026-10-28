@@ -1,5 +1,18 @@
 # @readyph/ui
 
+## 0.14.0
+
+### Minor Changes
+
+- 04f985a: RDY-382 Inventory frame (I23): PlatformShell `railWidth="wide"` (64px rail), IconRailMark `variant="letter"`, CountBadge `placement="tab"`, SheetBar `actionsFirst` and `SheetBarWhere`, `InventoryStatusBar`. Additive; existing consumers unchanged.
+- 18663d5: RDY-387 StockLevelBar (I3): violet stock level bar with reorder tick (row, wide, stocker).
+- 56649a8: RDY-390 I16 BarcodeSheet (new): scan or type a barcode in a bottom sheet (phone) or centred dialog (700px and up); product and capture modes, unknown-barcode state, prototype sample scans.
+- a4f23f1: RDY-392 OrderListsPanel (I8): the order lists cart, a right sheet with a ruled group per supplier.
+- a9147fb: RDY-396 I12 ShortDeliveryBlock (new): settle a short purchase-order delivery (accept the shortage, dispute, record the answer, or tell the manager) with inline confirm forms.
+- 1d6e4f8: RDY-397 MovementLedger (I13): Ledger | Transfers tabs, Transfers open line, ledger filters, day-grouped movement list.
+- 324f062: RDY-399 StockerFrame (I17): Stocker app frame with header, step line, pinned action bar and bottom tab bar.
+- 71caceb: RDY-401 Switch (I21): new look="settings" with visible On/Off (40x22 track, 16px thumb) and compact prop. Existing looks unchanged.
+
 ## 0.13.0
 
 ### Minor Changes
