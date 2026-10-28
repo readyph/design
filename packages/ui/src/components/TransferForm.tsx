@@ -9,7 +9,7 @@ import { Select } from './Select';
  * RDY-398 I15 (form). Transcribed from inventory-home FINAL/movements.css 124-139 (.tform .tf-*), 252, 292-299 (.recx .rcaside .hw), 313-318 (.tl-w),
  * 246-251 (<=640); stock.css 18-22, 42-48, 70-73 (.rc-*); products.css 126-130 (.tin); movements.js 427-452 (fPlan, fSum, warnHTML, fLinesHTML, formHTML),
  * 641-642 and 675-678 (Enter adds the first match, Enter in a quantity returns to search, Escape clears the search).
- * GAP: the line stepper is the shared QuantityStepper (I2); the source .tl-r .stp input is 72px.
+ * The line stepper is QuantityStepper look="transfer" (72px field, transparent buttons: movements.css 132, 306-307).
  */
 export interface TransferProduct {
   id: string;
@@ -73,7 +73,7 @@ const isJO = (s: string) => /^JO-\d+/.test(s);
 
 /* .tin (products.css 126-130) */
 const tin =
-  'block w-full h-[34px] px-[10px] border border-control rounded-control bg-surface text-text text-[14px] placeholder:text-muted hover:border-muted outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent focus-visible:border-accent';
+  'block w-full h-[34px] px-[10px] border border-control rounded-control bg-surface text-text text-[14px] max-[640px]:h-11 max-[640px]:text-[16px] placeholder:text-muted hover:border-muted outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent focus-visible:border-accent';
 /* .tform .rc-f .fr (movements.css 139, 252) */
 const fr = 'grid grid-cols-[148px_minmax(0,1fr)] gap-x-4 items-center max-[640px]:grid-cols-[minmax(0,1fr)] max-[640px]:gap-y-2';
 const frTop = 'items-start';
@@ -152,15 +152,15 @@ export function TransferForm({
 
   return (
     <div className={cn('', className)}>
-      <h1 className="mt-2 text-[length:var(--fs-case)] leading-7 font-semibold tracking-[-0.01em]">
-        {editingId ? <>Change <span className="text-[12px]">{editingId}</span></> : 'New transfer'}
+      <h1 className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-[length:var(--fs-title)] leading-7 font-semibold tracking-[-0.01em]">
+        {editingId ? <>Change <span className="text-[22px] font-semibold">{editingId}</span></> : 'New transfer'}
       </h1>
-      <p className="mt-5 max-w-[720px] text-[14px] leading-[21px] text-muted">
+      <p className="mt-5 max-w-[720px] text-[14px] leading-[21px] text-muted max-[640px]:mt-3">
         One document for both places. Stock leaves {hereShort} when you mark it sent, and goes into the other place when they check it in. Nothing moves while it is a draft.
       </p>
-      <div className="mt-8 grid grid-cols-[minmax(0,1fr)_320px] items-start gap-x-14 max-[1099px]:grid-cols-[minmax(0,1fr)] max-[1099px]:gap-y-8">
-        <div className="min-w-0 max-w-[860px]">
-          <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-[minmax(0,1fr)_320px] items-start gap-x-14 max-[1099px]:grid-cols-[minmax(0,1fr)]">
+        <div className="min-w-0 max-w-[860px] pt-4">
+          <div className="flex flex-col gap-5">
             <div className={fr}>
               <span className={fl}>From</span>
               <span className="text-[14px]"><b className="font-semibold">{hereName}</b> · this stockroom</span>
@@ -184,10 +184,10 @@ export function TransferForm({
                       <div key={l.productId} data-line={l.productId} className="grid grid-cols-[minmax(0,1fr)_auto_56px_auto] items-center gap-x-4 border-b border-rule py-3 max-[640px]:grid-cols-[minmax(0,1fr)_auto] max-[640px]:gap-y-[10px]">
                         <span className="min-w-0">
                           <span className={t1}>{l.p.name}</span>
-                          <span className={t2}><span className="text-[12px]">{l.p.sku}</span> · {l.p.onHand} on hand here</span>
+                          <span className={t2}><span className="font-mono text-[12px]">{l.p.sku}</span> · {l.p.onHand} on hand here</span>
                         </span>
                         <span ref={(el) => { qtyRefs.current[l.productId] = el; }} className="max-[640px]:col-start-1 max-[640px]:row-start-2">
-                          <QuantityStepper value={l.qty} min={1} max={l.p.onHand} productName={l.p.name} onValueChange={(n: number) => setLines((a) => a.map((x) => (x.productId === l.productId ? { ...x, qty: n } : x)))} onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => { if (e.key === 'Enter' && (e.target as HTMLElement).tagName === 'INPUT') { e.preventDefault(); search.current?.focus(); } }} />
+                          <QuantityStepper look="transfer" value={l.qty} min={1} max={l.p.onHand} productName={l.p.name} onValueChange={(n: number) => setLines((a) => a.map((x) => (x.productId === l.productId ? { ...x, qty: n } : x)))} onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => { if (e.key === 'Enter' && (e.target as HTMLElement).tagName === 'INPUT') { e.preventDefault(); search.current?.focus(); } }} />
                         </span>
                         <span className="text-[13px] text-muted max-[640px]:col-start-1 max-[640px]:row-start-3">{unitOf(l.p, l.qty)}</span>
                         <button type="button" data-tf-remove aria-label={`Remove ${l.p.name}`} onClick={() => remove(l.productId)} className={cn('inline-flex h-6 cursor-pointer items-center justify-self-end rounded-[4px] px-1 text-[12px] font-semibold text-accent hover:text-lk-hover max-[640px]:col-start-2 max-[640px]:row-[1/3] max-[640px]:min-h-11 max-[640px]:self-center', ring)}>
@@ -205,25 +205,25 @@ export function TransferForm({
                     <p className="border-b border-rule py-[14px] text-[13px] leading-[19px] text-muted">No product yet.</p>
                   )}
                 </div>
-                <div className="mt-4">
-                  <label className="relative mt-2 block">
+                <div className="relative mt-4">
+                  <label className="relative block">
                     <span className="sr-only">Add a product</span>
                     <MagnifyingGlass aria-hidden size={16} className="pointer-events-none absolute left-2.5 top-1/2 -mt-2 text-muted" />
                     <input ref={search} type="search" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={onSearchKey} placeholder="Add a product: type a name or code" autoComplete="off" className={cn(tin, 'pl-[34px]')} />
                   </label>
-                  <div className="mt-2">
+                  <div className={cn('absolute inset-x-0 top-full z-20 mt-1 max-h-80 overflow-y-auto rounded-lg border border-rule bg-surface shadow-[0_8px_24px_rgba(20,24,40,.14)]', !hits.length && !term && 'hidden')}>
                     {hits.length ? (
                       hits.map((p) => (
-                        <button key={p.id} type="button" onClick={() => add(p)} className={cn('grid w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 border-b border-rule bg-transparent px-2 py-[10px] text-left hover:bg-raised', ring)}>
+                        <button key={p.id} type="button" onClick={() => add(p)} className={cn('-mx-2 grid w-[calc(100%+16px)] cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 border-t border-rule bg-transparent px-2 py-[6px] text-left first:border-t-transparent hover:bg-raised max-[640px]:mx-0 max-[640px]:w-full max-[640px]:py-[10px]', ring)}>
                           <span className="min-w-0">
                             <span className="block text-[14px] leading-5 font-semibold">{p.name}</span>
                             <span className="mt-0.5 block text-[13px] leading-[18px] text-muted [overflow-wrap:anywhere]">
-                              <span className="text-[12px]">{p.sku}</span>
+                              <span className="font-mono text-[12px]">{p.sku}</span>
                               {p.location ? ` · ${p.location}` : ''}
                               {alsoFor?.(p.id) ? ` · ${alsoFor(p.id)}` : ''}
                             </span>
                           </span>
-                          <span className="text-right"><b className="text-[14px] font-semibold">{p.onHand}</b> <small className="text-[12px] text-muted">on hand</small></span>
+                          <span className="flex flex-col items-end gap-[3px] whitespace-nowrap text-right tabular-nums"><b className="text-[14px] font-semibold">{p.onHand}</b><small className="text-[12px] text-muted">on hand</small></span>
                         </button>
                       ))
                     ) : term ? (
@@ -235,9 +235,9 @@ export function TransferForm({
             </div>
             <div className={cn(fr, frTop)}>
               <label className={cn(fl, flTop)} htmlFor={`${uid}-note`}>Note for the driver</label>
-              <textarea id={`${uid}-note`} rows={2} maxLength={160} value={note} onChange={(e) => setNote(e.target.value)} placeholder="For example: for the car waiting at the branch." className={cn(tin, 'h-auto min-h-16 max-w-[520px] resize-y px-[10px] py-2 font-[inherit] leading-5')} />
+              <textarea id={`${uid}-note`} rows={2} maxLength={160} value={note} onChange={(e) => setNote(e.target.value)} placeholder="For example: for the car waiting at the branch." className={cn(tin, 'h-auto min-h-32 w-full max-w-none resize-y px-[10px] py-2 font-[inherit] leading-5 max-[640px]:!text-[14px]')} />
             </div>
-            <p role="status" aria-live="polite" className="m-0 text-[14px] leading-5 [&_b]:font-semibold">
+            <p role="status" aria-live="polite" className="m-0 ml-[164px] max-w-[620px] text-[14px] leading-[21px] max-[640px]:ml-0 [&_b]:font-semibold">
               {plan.err ? (
                 <span className={plan.blank ? 'text-muted' : 'font-medium text-bad'}>{plan.err}</span>
               ) : (
@@ -246,15 +246,15 @@ export function TransferForm({
                 </>
               )}
             </p>
-            <div className="flex flex-wrap items-center gap-3">
-              <Button variant="primary" leftIcon={Check} disabled={!plan.ok} onClick={() => onSave({ to, job: job.trim().toUpperCase(), note: note.trim(), lines })}>
+            <div className="ml-[164px] flex flex-wrap items-center gap-3 min-[641px]:max-[1100px]:ml-[136px] max-[640px]:ml-0 max-[640px]:gap-2">
+              <Button className="max-[640px]:h-11 max-[640px]:flex-auto" variant="primary" leftIcon={Check} disabled={!plan.ok} onClick={() => onSave({ to, job: job.trim().toUpperCase(), note: note.trim(), lines })}>
                 {editingId ? 'Save changes' : 'Create draft'}
               </Button>
-              <Button variant="text" onClick={onCancel}>Cancel</Button>
+              <Button className="max-[640px]:h-11 max-[640px]:flex-auto" variant="text" onClick={onCancel}>Cancel</Button>
             </div>
           </div>
         </div>
-        <aside aria-label="What happens next" className="min-w-0 pt-5">
+        <aside aria-label="What happens next" className="min-w-0 pt-5 max-[1099px]:max-w-[520px] max-[1099px]:pt-8 max-[640px]:pt-7">
           <h2 className="mb-0 border-b border-border pb-2 text-[13px] font-semibold">What happens next</h2>
           <ol className="m-0 list-none p-0 [&_b]:block [&_b]:text-[14px] [&_b]:leading-5 [&_b]:font-semibold [&_li]:border-b [&_li]:border-rule [&_li]:py-[14px] [&_li>span]:mt-0.5 [&_li>span]:block [&_li>span]:text-[13px] [&_li>span]:leading-[19px] [&_li>span]:text-muted">
             <li><b>Draft</b><span>You are here. Check the products, print the paper for the driver.</span></li>

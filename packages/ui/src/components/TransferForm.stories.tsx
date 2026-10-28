@@ -21,8 +21,8 @@ const meta: Meta<typeof TransferForm> = {
   component: TransferForm,
   tags: ['autodocs'],
   args: base,
-  decorators: [(Story) => <div className="bg-surface px-pad py-5"><Story /></div>],
-  parameters: { docs: { description: { component: 'Transfer form (RDY-398, I15). Source: inventory-home FINAL/movements.css 124-139, movements.js 427-452.' } } },
+  decorators: [(Story) => <div className="bg-surface px-4 py-5 min-[641px]:px-pad"><Story /></div>],
+  parameters: { layout: 'fullscreen', docs: { description: { component: 'Transfer form (RDY-398, I15). Source: inventory-home FINAL/movements.css 124-139, movements.js 427-452.' } } },
 };
 export default meta;
 type Story = StoryObj<typeof TransferForm>;

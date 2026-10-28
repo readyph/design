@@ -15,7 +15,7 @@ const steps = (s: 'draft' | 'transit' | 'received') => (
 const paper = <article aria-label="Stock transfer TR-0032" className="rounded-control border border-border p-6 text-[14px]">Transfer paper (PaperDocument, I9)</article>;
 const base: TransferDetailProps = {
   id: 'TR-0032', out: true, otherName: 'Cebu branch', status: 'draft',
-  facts: [<>From <b>Main stockroom</b></>, <>To <b>Cebu branch</b></>, '8 pcs', <>For <b>JO-0412</b></>],
+  facts: [<>From <b>Main stockroom</b></>, <>To <b>Cebu branch</b></>, '8 pcs', <>For <b className="font-mono">JO-0412</b></>],
   steps: steps('draft'), paper,
   history: [{ at: '22 Oct, 9:40 AM', who: 'Ana', what: 'Drafted the transfer' }],
   can: { send: true, receive: true, change: true },
@@ -27,8 +27,8 @@ const meta: Meta<typeof TransferDetail> = {
   component: TransferDetail,
   tags: ['autodocs'],
   args: base,
-  decorators: [(Story) => <div className="bg-surface px-pad py-5"><Story /></div>],
-  parameters: { docs: { description: { component: 'Transfer detail (RDY-398, I15). Source: inventory-home FINAL/movements.js 311-376, movements.css 107-121.' } } },
+  decorators: [(Story) => <div className="bg-surface px-4 py-5 min-[641px]:px-pad"><Story /></div>],
+  parameters: { layout: 'fullscreen', docs: { description: { component: 'Transfer detail (RDY-398, I15). Source: inventory-home FINAL/movements.js 311-376, movements.css 107-121.' } } },
 };
 export default meta;
 type Story = StoryObj<typeof TransferDetail>;

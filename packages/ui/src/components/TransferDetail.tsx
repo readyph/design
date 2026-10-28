@@ -61,12 +61,12 @@ const va = 'inline-flex h-6 cursor-pointer items-center rounded-[4px] px-1 text-
 /** Transfer detail (I15): header and state, facts, actions (one primary), inline send question, steps, note, the paper beside History. */
 export function TransferDetail(p: TransferDetailProps) {
   const { status, out } = p;
-  const print = <Button variant="secondary" leftIcon={Printer} disabled={p.disabled} onClick={p.onPrint}>Print</Button>;
+  const print = <Button className="max-[640px]:hidden" variant="secondary" leftIcon={Printer} disabled={p.disabled} onClick={p.onPrint}>Print</Button>;
   let actions: ReactNode;
   if (status === 'draft' && out) {
     actions = p.can.send ? (
       <>
-        {!p.confirming && <Button variant="primary" leftIcon={PaperPlaneTilt} disabled={p.disabled} onClick={p.onAskSend}>Mark as sent</Button>}
+        {!p.confirming && <Button className="max-[640px]:hidden" variant="primary" leftIcon={PaperPlaneTilt} disabled={p.disabled} onClick={p.onAskSend}>Mark as sent</Button>}
         {print}
       </>
     ) : (
@@ -81,7 +81,7 @@ export function TransferDetail(p: TransferDetailProps) {
   } else if (status === 'transit' && !out) {
     actions = (
       <>
-        {p.can.receive && <Button variant="primary" leftIcon={Truck} disabled={p.disabled} onClick={p.onReceive}>Receive transfer</Button>}
+        {p.can.receive && <Button className="max-[640px]:hidden" variant="primary" leftIcon={Truck} disabled={p.disabled} onClick={p.onReceive}>Receive transfer</Button>}
         {print}
       </>
     );
@@ -89,20 +89,20 @@ export function TransferDetail(p: TransferDetailProps) {
   const showSec = status === 'draft' && out && p.can.change;
   return (
     <div className={cn('', p.className)}>
-      <div className="mt-2 flex items-start gap-4">
-        <h1 className="text-[length:var(--fs-case)] leading-7 font-semibold tracking-[-0.01em]">
-          <span className="text-[12px]">{p.id}</span> <span className="font-semibold">{out ? 'to' : 'from'} {p.otherName}</span>
+      <div className="flex items-center gap-4 max-[640px]:flex-wrap max-[640px]:items-start max-[640px]:gap-x-3 max-[640px]:gap-y-2">
+        <h1 className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-[length:var(--fs-title)] leading-7 font-semibold tracking-[-0.01em]">
+          <span className="text-[22px] font-semibold">{p.id}</span> <span className="font-normal text-muted">{out ? 'to' : 'from'} {p.otherName}</span>
         </h1>
         <TransferStatusBadge status={status} />
       </div>
-      <div className="mt-2 flex flex-wrap items-center gap-y-1 text-[13px] leading-5 text-muted [&>span]:inline-flex [&>span]:items-center [&>span]:gap-1.5 [&>span]:whitespace-nowrap [&>span+span]:before:mx-1 [&>span+span]:before:ml-2.5 [&>span+span]:before:h-[3px] [&>span+span]:before:w-[3px] [&>span+span]:before:rounded-full [&>span+span]:before:bg-control [&>span+span]:before:content-[''] [&_b]:font-semibold [&_b]:text-text">
+      <div className="mt-3 flex flex-wrap items-center gap-y-1 text-[13px] leading-5 text-muted [&>span]:inline-flex [&>span]:items-center [&>span]:gap-1.5 [&>span]:whitespace-nowrap [&>span+span]:before:mx-1 [&>span+span]:before:ml-2.5 [&>span+span]:before:h-[3px] [&>span+span]:before:w-[3px] [&>span+span]:before:rounded-full [&>span+span]:before:bg-control [&>span+span]:before:content-[''] [&_b]:font-semibold [&_b]:text-text">
         {p.facts.map((f, i) => <span key={i}>{f}</span>)}
       </div>
-      <div className="mt-4">
+      <div className="mt-6">
         <div className="flex flex-wrap items-center gap-3">
           {actions}
           {showSec && (
-            <span className="ml-3 inline-flex items-center gap-4 text-[13px]">
+            <span className="ml-3 inline-flex items-center gap-4 text-[13px] max-[640px]:ml-0">
               <button type="button" className={va} disabled={p.disabled} onClick={p.onChange}>Change the draft</button>
               <button type="button" className={va} disabled={p.disabled} onClick={p.onCancelDraft}>Cancel this draft</button>
             </span>

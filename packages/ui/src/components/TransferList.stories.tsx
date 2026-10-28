@@ -15,8 +15,8 @@ const meta: Meta<typeof TransferList> = {
   component: TransferList,
   tags: ['autodocs'],
   args: { transfers: rows, filter: 'all', counts, onFilterChange: () => {}, onOpen: () => {}, onNew: () => {} },
-  decorators: [(Story) => <div className="bg-surface px-pad py-5"><Story /></div>],
-  parameters: { docs: { description: { component: 'Transfer list (RDY-398, I15). Transfer | Status | Items | When | action, filtered by status. Source: inventory-home FINAL/movements.css 89-105, movements.js 211-253.' } } },
+  decorators: [(Story) => <div className="bg-surface px-4 py-5 min-[641px]:px-pad"><Story /></div>],
+  parameters: { layout: 'fullscreen', docs: { description: { component: 'Transfer list (RDY-398, I15). Transfer | Status | Items | When | action, filtered by status. Source: inventory-home FINAL/movements.css 89-105, movements.js 211-253.' } } },
 };
 export default meta;
 type Story = StoryObj<typeof TransferList>;
