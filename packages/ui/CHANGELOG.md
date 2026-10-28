@@ -1,5 +1,46 @@
 # @readyph/ui
 
+## 0.15.0
+
+### Minor Changes
+
+- 2392960: RDY-385 DayTimeline and DayTimelinePhone (I6): the day's lanes on a time axis with chips laid out in up to four rows, and the phone vertical list.
+- c46dbf9: RDY-388 ProductList (I7): ProductList, ProductRow, ProductStatusTabs, ProductFilters, ProductSelectionBar, ProductSupplierBar, OrderListsStrip.
+- 1d1d904: RDY-389 RecordMovementForm (I14): product picker with scan button and "Likely today", five reasons, quantity, job order, note, summary line and actions.
+- 18ac1f1: RDY-391 NewProductRequest (I19): NewProductForm and NewProductBar for the stocker, NewProductRequests ("Needs setting up" rows) for the manager.
+- 3ab4508: RDY-393 PaperDocument (I9): the printed order list, purchase order and stock transfer paper, with the print rules. Generated globals gain the `@page` margin (15mm 16mm 18mm).
+- 02294e5: RDY-394 I10 Progress steps (new): ProgressSteps (step bar, states done/now/next/off, late flag) and SideSteps (numbered side steps).
+- 7d8b889: RDY-395 ReceiveForm (I11): count what arrived against a purchase order, with the one number rule, damaged units, the summary and Confirm/Cancel. QuantityStepper gains an optional `look` prop (`receive`, `damaged`) for the count lines; the default is unchanged.
+- 5145c07: RDY-398 Transfers (I15): TransferList, TransferForm, TransferDetail, TransferStatusBadge. QuantityStepper gains `look="transfer"` (72px field, transparent buttons); existing looks unchanged.
+- 87d9035: RDY-399 StockerFrame: remove the `flow` prop. The workshop never hides the tab bar, so tabs are always shown except on the signed-out screen. Consumers passing `flow` must drop it.
+- d510989: RDY-400 StockerRow, StockerStatus, StockerId and StockerFacts (I18): the Stocker list row (what, where, how many, action) and the ruled product facts list.
+- 1f933ed: RDY-402 SettingsModal (I20): My settings as a modal with a side nav, and the inline page form (SettingsForm). Switch (settings look) gains aria-describedby.
+- fa3d024: QuantityStepper: new compact prop (28px buttons, 48px field) for the Order lists paper. Default unchanged.
+- fa3d024: SheetBarWhere: optional `parent` crumb; `note` accepts a node (RDY-405).
+- 9324888: RDY-445 StockRunway lane-embedded day variant (I5): `variant="lane"` draws the day at 128px, full width, inside a timeline lane. New optional props: variant, confirmed, laterLabel, endAction, point.d, alt.points. Standalone output unchanged.
+
+### Patch Changes
+
+- 9e692e2: RDY-403 Inventory Home final assembly (prototype only, not exported). HomeZones gains an optional `mid` slot; Pill is exported from the zones file.
+- c70c278: RDY-406 PlatformShell: print rules (rail, bars and status hidden, sheet flows on the page) so the Inventory Purchase orders page prints as in the workshop.
+- de72cb6: RDY-407 Movements final assembly (prototype only, not exported): Ask Leda conversation and palette for Movements.
+- eeb428a: RDY-410 Signed out prototype (Prototypes/Inventory, not exported from the package).
+- 1478ae6: RDY-422 Inventory Home 2/5 (b): timeline panel and runway story (prototype only, not exported).
+- 834f80f: RDY-423 Inventory Home 3/5 (c): zones stories (prototype only, not exported).
+- e601bea: RDY-424 Inventory Home 4/5 (d): case view, phone vertical timeline and role variants stories (prototype only, not exported).
+- d7d4d34: RDY-427 Purchase orders prototype 3/5 (c): the one-order view (prototype only, not exported). InventoryChrome gains optional detail and actionBar pass-through.
+- f5c89fb: RDY-428 Purchase orders prototype 4/5 (d): Receive and short-delivery wiring (prototype only, not exported).
+- f5257e0: RDY-429 StockerFrame: 4px gap between the tab bar columns, as computed in the workshop (shell.css .tabs gap leaks into stocker.css .tabs). Prototype files for the Stocker frame are not exported.
+- 0b7186a: RDY-431 Stocker Stock in prototype story (Prototypes/Inventory/Stocker); StockerSection takes a className. Prototype only, not exported.
+- 5b765bb: RDY-432 Stocker Stock out story (Prototypes/Inventory/Stocker); Stocker.in.tsx helpers exported for reuse.
+- b0edf3c: RDY-433 Stocker Find (5/6 e) prototype stories (Find, product, new product, tell your manager). Prototype only.
+- 0141ab8: RDY-434 SettingsForm (I20), `compact` page form on the stocker phone: section headers are the quiet band (stocker.css 228-231), Log out is the 52px secondary button (.sb), the sticky Save bar sits above the tab bar, load error "Try again" is 44px. Other layouts unchanged.
+- 73f62b4: RDY-436 MovementFilters: optional `extra` slot (From and To date fields) and `activeFilters`; on a phone the Show menu, a Filters button and collapsible menus replace the toggles and the four-menu row.
+- a790a13: RDY-437 Prototypes/Inventory/Movements: Record movement sub-page and Undo (prototype only, nothing exported).
+- fc25416: RDY-438 Prototypes/Inventory/Movements: Transfers view (list, detail, send, cancel, new transfer, change draft) composed from I15 (prototype only, nothing exported).
+- 7d677cb: RDY-440 Prototypes/Inventory/Movements: Receive transfer (count lines, short receipt, confirm and undo), page-level, prototype only, nothing exported.
+- 4c463ec: RDY-446 Order lists: sent purchase order is pickable on phone (prototype only, not exported).
+
 ## 0.14.0
 
 ### Minor Changes
