@@ -270,7 +270,7 @@ export function PurchaseOrdersPage({ tenant = 'a', as = 'manager', state, pos, a
   /* 230-238 listHTML */
   const body = loading ? loadingBody : poErr ? (
     <div className="flex flex-col gap-8 max-[640px]:gap-7">
-      <div role="alert" className="m-0 flex items-center gap-2.5 rounded-card border border-dashed border-control px-3 py-2.5 text-[13px]"><WarningCircle aria-hidden size={16} className="flex-none text-bad" /><span>{`Purchase orders did not load. This is the list from ${now.lastLoaded}. Nothing can be received, cancelled or sent until it loads, so nothing is counted twice.`}</span><Button variant="secondary" leftIcon={ArrowClockwise} className="ml-auto" onClick={() => setRetried(true)}>Retry</Button></div>
+      <div role="alert" className="m-0 flex items-center print:hidden gap-2.5 rounded-card border border-dashed border-control px-3 py-2.5 text-[13px]"><WarningCircle aria-hidden size={16} className="flex-none text-bad" /><span>{`Purchase orders did not load. This is the list from ${now.lastLoaded}. Nothing can be received, cancelled or sent until it loads, so nothing is counted twice.`}</span><Button variant="secondary" leftIcon={ArrowClockwise} className="ml-auto" onClick={() => setRetried(true)}>Retry</Button></div>
       <div {...({ inert: '' } as object)} className="mt-6"><section className="flex min-w-0 flex-col [&_[data-row]]:opacity-60">{results()}</section></div>
     </div>
   ) : !all.length ? <div className="flex flex-col gap-8 max-[640px]:gap-7">{empty}</div> : (

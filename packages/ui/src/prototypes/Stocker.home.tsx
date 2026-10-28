@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ChatCircleText } from '@phosphor-icons/react';
 import { StockerRow, StockerId } from '../components/StockerRow';
 import { StockerActs, StockerButton, StockerEmpty, StockerError, StockerNoProducts, StockerPageFrame, StockerSection, StockerSkeleton } from './Stocker.frame';
+import { StockerNpAskPage } from './Stocker.find';
 import { stockerData, type Stocker, type StockerParams } from './Stocker.data';
 
 /*
@@ -47,6 +48,7 @@ function Activity({ s }: { s: Stocker }) {
 }
 
 export function StockerHomePage(params: StockerParams) {
+  if (params.np != null || params.ask != null) return <StockerNpAskPage {...params} />;
   const s = stockerData(params);
   const F = s.flags;
   const dl = s.deliveries(), ts = s.toSend(), tc = s.toCheck();
