@@ -280,7 +280,7 @@ export function SettingsForm(props: SettingsFormProps) {
   const errCls = 'text-[13px] font-semibold leading-[19px] text-bad empty:hidden';
   const helpIn = (cls?: string) => cn(mutedH, cls);
   const linkCls = cn('inline-block h-6 px-0 text-[15px] leading-[22px]', compact ? 'min-h-11 !inline-flex items-center' : 'max-[640px]:min-h-11 max-[640px]:!inline-flex max-[640px]:items-center');
-  const helpLink = cn('h-6 px-0', compact ? 'min-h-11 !inline-flex items-center' : 'max-[640px]:min-h-11 max-[640px]:!inline-flex max-[640px]:items-center');
+  const helpLink = cn('h-6 px-0 leading-[19px]', compact ? 'min-h-11 !inline-flex items-center' : 'max-[640px]:min-h-11 max-[640px]:!inline-flex max-[640px]:items-center');
   // Rendered in the workshop at 12px / 21px, gap 4px, 24px high (computed); max-[640px]: .ms-bar .va min-height 44.
   const barLink = cn('!flex h-6 gap-1 px-0 text-[12px] leading-[21px]', compact ? 'min-h-11' : 'max-[640px]:min-h-11');
   const inCls = cn(
@@ -301,8 +301,8 @@ export function SettingsForm(props: SettingsFormProps) {
           compact && 'grid-cols-[minmax(0,1fr)] gap-y-2 pt-7',
         ),
   );
-  const shCls = modal ? 'm-0 flex flex-col items-start pb-1 pt-4' : 'max-[1099px]:pb-2';
-  const shH2 = modal ? 'sr-only' : 'text-[16px] font-semibold leading-[22px]';
+  const shCls = modal ? 'm-0 flex flex-col items-start pb-1 pt-4' : compact ? '-mx-5 flex items-center gap-2.5 bg-raised px-5 py-2 max-[360px]:-mx-4 max-[360px]:px-4' : 'max-[1099px]:pb-2';
+  const shH2 = modal ? 'sr-only' : compact ? 'gap-2 text-[16px] font-semibold uppercase leading-[22px] tracking-[.08em] text-muted' : 'text-[16px] font-semibold leading-[22px]';
   const shP = cn(modal ? 'mt-0 pl-0 text-[13px] leading-[19px] text-muted' : 'mt-1 text-[13px] leading-[19px] text-muted');
 
   const hd = (sid: string, t: string, help: ReactNode) => {
@@ -310,7 +310,7 @@ export function SettingsForm(props: SettingsFormProps) {
     return (
       <div className={shCls}>
         <h2 id={id(`-h-${sid}`)} className={cn('m-0 flex items-center gap-2', shH2)}>
-          <Ic aria-hidden size={18} className={modal ? '' : 'hidden'} />
+          <Ic aria-hidden size={18} className={modal ? '' : compact ? 'flex-none tracking-[0] text-muted' : 'hidden'} />
           {t}
         </h2>
         <p className={shP}>{help}</p>
@@ -379,7 +379,7 @@ export function SettingsForm(props: SettingsFormProps) {
           <p>
             <b>Your settings did not load.</b> Nothing was changed. Last loaded {lastLoaded}.
           </p>
-          <ActionLink onClick={onRetry}>Try again</ActionLink>
+          <ActionLink onClick={onRetry} className={compact ? '!inline-flex min-h-[var(--tap)] items-center rounded-[4px] px-1 text-[15px] leading-[22px]' : undefined}>Try again</ActionLink>
         </div>
       </div>
     );
@@ -677,10 +677,13 @@ export function SettingsForm(props: SettingsFormProps) {
                   id={id('-logout')}
                   href={signOutHref}
                   className={cn(
-                    'mt-0 inline-flex min-h-10 w-auto items-center gap-2 rounded-control border border-control bg-surface px-4 text-[14px] font-semibold text-text no-underline hover:border-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent max-[640px]:min-h-12 max-[640px]:w-full max-[640px]:justify-center',
+                    'inline-flex items-center rounded-control border border-control bg-surface font-semibold text-text no-underline hover:border-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+                    compact
+                      ? 'mt-7 min-h-[var(--tap-big)] w-full justify-center gap-2.5 rounded-[8px] border-[1.5px] px-5 text-[16px] leading-[22px]'
+                      : 'mt-0 min-h-10 w-auto gap-2 px-4 text-[14px] max-[640px]:min-h-12 max-[640px]:w-full max-[640px]:justify-center',
                   )}
                 >
-                  <SignOut aria-hidden size={16} />
+                  <SignOut aria-hidden size={compact ? 20 : 16} />
                   Log out
                 </a>
                 <p className={helpIn(modal ? 'mt-2' : '')}>
@@ -697,7 +700,7 @@ export function SettingsForm(props: SettingsFormProps) {
           'flex items-center gap-4 border-t border-border bg-surface',
           modal
             ? 'flex-none px-6 py-[14px] max-[640px]:px-4 max-[640px]:pb-[calc(12px+env(safe-area-inset-bottom))] max-[640px]:pt-3 min-[641px]:col-span-2 min-[641px]:col-start-1 min-[641px]:row-start-2'
-            : 'sticky bottom-0 z-[3] mt-10 pb-[calc(14px+env(safe-area-inset-bottom))] pt-[14px]',
+            : cn('sticky z-[3] mt-10 pb-[calc(14px+env(safe-area-inset-bottom))] pt-[14px]', compact ? 'bottom-[calc(var(--tabh)+env(safe-area-inset-bottom))]' : 'bottom-0'),
           barStack,
         )}
         id={id('-bar')}
