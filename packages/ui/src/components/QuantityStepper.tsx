@@ -17,20 +17,24 @@ export interface QuantityStepperProps extends Omit<HTMLAttributes<HTMLDivElement
   productName?: string;
   /**
    * `receive` (arrived count) and `damaged` (damaged count) are the Receive form's count lines (purchase-orders.css 134-137, 268-270; products.css 226, 363):
-   * transparent background, 72px (arrived) or 88px (damaged) field, 48px phone buttons. Default keeps every existing consumer unchanged.
+   * transparent background, 72px (arrived) or 88px (damaged) field, 48px phone buttons. `transfer` is the Transfer form line (movements.css 132, 250, 306-307):
+   * transparent buttons, 72px surface field, default phone sizes. Default keeps every existing consumer unchanged.
    */
-  look?: 'default' | 'receive' | 'damaged';
+  look?: 'default' | 'receive' | 'damaged' | 'transfer';
 }
 
 const control =
   'grid h-9 w-9 flex-none cursor-pointer place-items-center border border-control bg-surface text-[14px] text-text hover:border-muted hover:bg-raised max-[640px]:h-11 max-[640px]:w-[52px]';
 const controlCount =
   'grid h-9 w-9 flex-none cursor-pointer place-items-center border border-control bg-transparent text-[14px] text-text hover:border-muted hover:bg-raised max-[640px]:h-12 max-[640px]:w-12';
+const controlTransfer =
+  'grid h-9 w-9 flex-none cursor-pointer place-items-center border border-control bg-transparent text-[14px] text-text hover:border-muted hover:bg-raised max-[640px]:h-11 max-[640px]:w-[52px]';
 const fieldBase =
   'rounded-none border border-x-0 border-control p-0 text-center font-semibold tabular-nums text-text [appearance:textfield] focus-visible:border-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none';
 const FIELD = {
   default: `${fieldBase} h-9 w-[88px] bg-surface text-[16px] max-[640px]:h-11 max-[640px]:w-auto max-[640px]:flex-1`,
   receive: `${fieldBase} h-9 w-[72px] bg-transparent text-[16px] max-[640px]:h-12 max-[640px]:w-auto max-[640px]:flex-1 max-[640px]:text-[18px]`,
+  transfer: `${fieldBase} h-9 w-[72px] bg-surface text-[16px] max-[640px]:h-11 max-[640px]:w-auto max-[640px]:flex-1`,
   damaged: `${fieldBase} h-9 w-[88px] bg-transparent text-[16px] max-[640px]:h-11 max-[640px]:w-auto max-[640px]:flex-1`,
 } as const;
 
@@ -72,7 +76,7 @@ export function QuantityStepper({
     onValueChange(next);
   };
 
-  const ctl = look === 'default' ? control : controlCount;
+  const ctl = look === 'default' ? control : look === 'transfer' ? controlTransfer : controlCount;
   const suffix = productName ? ` ${productName}` : '';
 
   return (
