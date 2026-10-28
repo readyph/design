@@ -4,7 +4,7 @@ import { PurchaseOrdersPage } from './PurchaseOrders.page';
 /**
  * [For Review] RDY-426. Prototype only: stories are not exported from the package. Purchase orders, list view (handover 2.5; slice b of 5).
  * Source: inventory-home FINAL purchase-orders.html, purchase-orders.js 150-238, purchase-orders.css. Data: PurchaseOrders.data.ts (RDY-425).
- * RDY-427 (slice c) appends the one-order view: purchase-orders.js 239-333, 371-394, 585-600, 631-635. Later slices append Receive and the final assembly.
+ * RDY-427 (slice c) appends the one-order view: purchase-orders.js 239-333, 371-394, 585-600, 631-635. RDY-428 (slice d) appends Receive and the short-delivery block. The final assembly follows.
  */
 const meta: Meta<typeof PurchaseOrdersPage> = { title: 'Prototypes/Inventory/Purchase orders', component: PurchaseOrdersPage, parameters: { layout: 'fullscreen' } };
 export default meta;
@@ -36,3 +36,24 @@ export const OrderClerkDraft: Story = { name: 'One order: clerk, draft', args: {
 export const OrderLate: Story = { name: 'One order: late (&asof=2)', args: { po: 'PO-0222', asof: 2 } };
 export const OrderTenantB: Story = { name: 'One order: tenant B', args: { po: 'PO-0046', tenant: 'b' } };
 export const OrderPhone: Story = { name: 'Phone 390 order', args: { po: 'PO-0223' }, parameters: { viewport: { defaultViewport: 'mobile1' } } };
+
+/* RDY-428, slice d: Receive (&receive=1) and the short-delivery block (purchase-orders.js 334-370, 395-478, 539-641) */
+const NOTE = { by: 'berto', at: 'Thu 22 Oct 9:12 AM' };
+export const Receive: Story = { name: 'Receive: What actually arrived? (?po=PO-0222&receive=1)', args: { po: 'PO-0222', receive: true } };
+export const ReceivePartIn: Story = { name: 'Receive: part in, 8 of 12 (?po=PO-0223&receive=1)', args: { po: 'PO-0223', receive: true } };
+export const ReceiveClerk: Story = { name: 'Receive: clerk', args: { po: 'PO-0222', receive: true, as: 'clerk' } };
+export const ReceivePhone: Story = { name: 'Phone 390 Receive', args: { po: 'PO-0222', receive: true }, parameters: { viewport: { defaultViewport: 'mobile1' } } };
+export const ReceiveTenantB: Story = { name: 'Receive: tenant B', args: { po: 'PO-0046', receive: true, tenant: 'b' } };
+export const PickDeliveryStory: Story = { name: 'Receive a delivery: which delivery arrived?', args: { pick: true } };
+export const ShortPartIn: Story = { name: 'Short delivery: part in, settle now (?po=PO-0223)', args: { po: 'PO-0223' } };
+export const ShortClosed: Story = { name: 'Short delivery: closed short, awaiting you (?po=PO-0221)', args: { po: 'PO-0221' } };
+export const ShortAcceptForm: Story = { name: 'Short delivery: accept the shortage (?settle=accept)', args: { po: 'PO-0221', settle: 'accept' } };
+export const ShortDisputeForm: Story = { name: 'Short delivery: dispute with the supplier (?settle=dispute)', args: { po: 'PO-0221', settle: 'dispute' } };
+export const ShortAccepted: Story = { name: 'Short delivery: accepted', args: { po: 'PO-0221', records: { acc: { 'PO-0221': { ...NOTE, why: 'never', note: '' } } } } };
+export const ShortDisputed: Story = { name: 'Short delivery: disputed, Record the answer', args: { po: 'PO-0221', records: { dsp: { 'PO-0221': { ...NOTE, reason: 'short', status: 'open', ref: 'PD-118', note: 'Driver said the rest is on the next truck.' } } } } };
+export const ShortRecordAnswer: Story = { name: 'Short delivery: record the answer (?settle=resolve)', args: { po: 'PO-0221', settle: 'resolve', records: { dsp: { 'PO-0221': { ...NOTE, reason: 'short', status: 'open' } } } } };
+export const ShortResolvedCredit: Story = { name: 'Short delivery: dispute resolved, credit', args: { po: 'PO-0221', records: { dsp: { 'PO-0221': { ...NOTE, reason: 'short', status: 'resolved', outcome: 'credit', credit: '500', rby: 'berto', rat: 'Thu 22 Oct 9:30 AM' } } } } };
+export const ShortClerk: Story = { name: 'Short delivery: clerk (tell the manager)', args: { po: 'PO-0221', as: 'clerk' } };
+export const ShortClerkTold: Story = { name: 'Short delivery: clerk told the manager', args: { po: 'PO-0221', as: 'clerk', records: { told: { 'PO-0221': { by: 'nonoy', at: 'Thu 22 Oct 9:14 AM', note: 'Six short on the 10W-40.' } } } } };
+export const ShortError: Story = { name: 'Short delivery: error (buttons disabled)', args: { po: 'PO-0221', state: 'error' } };
+export const ShortPhone: Story = { name: 'Phone 390 short delivery', args: { po: 'PO-0221' }, parameters: { viewport: { defaultViewport: 'mobile1' } } };

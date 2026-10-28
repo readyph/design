@@ -55,10 +55,14 @@ export interface OrderViewProps {
   disabled?: boolean;
   /** Story only: the Undo this receipt question is open. */
   undoOpen?: boolean;
+  /** RDY-428: the short-delivery block (settleHTML 341), placed between the actions and the steps. */
+  settle?: ReactNode;
+  /** RDY-428: Receive delivery opens the Receive form. */
+  onReceive?: () => void;
 }
 
 /** One order (purchase-orders.js 382-394): header, facts, actions, inline question, steps, what was ordered, supplier, notes, history. */
-export function PurchaseOrderView({ M, po, extras: X, stateBadge, confirm, onConfirm, disabled, undoOpen = false }: OrderViewProps) {
+export function PurchaseOrderView({ M, po, extras: X, stateBadge, confirm, onConfirm, disabled, undoOpen = false, settle, onReceive }: OrderViewProps) {
   const [undo, setUndo] = useState(undoOpen);
   const [why, setWhy] = useState('');
   const { can, money } = M;
@@ -105,7 +109,7 @@ export function PurchaseOrderView({ M, po, extras: X, stateBadge, confirm, onCon
       ? <Button leftIcon={PaperPlaneTilt} disabled={disabled} className="max-[640px]:hidden" onClick={() => onConfirm('send')}>Mark as sent</Button>
       : asked ? null : <Button leftIcon={PaperPlaneTilt} disabled={disabled} className="h-auto min-h-10 max-w-full whitespace-normal py-2 text-left leading-5 max-[640px]:hidden">Ask your manager to mark it sent</Button>}{paper('secondary')}</>;
   } else if (M.isOpen(po)) {
-    acts = <>{can('receive') ? <Button leftIcon={Truck} disabled={disabled} className="max-[640px]:hidden">Receive delivery</Button> : null}{paper('secondary')}</>;
+    acts = <>{can('receive') ? <Button leftIcon={Truck} disabled={disabled} className="max-[640px]:hidden" onClick={onReceive}>Receive delivery</Button> : null}{paper('secondary')}</>;
   }
   const sec = s === 'ORDERED'
     ? (mg ? <button type="button" className={VA} disabled={disabled} onClick={() => onConfirm('cancel')}>Cancel this order</button> : <span className={MUT}>Your manager cancels orders. Ask your manager if this one should not come.</span>)
@@ -245,8 +249,9 @@ export function PurchaseOrderView({ M, po, extras: X, stateBadge, confirm, onCon
       </div>
       <div className={cn(hasActs || q ? 'mt-6' : '')}>
         {hasActs ? <div className="flex flex-wrap items-center gap-3">{acts}{sec ? <span className="ml-3 inline-flex items-center gap-4 text-[13px] max-[640px]:ml-0">{sec}</span> : null}</div> : null}
-        {q}
+        {settle ? null : q}
       </div>
+      {settle}
       <ProgressSteps steps={steps} />
       {note}
       <div className="mt-10 grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)] grid-rows-[auto_1fr] items-start gap-x-12 gap-y-10 [grid-template-areas:'ln_prt'_'hi_prt'] max-[1099px]:grid-cols-[minmax(0,1fr)] max-[1099px]:grid-rows-[auto] max-[1099px]:[grid-template-areas:'ln'_'hi'_'prt'] max-[640px]:mt-8 max-[640px]:gap-8">
