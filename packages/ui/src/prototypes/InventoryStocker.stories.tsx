@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { StockerFramePage } from './Stocker.page';
 import { StockerHomePage } from './Stocker.home';
+import { StockerInPage } from './Stocker.in';
 
 /**
  * [For Review] RDY-429, Stocker 1/6 (a). Prototype only: stories are not exported from the package. Stocker (handover 2.7): the shared frame, tabs, steps and states.
@@ -30,3 +31,19 @@ export const HomeError: HomeStory = { ...homeMeta, name: '[For Review] Stocker H
 export const HomeEmpty: HomeStory = { ...homeMeta, name: '[For Review] Stocker Home empty (?state=empty)', args: { state: 'empty' }, render: (a) => <StockerHomePage {...a} /> };
 export const HomeQuiet: HomeStory = { ...homeMeta, name: '[For Review] Stocker Home quiet (?state=quiet)', args: { state: 'quiet' }, render: (a) => <StockerHomePage {...a} /> };
 export const HomeTenantB: HomeStory = { ...homeMeta, name: '[For Review] Stocker Home (tenant B)', args: { tenant: 'b' }, render: (a) => <StockerHomePage {...a} /> };
+
+const inMeta = { component: StockerInPage };
+type InStory = StoryObj<typeof StockerInPage>;
+const inStory = (name: string, args: Record<string, unknown> = {}, parameters?: typeof small): InStory => ({ ...inMeta, name: `[For Review] Stocker Stock in${name}`, args, parameters, render: (a) => <StockerInPage {...a} /> });
+export const StockIn: InStory = inStory('');
+export const StockInSmall: InStory = inStory(' (360)', {}, small);
+export const StockInLoading: InStory = inStory(' loading (?state=loading)', { state: 'loading' });
+export const StockInOrder: InStory = inStory(' which order (?via=order)', { via: 'order' });
+export const StockInOrderError: InStory = inStory(' which order error (?via=order&state=error)', { via: 'order', state: 'error' });
+export const StockInOrderQuiet: InStory = inStory(' which order quiet (?via=order&state=quiet)', { via: 'order', state: 'quiet' });
+export const StockInOther: InStory = inStory(' something else (?via=other)', { via: 'other' });
+export const StockInOtherProduct: InStory = inStory(' something else, product picked (?via=other&p=)', { via: 'other', p: 'p04' });
+export const StockInReceive: InStory = inStory(' receive an order (?po=)', { po: 'PO-0222' });
+export const StockInCheckIn: InStory = inStory(' check in a transfer (?tr=)', { tr: 'TR-0030' });
+export const StockInDone: InStory = inStory(' done (?done=1)', { done: true });
+export const StockInTenantB: InStory = inStory(' (tenant B)', { tenant: 'b' });

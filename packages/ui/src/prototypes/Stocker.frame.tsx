@@ -20,10 +20,10 @@ const ICONS: [RegExp, typeof Package][] = [
 const iconFor = (t: string) => (ICONS.find((x) => x[0].test(t)) || [null, ListBullets])[1];
 
 /** A section: a quiet band with an icon and small caps label, an optional count, a note, then ruled rows (.sec). */
-export function StockerSection({ id, title, help, n, children }: { id: string; title: string; help?: ReactNode; n?: number | null; children?: ReactNode }) {
+export function StockerSection({ id, title, help, n, className, children }: { id: string; title: string; help?: ReactNode; n?: number | null; className?: string; children?: ReactNode }) {
   const Icon = iconFor(title);
   return (
-    <section aria-labelledby={`h-${id}`} className="mt-7">
+    <section aria-labelledby={`h-${id}`} className={className ?? 'mt-7'}>
       <div className="-mx-5 flex items-center gap-2.5 bg-raised px-5 py-2 max-[360px]:-mx-4 max-[360px]:px-4">
         <h2 id={`h-${id}`} className="m-0 flex items-center gap-2 text-[12px] font-semibold uppercase leading-[18px] tracking-[.08em] text-muted">
           <Icon size={18} aria-hidden="true" className="tracking-[0] text-muted" />
