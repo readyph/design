@@ -42,6 +42,7 @@ export * from './components/BarcodeSheet';
 export * from './components/List';
 export * from './components/AskLedaBar';
 export * from './components/ReadyMark';
+export * from './components/ReceiveForm';
 export * from './components/IconRail';
 export * from './components/PlatformShell';
 export { PortalFrame, DetailTopBar, type PortalFrameProps, type DetailTopBarProps, type PortalPage, type PortalDest, type PortalAccount } from './components/PortalFrame';
