@@ -124,9 +124,9 @@ export interface TownMapProps {
   onAdd?: () => void;
   /** Accessible name of the whole map (a group of buttons, one per platform). */
   label?: string;
-  /** Overrides the accessible name of a platform button. */
+  /** Overrides the accessible name of a platform button. Start it with the visible label (WCAG 2.5.3). Default: the visible text followed by visually hidden status. */
   platformLabel?: (p: TownMapPlatform) => string;
-  /** Overrides the accessible name of the HQ button (default "HQ, your team and plan"). */
+  /** Overrides the accessible name of the HQ button. Start it with the visible label (WCAG 2.5.3). Default: the visible text followed by "your team and plan". */
   hqLabel?: (p: TownMapPlatform) => string;
   /** A second line under the HQ label (shown when selected or hovered), like "HQ · 6 of 7 on". Without it the HQ label is one line. */
   hqSub?: (p: TownMapPlatform) => string;
@@ -147,10 +147,11 @@ const slotHex = (p: TownMapPlatform): string => {
   return identity[((((p.index ?? 1) - 1) % 8) + 8) % 8];
 };
 
-const defaultLabel = (p: TownMapPlatform): string => {
-  const n = p.count ? `, ${p.count} need you` : '';
-  if (p.hq) return `HQ, your team and plan${n}`;
-  return `${p.name}, ${p.kind}, ${p.error ? 'no data' : statusWord[p.status].toLowerCase()}${n}`;
+/** Visually hidden text appended after the visible label, so the accessible name starts with what is on screen (WCAG 2.5.3). */
+const hiddenContext = (p: TownMapPlatform, hasCount: boolean): string => {
+  const n = hasCount ? ', need you' : '';
+  if (p.hq) return `, your team and plan${n}`;
+  return `, ${p.error ? 'no data' : statusWord[p.status].toLowerCase()}${n}`;
 };
 
 /** Shape-coded status mark (never colour alone): slow = filled dot, offline = ring, no data = dashed ring. */
@@ -204,8 +205,8 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
     errorNotice = true,
     fadeOthers = false,
     label = 'Platform map',
-    platformLabel = defaultLabel,
-    hqLabel = defaultLabel,
+    platformLabel,
+    hqLabel,
     hqSub,
     className,
   },
@@ -458,7 +459,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
                     data-sel={sel ? '' : undefined}
                     data-hl={hl ? '' : undefined}
                     data-count={n ? '' : undefined}
-                    aria-label={p.hq ? hqLabel(p) : platformLabel(p)}
+                    aria-label={(p.hq ? hqLabel : platformLabel)?.(p)}
                     aria-pressed={sel}
                     aria-disabled={loading || undefined}
                     onClick={() => {
@@ -522,6 +523,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
                         )}
                       </span>
                     ) : null}
+                    {(p.hq ? hqLabel : platformLabel) ? null : <span className="sr-only">{hiddenContext(p, n > 0)}</span>}
                   </button>
                 </li>
               );

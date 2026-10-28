@@ -13,6 +13,12 @@ const focused = async (text: string) => {
   await waitFor(() => expect(document.activeElement?.textContent).toContain(text));
   await new Promise((r) => setTimeout(r, 60)); // let Radix's own entry focus settle
 };
+it('AccountButton name starts with its visible initials', () => {
+  render(<AccountMenu name="Maria Santos" email="m@x.ph" role="Owner" />);
+  const b = btn();
+  expect(b.getAttribute('aria-label')!.startsWith(b.textContent!)).toBe(true);
+  cleanup();
+});
 const btn = () => screen.getByRole('button', { name: /Account menu/, hidden: true });
 
 afterEach(async () => {

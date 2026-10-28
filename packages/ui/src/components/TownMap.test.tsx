@@ -17,8 +17,10 @@ describe('TownMap', () => {
     const list = within(g).getByRole('list', { name: 'Platforms' });
     expect(within(list).getAllByRole('button')).toHaveLength(4);
     expect(container.querySelector('svg')!.getAttribute('aria-hidden')).toBe('true');
-    expect(screen.getByRole('button', { name: 'Auto Works Quezon City, Repair shop, slow' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'HQ, your team and plan, 1 need you' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Auto Works Quezon City.*slow$/ })).toBeTruthy();
+    const b = screen.getByRole('button', { name: /^Auto Works Quezon City/ });
+    expect(b.getAttribute('aria-label')).toBeNull();
+    expect(screen.getByRole('button', { name: /your team and plan, need you$/ })).toBeTruthy();
   });
 
   it('says link status in words, not colour', () => {
@@ -167,7 +169,7 @@ describe('TownMap workshop chrome (RDY-364)', () => {
   it('caption keeps the space between its parts and labels are 22px: 16px lines, 5px left padding', () => {
     render(<TownMap platforms={three} caption={<><b>3 platforms</b> + HQ</>} />);
     expect(screen.getByText('3 platforms').parentElement!.textContent).toBe('3 platforms + HQ');
-    const label = screen.getByRole('button', { name: 'HQ, your team and plan, 1 need you' });
+    const label = screen.getByRole('button', { name: /your team and plan, need you$/ });
     expect(label.className).toContain('pl-[5px]');
     expect(label.className).toContain('pr-1.5');
   });

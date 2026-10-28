@@ -16,12 +16,18 @@ afterEach(() => { cleanup(); vi.useRealTimers(); });
 describe('AskLedaBar semantics', () => {
   it('is a button named for what it does, with decorative extras hidden', () => {
     render(<AskLedaBar />);
-    expect(screen.getByRole('button', { name: 'Ask Leda or tell it what to do' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Ask Leda or tell it what to do/ })).toBeTruthy();
     expect(document.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
   });
   it('uses the scope in name and placeholder', () => {
     render(<AskLedaBar scope="Stockroom" />);
-    expect(screen.getByRole('button', { name: 'Ask Leda about Stockroom' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Ask Leda about Stockroom/ })).toBeTruthy();
+  });
+  it('name starts with the visible placeholder and includes the visible shortcut (WCAG 2.5.3)', () => {
+    render(<AskLedaBar />);
+    const name = screen.getByRole('button').getAttribute('aria-label')!;
+    expect(name.startsWith(document.querySelector('[data-ph]')!.textContent!)).toBe(true);
+    expect(name).toContain(document.querySelector('kbd')!.textContent!);
   });
   it('click, Cmd/Ctrl+K and / call onOpen; / is ignored while typing', () => {
     const onOpen = vi.fn();

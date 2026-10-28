@@ -47,7 +47,7 @@ describe('StatusBar', () => {
     expect(text.indexOf('9 people')).toBeLessThan(text.indexOf('Starter plan'));
     expect(screen.getByText('· all running')).toBeTruthy();
     expect(screen.getByText('· 1 invite pending')).toBeTruthy();
-    expect(screen.getByLabelText('9 people, 1 invite pending')).toBeTruthy();
+    expect(screen.getByLabelText('9 people · 1 invite pending')).toBeTruthy();
     expect(screen.queryByLabelText(/invite waiting/)).toBeNull();
     // shell.css breakpoints: days left and the summary go at 960, invites, plan and Updated at 1180
     expect(screen.getByText('7 days left').className).toContain('max-[960px]:hidden');
@@ -119,7 +119,7 @@ describe('StatusBar', () => {
   });
   it('caps platforms with +N', () => {
     render(<StatusBar platforms={p(11)} maxPlatforms={8} />);
-    expect(screen.getByLabelText('3 more platforms').textContent).toBe('+3');
+    expect(screen.getByLabelText('+3 more platforms').textContent).toBe('+3');
   });
   it('Leda usage is a named progressbar, warn from 80%', () => {
     render(<StatusBar leda={{ used: 1700, max: 2000 }} />);
