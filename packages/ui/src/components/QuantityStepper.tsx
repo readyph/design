@@ -21,6 +21,8 @@ export interface QuantityStepperProps extends Omit<HTMLAttributes<HTMLDivElement
    * transparent buttons, 72px surface field, default phone sizes. Default keeps every existing consumer unchanged.
    */
   look?: 'default' | 'receive' | 'damaged' | 'transfer';
+  /** On a printed paper: 28px buttons and a 48px field (order-list.css .qb, .qin). */
+  compact?: boolean;
 }
 
 const control =
@@ -46,6 +48,7 @@ export function QuantityStepper({
   max = QUANTITY_MAX,
   productName,
   look = 'default',
+  compact,
   className,
   ...rest
 }: QuantityStepperProps) {
@@ -82,7 +85,7 @@ export function QuantityStepper({
   return (
     <div className={cn('flex flex-col gap-1', className)} {...rest}>
       <div role="group" aria-label={productName ? `Quantity of ${productName}` : 'Quantity'} className="flex w-fit items-center max-[640px]:w-full">
-        <button type="button" aria-label={`One less${suffix}`} onClick={() => step(-1)} className={cn(ctl, focusRing, 'rounded-l-control rounded-r-none')}>
+        <button type="button" aria-label={`One less${suffix}`} onClick={() => step(-1)} className={cn(ctl, compact && '!h-7 !w-7 !text-[12px]', focusRing, 'rounded-l-control rounded-r-none')}>
           <Minus aria-hidden size={14} />
         </button>
         <input
@@ -99,9 +102,9 @@ export function QuantityStepper({
           onKeyDown={(e) => {
             if (e.key === 'Enter') commit(e.currentTarget.value);
           }}
-          className={FIELD[look]}
+          className={cn(FIELD[look], compact && '!h-7 !w-12 !px-0.5 !text-[14px]')}
         />
-        <button type="button" aria-label={`One more${suffix}`} onClick={() => step(1)} className={cn(ctl, focusRing, 'rounded-l-none rounded-r-control')}>
+        <button type="button" aria-label={`One more${suffix}`} onClick={() => step(1)} className={cn(ctl, compact && '!h-7 !w-7 !text-[12px]', focusRing, 'rounded-l-none rounded-r-control')}>
           <Plus aria-hidden size={14} />
         </button>
       </div>
