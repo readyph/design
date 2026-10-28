@@ -185,7 +185,7 @@ export function StockerFrame({
         {showTabs ? (
           <nav
             aria-label="Stocker"
-            className="fixed inset-x-0 bottom-0 z-[6] mx-auto grid max-w-[var(--col)] grid-cols-4 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)]"
+            className="fixed inset-x-0 bottom-0 z-[6] mx-auto grid max-w-[var(--col)] grid-cols-4 gap-1 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)]"
           >
             {TABS.map(({ id, label, Icon }) => (
               <a
