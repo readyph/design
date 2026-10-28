@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { HomeTimelinePanel } from './InventoryHome.timeline';
 import { HomeZones } from './InventoryHome.zones';
 import { HomeCaseView, HomeVerticalTimeline } from './InventoryHome.case';
+import { InventoryHomePage } from './InventoryHome.page';
 
 /**
  * [For Review] RDY-422 Inventory Home 2/5 (b). Prototype only: stories are not exported from the package.
@@ -55,3 +56,20 @@ export const CaseTenantB: CaseStory = { name: 'Case, tenant B (fresh milk reorde
 export const CasePhone: CaseStory = { name: 'Case, phone 390 (step line, sticky Confirm)', render: caseRender, parameters: phone, args: { tenant: 'a', open: 'n1' } };
 export const VerticalTimelinePhone: StoryObj<typeof HomeVerticalTimeline> = { name: 'Vertical timeline, phone 390', render: (a) => <HomeVerticalTimeline {...a} />, parameters: { viewport: { defaultViewport: 'mobile1' } }, args: { tenant: 'a' } };
 export const VerticalTimelineExpanded: StoryObj<typeof HomeVerticalTimeline> = { name: 'Vertical timeline, Earlier today open, Show less', render: (a) => <HomeVerticalTimeline {...a} />, parameters: { viewport: { defaultViewport: 'mobile1' } }, args: { tenant: 'a', earlier: true, all: true } };
+
+/* RDY-403 Inventory Home 5/5 (e): the assembled page. Source: home.js 628-640, 694-722; home.html CSS. */
+type PageStory = StoryObj<typeof InventoryHomePage>;
+const pageRender = (args: React.ComponentProps<typeof InventoryHomePage>) => <InventoryHomePage {...args} />;
+const full = { layout: 'fullscreen' };
+export const PageLive: PageStory = { name: 'Page, live', render: pageRender, parameters: full, args: { tenant: 'a' } };
+export const PageQuiet: PageStory = { name: 'Page, quiet (?state=quiet)', render: pageRender, parameters: full, args: { tenant: 'a', state: 'quiet' } };
+export const PageLoading: PageStory = { name: 'Page, loading', render: pageRender, parameters: full, args: { tenant: 'a', state: 'loading' } };
+export const PageError: PageStory = { name: 'Page, error (?state=error)', render: pageRender, parameters: full, args: { tenant: 'a', state: 'error' } };
+export const PageEmpty: PageStory = { name: 'Page, empty first run (?state=empty)', render: pageRender, parameters: full, args: { tenant: 'a', state: 'empty' } };
+export const PageDegraded: PageStory = { name: 'Page, degraded (?state=degraded)', render: pageRender, parameters: full, args: { tenant: 'a', state: 'degraded' } };
+export const PageThisWeek: PageStory = { name: 'Page, This week (?view=week)', render: pageRender, parameters: full, args: { tenant: 'a', view: 'week' } };
+export const PageClerk: PageStory = { name: 'Page, clerk (?role=clerk)', render: pageRender, parameters: full, args: { tenant: 'a', role: 'clerk' } };
+export const PageOwner: PageStory = { name: 'Page, owner (?role=owner)', render: pageRender, parameters: full, args: { tenant: 'a', role: 'owner' } };
+export const PageTenantB: PageStory = { name: 'Page, tenant B', render: pageRender, parameters: full, args: { tenant: 'b' } };
+export const PageTenantBWeek: PageStory = { name: 'Page, tenant B, This week', render: pageRender, parameters: full, args: { tenant: 'b', view: 'week' } };
+export const PagePhone: PageStory = { name: 'Page, phone 390', render: pageRender, parameters: { ...phone }, args: { tenant: 'a' } };

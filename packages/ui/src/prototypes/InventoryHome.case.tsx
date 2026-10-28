@@ -270,7 +270,7 @@ export function HomeVerticalTimeline({ tenant = 'a', role = 'manager', state = '
 }
 
 /* home.js 694-720: the case inside the inventory shell. On the phone Confirm sits in the sticky bottom bar (#pbar). */
-export function HomeCaseView(props: HomeCaseProps) {
+export function HomeCaseView(props: HomeCaseProps & { onBack?: () => void }) {
   const { M, d } = useCaseModel(props);
   const { D, S, isDone } = M;
   const platform = { name: D.business.platform, initials: D.business.platform.split(' ').map((w: string) => w[0]).join('') };
@@ -279,7 +279,7 @@ export function HomeCaseView(props: HomeCaseProps) {
   const link: any = D.link;
   return (
     <InventoryChrome tenant={D.business.key as 'a' | 'b'} as={D.role as any} nav="home" page="Home" lists={2} detail actionBar={bar}
-      sheetBar={<SheetBar wrapChildren={false} actionsFirst={false} actions={<AskLedaBar variant="bar" scope={d?.product?.sku || d?.action?.ref || 'Home'} shortcuts={false} />}><BackLink>{S.view === 'week' ? 'This week' : 'Today'}</BackLink><span className="self-center text-[13px] font-semibold text-text">/ {d?.title}</span></SheetBar>}
+      sheetBar={<SheetBar wrapChildren={false} actionsFirst={false} actions={<AskLedaBar variant="bar" scope={d?.product?.sku || d?.action?.ref || 'Home'} shortcuts={false} />}><BackLink href="#today" onClick={(e) => { if (props.onBack) { e.preventDefault(); props.onBack(); } }}>{S.view === 'week' ? 'This week' : 'Today'}</BackLink><span className="self-center text-[13px] font-semibold text-text">/ {d?.title}</span></SheetBar>}
       status={<InventoryStatusBar platform={platform} dataLink={link ? { with: link.with, status: link.status === 'slow' ? 'slow' : 'linked', since: link.since, title: `${link.shares} · ${link.reads}` } : undefined} viewer={{ name: D.viewer.short, role: D.roleLabel }} leda={{ canDecide: D.decisions.some((x: any) => x.canDecide) || M.can('confirm_po'), managerName: D.manager.short }} updatedAt={D.now.time} />}>
       <div className="min-w-0 px-pad pb-10 pt-5 max-[640px]:px-4 max-[640px]:pb-[120px] max-[640px]:pt-4"><HomeCase {...props} /></div>
     </InventoryChrome>
