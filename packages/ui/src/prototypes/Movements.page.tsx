@@ -17,6 +17,7 @@ import { InventoryStatusBar } from '../components/StatusBar';
 import { Toaster } from '../components/toast/Toaster';
 import { addToast } from '../components/toast/toastStore';
 import type { RecordEntry, RecordProduct } from '../components/RecordMovementForm';
+import { useMovementsLeda } from './Movements.leda';
 import { RecordView } from './Movements.record';
 import { ReceiveTransferView, type ReceiveTransferResult } from './Movements.receive';
 import { TransferDetailView, TransferFormView, TransfersList } from './Movements.transfers';
@@ -154,6 +155,7 @@ export function MovementsPage({ tenant = 'a', as = 'manager', state = 'live', vi
   const trDisabled = !!err;
   const openTr = (id: string) => { if (!M.trBy(id)) return; Object.assign(S, { tr: id, view: 'transfers' as const, rec: false, form: null, confirm: null }); setConfirmSend(false); tick(); };
   const startForm = (o: { id?: string } = {}) => { const t0 = o.id ? M.trBy(o.id) : null; Object.assign(S, { form: { id: t0?.id ?? null, to: t0?.to ?? null, lines: t0 ? t0.lines.map((l) => ({ p: l.p, qty: l.qty })) : [], note: t0?.note ?? '', job: t0?.job ?? '', q: '', err: '' }, tr: t0 ? S.tr : null, rec: false, view: 'transfers' as const }); tick(); };
+  const ledaUi = useMovementsLeda({ M, openTr: (id) => openTr(id), openRecord: () => openRecord(), startForm: () => startForm(), go: (name) => { try { window.location.hash = `#${name}`; } catch { /* no location */ } } }, S.tr);
   const backTr = () => { const was = S.tr; Object.assign(S, { rec: false, recP: null, tr: S.form && S.form.id ? was : null, form: null, confirm: null }); if (!S.form && !S.tr) S.tr = null; setConfirmSend(false); tick(); };
   const saveTr = (v: TransferFormValue) => {
     const f = S.form; if (!f) return;
@@ -229,7 +231,7 @@ export function MovementsPage({ tenant = 'a', as = 'manager', state = 'live', vi
       <span className="min-w-0 truncate text-[13px] text-muted max-[480px]:hidden">· Movements</span>
       <span className="flex-1" />
       <button type="button" className="relative inline-flex h-9 flex-none items-center gap-1.5 rounded-control border border-control px-2.5 text-[13px] font-semibold text-text"><ListChecks size={18} aria-hidden />Order lists</button>
-      <AskLedaBar variant="bar" scope="Movements" shortcuts={false} />
+      <AskLedaBar variant="bar" scope="Movements" shortcuts={false} paused={ledaUi.active} onOpen={ledaUi.open} />
       <span className="contents [&>button]:size-11"><AccountMenu name={account.name} email={account.email} role={account.role} initials={account.initials} applyToDocument={false} /></span>
     </>
   );
@@ -414,12 +416,13 @@ export function MovementsPage({ tenant = 'a', as = 'manager', state = 'live', vi
     return (
       <PlatformShell
         railWidth="wide" railLabel="Inventory" rail={rail} topBar={topBar} phoneNav={phoneNav} heading={platform.name} hideSheetBarOnPhone detail
-        sheetBar={<SheetBar wrapChildren={false} actionsFirst={false} actions={<AskLedaBar variant="bar" scope="Movements" shortcuts={false} />}><BackLink onClick={() => { S.rec = false; S.recP = null; tick(); }}>Movements</BackLink><span className="self-center text-[13px] font-semibold text-text">/ Record movement</span></SheetBar>}
+        sheetBar={<SheetBar wrapChildren={false} actionsFirst={false} actions={<AskLedaBar variant="bar" scope="Movements" shortcuts={false} paused={ledaUi.active} onOpen={ledaUi.open} />}><BackLink onClick={() => { S.rec = false; S.recP = null; tick(); }}>Movements</BackLink><span className="self-center text-[13px] font-semibold text-text">/ Record movement</span></SheetBar>}
         statusLabel="Status"
         status={<InventoryStatusBar platform={platform} dataLink={link_ ? { with: link_.with, status: link_.status === 'slow' ? 'slow' : 'linked', since: link_.since ?? '8:50', title: 'Parts and job orders' } : undefined} viewer={{ name: viewer.short, role: D.roleLabel }} leda={{ canDecide: can('adjust_stock'), managerName: (D.manager as { short: string }).short }} updatedAt={D.now.time} />}
       >
         <RecordView M={M} productId={S.recP} whatOf={whatOf} onCancel={() => { S.rec = false; S.recP = null; tick(); }} onTransfer={() => { S.rec = false; S.recP = null; S.view = 'transfers'; tick(); }} onRecord={recordMovement} />
         <Toaster actionStyle="inventory" />
+      {ledaUi.node}
       </PlatformShell>
     );
   }
@@ -437,7 +440,7 @@ export function MovementsPage({ tenant = 'a', as = 'manager', state = 'live', vi
     return (
       <PlatformShell
         railWidth="wide" railLabel="Inventory" rail={rail} topBar={topBar} phoneNav={phoneNav} heading={platform.name} hideSheetBarOnPhone detail actionBar={bar}
-        sheetBar={<SheetBar wrapChildren={false} actionsFirst={false} actions={<AskLedaBar variant="bar" scope={t ? t.id : 'Movements'} shortcuts={false} />}><BackLink onClick={rcvOn ? cancelRcv : backTr}>{rcvOn ? t!.id : f && f.id ? f.id : 'Transfers'}</BackLink><span className="self-center text-[13px] font-semibold text-text">/ {crumb}</span></SheetBar>}
+        sheetBar={<SheetBar wrapChildren={false} actionsFirst={false} actions={<AskLedaBar variant="bar" scope={t ? t.id : 'Movements'} shortcuts={false} paused={ledaUi.active} onOpen={ledaUi.open} />}><BackLink onClick={rcvOn ? cancelRcv : backTr}>{rcvOn ? t!.id : f && f.id ? f.id : 'Transfers'}</BackLink><span className="self-center text-[13px] font-semibold text-text">/ {crumb}</span></SheetBar>}
         statusLabel="Status" status={statusEl}
       >
         <div id="vbody-tr" className="min-w-0 print:p-0 px-pad pb-8 pt-5 max-[640px]:px-4 max-[640px]:pb-[112px] max-[640px]:pt-4">
@@ -448,6 +451,7 @@ export function MovementsPage({ tenant = 'a', as = 'manager', state = 'live', vi
         <ConfirmDialog open={cancelAsk && !!t} onOpenChange={(o) => { if (!o) setCancelAsk(false); }} onCancel={() => setCancelAsk(false)} tone="danger" icon={X} title="Cancel this draft?"
           name={t ? `${t.id} · to ${t.other.name}` : ''} description="Nothing has left stock, so no stock changes. The draft stays in the list as cancelled." confirmLabel="Cancel draft" onConfirm={cancelTr} />
         <Toaster actionStyle="inventory" />
+      {ledaUi.node}
       </PlatformShell>
     );
   }
@@ -461,7 +465,7 @@ export function MovementsPage({ tenant = 'a', as = 'manager', state = 'live', vi
       phoneNav={phoneNav}
       heading={platform.name}
       hideSheetBarOnPhone
-      sheetBar={<SheetBar wrapChildren={false} actionsFirst={false} actions={<AskLedaBar variant="bar" scope="Movements" shortcuts={false} />}><SheetBarWhere platform={platform} page="Movements" note={as !== 'manager' ? `Viewing as ${viewer.short}, ${D.roleLabel.toLowerCase()}` : undefined} /></SheetBar>}
+      sheetBar={<SheetBar wrapChildren={false} actionsFirst={false} actions={<AskLedaBar variant="bar" scope="Movements" shortcuts={false} paused={ledaUi.active} onOpen={ledaUi.open} />}><SheetBarWhere platform={platform} page="Movements" note={as !== 'manager' ? `Viewing as ${viewer.short}, ${D.roleLabel.toLowerCase()}` : undefined} /></SheetBar>}
       statusLabel="Status"
       status={
         <InventoryStatusBar
@@ -508,6 +512,7 @@ export function MovementsPage({ tenant = 'a', as = 'manager', state = 'live', vi
         description={undoTarget ? `${Math.abs(undoTarget.qty)} ${undoTarget.qty < 0 ? 'go back into stock' : 'come back out of stock'}, so ${undoTarget.product.name} returns to ${undoTarget.product.onHand - undoTarget.qty}. Use this only if it was entered by mistake.` : ''}
         confirmLabel="Undo movement" onConfirm={undoMv} />
       <Toaster actionStyle="inventory" />
+      {ledaUi.node}
     </PlatformShell>
   );
 }
