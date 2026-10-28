@@ -19,7 +19,7 @@ type PillTone = 'neutral' | 'bad' | 'warn' | 'info' | 'ok' | 'accent' | 'dash';
 const dotCls: Record<PillTone, string> = {
   neutral: 'bg-faint', bad: 'bg-bad', warn: 'bg-warn', info: 'bg-info', ok: 'bg-ok', accent: 'bg-accent', dash: 'h-1.5 w-1.5 border-[1.5px] border-dashed border-muted bg-transparent',
 };
-function Pill({ children, tone = 'neutral' }: { children: ReactNode; tone?: PillTone }) {
+export function Pill({ children, tone = 'neutral' }: { children: ReactNode; tone?: PillTone }) {
   return (
     <span className={cn('inline-flex h-5 flex-none items-center gap-1.5 whitespace-nowrap p-0 text-[13px] font-medium', tone === 'bad' ? 'text-bad' : tone === 'dash' ? 'text-muted' : 'text-text')}>
       <span aria-hidden="true" className={cn('h-[7px] w-[7px] flex-none rounded-full', dotCls[tone])} />
@@ -132,10 +132,10 @@ function ruleWords(M: HomeModel, ls: any[]) {
 }
 const noop = () => {};
 
-export interface HomeZonesProps { tenant?: HomeTenant; role?: HomeRole; state?: HomeState; view?: 'today' | 'week' }
+export interface HomeZonesProps { tenant?: HomeTenant; role?: HomeRole; state?: HomeState; view?: 'today' | 'week'; /** Phone only: sits between To do and the trio (home.html 362-364 order). */ mid?: ReactNode }
 
 /* home.js 448-577, composed as home.js 633-637: duo (To do, Leda is watching) then trio (Deliveries, Needs stock, Stock moved) */
-export function HomeZones({ tenant = 'a', role = 'manager', state = 'live', view = 'today' }: HomeZonesProps) {
+export function HomeZones({ tenant = 'a', role = 'manager', state = 'live', view = 'today', mid }: HomeZonesProps) {
   const [watchOpen, setWatchOpen] = useState(false);
   const [yOpen, setYOpen] = useState(false);
   const [retried, setRetried] = useState(false);
@@ -388,6 +388,7 @@ export function HomeZones({ tenant = 'a', role = 'manager', state = 'live', view
     <div className="@container/sheet w-full max-w-[1330px]">
       <div className="flex flex-col gap-12 max-[640px]:gap-8">
         <div className="grid grid-cols-3 items-start gap-x-10 gap-y-12 @max-[1100px]/sheet:grid-cols-1 max-[640px]:gap-8">{todo()}{watch()}</div>
+        {mid}
         <div className="grid grid-cols-3 items-start gap-x-10 gap-y-12 @max-[1100px]/sheet:grid-cols-2 @max-[760px]/sheet:grid-cols-1 max-[640px]:grid-cols-1 max-[640px]:gap-8">{deliveriesPanel()}{lowPanel()}{movedPanel()}</div>
       </div>
     </div>
