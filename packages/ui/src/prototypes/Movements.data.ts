@@ -25,7 +25,10 @@ export interface Transfer {
   createdBy: string; createdAt: string; sentAt?: string; sentBy?: string; sentN?: number; sentHM?: string;
   receivedAt?: string; receivedBy?: string; recvN?: number; recvHM?: string; cancelled?: { at: string; [k: string]: unknown }; legacy?: boolean; [k: string]: unknown;
 }
-export interface TrView extends Omit<Transfer, 'lines'> { out: boolean; other: Place; lines: (TrLine & { product: MvProduct })[]; units: number; got: number; short: number }
+/* Omit on a type with an index signature collapses every key to unknown, so the known keys are picked out first (RDY-438). */
+type KnownKeys<T> = keyof { [K in keyof T as string extends K ? never : K]: T[K] };
+export interface TrView extends Omit<Pick<Transfer, KnownKeys<Transfer>>, 'lines'> {
+  receivedNote?: string; [k: string]: unknown; out: boolean; other: Place; lines: (TrLine & { product: MvProduct })[]; units: number; got: number; short: number }
 export interface Place { id: string; name: string; short: string; addr: string; here?: boolean }
 export interface HistoryOrder { no: string; supplier: string; status: string; ordered: string; expected: string; sentBy: string; receivedAt?: string; receivedBy?: string; cancelled?: { by: string; at: string; why: string }; closedShort?: boolean; settled?: string; lines: { p: string; ordered: number; received: number; cost: number }[] }
 
