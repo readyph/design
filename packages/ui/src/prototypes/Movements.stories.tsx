@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { MovementsPage } from './Movements.page';
 
 /**
- * [For Review] Movements. Prototype only: stories are not exported from the package. RDY-436 (b): ledger, filters, tabs shell, states, phone.
+ * [For Review] Movements. Prototype only: stories are not exported from the package. RDY-436 (b): ledger, filters, tabs shell, states, phone. RDY-437 (c): Record movement and Undo.
  * Source: inventory-home FINAL movements.html, movements.js, movements.css. Data from Movements.data.ts. Later slices (c, d, e, f) append stories to this file.
  */
 const meta: Meta<typeof MovementsPage> = {
@@ -27,3 +27,12 @@ export const Quiet: Story = { name: 'Quiet', args: { state: 'quiet' } };
 export const Clerk: Story = { name: 'Clerk', args: { as: 'clerk' } };
 export const TenantB: Story = { name: 'Tenant B', args: { tenant: 'b' } };
 export const Phone: Story = { name: 'Phone 390 ledger', args: {}, parameters: { viewport: { defaultViewport: 'mobile1' } } };
+
+/* RDY-437 (c): Record movement and Undo. movements.js 276-293, 456-465, 483-500, 573-578; stock.js 83-91, 205-212. */
+export const RecordMovement: Story = { name: 'Record movement (&record=1)', args: { record: true } };
+export const RecordMovementWithProduct: Story = { name: 'Record movement with product (&record=1&p=)', args: { record: true, p: 'p01' } };
+export const RecordMovementClerk: Story = { name: 'Record movement, clerk (Damaged or lost and Count correction locked)', args: { record: true, p: 'p01', as: 'clerk' } };
+export const LandedWithUndo: Story = { name: 'Landed note with Undo (flash moved)', args: { landed: true } };
+export const UndoAsksFirst: Story = { name: 'Undo asks first', args: { landed: true, undoOpen: true } };
+export const RecordingOff: Story = { name: 'Recording off (error)', args: { state: 'error' } };
+export const PhoneRecord: Story = { name: 'Phone 390 record', args: { record: true, p: 'p01' }, parameters: { viewport: { defaultViewport: 'mobile1' } } };
