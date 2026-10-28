@@ -40,3 +40,15 @@ export const Week: Story = { args: { week } };
 export const Loading: Story = { args: { state: 'loading' } };
 export const Empty: Story = { args: { state: 'empty' } };
 export const Phone: Story = { args: { alt: { no: 'PO-0224', left: 60, at: h(14) } }, decorators: [(Story) => <div className="w-[390px] bg-surface p-4"><Story /></div>] };
+
+// Lane-embedded day (RDY-445): 128px lane height, full width. Story values only.
+const laneDecorator = (Story: () => JSX.Element) => <div className="w-full max-w-[960px] bg-surface"><Story /></div>;
+const lanePO = { no: 'PO-0224', left: 60, at: h(14), points: [...points.slice(0, 3), { t: h(14), v: 66, kind: 'del' as const, ref: 'PO-0224', d: 60 }, { t: h(14, 30), v: 60, kind: 'job' as const, ref: 'JO-0417' }] };
+export const LaneDay: Story = { args: { variant: 'lane', points: points.slice(0, 3).concat([{ t: h(14, 30), v: 3, kind: 'job', ref: 'JO-0417' }]) }, decorators: [laneDecorator] };
+export const LaneShort: Story = { args: { variant: 'lane' }, decorators: [laneDecorator] };
+export const LaneShortWithFix: Story = { args: { variant: 'lane', endAction: <button type="button" className="rounded-chip border border-rule px-2 text-small">Fix</button> }, decorators: [laneDecorator] };
+export const LaneWithDraftPO: Story = { args: { variant: 'lane', alt: lanePO }, decorators: [laneDecorator] };
+export const LaneWithSentPO: Story = { args: { variant: 'lane', confirmed: true, points: lanePO.points }, decorators: [laneDecorator] };
+export const LaneRate: Story = { args: { variant: 'lane', points: [{ t: h(8), v: 9, kind: 'start' }], rate: { vNow: 8, tz: h(14, 48), end: 0 }, laterLabel: 'PO-0231: +40 Thu 22 8:30', caption: 'Projected at about 20 a day, as of 9:12 AM' }, decorators: [laneDecorator] };
+export const LaneLoading: Story = { args: { variant: 'lane', state: 'loading' }, decorators: [laneDecorator] };
+export const LaneEmpty: Story = { args: { variant: 'lane', state: 'empty' }, decorators: [laneDecorator] };
