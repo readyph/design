@@ -75,3 +75,4 @@ export * from './components/QuantityStepper';
 export * from './components/MovementLedger';
 export * from './components/SettingsModal';
 export * from './components/DayTimeline';
+export * from './components/PaperDocument';
