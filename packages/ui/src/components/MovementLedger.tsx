@@ -1,5 +1,5 @@
-import { useRef, type KeyboardEvent, type ReactNode } from 'react';
-import { ArrowsLeftRight, CalendarBlank, CaretRight, MagnifyingGlass } from '@phosphor-icons/react';
+import { useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { ArrowsLeftRight, CalendarBlank, CaretRight, Funnel, MagnifyingGlass } from '@phosphor-icons/react';
 import { cn, focusForced } from '../utils/cn';
 import { SegmentedControl } from './SegmentedControl';
 import { Select, type SelectOption } from './Select';
@@ -175,6 +175,10 @@ export interface MovementFiltersProps {
   product: MovementFilterMenu;
   person: MovementFilterMenu;
   dates: MovementFilterMenu;
+  /** After the four menus: the From and To date fields when Dates is "Choose dates" (movements.js 195, movements.css 64-65, 85). */
+  extra?: ReactNode;
+  /** Phone: how many of the four menus are not at their default (the badge on Filters, movements.js 183). */
+  activeFilters?: number;
   className?: string;
 }
 
@@ -198,43 +202,75 @@ function Menu({ id, label, menu, className }: { id: string; label: string; menu:
  * Ledger filters (`.bar.lbar`): the Stock in / out toggles, search and four menus (reason, product, person, dates).
  * From 1260px one row; 641-1259 a 4-column grid; below that stacked.
  */
-export function MovementFilters({ io, counts, onIoChange, query, onQueryChange, searchPlaceholder = 'Search by product, code, order, job or person', reason, product, person, dates, className }: MovementFiltersProps) {
+export function MovementFilters({ io, counts, onIoChange, query, onQueryChange, searchPlaceholder = 'Search by product, code, order, job or person', reason, product, person, dates, extra, activeFilters = 0, className }: MovementFiltersProps) {
+  const [fo, setFo] = useState(false);
   return (
     <div
       className={cn(
         'grid grid-cols-1 items-center gap-x-6 gap-y-6',
         'min-[641px]:max-[1259px]:grid-cols-4 min-[641px]:max-[1259px]:items-end min-[641px]:max-[1259px]:gap-x-4 min-[641px]:max-[1259px]:gap-y-3',
         'min-[1260px]:flex min-[1260px]:items-end min-[1260px]:gap-3',
+        'max-[640px]:flex max-[640px]:flex-col max-[640px]:items-stretch max-[640px]:gap-3',
         className,
       )}
     >
-      <div className="min-[641px]:max-[1259px]:col-[1/3] min-[1260px]:flex-none">
-        <SegmentedControl
-          aria-label="Show"
-          className="m-0"
-          value={io}
-          onChange={(v) => onIoChange?.(v as MovementIo)}
-          options={[
-            { value: 'all', label: 'All', count: counts?.all },
-            { value: 'in', label: 'Stock in', count: counts?.in },
-            { value: 'out', label: 'Stock out', count: counts?.out },
-          ]}
-        />
+      <div className="flex items-end gap-2 min-[641px]:max-[1259px]:col-[1/3] min-[1260px]:flex-none max-[640px]:order-2">
+        <div className="max-[640px]:hidden">
+          <SegmentedControl
+            aria-label="Show"
+            className="m-0"
+            value={io}
+            onChange={(v) => onIoChange?.(v as MovementIo)}
+            options={[
+              { value: 'all', label: 'All', count: counts?.all },
+              { value: 'in', label: 'Stock in', count: counts?.in },
+              { value: 'out', label: 'Stock out', count: counts?.out },
+            ]}
+          />
+        </div>
+        <div className="hidden min-w-0 flex-1 max-[640px]:block">
+          <span id="mv-show-l" className="sr-only">Show</span>
+          <Select
+            id="mv-show"
+            aria-labelledby="mv-show-l"
+            size="sm"
+            value={io}
+            onValueChange={(v) => onIoChange?.(v as MovementIo)}
+            options={[
+              { value: 'all', label: 'All movements', meta: counts ? String(counts.all) : undefined },
+              { value: 'in', label: 'Stock in', meta: counts ? String(counts.in) : undefined },
+              { value: 'out', label: 'Stock out', meta: counts ? String(counts.out) : undefined },
+            ]}
+            className="w-full"
+          />
+        </div>
+        <button
+          type="button"
+          aria-expanded={fo}
+          aria-controls="mv-fmore"
+          onClick={() => setFo((v) => !v)}
+          className={cn('hidden h-11 flex-none cursor-pointer items-center gap-1.5 rounded-control border border-control bg-surface px-3.5 text-[13px] font-medium text-text max-[640px]:inline-flex', ring)}
+        >
+          <Funnel aria-hidden size={16} />
+          Filters
+          {activeFilters ? <span className="ml-0.5 text-[12px] font-semibold text-accent">{activeFilters}</span> : null}
+        </button>
       </div>
       <div
         role="search"
-        className="flex flex-wrap items-end gap-4 min-[641px]:max-[1259px]:contents min-[1260px]:min-w-0 min-[1260px]:flex-1 min-[1260px]:flex-nowrap min-[1260px]:gap-3"
+        className="flex flex-wrap items-end gap-4 max-[640px]:order-1 max-[640px]:flex-col max-[640px]:items-stretch max-[640px]:gap-3 min-[641px]:max-[1259px]:contents min-[1260px]:min-w-0 min-[1260px]:flex-1 min-[1260px]:flex-nowrap min-[1260px]:gap-3"
       >
         <label className="relative block max-w-[440px] flex-[1_1_280px] min-[641px]:max-[1259px]:col-[3/5] min-[641px]:max-[1259px]:max-w-none min-[1260px]:min-w-[140px] min-[1260px]:max-w-none min-[1260px]:flex-[1_1_160px] max-[640px]:max-w-none">
           <span className="sr-only">Search movements</span>
           <MagnifyingGlass aria-hidden size={16} className="pointer-events-none absolute left-2.5 top-1/2 -mt-2 text-muted" />
           <input type="search" value={query} onChange={(e) => onQueryChange?.(e.target.value)} placeholder={searchPlaceholder} autoComplete="off" className={searchInput} />
         </label>
-        <div className="contents">
+        <div id="mv-fmore" className={cn('contents', fo ? 'max-[640px]:grid max-[640px]:w-full max-[640px]:grid-cols-2 max-[640px]:gap-3 max-[640px]:[&>:last-child]:col-span-2' : 'max-[640px]:hidden')}>
           <Menu id="mv-reason" label="Reason" menu={reason} className="min-[1260px]:w-[158px] min-[1260px]:flex-none" />
           <Menu id="mv-product" label="Product" menu={product} className="min-[1260px]:w-[158px] min-[1260px]:flex-none" />
           <Menu id="mv-person" label="Person" menu={person} className="min-[1260px]:w-[130px] min-[1260px]:flex-none" />
           <Menu id="mv-dates" label="Dates" menu={dates} className="min-[1260px]:w-[174px] min-[1260px]:flex-none" />
+          {extra}
         </div>
       </div>
     </div>
