@@ -40,6 +40,9 @@ describe('Products page', () => {
     ['empty', { state: 'empty' }],
     ['clerk detail', { as: 'clerk', open: 'p07' }],
     ['tenant B', { tenant: 'b' }],
+    ['needs setting up', { requests: [{ id: 'np1', barcode: '4805550031415', name: 'Fleetguard LF3349', qty: 6, by: 'jomar', at: 'Thu 22 Oct 8:40' }] }],
+    ['order lists panel', { ordersOpen: true }],
+    ['error detail', { state: 'error', open: 'p07' }],
   ] as const)('%s: no axe violations', async (_n, props) => {
     render(<ProductsPage {...(props as object)} />);
     await axeOk();

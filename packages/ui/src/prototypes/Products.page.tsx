@@ -21,6 +21,9 @@ import { Select } from '../components/Select';
 import { addToast } from '../components/toast/toastStore';
 import { PRODUCTS, UNITS, type PData, type PList, type PMove, type PProduct, type ProductsRole, type ProductsTenant } from './Products.data';
 import { InventoryChrome } from './Products.chrome';
+import { useProductsLeda } from './Products.leda';
+import { OrderListsPanel } from '../components/OrderListsPanel';
+import { BarcodeSheet, type BarcodeProduct } from '../components/BarcodeSheet';
 
 /* RDY-404. Page: Products. Source: workshop/prototypes/inventory-home/round-1/final/products.js (+ products.html), handover 2.2.
    URL params as props: ?tenant ?as ?state ?open ?panel ?f ?qs ?cat ?sup. Logic ported from products.js (line refs in comments). */
@@ -36,6 +39,10 @@ export interface ProductsPageProps {
   sup?: string;
   /** Story only: open the Add product dialog (products.js 604). */
   addDialog?: boolean;
+  /** Story only: barcodes a stocker scanned that the system does not know (Needs setting up). */
+  requests?: { id: string; barcode: string; name?: string; qty?: number; loc?: string; by: string; at: string; photo?: boolean; note?: string }[];
+  /** Story only: open the order lists panel (I8). */
+  ordersOpen?: boolean;
 }
 
 const MINUS = '−';
@@ -77,13 +84,16 @@ function Tip({ id, className = '', down }: { id: string; className?: string; dow
 }
 const isId = (r?: string | null) => /^[A-Z]{2,}-\d+/.test(r || '');
 
-export function ProductsPage({ tenant = 'a', as = 'manager', state = 'live', open: openProp, panel: panelProp, f = 'all', qs = '', cat: catProp = 'all', sup: supProp = 'all', addDialog }: ProductsPageProps) {
+export function ProductsPage({ tenant = 'a', as = 'manager', state = 'live', open: openProp, panel: panelProp, f = 'all', qs = '', cat: catProp = 'all', sup: supProp = 'all', addDialog, requests, ordersOpen: ordersProp }: ProductsPageProps) {
   const D: PData = PRODUCTS[tenant];
   const V = D.viewers[as];
   const can = (p: string) => V.can.includes(p);
-  const quiet = state === 'quiet', loading = state === 'loading', down = state === 'down';
   const NOW = toMin(D.now.hm), OPEN = toMin(D.business.hours.open), CLOSE = toMin(D.business.hours.close);
   const [retried, setRetried] = useState(false);
+  const [cleared, setCleared] = useState(false);
+  const quiet = state === 'quiet', loading = state === 'loading', down = state === 'down' && !cleared;
+  const [ordersOpen, setOrdersOpen] = useState(!!ordersProp);
+  const [bc, setBc] = useState<'search' | 'form' | null>(null);
   const poErr = state === 'error' && !retried;
   const [lists, setLists] = useState<PList[]>(() => D.lists.map((l) => ({ ...l, lines: l.lines.map((x) => ({ ...x })) })));
   const [added, setAdded] = useState<PProduct[]>([]);
@@ -102,7 +112,7 @@ export function ProductsPage({ tenant = 'a', as = 'manager', state = 'live', ope
   const [mvf, setMvf] = useState('all');
   const [mvAll, setMvAll] = useState(false);
   const [ro, setRo] = useState<{ qty: number | null; sup: string | null }>({ qty: null, sup: null });
-  const [np, setNp] = useState<React.ComponentProps<typeof NewProductRequests>['requests']>([]) /* receiving.js 12, 44: starts empty; requests only come from the stocker flow (GAP: none in the sample) */;
+  const [np, setNp] = useState<React.ComponentProps<typeof NewProductRequests>['requests']>(requests ?? []) /* receiving.js 12, 44: starts empty in the workshop; stories seed it to show the section (GAP: workshop sample has none) */;
   const [dlg, setDlg] = useState(!!addDialog);
   const [form, setForm] = useState({ name: '', sku: '', cat: D.categories[0].id, unit: UNITS[0], sup: D.suppliers[0].id, barcode: '', reorder: '5', err: '' });
 
@@ -190,6 +200,19 @@ export function ProductsPage({ tenant = 'a', as = 'manager', state = 'live', ope
     setDlg(false); setSort('attn'); toast(`${name} added. It is out of stock until you receive or count it.`);
   }
 
+  const go = (name: string) => { try { window.location.hash = `#${name}`; } catch { /* no location */ } };
+  const retry = () => { setRetried(true); toast('Purchase orders loaded.'); };
+  /* products.js 584-590 */
+  function draftAll() {
+    const items = base.filter(addable); if (!items.length) { toast('Every product that needs stock is on a list or an order already.'); return; }
+    const before = lists; let next = lists;
+    items.forEach((p) => { const n = suggestQty(p); const has = next.find((l) => l.sup === p.supplier); next = has ? next.map((l) => (l.sup === p.supplier ? { ...l, lines: [...l.lines, { p: p.id, qty: n, by: 'leda' }] } : l)) : [...next, { id: `L-${p.supplier}`, no: null, sup: p.supplier, by: 'leda', at: D.now.time, lines: [{ p: p.id, qty: n, by: 'leda' }] }]; });
+    setLists(next);
+    const nl = new Set(items.map((p) => p.supplier)).size;
+    toast(`${items.length} ${items.length === 1 ? 'product' : 'products'} added to ${nl} order ${nl === 1 ? 'list' : 'lists'} by Leda. Nothing is sent.`, () => setLists(before));
+  }
+  const ledaUi = useProductsLeda({ D, tenant, can, products: base, total: D.total + added.length, onHand, status: st, addable, suggestQty, onList, ordered, shortSup: short, supName: (id) => supOf(id).name, locName: (id) => locOf(id).name, shortDate, unitOf, openProduct: (id, pn) => { setOpenId(id); setPanel(pn ?? null); if (pn === 'list') setRo({ qty: null, sup: null }); }, addToList: (pid) => addToList(pid, null, null), draftAll, go }, openId ? `${prod(openId)?.sku ?? ''}` : 'Products', openId);
+
   /* headline (products.js 266-281) */
   const headline = (() => {
     if (!base.length) return 'No products yet. Add your first, or let Leda read a supplier list.';
@@ -249,7 +272,7 @@ export function ProductsPage({ tenant = 'a', as = 'manager', state = 'live', ope
         </span>
         {poErr ? <span className="inline-flex min-h-8 items-center gap-1.5 text-[13px] text-muted"><WarningCircle aria-hidden size={14} />Order lists did not load. Retry first, so nothing is ordered twice.</span> : ol ? <span className="inline-flex min-h-8 items-center text-[13px] text-muted">On {short(ol.list.sup)} list {'·'} {ol.line.qty}</span> : null}
         {can('stock_out') ? <Button variant="secondary" leftIcon={ArrowsDownUp} onClick={() => setPanel('adjust')}>{can('adjust_stock') ? 'Adjust stock' : 'Record stock out'}</Button> : null}
-        <Button variant="secondary" onClick={() => toast('Ask Leda opens here.')}><LedaMark size={14} decorative />Ask Leda</Button>
+        <Button variant="secondary" onClick={() => ledaUi.ask(`Where is ${p.name}?`)}><LedaMark size={14} decorative />Ask Leda</Button>
       </>
     );
     const rsup = ro.sup || (ol ? ol.list.sup : p.supplier), rqty = ro.qty ?? (ol ? ol.line.qty : suggestQty(p)), same = !!ol && ol.list.sup === rsup;
@@ -313,7 +336,7 @@ export function ProductsPage({ tenant = 'a', as = 'manager', state = 'live', ope
           <RunwayPanel />
           <section id="p-po" className="flex min-w-0 flex-col [grid-area:po]">
             <PanelHead icon={Receipt} title="On order" count={poErr ? undefined : incoming(p.id).length} sub="purchase orders and order lists with this product" />
-            {poErr ? <ErrorBlock thing="purchase orders" lastLoaded={lastLoaded} onRetry={() => setRetried(true)} retryLabel="Retry" /> : incoming(p.id).length ? <div className="flex flex-col">{incoming(p.id).map((x) => {
+            {poErr ? <ErrorBlock thing="purchase orders" lastLoaded={lastLoaded} onRetry={retry} retryLabel="Retry" /> : incoming(p.id).length ? <div className="flex flex-col">{incoming(p.id).map((x) => {
               const [word, tone] = x.draft ? ['On order list, not sent', 'dash'] as const : x.po.status === 'PARTIAL' ? [`Part in · ${x.po.unitsReceived} of ${x.po.unitsOrdered}`, 'warn'] as const : ['Sent', 'info'] as const;
               const canRecv = can('receive') && !x.draft;
               const inner = (<>
@@ -330,7 +353,7 @@ export function ProductsPage({ tenant = 'a', as = 'manager', state = 'live', ope
             <div className="flex flex-col">{[{ s: sp, cost: p.cost, pref: true, note: sp.leadTime }, ...(D.alt[p.id] ?? []).map((a) => ({ s: supOf(a.sup), cost: a.cost, pref: false, note: a.note ? `${supOf(a.sup).leadTime}. ${a.note}` : supOf(a.sup).leadTime }))].map((r) => (
               <div key={r.s.id} className="grid min-h-[60px] w-full grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-x-3 border-t border-rule py-4 text-left first:border-t-transparent max-[640px]:grid-cols-[minmax(0,1fr)_auto] max-[640px]:gap-y-2"><span className="min-w-0"><span className={T1}>{r.s.name}{r.pref ? <span className="ml-1.5 text-[12px] font-normal text-muted">Preferred</span> : null}</span><span className="mt-[3px] block min-w-0 text-[13px] leading-[18px] text-muted">{r.note || ''}</span></span>{can('valuation') && r.cost ? <span className="flex flex-col items-end text-right tabular-nums"><b className="text-[15px] font-semibold">{peso(r.cost)}</b><small className="text-[12px] text-muted">per {p.unit}</small></span> : <span />}{can('draft_po') && !poErr ? (ol && ol.list.sup === r.s.id ? <span className="inline-flex min-h-8 items-center text-[13px] text-muted">On list {'·'} {ol.line.qty}</span> : <ActionLink caret aria-label={`Add ${p.name} to the ${r.s.name} order list`} className="h-7 max-[640px]:col-span-full" onClick={() => { setPanel('list'); setRo({ qty: null, sup: r.s.id }); }}>Add to list</ActionLink>) : null}</div>
             ))}</div>
-            <div className="flex flex-wrap items-center justify-between gap-4 pt-4 text-[13px] text-muted">{(D.alt[p.id] ?? []).length ? <span /> : <span>This is the only supplier on file.</span>}{can('setup') ? <button type="button" className={`${VA} text-[13px] max-[640px]:min-h-10`} onClick={() => toast('Setup is coming next.')}>Suppliers and categories in Setup<CaretRight aria-hidden size={12} /></button> : <span className="inline-flex items-center gap-1.5"><Lock aria-hidden size={14} />{Mgr} manages suppliers and categories.</span>}</div>
+            <div className="flex flex-wrap items-center justify-between gap-4 pt-4 text-[13px] text-muted">{(D.alt[p.id] ?? []).length ? <span /> : <span>This is the only supplier on file.</span>}{can('setup') ? <button type="button" className={`${VA} text-[13px] max-[640px]:min-h-10`} onClick={() => go('setup')}>Suppliers and categories in Setup<CaretRight aria-hidden size={12} /></button> : <span className="inline-flex items-center gap-1.5"><Lock aria-hidden size={14} />{Mgr} manages suppliers and categories.</span>}</div>
           </section>
         </div>
         {!panel ? (
@@ -349,9 +372,11 @@ export function ProductsPage({ tenant = 'a', as = 'manager', state = 'live', ope
       const head = <PanelHead icon={ChartLineDown} title="Stock left today" sub={jb || rate ? hours : `as of ${D.now.time}`} right={jb || rate ? <span className="flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-muted"><span className="inline-flex items-center gap-1.5 whitespace-nowrap"><i className="inline-block w-[18px] flex-none border-t-2 border-accent" />So far</span><span className="inline-flex items-center gap-1.5 whitespace-nowrap"><i className="inline-block w-[18px] flex-none border-t-2 border-dashed border-accent" />Projected</span>{jb && r && r.short.length ? <span className="inline-flex items-center gap-1.5 whitespace-nowrap"><i className="inline-block h-2.5 w-3.5 flex-none border-b-[1.5px] border-bad bg-bad-bg" />Short</span> : null}</span> : undefined} />;
       if (!jb && !rate) return <section id="p-run" className="flex min-w-0 flex-col [grid-area:run]">{head}<p className="m-0 my-4 text-[13px] text-muted">{tenant === 'a' ? `No job is booked against this part today, and it has no steady use rate, so the stock stays at ${n}.` : `Nothing is planned to use this today, so the stock stays at ${n}.`}</p></section>;
       const dr = incoming(p.id).find((x) => x.draft);
+      const r1 = dr && !(r!.po && r!.po.status !== 'DRAFT') ? runway(p, true) : null;
+      const alt = r1 && r1.po ? { no: r1.po.no, left: ((r1.pts.find((x) => x.kind === 'del') || { v: r1.end }) as { v: number }).v, at: toMin(supOf(r1.po.supplier).sameDayArrival) || toMin((/by (\d{1,2}:\d{2})/.exec(r1.po.expected) || [])[1]) } : undefined;
       return (
         <section id="p-run" className="flex min-w-0 flex-col [grid-area:run]">{head}
-          <div className="mt-3 min-h-[200px]"><StockRunway name={p.name} hours={{ open: OPEN, close: CLOSE }} now={NOW} points={r!.pts} rate={r!.rate ? { vNow: r!.vNow, tz: r!.tz, end: r!.end } : undefined} formatTime={hm} caption={jb ? `Projected from booked jobs, as of ${D.now.time}` : `Projected at about ${p.usePerDay} a day, as of ${D.now.time}`} /></div>
+          <div className="mt-3 min-h-[200px]"><StockRunway name={p.name} hours={{ open: OPEN, close: CLOSE }} now={NOW} points={r!.pts} rate={r!.rate ? { vNow: r!.vNow, tz: r!.tz, end: r!.end } : undefined} formatTime={hm} alt={alt} caption={jb ? `Projected from booked jobs, as of ${D.now.time}` : `Projected at about ${p.usePerDay} a day, as of ${D.now.time}`} /></div>
           {r!.short.length ? <p className="m-0 mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-[14px] leading-[22px]"><Dot tone="bad">Short</Dot><span>{r!.short.map((x, i) => <span key={i}>{i ? ' and ' : ''}<Ref r={x.ref} /> {hm(x.t)}</span>)} would be short.</span>{dr ? <a className="inline-flex h-7 items-center gap-1 rounded-control border border-control bg-surface pl-2.5 pr-1.5 text-[13px] font-medium text-text no-underline hover:border-text hover:bg-raised max-[640px]:h-10" href="#order-list">Review the {short(dr.po.supplier)} order list<CaretRight aria-hidden size={12} className="text-faint" /></a> : null}</p> : r!.rate && r!.tz ? <p className="m-0 mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-[14px] leading-[22px]"><Dot tone="bad">Out</Dot><span>Runs out about {hm(r!.tz)} at this rate.</span></p> : null}
         </section>
       );
@@ -365,27 +390,32 @@ export function ProductsPage({ tenant = 'a', as = 'manager', state = 'live', ope
     past.forEach((m) => { v += m.qty; pts.push({ t: toMin(m.at), v, kind: 'moved', ref: m.ref ?? undefined }); });
     if (delta[p.id]) { v += delta[p.id]; pts.push({ t: NOW, v, kind: 'moved', ref: 'you' }); }
     const evs = jobsFor(p.id).map((j) => ({ t: toMin(j.at), d: -(j.needs.find((x) => x.p === p.id)?.qty ?? 0), kind: 'job' as const, ref: j.jo }));
-    evs.sort((a, b) => a.t - b.t);
-    void withPO;
+    const arrival = (po: { supplier: string; expected: string }) => { const sx = supOf(po.supplier), d = /(\d{1,2}) Oct/.exec(po.expected || ''); if (!d) return null; const day = +d[1] - +(/\d+/.exec(D.now.short) || [22])[0]; let t: number | null = null; if (day === 0) t = toMin(sx.sameDayArrival) || toMin((/by (\d{1,2}:\d{2})/.exec(po.expected) || [])[1]) || null; if (day > 0) t = toMin((/,\s*(\d{1,2}:\d{2})/.exec(po.expected) || [])[1]) || null; return { day, t }; }; /* products.js 67-74 */
+    const dpo = incoming(p.id).map((x) => x.po).find((po) => arrival(po)?.day === 0 && arrival(po)?.t != null);
+    if (dpo && withPO) { const l = dpo.lines.find((x) => x.p === p.id)!; evs.push({ t: arrival(dpo)!.t!, d: remaining(dpo, l), kind: 'del' as never, ref: dpo.no }); }
+    evs.sort((x, y) => x.t - y.t || ((x.kind as string) === 'del' ? -1 : 1));
     evs.forEach((e) => { v += e.d; pts.push({ t: e.t, v, kind: e.kind, ref: e.ref, short: e.kind === 'job' && v < 0 }); });
+    const hasJob = evs.some((e) => e.kind === 'job');
     let rate: { vNow: number; tz: number | null; end: number } | undefined;
-    if (p.usePerDay && !evs.length) {
+    if (p.usePerDay && !hasJob) {
       const rpm = p.usePerDay / (CLOSE - OPEN), vNow = v, tz = NOW + vNow / rpm;
       rate = { vNow, tz: tz < CLOSE ? Math.round(tz / 6) * 6 : null, end: Math.max(0, Math.round(vNow - rpm * (CLOSE - NOW))) };
     }
-    return { pts, rate: rate ? true : false, vNow: rate?.vNow ?? v, tz: rate?.tz ?? null, end: rate?.end ?? v, short: pts.filter((x) => x.short) as (StockRunwayPoint & { ref: string })[] };
+    return { po: dpo ?? null, pts, rate: rate ? true : false, vNow: rate?.vNow ?? v, tz: rate?.tz ?? null, end: rate?.end ?? v, short: pts.filter((x) => x.short) as (StockRunwayPoint & { ref: string })[] };
   }
 
   const openP = openId ? prod(openId) : null;
   const platform = { name: D.business.platform, initials: tenant === 'a' ? 'PS' : 'CI' };
   const dataLink = D.link && !down ? { with: D.link.with, status: (state === 'degraded' ? 'slow' : 'linked') as 'slow' | 'linked', since: state === 'degraded' ? '8:50' : D.now.time, title: D.link.reads } : undefined;
+  const bcProducts: BarcodeProduct[] = base.map((p) => ({ id: p.id, name: p.name, sku: p.sku, barcode: p.barcode, unit: p.unit, onHand: onHand(p), location: locOf(p.loc).name }));
+  const bcSamples = (tenant === 'a' ? ['p07', 'p16', 'p17'] : ['b01', 'b09', 'b11']).map((id) => bcProducts.find((p) => p.id === id)).filter((x): x is BarcodeProduct => !!x); /* barcode.js 30 */
   const empty = !base.length && !loading && !down;
   const sheetBar = openP
-    ? <SheetBar wrapChildren={false} actionsFirst={false} actions={<AskLedaBar variant="bar" scope={openP.sku} shortcuts={false} />}><button type="button" className="inline-flex items-center gap-1.5 text-[13px] text-accent" onClick={() => { setOpenId(null); setPanel(null); }}><ArrowLeft aria-hidden size={14} />Products</button><span className="text-[13px] text-muted">/ {openP.name}</span></SheetBar>
-    : <SheetBar wrapChildren={false} actionsFirst={false} actions={<AskLedaBar variant="bar" scope="Products" shortcuts={false} />}><SheetBarWhere platform={platform} page="Products" note={as !== 'manager' ? `Viewing as ${V.viewer.short}, ${V.roleLabel.toLowerCase()}` : undefined} /></SheetBar>;
+    ? <SheetBar wrapChildren={false} actionsFirst={false} actions={<AskLedaBar variant="bar" scope={openP.sku} paused={ledaUi.active} onOpen={ledaUi.open} />}><button type="button" className="inline-flex items-center gap-1.5 text-[13px] text-accent" onClick={() => { setOpenId(null); setPanel(null); }}><ArrowLeft aria-hidden size={14} />Products</button><span className="text-[13px] text-muted">/ {openP.name}</span></SheetBar>
+    : <SheetBar wrapChildren={false} actionsFirst={false} actions={<AskLedaBar variant="bar" scope="Products" paused={ledaUi.active} onOpen={ledaUi.open} />}><SheetBarWhere platform={platform} page="Products" note={as !== 'manager' ? `Viewing as ${V.viewer.short}, ${V.roleLabel.toLowerCase()}` : undefined} /></SheetBar>;
   return (
     <>
-      <InventoryChrome tenant={tenant} as={as} nav="products" page={openP ? '' : 'Products'} sheetBar={sheetBar} lists={lists.length} status={<InventoryStatusBar platform={platform} dataLink={dataLink} viewer={{ name: V.viewer.short, role: V.roleLabel }} leda={{ canDecide: can('confirm_po'), managerName: D.viewers.manager.viewer.short }} updatedAt={loading ? `Loading… last loaded ${lastLoaded}` : D.now.time} />}>
+      <InventoryChrome tenant={tenant} as={as} nav="products" page={openP ? '' : 'Products'} sheetBar={sheetBar} lists={lists.length} onAsk={ledaUi.open} onLists={() => setOrdersOpen(true)} ledaActive={ledaUi.active} status={<InventoryStatusBar platform={platform} dataLink={dataLink} viewer={{ name: V.viewer.short, role: V.roleLabel }} leda={{ canDecide: can('confirm_po'), managerName: D.viewers.manager.viewer.short }} updatedAt={loading ? `Loading… last loaded ${lastLoaded}` : D.now.time} />}>
         {openP ? detail(openP) : (
           <div className="flex min-w-0 flex-col gap-6 p-pad">
             <div className="flex flex-wrap items-start justify-between gap-3"><div className="flex min-w-0 flex-col gap-1"><h1 className="m-0 text-[22px] font-semibold leading-7">Products</h1><p className="m-0 flex items-center gap-2 text-[14px] text-muted">{loading ? 'Loading…' : headline}</p></div>
@@ -397,19 +427,19 @@ export function ProductsPage({ tenant = 'a', as = 'manager', state = 'live', ope
                 <ul className="m-0 flex list-none flex-col gap-2 p-0 text-[14px]"><li><StockStatus status="out" /> Nothing left on the shelf. Order these first.</li><li><StockStatus status="low" /> At or under the reorder level. Time to order.</li><li><StockStatus status="ok" /> Above the reorder level. Nothing to do.</li></ul></section>
             ) : (
               <>
-                {poErr && !down ? <ErrorBlock thing="purchase orders" lastLoaded={lastLoaded} onRetry={() => setRetried(true)} retryLabel="Retry">What is on order is not shown.</ErrorBlock> : null}
+                {poErr && !down ? <ErrorBlock thing="purchase orders" lastLoaded={lastLoaded} onRetry={retry} retryLabel="Retry">What is on order is not shown.</ErrorBlock> : null}
                 {can('setup') ? <NewProductRequests requests={np} onSetUp={() => setDlg(true)} onNotOurs={(id) => { const r = np; setNp(np.filter((x) => x.id !== id)); toast('Request removed.', () => setNp(r)); }} /> : null}
-                <OrderListsStrip lists={stripLists} summary={poErr || !perSup.length ? undefined : `${summary}. Nothing sent.`} error={poErr} onOpenAll={() => toast('Order lists open as a panel on the page.')} />
+                <OrderListsStrip lists={stripLists} summary={poErr || !perSup.length ? undefined : `${summary}. Nothing sent.`} error={poErr} onOpenAll={() => setOrdersOpen(true)} />
                 <div className="flex flex-col gap-6">
                   <ProductStatusTabs value={status} onValueChange={setStatus} counts={loading ? {} : { all: base.length ? total : 0, low: cnt.low, out: cnt.out, order: poErr ? undefined : cnt.order }} />
-                  <ProductFilters query={q} onQueryChange={setQ} onScan={() => toast('The barcode sheet opens here.')} category={menu(cat, catOpts, setCat)} supplier={menu(sup, supOpts, setSup)} sort={menu(sort, sortOpts, setSort)} open={fopen} onOpenChange={setFopen} activeCount={nAct} onSetup={can('setup') ? () => toast('Setup is coming next.') : undefined} />
+                  <ProductFilters query={q} onQueryChange={setQ} onScan={() => setBc('search')} category={menu(cat, catOpts, setCat)} supplier={menu(sup, supOpts, setSup)} sort={menu(sort, sortOpts, setSort)} open={fopen} onOpenChange={setFopen} activeCount={nAct} onSetup={can('setup') ? () => go('setup') : undefined} />
                 </div>
                 {sup !== 'all' && !poErr && !down && !loading && can('draft_po') ? (supNeed.length ? <ProductSupplierBar supplier={supOf(sup).name} listName={short(sup)} need={supNeed.length} todo={supTodo.length} cutoff={ci && !ci.passed ? `Order by ${ci.at} for same-day delivery (${ci.text} left).` : undefined} preview={supTodo.length ? `Adds ${supTodo.map((p) => `${suggestQty(p)} ${p.name}`).join(', ')}${can('valuation') ? `, about ${peso(supTodo.reduce((t, p) => t + suggestQty(p) * p.cost, 0))}` : ''}. Nothing is sent.` : undefined} onAddAll={() => addMany(supTodo)} /> : <p className="m-0 text-[14px]">{supOf(sup).name}: nothing needs stock.</p>) : null}
                 <ProductList groups={groups} total={total} flat={sort !== 'attn'} addable={addSet} selected={sel} loading={loading} stale={down} onOpen={(r) => { setOpenId(r.id); setPanel(null); setMvf('all'); setMvAll(false); }}
                   onSelectedChange={(id, v) => setSel((s) => { const n = new Set(s); if (v) n.add(id); else n.delete(id); return n; })}
                   onSelectGroup={(g) => { const ids = g.rows.filter((r) => addSet.has(r.id)).map((r) => r.id); setSel((s) => (ids.every((i) => s.has(i)) ? new Set([...s].filter((i) => !ids.includes(i))) : new Set([...s, ...ids]))); }}
-                  onShowMore={status === 'all' && !isFiltered ? () => toast('Showing the first products. The rest load here.') : undefined} onSetup={can('setup') ? () => toast('Setup is coming next.') : undefined}
-                  banner={down ? <Notice tone="bad" title="Products did not load" action={<Button variant="secondary" onClick={() => undefined}>Retry</Button>}>{`Products did not load, so this is the list from ${lastLoaded}. Counts may have changed.`}</Notice> : undefined}
+                  onShowMore={status === 'all' && !isFiltered ? () => toast('Showing the first products. The rest load here.') : undefined} onSetup={can('setup') ? () => go('setup') : undefined}
+                  banner={down ? <Notice tone="bad" title="Products did not load" action={<Button variant="secondary" onClick={() => setCleared(true)}>Retry</Button>}>{`Products did not load, so this is the list from ${lastLoaded}. Counts may have changed.`}</Notice> : undefined}
                   noResults={{ title: why, hint: q.trim() ? 'Check the spelling, or search by SKU or supplier.' : quiet ? 'Every product is above its reorder level.' : 'Try fewer filters.', onClear: isFiltered || status !== 'all' ? clear : undefined, onAskLeda: () => undefined, start: sorted(base.filter((p) => st(p) !== 'ok')).slice(0, 3).map(rowOf) }} />
                 {selIds.length ? <ProductSelectionBar count={selIds.length} goesTo={Object.keys(by).map((k) => `${short(k)} ${by[k]}`).join(' · ')} lists={Object.keys(by).length} onClear={() => setSel(new Set())} onAdd={() => addMany(selIds.map((id) => prod(id)!))} /> : null}
               </>
@@ -417,6 +447,15 @@ export function ProductsPage({ tenant = 'a', as = 'manager', state = 'live', ope
           </div>
         )}
       </InventoryChrome>
+      {ledaUi.node}
+      <OrderListsPanel open={ordersOpen} onOpenChange={setOrdersOpen} onProductsPage groups={lists.map((l) => ({ id: l.sup, supplier: supOf(l.sup).name, shortName: short(l.sup), poNo: l.no ?? undefined, cutoff: D.cutoff[l.sup] && !D.cutoff[l.sup]!.passed ? { at: D.cutoff[l.sup]!.at, left: D.cutoff[l.sup]!.text } : undefined, lines: l.lines.map((x) => ({ id: x.p, name: prod(x.p)?.name ?? x.p, sku: prod(x.p)?.sku ?? x.p, qty: x.qty, unit: prod(x.p)?.unit ?? 'pc', cost: prod(x.p) ? costFor(prod(x.p)!, l.sup) : undefined })) }))}
+        canSend={can('confirm_po')} money={can('valuation')} error={poErr ? { lastLoaded } : undefined} purchaseOrdersHref="#pos" onRetry={retry}
+        onQuantityChange={(g, id, qty) => setLists(lists.map((l) => (l.sup === g ? { ...l, lines: l.lines.map((x) => (x.p === id ? { ...x, qty } : x)) } : l)))}
+        onRemove={(g, id) => { const before = lists; setLists(lists.map((l) => (l.sup === g ? { ...l, lines: l.lines.filter((x) => x.p !== id) } : l)).filter((l) => l.lines.length || l.no)); toast(`${prod(id)?.name ?? id} taken off the ${supOf(g).name} order list.`, () => setLists(before)); }}
+        onProceed={() => go('pos')} onOpenPo={() => go('pos')} />
+      <BarcodeSheet open={bc !== null} onOpenChange={(o) => !o && setBc(null)} mode="capture" ctx="search" title={bc === 'form' ? 'Scan the barcode' : 'Search by barcode'} names={false} warnKnown={bc === 'form'}
+        products={bcProducts} samples={bcSamples} unknown={null}
+        onCode={(code) => { if (bc === 'form') setForm((f) => ({ ...f, barcode: code })); else setQ(code); setBc(null); }} />
       <Modal open={dlg} onOpenChange={setDlg} icon={Package} title="Add product" description="It starts at 0 on hand. Receive stock or count it next." size="md"
         footer={<><Button onClick={saveAdd}>Add product</Button><Button variant="text" onClick={() => setDlg(false)}>Cancel</Button></>}>
         <div className="flex flex-col gap-3">
@@ -425,10 +464,10 @@ export function ProductsPage({ tenant = 'a', as = 'manager', state = 'live', ope
           <label className="flex flex-col gap-1 text-[13px]">Category<Select size="sm" options={D.categories.map((c) => ({ value: c.id, label: c.name }))} value={form.cat} onValueChange={(v) => setForm({ ...form, cat: v })} /></label>
           <label className="flex flex-col gap-1 text-[13px]">Unit<Select size="sm" options={UNITS.map((u) => ({ value: u, label: u }))} value={form.unit} onValueChange={(v) => setForm({ ...form, unit: v })} /></label>
           <label className="flex flex-col gap-1 text-[13px]">Supplier<Select size="sm" options={D.suppliers.map((s) => ({ value: s.id, label: s.name }))} value={form.sup} onValueChange={(v) => setForm({ ...form, sup: v })} /></label>
-          <div className="flex items-end gap-2"><div className="flex-1"><TextField label="Barcode" inputMode="numeric" value={form.barcode} placeholder="13 digits, optional" onChange={(e) => setForm({ ...form, barcode: e.target.value })} /></div><Button variant="secondary" onClick={() => toast('The barcode sheet opens here.')}>Scan</Button></div>
+          <div className="flex items-end gap-2"><div className="flex-1"><TextField label="Barcode" inputMode="numeric" value={form.barcode} placeholder="13 digits, optional" onChange={(e) => setForm({ ...form, barcode: e.target.value })} /></div><Button variant="secondary" onClick={() => setBc('form')}>Scan</Button></div>
           <TextField label="Reorder level" type="number" min={0} step={1} value={form.reorder} onChange={(e) => setForm({ ...form, reorder: e.target.value })} />
           <p role="alert" className="m-0 min-h-[18px] text-[13px] text-bad">{form.err}</p>
-          <p className="m-0 text-[13px] text-muted">Categories, suppliers and units come from Setup. Need a new one? <button type="button" className="text-accent" onClick={() => toast('Setup is coming next.')}>Add it in Setup</button></p>
+          <p className="m-0 text-[13px] text-muted">Categories, suppliers and units come from Setup. Need a new one? <button type="button" className="text-accent" onClick={() => { setDlg(false); go('setup'); }}>Add it in Setup</button></p>
         </div>
       </Modal>
     </>

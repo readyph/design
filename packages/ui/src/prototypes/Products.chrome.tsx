@@ -18,7 +18,7 @@ const NAV: { id: string; label: string; short?: string; icon: PhosphorIcon; need
   { id: 'setup', label: 'Setup', icon: SlidersHorizontal, needs: 'setup', soon: true },
 ];
 
-export function InventoryChrome({ tenant, as, nav, page, sheetBar, status, lists, children }: { tenant: ProductsTenant; as: ProductsRole; nav: string; page: string; sheetBar: ReactNode; status: ReactNode; lists: number; children: ReactNode }) {
+export function InventoryChrome({ tenant, as, nav, page, sheetBar, status, lists, onAsk, onLists, ledaActive, children }: { tenant: ProductsTenant; as: ProductsRole; nav: string; page: string; sheetBar: ReactNode; status: ReactNode; lists: number; onAsk?: () => void; onLists?: () => void; ledaActive?: boolean; children: ReactNode }) {
   const D = PRODUCTS[tenant], V = D.viewers[as].viewer, roleLabel = D.viewers[as].roleLabel;
   const canSetup = D.viewers[as].can.includes('setup');
   const items = NAV.filter((n) => !n.needs || canSetup);
@@ -47,8 +47,8 @@ export function InventoryChrome({ tenant, as, nav, page, sheetBar, status, lists
       <span className="flex-none whitespace-nowrap text-[15px] font-semibold">{D.business.platform}</span>
       <span className="min-w-0 truncate text-[13px] text-muted max-[480px]:hidden">{page ? `· ${page}` : ''}</span>
       <span className="flex-1" />
-      <button type="button" className="relative inline-flex h-9 flex-none items-center gap-1.5 rounded-control border border-control px-2.5 text-[13px] font-semibold text-text"><ListChecks size={18} aria-hidden />Order lists<span className="h-4 min-w-4 rounded-[3px] bg-text px-1 text-center text-tiny font-medium leading-4 text-surface">{lists}</span></button>
-      <AskLedaBar variant="bar" scope={page || 'Products'} shortcuts={false} />
+      <button type="button" onClick={onLists} aria-haspopup="dialog" className="relative inline-flex h-9 flex-none items-center gap-1.5 rounded-control border border-control px-2.5 text-[13px] font-semibold text-text"><ListChecks size={18} aria-hidden />Order lists<span className="h-4 min-w-4 rounded-[3px] bg-text px-1 text-center text-tiny font-medium leading-4 text-surface">{lists}</span></button>
+      <AskLedaBar variant="bar" scope={page || 'Products'} shortcuts={false} paused={ledaActive} onOpen={onAsk} />
       <span className="contents [&>button]:size-11">{acct}</span>
     </>
   );

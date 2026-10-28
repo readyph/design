@@ -1,10 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { UNKNOWN_BARCODE } from '../components/BarcodeSheet';
 import { ProductsPage } from './Products.page';
 
 /**
  * [For Review] RDY-404. Prototype only: stories are not exported from the package. Products (handover 2.2): list and product detail.
  * Source: inventory-home FINAL products.html, products.js, products.css. Data: Products.data.ts (dumped from data.js, stock.js, orders.js).
- * GAPs: Needs setting up has no sample request (the workshop starts it empty; requests come from the stocker flow); Ask Leda palette, barcode sheet and Setup only toast; the order lists panel (RDY-392) is not wired to "Open order lists".
+ * GAPs: the workshop starts Needs setting up empty (requests come from the stocker flow), so its story seeds one illustrative request; Setup navigates by hash only (no Setup page); the palette's "Prototype states" group (products.js 676-681) is not built, the stories are those states.
  */
 const meta: Meta<typeof ProductsPage> = { title: 'Prototypes/Inventory/[For Review] Products', component: ProductsPage, parameters: { layout: 'fullscreen' } };
 export default meta;
@@ -30,3 +31,5 @@ export const ClerkDetail: Story = { name: 'Detail (clerk)', args: { as: 'clerk',
 export const TenantB: Story = { name: 'List (tenant B)', args: { tenant: 'b' } };
 export const Phone: Story = { name: 'List (phone 390)', parameters: phone };
 export const PhoneDetail: Story = { name: 'Detail (phone 390)', args: { open: 'p07' }, parameters: phone };
+export const NeedsSetup: Story = { name: 'Needs setting up (illustrative request)', args: { requests: [{ id: 'np1', barcode: UNKNOWN_BARCODE, name: 'Fleetguard LF3349 oil filter', qty: 6, loc: 'Aisle B', by: 'jomar', at: 'Thu 22 Oct 8:40' }] } };
+export const OrderLists: Story = { name: 'Order lists panel (I8)', args: { ordersOpen: true } };
