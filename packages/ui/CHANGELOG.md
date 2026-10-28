@@ -1,5 +1,15 @@
 # @readyph/ui
 
+## 0.11.0
+
+### Minor Changes
+
+- ff63b33: List, ListGroups, Queue: with several lists on one page, only the list that last received focus or a pointer press handles j / k (and `s` in Queue); the first list mounted owns them until then. `shortcuts={false}` still opts a list out, and keys stay ignored in inputs, menus and dialogs. ListCell is as tall as a button and centres its content, so one-line rows sit level with their action buttons; multi-line cells keep their text at the top, and stacked rows are unchanged.
+
+### Patch Changes
+
+- 9f786b3: RevenueChart: bars and legend swatches stay visible and distinguishable in forced-colors (alternating Highlight and Canvas fills with a CanvasText outline). Sparkline: non-finite values leave gaps instead of NaN paths, and fewer than two finite points renders a dashed empty baseline. Normal rendering is unchanged.
+
 ## 0.10.2
 
 ### Patch Changes
