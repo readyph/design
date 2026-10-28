@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { StockerFramePage } from './Stocker.page';
 import { StockerHomePage } from './Stocker.home';
 import { StockerInPage } from './Stocker.in';
+import { StockerOutPage } from './Stocker.out';
 
 /**
  * [For Review] RDY-429, Stocker 1/6 (a). Prototype only: stories are not exported from the package. Stocker (handover 2.7): the shared frame, tabs, steps and states.
@@ -47,3 +48,18 @@ export const StockInReceive: InStory = inStory(' receive an order (?po=)', { po:
 export const StockInCheckIn: InStory = inStory(' check in a transfer (?tr=)', { tr: 'TR-0030' });
 export const StockInDone: InStory = inStory(' done (?done=1)', { done: true });
 export const StockInTenantB: InStory = inStory(' (tenant B)', { tenant: 'b' });
+
+const outMeta = { component: StockerOutPage };
+type OutStory = StoryObj<typeof StockerOutPage>;
+const outStory = (name: string, args: Record<string, unknown> = {}, parameters?: typeof small): OutStory => ({ ...outMeta, name: `[For Review] Stocker Stock out${name}`, args, parameters, render: (a) => <StockerOutPage {...a} /> });
+export const StockOut: OutStory = outStory('');
+export const StockOutSmall: OutStory = outStory(' (360)', {}, small);
+export const StockOutLoading: OutStory = outStory(' loading (?state=loading)', { state: 'loading' });
+export const StockOutEmpty: OutStory = outStory(' empty (?state=empty)', { state: 'empty' });
+export const StockOutQuiet: OutStory = outStory(' quiet (?state=quiet)', { state: 'quiet' });
+export const StockOutProduct: OutStory = outStory(' product picked (?p=)', { p: 'p07' });
+export const StockOutNone: OutStory = outStory(' nothing on hand (?p=)', { p: 'p10' });
+export const StockOutSend: OutStory = outStory(' send a transfer (?tr=)', { tr: 'TR-0032' });
+export const StockOutDone: OutStory = outStory(' done (?done=1)', { done: true });
+export const StockOutTenantB: OutStory = outStory(' (tenant B)', { tenant: 'b' });
+export const StockOutTenantBProduct: OutStory = outStory(' product picked (tenant B)', { tenant: 'b', p: 'b01' });

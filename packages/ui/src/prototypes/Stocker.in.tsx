@@ -26,25 +26,25 @@ interface LineState { mode: Mode; got: number; bad: number; badWhy: string }
 const fresh = (): LineState => ({ mode: 'unset', got: 0, bad: 0, badWhy: BADW[0] });
 interface CLine { p: string; product: SProduct; ordered?: number; received?: number; out?: number; qty?: number }
 
-const sbBase = 'inline-flex min-h-[var(--tap-big)] w-full items-center justify-center gap-2.5 rounded-[8px] px-5 text-center text-[16px] font-semibold leading-[22px] transition-colors duration-[120ms] [&_svg]:h-5 [&_svg]:w-5';
+export const sbBase = 'inline-flex min-h-[var(--tap-big)] w-full items-center justify-center gap-2.5 rounded-[8px] px-5 text-center text-[16px] font-semibold leading-[22px] transition-colors duration-[120ms] [&_svg]:h-5 [&_svg]:w-5';
 const sbPrimary = 'bg-accent text-accent-ink hover:bg-accent-hover disabled:cursor-not-allowed disabled:bg-raised-2 disabled:text-muted disabled:hover:bg-raised-2';
 const sbSecondary = 'border-[1.5px] border-control bg-surface text-text hover:border-muted';
-const ring = 'outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent';
-function Sb({ primary, className, children, ...rest }: { primary?: boolean; className?: string; children: ReactNode } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
+export const ring = 'outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent';
+export function Sb({ primary, className, children, ...rest }: { primary?: boolean; className?: string; children: ReactNode } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return <button type="button" {...rest} className={cn(sbBase, primary ? sbPrimary : sbSecondary, ring, className)}>{children}</button>;
 }
 /** .va: an accent text button. */
-function Va({ className, children, ...rest }: { className?: string; children: ReactNode } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
+export function Va({ className, children, ...rest }: { className?: string; children: ReactNode } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return <button type="button" {...rest} className={cn('inline-flex min-h-[var(--tap)] items-center gap-1.5 rounded-[4px] px-1 text-[15px] font-semibold text-accent hover:text-lk-hover [&_svg]:h-3.5 [&_svg]:w-3.5', ring, className)}>{children}</button>;
 }
 /** shell.css:70 .id (13px) as used in the page lead, where stocker.css has no 12px override. */
 const LeadId = ({ children }: { children: ReactNode }) => <span className="font-mono text-[13px] tracking-[0]">{children}</span>;
-const Note = ({ children }: { children: ReactNode }) => <p className="mt-2 text-[13px] leading-[19px] text-muted [&_b]:font-semibold [&_b]:text-text">{children}</p>;
-const Lbl = ({ htmlFor, children }: { htmlFor?: string; children: ReactNode }) => <label htmlFor={htmlFor} className="mt-5 block text-[15px] font-semibold [&_small]:text-[13px] [&_small]:font-normal [&_small]:text-muted">{children}</label>;
-const tin = 'min-h-[var(--tap-big)] w-full rounded-[8px] border-[1.5px] border-control bg-surface px-[14px] text-[16px] text-text placeholder:text-faint focus-visible:border-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent';
+export const Note = ({ children }: { children: ReactNode }) => <p className="mt-2 text-[13px] leading-[19px] text-muted [&_b]:font-semibold [&_b]:text-text">{children}</p>;
+export const Lbl = ({ htmlFor, children }: { htmlFor?: string; children: ReactNode }) => <label htmlFor={htmlFor} className="mt-5 block text-[15px] font-semibold [&_small]:text-[13px] [&_small]:font-normal [&_small]:text-muted">{children}</label>;
+export const tin = 'min-h-[var(--tap-big)] w-full rounded-[8px] border-[1.5px] border-control bg-surface px-[14px] text-[16px] text-text placeholder:text-faint focus-visible:border-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent';
 
 /** .stp: minus, number, plus (stocker.css 146-151). */
-function Stepper({ id, value, label, onValue }: { id: string; value: number | ''; label: string; onValue: (v: number | '') => void }) {
+export function Stepper({ id, value, label, onValue }: { id: string; value: number | ''; label: string; onValue: (v: number | '') => void }) {
   const step = (by: number) => onValue(Math.max(0, Math.min(99999, (+value || 0) + by)));
   const sb = 'grid place-items-center bg-raised text-[20px] text-text hover:bg-raised-2 ' + ring;
   return (
@@ -56,8 +56,8 @@ function Stepper({ id, value, label, onValue }: { id: string; value: number | ''
     </span>
   );
 }
-const StpW = ({ children }: { children: ReactNode }) => <div className="mt-2 flex flex-wrap items-center gap-3">{children}</div>;
-const Unit = ({ children, id }: { children: ReactNode; id?: string }) => <span id={id} className="text-[15px] text-muted">{children}</span>;
+export const StpW = ({ children }: { children: ReactNode }) => <div className="mt-2 flex flex-wrap items-center gap-3">{children}</div>;
+export const Unit = ({ children, id }: { children: ReactNode; id?: string }) => <span id={id} className="text-[15px] text-muted">{children}</span>;
 
 /** .rs / .r: the radio rows of "what is wrong". */
 function Radios({ name, value, onValue }: { name: string; value: string; onValue: (w: string) => void }) {
@@ -137,7 +137,7 @@ function Line({ s, l, st, kind, set }: { s: Stocker; l: CLine; st: LineState; ki
 const goesInL = (s: Stocker, rows: { product: SProduct; n: number }[]) => { const ls = rows.filter((r) => r.n > 0), one = ls.length === 1 && ls[0].n === 1; return `${s.unitWords(ls)} ${one ? 'goes' : 'go'} into stock`; };
 
 /** .bar contents: the plain sentence and the one button. */
-function BarBody({ sum, label, disabled, onClick, span }: { sum: ReactNode; label: ReactNode; disabled: boolean; onClick: () => void; span?: boolean }) {
+export function BarBody({ sum, label, disabled, onClick, span }: { sum: ReactNode; label: ReactNode; disabled: boolean; onClick: () => void; span?: boolean }) {
   return (
     <>
       <p role="status" aria-live="polite" className="mb-2 text-[14px] leading-5 text-text [&_.mut]:text-muted [&_b]:font-semibold [&_.bad]:text-bad">{sum}</p>
@@ -146,7 +146,7 @@ function BarBody({ sum, label, disabled, onClick, span }: { sum: ReactNode; labe
   );
 }
 
-const asBarcode = (s: Stocker, p: SProduct): BarcodeProduct => ({ id: p.id, name: p.name, sku: p.sku, barcode: p.barcode, unit: p.unit, onHand: p.onHand, location: s.loc(p) });
+export const asBarcode = (s: Stocker, p: SProduct): BarcodeProduct => ({ id: p.id, name: p.name, sku: p.sku, barcode: p.barcode, unit: p.unit, onHand: p.onHand, location: s.loc(p) });
 
 function PickRow({ s, p, onPick }: { s: Stocker; p: SProduct; onPick: (id: string) => void }) {
   const st = s.stOf(p);
@@ -158,7 +158,7 @@ function Likely({ s, onPick }: { s: Stocker; onPick: (id: string) => void }) {
   const l = out.concat(low).slice(0, 5);
   return l.length ? <><p className="mt-4 text-[13px] leading-[19px] text-muted">Products that need stock</p><div>{l.map((p) => <PickRow key={p.id} s={s} p={p} onPick={onPick} />)}</div></> : null;
 }
-function Selected({ s, p, onChange }: { s: Stocker; p: SProduct; onChange: () => void }) {
+export function Selected({ s, p, onChange }: { s: Stocker; p: SProduct; onChange: () => void }) {
   const st = s.stOf(p);
   return (
     <div className="grid min-h-[64px] grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 border-b border-rule py-[10px]">
@@ -174,9 +174,9 @@ function Selected({ s, p, onChange }: { s: Stocker; p: SProduct; onChange: () =>
 export interface StockerFlash { title: string; text: string; sub?: string; again?: { href: string; label: string }; undoable?: boolean }
 
 /** doneView (stocker.js 182-196). */
-export function StockerDone({ s, fl }: { s: Stocker; fl: StockerFlash }) {
+export function StockerDone({ s, fl, page = 'in' }: { s: Stocker; fl: StockerFlash; page?: 'in' | 'out' }) {
   return (
-    <StockerPageFrame s={s} page="in" title={fl.title}>
+    <StockerPageFrame s={s} page={page} title={fl.title}>
       <div className="mt-7"><span className="grid h-12 w-12 place-items-center rounded-full border-2 border-accent text-[26px] text-accent"><Check aria-hidden="true" /></span></div>
       <p className="mt-1 text-[15px] leading-[22px]"><b className="font-semibold">{fl.text}</b></p>
       {fl.sub ? <Note>{fl.sub}</Note> : null}
