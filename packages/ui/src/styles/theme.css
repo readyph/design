@@ -92,6 +92,11 @@
   --rd-shine-mid: #F2563A;
   --rd-shine-mid-core: #FF8463;
   --rd-shine-eye: #FFFFFF;
+  --lv-fill: #6d48c6;
+  --lv-track: #dcd5f0;
+  --lk-hover: #15338a;
+  --lk-inv: #8eaaf6;
+  --lk-inv-hover: #d3dffc;
   --identity-1: #6d48c6;
   --identity-2: #3a6d8c;
   --identity-3: #85408f;
@@ -178,6 +183,16 @@
   --ctl-leda-bar: 34px;
   --ctl-chip: 30px;
   --ctl-touch: 44px;
+  --lane-h: 168px;
+  --panel: var(--surface);
+  --zone-gap: 48px;
+  --col-gap: 40px;
+  --tabh: 56px;
+  --tap: 44px;
+  --tap-big: 52px;
+  --col: 520px;
+  --bt: 44px;
+  --bb: 52px;
   --blur-menu: blur(14px) saturate(1.2);
   --blur-palette: blur(20px) saturate(1.4);
   --ease-subpage: cubic-bezier(0.22, 1, 0.36, 1);

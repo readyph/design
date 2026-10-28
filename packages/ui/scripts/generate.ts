@@ -9,11 +9,11 @@
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
-import { surfaces, status, dataviz, identity, leda, ready, type Pair } from '../src/tokens/colors';
+import { surfaces, status, dataviz, identity, leda, ready, inventory, type Pair } from '../src/tokens/colors';
 import { fonts, type, radius, spacing, layout, responsive, shadow, blur, motion } from '../src/tokens/scale';
 
 const pkgRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const colorGroups: Record<string, Pair>[] = [surfaces, status, dataviz, leda, ready];
+const colorGroups: Record<string, Pair>[] = [surfaces, status, dataviz, leda, ready, inventory];
 const allColors: Record<string, Pair> = Object.assign({}, ...colorGroups);
 
 const decl = (pairs: [string, string][], indent: string) => pairs.map(([k, v]) => `${indent}--${k}: ${v};`).join('\n');
@@ -102,6 +102,7 @@ for (const k of Object.keys(dataviz)) colors[k] = v(k);
 identity.forEach((_, i) => (colors[`identity-${i + 1}`] = v(`identity-${i + 1}`)));
 for (const k of Object.keys(leda)) colors[k] = v(k);
 for (const k of Object.keys(ready)) colors[k] = v(k);
+for (const k of Object.keys(inventory)) colors[k] = v(k);
 
 const fontSize = Object.fromEntries(
   Object.entries(type).map(([k, [, , w, ls]]) => [

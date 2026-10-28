@@ -70,6 +70,15 @@ export const dataviz: Record<string, Pair> = {
 /** Identity palette: generated monogram tiles, in platform order. Same in both themes. */
 export const identity = ['#6d48c6', '#3a6d8c', '#85408f', '#5c6b22', '#52607a', '#4f6b4a', '#8c5866', '#9b4f2c'] as const;
 
+/** Inventory additions (RDY-379; inventory-home FINAL links.css 4-6, stocker.css 6-8, products.css 504-507). Violet only for the stock-level bar; link hover is text colour only. */
+export const inventory: Record<string, Pair> = {
+  'lv-fill': ['#6d48c6', '#a690ec'],
+  'lv-track': ['#dcd5f0', '#4a4560'],
+  'lk-hover': ['#15338a', '#c9d7fb'],
+  'lk-inv': ['#8eaaf6', '#2a56c6'],
+  'lk-inv-hover': ['#d3dffc', '#163a94'],
+};
+
 /** Ready brand palette (RDY-363, decision.md): the falcon's vermilion tones and wordmark ink. A brand tone, never a status colour. Dark values are the lifted on-dark tones. */
 export const ready: Record<string, Pair> = {
   'rd-lit': ['#F26B3E', '#FF8A5C'],
