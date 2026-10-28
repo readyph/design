@@ -91,7 +91,7 @@ const mvIc = (k: string): [ReactNode, string] => MV_IC[k] || [<ArrowsDownUp key=
 const Ref = ({ r, isId }: { r: string; isId: (s: string) => boolean }) => (isId(r) ? <span className={idCls}>{r}</span> : <>{r}</>);
 
 /* home.js 606-612: the runway shrunk to an inline step line (phone) */
-function StepLine({ M, pid, W = 220, H = 30 }: { M: HomeModel; pid: string; W?: number; H?: number }) {
+export function StepLine({ M, pid, W = 220, H = 30 }: { M: HomeModel; pid: string; W?: number; H?: number }) {
   const { runway, runConfirmed, NOW, OPEN, CLOSE, hm } = M;
   const r: any = runway(pid, runConfirmed(pid));
   const lo = Math.min(0, ...r.pts.map((p: any) => (p.kind === 'del' ? 0 : p.v))), hi = Math.max(6, ...r.pts.filter((p: any) => p.kind !== 'del').map((p: any) => p.v));

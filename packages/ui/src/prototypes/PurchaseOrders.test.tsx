@@ -71,3 +71,41 @@ describe('axe', () => {
     expect(r.violations.map((v) => `${v.id}: ${v.nodes[0]?.html.slice(0, 120)}`)).toEqual([]);
   });
 });
+
+describe('PurchaseOrdersPage Receive and short delivery (RDY-428)', () => {
+  it('Receive shows the form and Cancel returns to the order', () => {
+    render(<PurchaseOrdersPage po="PO-0222" receive />);
+    expect(screen.getByRole('heading', { name: /Receive PO-0222/ })).toBeTruthy();
+    expect(screen.getAllByRole('button', { name: 'Cancel' }).length).toBeGreaterThan(0);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Cancel' })[0]);
+    expect(screen.getByRole('heading', { name: /PO-0222/ })).toBeTruthy();
+  });
+  it('Receive delivery opens Receive', () => {
+    render(<PurchaseOrdersPage po="PO-0222" />);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Receive delivery' })[0]);
+    expect(screen.getByText(/Count what is on the delivery/)).toBeTruthy();
+  });
+  it('Receive a delivery asks which delivery arrived', () => {
+    render(<PurchaseOrdersPage />);
+    fireEvent.click(screen.getByRole('button', { name: 'Receive a delivery' }));
+    expect(screen.getByText('Which delivery arrived?')).toBeTruthy();
+  });
+  it('short delivery: manager settles, clerk tells the manager, error disables', () => {
+    const { unmount } = render(<PurchaseOrdersPage po="PO-0221" />);
+    expect(screen.getByRole('button', { name: /Accept the shortage/ })).toBeTruthy();
+    unmount();
+    const c = render(<PurchaseOrdersPage po="PO-0221" as="clerk" />);
+    expect(screen.getByRole('button', { name: /Tell your manager/ })).toBeTruthy();
+    c.unmount();
+    render(<PurchaseOrdersPage po="PO-0221" state="error" />);
+    expect((screen.getByRole('button', { name: /Accept the shortage/ }) as HTMLButtonElement).disabled).toBe(true);
+  });
+  it('axe: receive and short delivery', async () => {
+    for (const p of [{ po: 'PO-0222', receive: true }, { po: 'PO-0221' }] as PurchaseOrdersPageProps[]) {
+      const { container, unmount } = render(<PurchaseOrdersPage {...p} />);
+      const r = await axe.run(container, { rules: { 'color-contrast': { enabled: false }, region: { enabled: false } } });
+      expect(r.violations.map((v) => v.id)).toEqual([]);
+      unmount();
+    }
+  });
+});
