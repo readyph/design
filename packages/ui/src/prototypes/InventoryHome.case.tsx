@@ -1,7 +1,7 @@
 /* RDY-424. Inventory Home 4/5 (d): the case (one decision) and the phone vertical timeline. Prototype only, not exported from the package.
    Transcribed from workshop/prototypes/inventory-home/round-1/final/home.js: vtHTML 579-605, stepLine 606-612, caseHTML 641-658, kv 659, evidence 660-677, wellHTML 678-692, sbarHTML 694-699 (case branch),
    render 705-720 (#pbar), doConfirm 727-744. CSS from home.html 299-333 (case), 336, 346-383 (phone), 386-407 (.vt), shell.css 235-247 (.chead .facts), 269-299 (.kv, .lnote, .seg, table.data), 390-391 (.pbar).
-   GAP (RDY-424): the desktop lane strip of a case (stripHTML({only, pid, caseP, po}), home.js 302-317 with the "{part} today" header) is not built yet; see the PR. */
+ */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo, type ReactNode } from 'react';
 import { ArrowRight, ArrowSquareOut, CaretDown, CaretRight, CaretUp, CheckCircle, ClockCounterClockwise, Clock, HourglassMedium, Truck, WarningCircle } from '@phosphor-icons/react';
@@ -16,6 +16,10 @@ import { cn } from '../utils/cn';
 import { createHomeModel, homeData, type HomeModel, type HomeRole, type HomeState, type HomeTenant } from './InventoryHome.data';
 import { InventoryChrome } from './Products.chrome';
 import { StepLine } from './InventoryHome.zones';
+import { DayTimeline } from '../components/DayTimeline';
+import { homeTimelineProps } from './InventoryHome.timeline';
+
+const noop = () => {};
 
 const idCls = 'font-mono text-[13px] tracking-normal';
 /* shell.css 269-274 .kv, home.html 299-306 .case .cfacts .kv */
@@ -160,10 +164,9 @@ export function HomeCase(props: HomeCaseProps) {
   const r: any = showStrip ? runway(p.id, runConfirmed(p.id)) : null;
   const strip = showStrip ? (
     <section aria-label="This part today" className="mb-4">
-      <div className="flex min-h-8 items-center gap-2.5 pb-1">
+      <div className="hidden min-h-8 items-center gap-2.5 pb-1 max-[640px]:flex">
         <Clock aria-hidden="true" className="self-center text-[18px] text-muted" />
         <h2 className="whitespace-nowrap text-[16px] font-semibold leading-[22px]">{p.name} today</h2>
-        <span className="min-w-0 truncate text-[12px] text-muted max-[640px]:hidden">as of {D.now.time}</span>
       </div>
       {hasJobs ? (
         <div className="hidden pt-3 max-[640px]:block">
@@ -174,7 +177,15 @@ export function HomeCase(props: HomeCaseProps) {
           </p>
         </div>
       ) : null}
-      {/* GAP: desktop lane strip, stripHTML({ only: [d.id], pid, caseP, po }) home.js 302-317 */}
+      <div className="max-[640px]:hidden">
+        <DayTimeline
+          {...homeTimelineProps(M, noop, { only: [d.id], pid: hasJobs ? p.id : null, caseP: p.id, po: d.po && d.po.status !== 'RECEIVED' ? d.po : null })}
+          title={`${p.name} today`}
+          subtitle={`as of ${D.now.time}`}
+          variant="case"
+          className="w-full"
+        />
+      </div>
     </section>
   ) : null;
   const note = (
@@ -184,7 +195,7 @@ export function HomeCase(props: HomeCaseProps) {
     </div>
   );
   return (
-    <div id="case" className="@container/sheet min-w-0">
+    <div id="case" className="@container [container-name:sheet_dt] min-w-0">
       <div className="flex items-center gap-2.5">
         <h1 className="text-case font-semibold">{d.title}</h1>
         {done ? <span className="inline-flex h-5 items-center gap-1.5 text-[13px] font-medium"><span aria-hidden="true" className="h-[7px] w-[7px] rounded-full bg-ok" />Done</span> : null}

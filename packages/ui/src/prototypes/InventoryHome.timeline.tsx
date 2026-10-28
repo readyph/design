@@ -24,12 +24,12 @@ const unitWords = (ls: any[], get: (l: any) => number, M: HomeModel) => {
 };
 const amt = (ls: any[], get: (l: any) => number, M: HomeModel) => (mixed(ls, M) ? unitWords(ls, get, M) : String(ls.reduce((s, l) => s + get(l), 0)));
 
-export interface HomeTimelineOptions { pid?: string }
+export interface HomeTimelineOptions { pid?: string | null; only?: string[]; caseP?: string; po?: any }
 
 /* home.js 293 */
 const shortName = (p: any) => { const w = p.name.split(' ').filter((x: string) => x !== p.sku && !(/\d/.test(x) && /[A-Z]/.test(x))); const s = (w.length > 2 ? w.slice(1) : w).join(' '); return s.charAt(0).toUpperCase() + s.slice(1); };
 
-export function homeTimelineProps(M: HomeModel, pickRunway: (id: string) => void) {
+export function homeTimelineProps(M: HomeModel, pickRunway: (id: string) => void, o: HomeTimelineOptions = {}) {
   const { D, S, F, NOW, OPEN, CLOSE, toMin, hm, plr, isA, DAYS, TODAY_N, WDATE, WW, sundayClosed } = M;
   const { prod, branch, sup, loc, runway, runPid, jobPid, runParts, runConfirmed, viaPO, arrival, poStatus, coming, openDecs, isDone, todayMoves, dayOf, weekModel } = M;
   const week = S.view === 'week';
@@ -54,7 +54,7 @@ export function homeTimelineProps(M: HomeModel, pickRunway: (id: string) => void
   const doneWord = (_ref: string) => 'Done';
 
   function laneDecide(): DayTimelineLane {
-    const ds = D.decisions.filter((d: any) => toMin(d.due && d.due.at) != null) as any[];
+    const ds = (o.only ? D.decisions.filter((d: any) => o.only!.includes(d.id)) : D.decisions).filter((d: any) => toMin(d.due && d.due.at) != null) as any[];
     const head = { id: 'decide', icon: <Alarm size={18} />, title: 'To do by', sub: D.decisions.length && D.decisions.every((d: any) => !d.canDecide) ? `${Mgr()} decides` : 'deadlines' };
     if (F.empty) return { ...head, note: { text: 'Nothing to do until there is stock.' } };
     if (!ds.length) return { ...head, note: { text: 'No deadlines today.', icon: <CheckCircle size={14} />, tone: 'ok' } };
@@ -83,11 +83,12 @@ export function homeTimelineProps(M: HomeModel, pickRunway: (id: string) => void
     if (M.poErr) return { ...head, note: { text: `Couldn't load deliveries. Last loaded ${(F.error as any).lastLoaded}.`, icon: <WarningCircle size={14} />, tone: 'bad' } };
     const marks: DayTimelineMark[] = [], carry: DayTimelineChip[] = [], later: { k: number; c: DayTimelineChip }[] = [];
     // a short delivery from yesterday waits at the Now line
-    if (!week) (D.decisions as any[]).filter((d) => d.kind === 'variance' && d.po).forEach((d) => {
+    if (!o.po && !o.caseP && !week) (D.decisions as any[]).filter((d) => d.kind === 'variance' && d.po).forEach((d) => {
       const done = isDone(d.id), n = amt(d.po.lines.filter((l: any) => l.ordered > l.received), (l) => l.ordered - l.received, M);
       carry.push({ id: d.id, tone: done ? 'done' : 'bad', icon: done ? <CheckCircle size={13} /> : <WarningCircle size={13} />, onSelect: noop, tip: tip([`${d.po.no} · ${d.po.supplierName}`, d.detail, `Arrived ${d.po.receivedAt || ''}`], 'settle it'), children: <><ChipId>{d.po.no}</ChipId><ChipWord>{done ? doneWord(d.po.no) : `short ${n}`}</ChipWord></> });
     });
-    coming().forEach((po: any) => {
+    const list = o.po ? [o.po] : o.caseP ? coming().filter((po: any) => po.lines.some((l: any) => l.p === o.caseP && l.received < l.ordered)) : coming();
+    list.forEach((po: any) => {
       const a = arrival(po); if (!a) return;
       const st = poStatus(po), firm = st !== 'DRAFT', lines = po.lines.filter((l: any) => l.received < l.ordered), units = amt(lines, (l) => l.ordered - l.received, M), unitsW = mixed(lines, M) ? units : plr(Number(units), 'unit');
       const tp = tip([`${po.no} · ${po.supplierName}`, firm ? (st === 'PARTIAL' ? `Rest of a partial delivery, ${unitsW}` : `Ordered, ${unitsW}`) : `Not sent yet. Arrives only if sent by ${sup(po.supplier).cutoff || ''}`, lines.map((l: any) => `${l.ordered - l.received} ${l.product.sku}`).join(', ')], 'open');
@@ -114,26 +115,26 @@ export function homeTimelineProps(M: HomeModel, pickRunway: (id: string) => void
     const hasJobs = D.jobs.length > 0;
     const head = { id: 'out', icon: <ArrowSquareOut size={18} />, title: 'Stock out', sub: hasJobs ? 'jobs and transfers' : 'used and corrections' } as DayTimelineLane;
     if (F.empty) return { ...head, note: { text: 'Nothing goes out until there is stock.' } };
-    const pid = hasJobs ? jobPid() : null, rw = pid ? runway(pid, runConfirmed(pid)) : null;
+    const pid = hasJobs ? o.pid || jobPid() : null, rw = pid ? runway(pid, runConfirmed(pid)) : null;
     const shortRefs = new Set(rw ? rw.short.map((s) => s.ref) : []);
     if (week) {
-      if (!hasJobs) return { ...head, note: { text: rateNote() } };
+      if (!hasJobs) return { ...head, note: { text: rateNote(o.pid || undefined) } };
       const n = D.jobs.filter((j: any) => (toMin(j.at) as number) >= NOW).length;
       return { ...head, marks: [{ id: 'wk', x: XW(0, 13 * 60), info: <><b className="tabular-nums">{n}</b> jobs today</> }], note: { text: 'No jobs booked after today yet', leftPct: XW(1, null) - 5 } };
     }
     const lane: DayTimelineLane = { ...head };
-    const gone = todayMoves().filter((m: any) => m.qty < 0).sort((a: any, b: any) => (toMin(a.at) as number) - (toMin(b.at) as number)) as any[];
+    const gone = todayMoves().filter((m: any) => m.qty < 0 && (!o.pid || m.p === o.pid)).sort((a: any, b: any) => (toMin(a.at) as number) - (toMin(b.at) as number)) as any[];
     if (gone.length) {
       const units = gone.length;
       lane.pastOut = { id: 'pastout', count: units, word: 'out', onSelect: noop, tip: tip(['Already out today', ...gone.map((m) => `${m.at} · ${Math.abs(m.qty)} ${m.product.name}${m.type === 'count' ? ' (count)' : ''}`)], 'see Stock moved'), children: null };
     }
-    if (!hasJobs) lane.note = { text: rateNote() };
+    if (!hasJobs) lane.note = { text: rateNote(o.pid || undefined) };
     const marks: DayTimelineMark[] = [];
-    (D.jobs as any[]).filter((j) => (toMin(j.at) as number) >= NOW).forEach((j) => {
+    (o.pid ? (D.jobs as any[]).filter((j) => j.needs.some((n: any) => n.p === o.pid)) : (D.jobs as any[])).filter((j) => (toMin(j.at) as number) >= NOW).forEach((j) => {
       const sh = shortRefs.has(j.jo), parts = j.needs.map((n: any) => `${n.qty} ${prod(n.p)!.name}`).join(', ');
       marks.push({ id: j.jo, x: XT(toMin(j.at) as number), tone: sh ? 'bad' : undefined, chip: { onSelect: noop, tip: tip([`${j.jo} · ${j.at} · ${branch(j.branch)}`, `${j.car} · ${j.work}`, `Takes ${parts}`, j.promised && `Promised ${j.promised}`, sh && 'Short: no stock left for this job'], 'open the job'), children: <><ChipId>{j.jo}</ChipId>{j.branch !== 'cubao' && <ChipSub>{branch(j.branch)}</ChipSub>}{sh && <ChipWord>short</ChipWord>}</> } });
     });
-    (D.decisions as any[]).filter((d) => d.kind === 'transfer' && d.due && d.due.at).forEach((d) => {
+    (o.only ? (D.decisions as any[]).filter((d) => o.only!.includes(d.id)) : (D.decisions as any[])).filter((d) => d.kind === 'transfer' && d.due && d.due.at).forEach((d) => {
       const done = isDone(d.id), j = (D.jobs as any[]).find((x) => x.jo === d.job), to = j ? branch(j.branch) : '';
       marks.push({ id: d.id, x: XT(toMin(d.due.at) as number), tone: done ? undefined : 'draft', chip: { onSelect: noop, tip: tip([`${d.action.ref} · 1 ${d.product.name} to ${to}`, done ? 'Sent' : 'Leaves only when you send it'], 'open'), children: <><ChipId>{d.action.ref}</ChipId><ChipSub>to {to}</ChipSub></> } });
     });
@@ -161,9 +162,9 @@ export function homeTimelineProps(M: HomeModel, pickRunway: (id: string) => void
   const weekAria = (m: any) => `${m.p.name} this week: ${Math.round(m.P[0].v)} now.${m.outs.map((o: any) => ` Out ${o.k ? dayLabel(o.k) : 'today'} about ${hm(Math.round(o.t))}.`).join('')}${m.dels.filter((d: any) => !d.draft).map((d: any) => ` ${d.no} brings ${d.q} ${dayLabel(d.k)}.`).join('')}`;
 
   function laneRun(): DayTimelineLane | null {
-    const pid = runPid(); if (!pid || F.empty) return null;
+    const pid = o.pid || (o.caseP ? null : runPid()); if (!pid || F.empty) return null;
     const p: any = prod(pid), parts = runParts();
-    const pick = parts.length > 1 ? (
+    const pick = !o.pid && parts.length > 1 ? (
       <SegmentedControl
         size="sm" aria-label="Part" className="mt-2 !flex !w-full !flex-col"
         value={pid} onChange={pickRunway}
@@ -213,7 +214,7 @@ export function homeTimelineProps(M: HomeModel, pickRunway: (id: string) => void
     return { id: 'run', icon: <ChartLineDown size={18} />, title: 'Stock left', sub, headExtra: pick, runway: rw };
   }
 
-  const lanes = [laneDecide(), laneIn(), laneOut(), laneExp(), laneRun()].filter(Boolean) as DayTimelineLane[];
+  const lanes = [laneDecide(), laneIn(), laneOut(), o.caseP ? null : laneExp(), laneRun()].filter(Boolean) as DayTimelineLane[];
   const nx = nowX();
   const closedI = week && sundayClosed ? WDATE.findIndex((d) => d.getDay() === 0) : -1;
   const common = {
