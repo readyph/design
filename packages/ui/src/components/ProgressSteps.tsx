@@ -4,7 +4,7 @@ import { cn } from '../utils/cn';
 /*
  * RDY-394 I10. Transcribed from inventory-home round-1/final:
  *  - ProgressSteps: purchase-orders.css 69-81 (base), 196 (<=1099 gap), 237-238 (<=640 stacked), 304/307 (print); markup purchase-orders.js 275.
- *  - SideSteps: order-list.css 128-132 (base), 159-160 (<=640 three columns); markup order-list.js 180.
+ *  - SideSteps: order-list.css 128-132 (base), 154-160 (@container sheet max-width 1100px: three columns), 203 (<=640 media: hidden); markup order-list.js 180.
  * Not interactive. The decorative .pd dot is display:none in the source and is not built.
  */
 export type ProgressStepState = 'done' | 'now' | 'next' | 'off';
@@ -66,19 +66,22 @@ export function ProgressSteps({ steps, 'aria-label': ariaLabel = 'Where this ord
 export type SideStep = { title: string; note: ReactNode };
 export type SideStepsProps = { steps: SideStep[]; 'aria-label'?: string; className?: string };
 
-/** Side steps (I10): numbered steps down the side ("1 · Check it"); three columns at 640px and below. The number is part of the title text. */
+/** Side steps (I10): numbered steps down the side ("1 · Check it"); three columns when the host container named `sheet` is 1100px wide or less; hidden at 640px and below. The host shell must set `container: sheet / inline-size` (as the workshop .sheet does). The number is part of the title text. */
 export function SideSteps({ steps, 'aria-label': ariaLabel, className }: SideStepsProps) {
   return (
     <ol
       aria-label={ariaLabel}
-      className={cn('m-0 list-none p-0 max-[640px]:grid max-[640px]:grid-cols-3 max-[640px]:gap-x-6', className)}
+      className={cn(
+        'm-0 list-none p-0 [@container_sheet_(max-width:1100px)]:grid [@container_sheet_(max-width:1100px)]:grid-cols-3 [@container_sheet_(max-width:1100px)]:gap-x-6 max-[640px]:!hidden',
+        className,
+      )}
     >
       {steps.map((s, i) => (
         <li
           key={`${s.title}-${i}`}
           className={cn(
             'flex flex-col items-start gap-1 border-t border-rule py-4',
-            'max-[640px]:border-t-0 max-[640px]:pt-3',
+            '[@container_sheet_(max-width:1100px)]:border-t-0 [@container_sheet_(max-width:1100px)]:pt-3',
             i === 0 && 'border-t-transparent',
           )}
         >

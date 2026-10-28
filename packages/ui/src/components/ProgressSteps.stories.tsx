@@ -64,17 +64,26 @@ export const Cancelled: Story = {
     ],
   },
 };
+const sideSteps = [
+  { title: '1 · Check it', note: 'Change quantities, remove lines, add a note.' },
+  { title: '2 · Print it', note: 'Print or save as PDF, then send it your usual way.' },
+  { title: '3 · Mark it sent', note: 'Once it has gone. It then counts as on order everywhere.' },
+];
+/** Host shell: the workshop .sheet sets `container: sheet / inline-size`. Wide (over 1100px) = numbered list down the side. */
 export const Side: Story = {
   render: () => (
-    <div className="w-[320px]">
-      <SideSteps
-        aria-label="Send this list"
-        steps={[
-          { title: '1 · Check it', note: 'Change quantities, remove lines, add a note.' },
-          { title: '2 · Print it', note: 'Print or save as PDF, then send it your usual way.' },
-          { title: '3 · Mark it sent', note: 'Once it has gone. It then counts as on order everywhere.' },
-        ]}
-      />
+    <div className="w-[1200px] [container:sheet/inline-size]">
+      <div className="w-[320px]">
+        <SideSteps aria-label="Send this list" steps={sideSteps} />
+      </div>
+    </div>
+  ),
+};
+/** Sheet 1100px or narrower: three columns. */
+export const SideNarrowSheet: Story = {
+  render: () => (
+    <div className="w-[1100px] [container:sheet/inline-size]">
+      <SideSteps aria-label="Send this list" steps={sideSteps} />
     </div>
   ),
 };
