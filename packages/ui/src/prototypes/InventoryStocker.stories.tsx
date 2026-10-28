@@ -4,6 +4,7 @@ import { StockerHomePage } from './Stocker.home';
 import { StockerInPage } from './Stocker.in';
 import { StockerOutPage } from './Stocker.out';
 import { StockerFindPage } from './Stocker.find';
+import { StockerAccountPage, StockerSignedOutPage } from './Stocker.account';
 
 /**
  * [For Review] RDY-429, Stocker 1/6 (a). Prototype only: stories are not exported from the package. Stocker (handover 2.7): the shared frame, tabs, steps and states.
@@ -88,3 +89,20 @@ export const NewProductEmpty: HomeStory = npaStory('New product, no barcode (?np
 export const Ask: HomeStory = npaStory('Tell your manager (?ask=new)', { ask: 'new' });
 export const AskCount: HomeStory = npaStory('Tell your manager, count (?ask=count&p=)', { ask: 'count', p: 'p04' });
 export const AskSmall: HomeStory = npaStory('Tell your manager (?ask=new, 360)', { ask: 'new' }, small);
+
+/* RDY-434, Stocker 6/6 (f): Account (stocker-me.html, stocker.js 617-623) and Signed out (stocker-signedout.html, stocker.js 625-634). */
+const meMeta = { component: StockerAccountPage };
+type MeStory = StoryObj<typeof StockerAccountPage>;
+const meStory = (name: string, args: Record<string, unknown> = {}, parameters?: typeof small): MeStory => ({ ...meMeta, name: `[For Review] Stocker Account${name}`, args, parameters, render: (a) => <StockerAccountPage {...a} /> });
+export const Account: MeStory = meStory('');
+export const AccountSmall: MeStory = meStory(' (360)', {}, small);
+export const AccountLoading: MeStory = meStory(' loading (?state=loading)', { state: 'loading' });
+export const AccountError: MeStory = meStory(' error (?state=error)', { state: 'error' });
+export const AccountTenantB: MeStory = meStory(' (tenant B)', { tenant: 'b' });
+
+const outedMeta = { component: StockerSignedOutPage };
+type SignedStory = StoryObj<typeof StockerSignedOutPage>;
+const signedStory = (name: string, args: Record<string, unknown> = {}, parameters?: typeof small): SignedStory => ({ ...outedMeta, name: `[For Review] Stocker Signed out${name}`, args, parameters, render: (a) => <StockerSignedOutPage {...a} /> });
+export const SignedOut: SignedStory = signedStory('');
+export const SignedOutSmall: SignedStory = signedStory(' (360)', {}, small);
+export const SignedOutTenantB: SignedStory = signedStory(' (tenant B)', { tenant: 'b' });
