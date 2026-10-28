@@ -15,12 +15,30 @@ export interface QuantityStepperProps extends Omit<HTMLAttributes<HTMLDivElement
   max?: number;
   /** Product name, used in the accessible labels ("Quantity of {product}", "One less {product}"). */
   productName?: string;
+  /**
+   * `receive` (arrived count) and `damaged` (damaged count) are the Receive form's count lines (purchase-orders.css 134-137, 268-270; products.css 226, 363):
+   * transparent background, 72px (arrived) or 88px (damaged) field, 48px phone buttons. `transfer` is the Transfer form line (movements.css 132, 250, 306-307):
+   * transparent buttons, 72px surface field, default phone sizes. Default keeps every existing consumer unchanged.
+   */
+  look?: 'default' | 'receive' | 'damaged' | 'transfer';
   /** On a printed paper: 28px buttons and a 48px field (order-list.css .qb, .qin). */
   compact?: boolean;
 }
 
 const control =
   'grid h-9 w-9 flex-none cursor-pointer place-items-center border border-control bg-surface text-[14px] text-text hover:border-muted hover:bg-raised max-[640px]:h-11 max-[640px]:w-[52px]';
+const controlCount =
+  'grid h-9 w-9 flex-none cursor-pointer place-items-center border border-control bg-transparent text-[14px] text-text hover:border-muted hover:bg-raised max-[640px]:h-12 max-[640px]:w-12';
+const controlTransfer =
+  'grid h-9 w-9 flex-none cursor-pointer place-items-center border border-control bg-transparent text-[14px] text-text hover:border-muted hover:bg-raised max-[640px]:h-11 max-[640px]:w-[52px]';
+const fieldBase =
+  'rounded-none border border-x-0 border-control p-0 text-center font-semibold tabular-nums text-text [appearance:textfield] focus-visible:border-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none';
+const FIELD = {
+  default: `${fieldBase} h-9 w-[88px] bg-surface text-[16px] max-[640px]:h-11 max-[640px]:w-auto max-[640px]:flex-1`,
+  receive: `${fieldBase} h-9 w-[72px] bg-transparent text-[16px] max-[640px]:h-12 max-[640px]:w-auto max-[640px]:flex-1 max-[640px]:text-[18px]`,
+  transfer: `${fieldBase} h-9 w-[72px] bg-surface text-[16px] max-[640px]:h-11 max-[640px]:w-auto max-[640px]:flex-1`,
+  damaged: `${fieldBase} h-9 w-[88px] bg-transparent text-[16px] max-[640px]:h-11 max-[640px]:w-auto max-[640px]:flex-1`,
+} as const;
 
 /** Quantity stepper (I2): joined minus button, whole-number field and plus button, with a polite note line for clamped entries. */
 export function QuantityStepper({
@@ -29,6 +47,7 @@ export function QuantityStepper({
   min = 1,
   max = QUANTITY_MAX,
   productName,
+  look = 'default',
   compact,
   className,
   ...rest
@@ -60,12 +79,13 @@ export function QuantityStepper({
     onValueChange(next);
   };
 
+  const ctl = look === 'default' ? control : look === 'transfer' ? controlTransfer : controlCount;
   const suffix = productName ? ` ${productName}` : '';
 
   return (
     <div className={cn('flex flex-col gap-1', className)} {...rest}>
       <div role="group" aria-label={productName ? `Quantity of ${productName}` : 'Quantity'} className="flex w-fit items-center max-[640px]:w-full">
-        <button type="button" aria-label={`One less${suffix}`} onClick={() => step(-1)} className={cn(control, compact && '!h-7 !w-7 !text-[12px]', focusRing, 'rounded-l-control rounded-r-none')}>
+        <button type="button" aria-label={`One less${suffix}`} onClick={() => step(-1)} className={cn(ctl, compact && '!h-7 !w-7 !text-[12px]', focusRing, 'rounded-l-control rounded-r-none')}>
           <Minus aria-hidden size={14} />
         </button>
         <input
@@ -82,9 +102,9 @@ export function QuantityStepper({
           onKeyDown={(e) => {
             if (e.key === 'Enter') commit(e.currentTarget.value);
           }}
-          className={cn('h-9 w-[88px] rounded-none border border-x-0 border-control bg-surface p-0 text-center text-[16px] font-semibold tabular-nums text-text [appearance:textfield] focus-visible:border-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none max-[640px]:h-11 max-[640px]:w-auto max-[640px]:flex-1', compact && '!h-7 !w-12 !px-0.5 !text-[14px]')}
+          className={cn(FIELD[look], compact && '!h-7 !w-12 !px-0.5 !text-[14px]')}
         />
-        <button type="button" aria-label={`One more${suffix}`} onClick={() => step(1)} className={cn(control, compact && '!h-7 !w-7 !text-[12px]', focusRing, 'rounded-l-none rounded-r-control')}>
+        <button type="button" aria-label={`One more${suffix}`} onClick={() => step(1)} className={cn(ctl, compact && '!h-7 !w-7 !text-[12px]', focusRing, 'rounded-l-none rounded-r-control')}>
           <Plus aria-hidden size={14} />
         </button>
       </div>
