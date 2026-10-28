@@ -381,6 +381,16 @@ const preset = {
             "opacity": "1"
           }
         },
+        "bc-up": {
+          "from": {
+            "transform": "translateY(24px)",
+            "opacity": ".6"
+          },
+          "to": {
+            "transform": "none",
+            "opacity": "1"
+          }
+        },
         "town-flow-a": {
           "to": {
             "strokeDashoffset": "-27"
@@ -448,6 +458,7 @@ const preset = {
         "sub-back-l": "sub-back-l var(--dur-subpage-out) var(--ease-subpage) backwards",
         "sub-back-r": "sub-back-r var(--dur-subpage-out) var(--ease-subpage) backwards",
         "sub-fade": "sub-fade var(--dur-reduced-fade) linear backwards",
+        "bc-up": "bc-up .22s cubic-bezier(.22, 1, .36, 1)",
         "town-flow-a": "town-flow-a 1.6s linear infinite",
         "town-flow-b": "town-flow-b 1.6s linear infinite",
         "town-flow-a-slow": "town-flow-a 5s linear infinite",
