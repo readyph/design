@@ -14,6 +14,11 @@ export function formatCount(count: number): string {
 
 export interface CountBadgeProps extends HTMLAttributes<HTMLSpanElement> {
   count: number;
+  /**
+   * `rail` (default): 14px badge at the top right of a rail item. `tab` (RDY-382, shell.css 645-646): 16px badge, 4px padding, at the top
+   * of a phone bottom-nav tab, 6px right of the tab's centre.
+   */
+  placement?: 'rail' | 'tab';
 }
 
 /**
@@ -21,14 +26,16 @@ export interface CountBadgeProps extends HTMLAttributes<HTMLSpanElement> {
  * its (relative) parent, so it works on a rail item and on a phone bottom-nav tab alike. Decorative:
  * the parent's accessible name carries the number. Renders nothing for 0.
  */
-export function CountBadge({ count, className, ...rest }: CountBadgeProps) {
+export function CountBadge({ count, placement = 'rail', className, ...rest }: CountBadgeProps) {
   if (!(count > 0)) return null;
   return (
     <span
       aria-hidden
       className={cn(
-        'pointer-events-none absolute inline-flex h-[14px] min-w-[14px] items-center justify-center rounded-[3px] bg-text px-[3px] text-tiny font-medium leading-[14px] text-surface',
-        count > 99 ? 'right-[-3px] top-[1px]' : 'right-[2px] top-[3px]',
+        'pointer-events-none absolute inline-flex items-center justify-center rounded-[3px] bg-text text-tiny font-medium text-surface',
+        placement === 'tab'
+          ? 'left-[calc(50%+6px)] top-1 h-4 min-w-4 px-1 leading-4'
+          : cn('h-[14px] min-w-[14px] px-[3px] leading-[14px]', count > 99 ? 'right-[-3px] top-[1px]' : 'right-[2px] top-[3px]'),
         className,
       )}
       {...rest}
@@ -109,6 +116,8 @@ export interface IconRailMarkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorE
   label?: string;
   /** Play the shine (one light sweep): once on mount, and again on hover or keyboard focus. Default true. */
   animate?: boolean;
+  /** `falcon` (default): the Ready falcon. `letter` (Inventory, RDY-382; shell.css 83, shell.js 128): the letter "R" in a 36px link, 18px / 600, -0.02em, `--text`. */
+  variant?: 'falcon' | 'letter';
 }
 
 /**
@@ -117,7 +126,7 @@ export interface IconRailMarkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorE
  * after the last run has finished. `prefers-reduced-motion` turns it into one brightness step (see ReadyMark).
  */
 export const IconRailMark = forwardRef<HTMLAnchorElement, IconRailMarkProps>(function IconRailMark(
-  { label = 'Ready', href = '/', animate = true, className, onMouseEnter, onFocus, ...rest },
+  { label = 'Ready', href = '/', animate = true, variant = 'falcon', className, onMouseEnter, onFocus, ...rest },
   ref,
 ) {
   const [run, setRun] = useState(animate ? 1 : 0);
@@ -150,11 +159,12 @@ export const IconRailMark = forwardRef<HTMLAnchorElement, IconRailMarkProps>(fun
       }}
       className={cn(
         'mb-3 grid size-9 shrink-0 place-items-center rounded-control transition-colors motion-reduce:transition-none hover:bg-frame-hover',
+        variant === 'letter' && 'text-[18px] font-semibold leading-none tracking-[-0.02em] text-text',
         focusRing,
         className,
       )}
     >
-      <ReadyMark size={RAIL_MARK_PX} cut="full" decorative animate={run} effect="shine" />
+      {variant === 'letter' ? <span aria-hidden="true">R</span> : <ReadyMark size={RAIL_MARK_PX} cut="full" decorative animate={run} effect="shine" />}
     </a>
   );
 });
