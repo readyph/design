@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import { ArrowClockwise, Funnel, ListChecks, MagnifyingGlass, Package, Storefront, Truck, WarningCircle, X } from '@phosphor-icons/react';
-import { ActionLink } from '../components/ActionLink';
+import { ArrowClockwise, Funnel, ListChecks, MagnifyingGlass, Package, PaperPlaneTilt, Printer, Storefront, Truck, WarningCircle, X } from '@phosphor-icons/react';
+import { ActionLink, BackLink } from '../components/ActionLink';
 import { AskLedaBar } from '../components/AskLedaBar';
 import { Button } from '../components/Button';
 import { LedaMark } from '../components/Leda';
@@ -13,6 +13,8 @@ import { cn } from '../utils/cn';
 import { InventoryChrome } from './Products.chrome';
 import { PRODUCTS } from './Products.data';
 import { OL_A, OL_B } from './OrderLists.data';
+import { PurchaseOrderView, type OrderConfirm } from './PurchaseOrders.order';
+import { AFTER_RECEIPT, ORDER_EXTRAS } from './PurchaseOrders.order.data';
 import { STW, flag, plural, purchaseOrdersModel, type POFilter, type POQuery, type POSort, type POTone, type PurchaseOrder } from './PurchaseOrders.data';
 
 /* RDY-426. Page: Purchase orders, 2/5 (b): the list region. Source: inventory-home FINAL purchase-orders.js 150-238 (statusLine, expectedCell, actionOf, rowHTML,
@@ -31,6 +33,14 @@ export interface PurchaseOrdersPageProps {
   sup?: string;
   qs?: string;
   group?: 'sup';
+  /** `?po=<PO no>`: the one-order view (slice c). */
+  po?: string;
+  /** Story only: the inline question open on the order. */
+  confirm?: 'send' | 'cancel';
+  /** Story only: PO-0222 after one receipt, so History offers Undo this receipt (purchase-orders.js 314). */
+  receipt?: boolean;
+  /** Story only: the Undo this receipt question is open. */
+  undoOpen?: boolean;
   /** Story only: the error block has already been retried (purchase-orders.js 224, `S.retried`). */
   retried?: boolean;
 }
@@ -60,7 +70,8 @@ const COLS_M = 'grid-cols-[minmax(0,1.5fr)_150px_170px_150px_110px_112px] max-[1
 const COLS_C = 'grid-cols-[minmax(0,1.5fr)_150px_170px_150px_112px] max-[1099px]:grid-cols-[minmax(0,1.4fr)_130px_150px_100px]';
 const PHONE_COLS = 'max-[640px]:grid-cols-[minmax(0,1fr)_auto] max-[640px]:gap-x-3 max-[640px]:gap-y-1';
 
-export function PurchaseOrdersPage({ tenant = 'a', as = 'manager', state, pos, asof, f, sup, qs, group, retried: retriedProp }: PurchaseOrdersPageProps) {
+export function PurchaseOrdersPage({ tenant = 'a', as = 'manager', state, pos, asof, f, sup, qs, group, retried: retriedProp, po: poProp, confirm: confirmProp, receipt, undoOpen }: PurchaseOrdersPageProps) {
+  const [confirm, setConfirm] = useState<OrderConfirm>(confirmProp ?? null);
   const [filter, setFilter] = useState<POFilter>(f ?? 'all');
   const [supplier, setSupplier] = useState(sup ?? 'all');
   const [query, setQuery] = useState(qs ?? '');
@@ -68,7 +79,7 @@ export function PurchaseOrdersPage({ tenant = 'a', as = 'manager', state, pos, a
   const [sort, setSort] = useState<POSort>('attn');
   const [fopen, setFopen] = useState(false);
   const [retried, setRetried] = useState(!!retriedProp);
-  const M = useMemo(() => purchaseOrdersModel({ tenant, as, state, pos, asof, f: filter, sup: supplier, qs: query, group: grouped, retried }), [tenant, as, state, pos, asof, filter, supplier, query, grouped, retried]);
+  const M = useMemo(() => purchaseOrdersModel({ tenant, as, state, pos, asof, po: poProp, f: filter, sup: supplier, qs: query, group: grouped, retried }), [tenant, as, state, pos, asof, poProp, filter, supplier, query, grouped, retried]);
   const P = PRODUCTS[tenant], V = P.viewers[as], contacts = (tenant === 'a' ? OL_A : OL_B).contacts;
   const { can, money, flags: F, now, todayLabel } = M;
   const poErr = F.error && !retried;
@@ -256,6 +267,26 @@ export function PurchaseOrdersPage({ tenant = 'a', as = 'manager', state, pos, a
   const stamp = `${asof ? `${todayLabel} 2026 · preview` : now.date} · ${loading ? `Loading… last loaded ${now.lastLoaded}` : poErr ? `Last loaded ${now.lastLoaded}` : `Updated ${now.time}`}`;
   const hl = M.headline();
   const sheetBar = <SheetBar wrapChildren={false} actionsFirst={false} actions={<AskLedaBar variant="bar" scope="Purchase orders" />}><SheetBarWhere platform={platform} page="Purchase orders" note={as !== 'manager' ? `Viewing as ${V.viewer.short}, ${V.roleLabel.toLowerCase()}` : undefined} /></SheetBar>;
+  /* purchase-orders.js 382-394 detailHTML, 479-484 sbarHTML (order), 490-498 paintPbar */
+  const swap = receipt && poProp === 'PO-0222' ? AFTER_RECEIPT : null;
+  const openPo = !loading && poProp ? (swap ? (swap.po as unknown as PurchaseOrder) : M.byNo(poProp)) : null;
+  if (openPo) {
+    const X = swap ? (swap.extras as typeof ORDER_EXTRAS.a[string]) : ORDER_EXTRAS[tenant][openPo.no];
+    const mg = can('confirm_po'), s = openPo.status;
+    const paperBtn = (pri: boolean) => <Button variant={pri ? 'primary' : 'secondary'} actionBar fullWidth leftIcon={Printer}>Open paper</Button>;
+    const bar = s === 'DRAFT' ? (mg ? <><Button actionBar fullWidth leftIcon={PaperPlaneTilt} onClick={() => setConfirm('send')}>Mark as sent</Button>{paperBtn(false)}</> : paperBtn(true))
+      : M.isOpen(openPo) && can('receive') ? <Button actionBar fullWidth leftIcon={Truck} disabled={poErr}>Receive delivery</Button> : undefined;
+    return (
+      <InventoryChrome tenant={tenant} as={as} nav="pos" page="Orders" lists={nLists} detail actionBar={bar}
+        sheetBar={<SheetBar wrapChildren={false} actionsFirst={false} actions={<AskLedaBar variant="bar" scope={openPo.no} />}><BackLink>Purchase orders</BackLink><span className="self-center text-[13px] text-muted">/ {openPo.no}</span></SheetBar>}
+        status={<InventoryStatusBar platform={platform} dataLink={dataLink} viewer={{ name: V.viewer.short, role: V.roleLabel }} leda={{ canDecide: can('confirm_po'), managerName: P.viewers.manager.viewer.short }} updatedAt={poErr ? `Last loaded ${now.lastLoaded}` : now.time} />}>
+        <div className="min-w-0 px-pad pb-8 pt-5 max-[640px]:px-4 max-[640px]:pb-[112px] max-[640px]:pt-4">
+          <PurchaseOrderView M={M} po={openPo} extras={X} confirm={confirm} onConfirm={setConfirm} disabled={poErr} undoOpen={undoOpen}
+            stateBadge={<POState tone={STONE_OF[M.stKey(openPo)]}>{STW[M.stKey(openPo)]}</POState>} />
+        </div>
+      </InventoryChrome>
+    );
+  }
   return (
     <InventoryChrome tenant={tenant} as={as} nav="pos" page="Orders" sheetBar={sheetBar} lists={nLists}
       status={<InventoryStatusBar platform={platform} dataLink={dataLink} viewer={{ name: V.viewer.short, role: V.roleLabel }} leda={{ canDecide: can('confirm_po'), managerName: P.viewers.manager.viewer.short }} updatedAt={loading ? `Loading… last loaded ${now.lastLoaded}` : now.time} />}>
