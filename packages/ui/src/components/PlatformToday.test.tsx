@@ -149,14 +149,14 @@ describe('PlatformToday', () => {
 
     it('hover and focus fire onLinkHover with the link; leaving fires null', () => {
       const onLinkHover = vi.fn();
-      render(<PlatformToday platform={autoWorks} lists={[linked]} onLinkHover={onLinkHover} />);
+      render(<PlatformToday platform={{ ...autoWorks, id: 'auto-works' }} lists={[linked]} onLinkHover={onLinkHover} />);
       const chip = screen.getByRole('button', { name: /ALT-NCP150\s+0 on hand/ });
       fireEvent.mouseEnter(chip);
-      expect(onLinkHover).toHaveBeenLastCalledWith(linked.items[0].link, 'Auto Works Quezon City');
+      expect(onLinkHover).toHaveBeenLastCalledWith(linked.items[0].link, 'auto-works');
       fireEvent.mouseLeave(chip);
       expect(onLinkHover).toHaveBeenLastCalledWith(null);
       fireEvent.focus(chip);
-      expect(onLinkHover).toHaveBeenLastCalledWith(linked.items[0].link, 'Auto Works Quezon City');
+      expect(onLinkHover).toHaveBeenLastCalledWith(linked.items[0].link, 'auto-works');
       fireEvent.blur(chip);
       expect(onLinkHover).toHaveBeenLastCalledWith(null);
     });

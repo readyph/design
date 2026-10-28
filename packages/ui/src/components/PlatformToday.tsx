@@ -29,7 +29,6 @@ export interface TodayLink {
   onSelect?: () => void;
 }
 
-/** One row of a list. The same shape for every kind of platform. */
 /** What a chip click targets: the other platform and the reference of its row. */
 export interface TodayLinkTarget {
   platformId: string;
@@ -61,6 +60,7 @@ function flashTargetRow({ platformId, ref }: TodayLinkTarget) {
   }, FLASH_MS);
 }
 
+/** One row of a list. The same shape for every kind of platform. */
 export interface TodayItem {
   id: string;
   /** Short reference ("JO-0412"). Muted, before the title. */
@@ -382,7 +382,7 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
               className="[&>div:first-child]:gap-x-[7.25px] [&>div:first-child]:pb-1 [&>div:first-child]:pt-3.5 [&>div:first-child>*]:leading-5 [&>div:first-child>span]:text-ui"
             >
               {rows.map((it) => (
-                <Row key={flashRow && it.ref === flashRow.ref ? `${it.id}:${flashRow.n}` : it.id} item={it} platform={platform.name} layout={rowLayout} flash={!!flashRow && it.ref === flashRow.ref} onLinkActivate={onLinkActivate} onLinkHover={onLinkHover} label={`${l.title}: ${typeof it.title === 'string' ? it.title : it.ref ?? ''}`} />
+                <Row key={flashRow && it.ref === flashRow.ref ? `${it.id}:${flashRow.n}` : it.id} item={it} platform={platformKey(platform)} layout={rowLayout} flash={!!flashRow && it.ref === flashRow.ref} onLinkActivate={onLinkActivate} onLinkHover={onLinkHover} label={`${l.title}: ${typeof it.title === 'string' ? it.title : it.ref ?? ''}`} />
               ))}
             </ListGroup>
             {more ? (
