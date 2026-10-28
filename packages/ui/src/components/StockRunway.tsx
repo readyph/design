@@ -1,4 +1,4 @@
-import { forwardRef, useLayoutEffect, useRef, useState } from 'react';
+import { forwardRef, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { cn } from '../utils/cn';
 
 /** One step of the day: the start, a movement already made, a booked job or a delivery. */
@@ -11,6 +11,8 @@ export interface StockRunwayPoint {
   ref?: string;
   /** A job that takes on hand below zero. */
   short?: boolean;
+  /** Change in on hand at this step (a delivery adds its quantity). Used by the lane variant's delivery label. */
+  d?: number;
 }
 
 /** A part with no booked jobs: on hand falls in a straight line from Now at its use rate. */
@@ -31,6 +33,8 @@ export interface StockRunwayAlt {
   left: number;
   /** Minutes since midnight when it arrives. */
   at: number;
+  /** Lane variant: the whole day's steps with this order counted, drawn as the dotted line. */
+  points?: StockRunwayPoint[];
 }
 
 export interface StockRunwayWeekDay {
@@ -80,6 +84,14 @@ export interface StockRunwayProps {
   emptyLabel?: string;
   /** Formats minutes since midnight. Default "9:12" (24-hour, no leading zero on the hour). */
   formatTime?: (minutes: number) => string;
+  /** `lane` draws the day inside a 128px timeline lane, full width (the hour axis and Now line belong to the lane). Default `standalone`. */
+  variant?: 'standalone' | 'lane';
+  /** Lane variant: the delivery is a sent order, so it is part of the line (accent label, no short band). */
+  confirmed?: boolean;
+  /** Lane variant, rate part: right-aligned note for an order that lands on a later day, e.g. "PO-0231: +40 Thu 22 8:30". */
+  laterLabel?: string;
+  /** Lane variant: replaces the "short by close" text at the end of a projection that goes short (a chip that opens the fix). */
+  endAction?: ReactNode;
   /** Replaces the generated description. */
   'aria-label'?: string;
   className?: string;
@@ -104,7 +116,7 @@ const t = {
  * accent line only. Read as one image; everything inside is decoration. All colours are tokens.
  */
 export const StockRunway = forwardRef<HTMLDivElement, StockRunwayProps>(function StockRunway(
-  { state = 'ready', name, hours, now, points = [], rate, alt, week, caption, emptyLabel = 'Nothing goes out until there is stock.', formatTime, 'aria-label': ariaLabel, className },
+  { state = 'ready', variant = 'standalone', confirmed = false, laterLabel, endAction, name, hours, now, points = [], rate, alt, week, caption, emptyLabel = 'Nothing goes out until there is stock.', formatTime, 'aria-label': ariaLabel, className },
   ref,
 ) {
   const box = useRef<HTMLDivElement | null>(null);
@@ -127,7 +139,8 @@ export const StockRunway = forwardRef<HTMLDivElement, StockRunwayProps>(function
 
   const hm = formatTime ?? defaultFormat;
   const W = width > 0 ? width : FALLBACK_W;
-  const wrap = cn('relative mt-3 min-h-[200px]', className);
+  const lane = variant === 'lane';
+  const wrap = cn(lane ? 'relative h-[128px]' : 'relative mt-3 min-h-[200px]', className);
 
   if (state === 'loading') {
     return (
@@ -193,6 +206,60 @@ export const StockRunway = forwardRef<HTMLDivElement, StockRunwayProps>(function
             <text x={X(0, now) + 8} y={H - 6} className={cn('text-small tabular-nums', t.muted)}>{week.caption}</text>
           </g>
         </svg>
+      </div>
+    );
+  }
+
+  if (lane && !week) {
+    const H = 128, top = 26;
+    const main = { pts: points, end: rate ? rate.end : points[points.length - 1].v };
+    const altPts = !rate && alt?.points ? alt.points : null;
+    const shortHead = points.find((p) => p.short);
+    const bot = H - (W < 700 && main.end < 0 ? 52 : 24);
+    const preDel = (pp: StockRunwayPoint[]) => { const dl = pp.find((q) => q.kind === 'del'); return pp.filter((q) => !dl || q.t < dl.t).map((q) => q.v); };
+    const vals = preDel(points).concat(altPts ? preDel(altPts) : [], points.filter((q) => q.v < 0).map((q) => q.v));
+    const deliveryV = points.concat(altPts ?? []).filter((q) => q.kind === 'del').map((q) => q.v);
+    const lo = Math.min(0, ...vals), hi = Math.max(Math.max(...vals) + 1, 6);
+    const off = deliveryV.some((v) => v > hi);
+    const y = (v: number) => (v > hi ? top - 6 : bot - ((v - lo) / (hi - lo)) * (bot - top));
+    const X = (tm: number) => (Math.max(0, Math.min(100, ((tm - OPEN) / (CLOSE - OPEN)) * 100)) / 100) * W;
+    const xNow = X(now), xEnd = W;
+    const tz = rate ? rate.tz : null;
+    const vAtL = (pp: StockRunwayPoint[], tm: number) => pp.filter((q) => q.t <= tm).pop()!.v;
+    const stepsL = (pp: StockRunwayPoint[], from: number, to: number) => { let dd = `M${X(from)} ${y(vAtL(pp, from))}`; pp.forEach((q) => { if (q.t > from && q.t <= to) dd += ` H${X(q.t)} V${y(q.v)}`; }); return `${dd} H${X(to)}`; };
+    const fut = rate ? `M${xNow} ${y(rate.vNow)} L${tz != null ? `${X(tz)} ${y(0)} H${xEnd}` : `${xEnd} ${y(rate.end)}`}` : stepsL(points, now, CLOSE);
+    const bad = main.end < 0 || (!!rate && tz != null);
+    const endTxt = main.end < 0 ? `${Math.abs(main.end)} short by close` : rate && tz != null ? 'out by close' : `${main.end} left by close`;
+    const altDel = altPts?.find((q) => q.kind === 'del');
+    const offDel = (confirmed ? points : altPts ?? [])?.find((q) => q.kind === 'del');
+    const spokenL = ariaLabel ?? `${name}: ${points.map((q) => `${hm(q.t)} ${q.v}`).join(', ')}.${points.some((q) => q.short) ? ` Short for ${points.filter((q) => q.short).map((q) => q.ref).join(' and ')}.` : ''}${alt ? ` With ${alt.no}: ${altPts ? altPts[altPts.length - 1].v : alt.left} by close.` : ''}`;
+    const txt = 'text-small tabular-nums';
+    return (
+      <div ref={setRefs} className={wrap} data-variant="lane">
+        <svg role="img" aria-label={spokenL} width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="block overflow-visible">
+          <g aria-hidden="true">
+            {shortHead && !confirmed && <rect x={X(shortHead.t)} y={y(0)} width={Math.max(0, xEnd - X(shortHead.t))} height={bot - y(0) + 4} className="fill-bad-bg" />}
+            {tz != null && <rect x={X(tz)} y={y(0) - 16} width={Math.max(0, xEnd - X(tz))} height={20} className="fill-bad-bg" />}
+            <line x1={0} x2={W} y1={y(0)} y2={y(0)} strokeWidth={1} className="stroke-control" />
+            <text x={4} y={y(0) - 5} className={cn(txt, t.muted)}>0</text>
+            {altPts && <path d={stepsL(altPts, now, CLOSE)} fill="none" strokeWidth={1.5} strokeDasharray="2 4" strokeLinecap="round" className="stroke-muted forced-colors:stroke-[CanvasText]" />}
+            <path d={stepsL(points, OPEN, now)} fill="none" strokeWidth={2.5} className="stroke-accent forced-colors:stroke-[CanvasText]" />
+            <path d={fut} fill="none" strokeWidth={2.5} strokeDasharray="6 4" className="stroke-accent forced-colors:stroke-[CanvasText]" />
+            {points.map((pt, i) => {
+              const xx = X(pt.t) + (i === 0 ? 14 : 5), v = pt.v;
+              if (pt.kind === 'del') return <text key={i} x={xx} y={top - 10} className={cn(txt, confirmed ? t.acc : t.ink)}>{`+${pt.d} ${pt.ref} · ${v}`}</text>;
+              if (v > hi) return null;
+              return <text key={i} x={xx} y={v < 0 ? y(v) + 15 : y(v) - 6} className={cn(txt, v < 0 ? t.bad : i === 0 ? t.muted : t.ink)}>{v < 0 ? MINUS + Math.abs(v) : v}</text>;
+            })}
+            {altDel && <text x={X(altDel.t) + 5} y={top - 10} className={cn(txt, t.muted)}>{`with ${altDel.ref}: ${altDel.v} left`}</text>}
+            {tz != null && <text x={X(tz) + 6} y={y(0) + 15} className={cn(txt, t.bad)}>{`Out about ${hm(tz)}`}</text>}
+            {rate && laterLabel && <text x={xEnd - 2} y={top - 10} textAnchor="end" className={cn(txt, t.ink)}>{laterLabel}</text>}
+            {off && offDel && <path d={`M${X(offDel.t) - 4} ${top + 2} L${X(offDel.t)} ${top - 4} L${X(offDel.t) + 4} ${top + 2}`} fill="none" strokeWidth={1.5} className={cn(confirmed ? 'stroke-accent' : 'stroke-muted', 'forced-colors:stroke-[CanvasText]')} />}
+            {!(bad && endAction) && <text x={xEnd - 2} y={H - 6} textAnchor="end" className={cn(txt, bad ? t.bad : confirmed ? t.acc : t.ink)}>{endTxt}</text>}
+            {caption && <text x={xNow + 8} y={H - 6} className={cn(txt, t.muted)}>{caption}</text>}
+          </g>
+        </svg>
+        {bad && endAction && <div className="absolute bottom-1.5 right-0 z-[3]">{endAction}</div>}
       </div>
     );
   }
