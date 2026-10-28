@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
-import { ArrowLeft, ArrowsDownUp, ListPlus, Package, Prohibit, Receipt, Storefront, TrendDown, WarningCircle } from '@phosphor-icons/react';
+import { ArrowLeft, ArrowsDownUp, ArrowSquareOut, CaretRight, ChartLineDown, ListPlus, Lock, Package, Prohibit, Receipt, Scales, Storefront, TrendDown, Truck, WarningCircle } from '@phosphor-icons/react';
+import { ActionLink } from '../components/ActionLink';
+import { LedaMark } from '../components/Leda';
 import { AskLedaBar } from '../components/AskLedaBar';
 import { Button } from '../components/Button';
 import { ErrorBlock } from '../components/ErrorBlock';
-import { LedaNote } from '../components/LedaNote';
 import { Modal } from '../components/Modal';
 import { NewProductRequests } from '../components/NewProductRequest';
 import { Notice } from '../components/Notice';
@@ -33,8 +34,6 @@ export interface ProductsPageProps {
   qs?: string;
   cat?: string;
   sup?: string;
-  /** The "Needs setting up" story: one stocker request is open (receiving.js 45, sample). */
-  needsSetup?: boolean;
   /** Story only: open the Add product dialog (products.js 604). */
   addDialog?: boolean;
 }
@@ -46,10 +45,39 @@ const peso = (n: number) => `₱${Math.round(n).toLocaleString('en-PH')}`;
 const unitOf = (p: { unit: string }, n: number) => (p.unit === 'pc' ? 'pc' : n === 1 ? p.unit : `${p.unit}s`);
 const signed = (n: number) => (n > 0 ? '+' : n < 0 ? MINUS : '') + Math.abs(n);
 const LOWTIP = 'The stock is low and we need to restock soon.';
-const MVW: Record<string, string> = { received: 'Stock in', sold: 'Stock out', transfer: 'Stock out', damaged: 'Stock out', count: 'Count' };
+const MVW: Record<string, [string, typeof Truck]> = { received: ['Stock in', Truck], sold: ['Stock out', ArrowSquareOut], transfer: ['Stock out', ArrowSquareOut], damaged: ['Stock out', ArrowSquareOut], count: ['Count', Scales] };
+/* products.css 46-57 (.pnl-h, .va), 74-84 (.row, .t1, .t2) */
+const VA = 'inline-flex h-6 cursor-pointer items-center gap-1 rounded-[4px] border-0 bg-transparent px-1 text-[12px] font-semibold text-accent no-underline hover:text-lk-hover active:text-lk-hover active:opacity-[.85] outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent';
+const ROW = 'relative grid w-[calc(100%+16px)] -mx-2 items-center gap-x-3 rounded-none border-t border-rule bg-clip-padding px-2 py-3 text-left text-text first:border-t-transparent';
+const T1 = 'block min-w-0 truncate text-[14px] font-medium leading-5';
+function Ref({ r }: { r?: string | null }) { return isId(r) ? <span className="font-mono text-[12px]">{r}</span> : <>{r}</>; }
+const DOT: Record<string, string> = { bad: 'bg-bad', warn: 'bg-warn', info: 'bg-info', dash: 'h-1.5 w-1.5 border-[1.5px] border-dashed border-muted' };
+/* products.css 93-102: a dot and a word; the colour lives on the dot, red only when short or out */
+function Dot({ tone, children }: { tone: 'bad' | 'warn' | 'info' | 'dash'; children: React.ReactNode }) {
+  return <span className={`inline-flex h-5 items-center gap-1.5 whitespace-nowrap text-[12px] font-medium ${tone === 'bad' ? 'text-bad' : tone === 'dash' ? 'text-muted' : 'text-text'}`}><span aria-hidden className={`flex-none rounded-full ${tone === 'dash' ? '' : 'h-[7px] w-[7px]'} ${DOT[tone]}`} />{children}</span>;
+}
+function PanelHead({ icon: Icon, title, count, sub, right }: { icon: typeof Truck; title: string; count?: number; sub?: string; right?: React.ReactNode }) {
+  return (
+    <div className="flex min-h-8 items-baseline gap-2.5 border-b border-border pb-2.5 max-[640px]:flex-wrap">
+      <Icon aria-hidden size={18} className="self-center text-muted" /><h2 className="m-0 whitespace-nowrap text-[16px] font-semibold leading-[22px]">{title}</h2>
+      {count != null ? <span className="text-[13px] font-medium tabular-nums text-muted">{count}</span> : null}
+      {sub ? <span className="min-w-0 truncate text-[12px] text-muted max-[640px]:hidden">{sub}</span> : null}
+      {right ? <span className="ml-auto flex items-center gap-4 self-center whitespace-nowrap text-[12px] text-muted max-[640px]:ml-0 max-[640px]:basis-full max-[640px]:pt-1">{right}</span> : null}
+    </div>
+  );
+}
+/* products.css 209-211 (.tip); links.css 27-31 (phone bar: note above the buttons, pointing down) */
+function Tip({ id, className = '', down }: { id: string; className?: string; down?: string }) {
+  return (
+    <span id={id} role="note" className={`relative max-w-[270px] rounded-[4px] border border-control bg-raised px-2.5 py-[7px] text-[12px] leading-[17px] text-text ${className}`}>
+      {LOWTIP}
+      <span aria-hidden className={`absolute h-2 w-2 rotate-45 bg-raised ${down ? `-bottom-[5px] border-b border-r border-control ${down === '25%' ? 'left-[calc(25%-4px)]' : 'left-[calc(50%-4px)]'}` : '-top-[5px] left-[22px] border-l border-t border-control'}`} />
+    </span>
+  );
+}
 const isId = (r?: string | null) => /^[A-Z]{2,}-\d+/.test(r || '');
 
-export function ProductsPage({ tenant = 'a', as = 'manager', state = 'live', open: openProp, panel: panelProp, f = 'all', qs = '', cat: catProp = 'all', sup: supProp = 'all', needsSetup, addDialog }: ProductsPageProps) {
+export function ProductsPage({ tenant = 'a', as = 'manager', state = 'live', open: openProp, panel: panelProp, f = 'all', qs = '', cat: catProp = 'all', sup: supProp = 'all', addDialog }: ProductsPageProps) {
   const D: PData = PRODUCTS[tenant];
   const V = D.viewers[as];
   const can = (p: string) => V.can.includes(p);
@@ -74,7 +102,7 @@ export function ProductsPage({ tenant = 'a', as = 'manager', state = 'live', ope
   const [mvf, setMvf] = useState('all');
   const [mvAll, setMvAll] = useState(false);
   const [ro, setRo] = useState<{ qty: number | null; sup: string | null }>({ qty: null, sup: null });
-  const [np, setNp] = useState(() => (needsSetup ? [{ id: 'NP-01', barcode: '4806521004417', name: 'Prestone coolant 1L', qty: 6, loc: 'Aisle B', by: 'Dandy', at: '8:30 AM' }] : []));
+  const [np, setNp] = useState<React.ComponentProps<typeof NewProductRequests>['requests']>([]) /* receiving.js 12, 44: starts empty; requests only come from the stocker flow (GAP: none in the sample) */;
   const [dlg, setDlg] = useState(!!addDialog);
   const [form, setForm] = useState({ name: '', sku: '', cat: D.categories[0].id, unit: UNITS[0], sup: D.suppliers[0].id, barcode: '', reorder: '5', err: '' });
 
@@ -215,98 +243,116 @@ export function ProductsPage({ tenant = 'a', as = 'manager', state = 'live', ope
     const rec: RecordProduct = { id: p.id, name: p.name, sku: p.sku, onHand: n, reorder: p.reorder, unit: p.unit, location: l.name };
     const actions = (
       <>
-        <span className="flex flex-col gap-1">
+        <span className="flex min-w-0 max-w-full flex-col items-start gap-[9px]">
           <Button variant={ol || s === 'ok' || ord.length ? 'secondary' : 'primary'} leftIcon={ListPlus} disabled={poErr} aria-describedby={low ? 'addTip' : undefined} onClick={() => { setPanel('list'); setRo({ qty: null, sup: null }); }}>Add to order list</Button>
-          {low ? <span id="addTip" role="note" className="text-[13px] text-muted">{LOWTIP}</span> : null}
+          {low ? <Tip id="addTip" /> : null}
         </span>
-        {poErr ? <span className="inline-flex items-center gap-1.5 text-[13px] text-muted"><WarningCircle aria-hidden size={16} />Order lists did not load. Retry first, so nothing is ordered twice.</span> : ol ? <span className="text-[13px] text-muted">On {short(ol.list.sup)} list {'·'} {ol.line.qty}</span> : null}
+        {poErr ? <span className="inline-flex min-h-8 items-center gap-1.5 text-[13px] text-muted"><WarningCircle aria-hidden size={14} />Order lists did not load. Retry first, so nothing is ordered twice.</span> : ol ? <span className="inline-flex min-h-8 items-center text-[13px] text-muted">On {short(ol.list.sup)} list {'·'} {ol.line.qty}</span> : null}
         {can('stock_out') ? <Button variant="secondary" leftIcon={ArrowsDownUp} onClick={() => setPanel('adjust')}>{can('adjust_stock') ? 'Adjust stock' : 'Record stock out'}</Button> : null}
-        <AskLedaBar variant="field" scope={p.name} shortcuts={false} />
+        <Button variant="secondary" onClick={() => toast('Ask Leda opens here.')}><LedaMark size={14} decorative />Ask Leda</Button>
       </>
     );
     const rsup = ro.sup || (ol ? ol.list.sup : p.supplier), rqty = ro.qty ?? (ol ? ol.line.qty : suggestQty(p)), same = !!ol && ol.list.sup === rsup;
     const target = lists.find((x) => x.sup === rsup), others = target ? target.lines.length - (same ? 1 : 0) : 0;
     const sOpts = [{ value: p.supplier, label: sp.name, meta: 'Preferred' }, ...(D.alt[p.id] ?? []).map((a) => ({ value: a.sup, label: supOf(a.sup).name }))];
     return (
-      <div className="flex min-w-0 flex-col gap-6 p-pad max-[640px]:pb-28">
-        <div className="flex flex-wrap items-center gap-3"><h1 className="m-0 text-[22px] font-semibold leading-7">{p.name}</h1><StockStatus status={s} /></div>
-        <div className="flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-muted">{facts.map((x, i) => <span key={i}>{x}</span>)}</div>
-        <section aria-label="Stock now" className="flex flex-col gap-4 border-y border-rule py-5">
-          <div className="grid grid-cols-3 gap-6 max-[640px]:grid-cols-1">
-            {[{ k: 'Left on the shelf', v: n, u: unitOf(p, n), s: l.name + (l.holds ? ` · ${l.holds}` : '') }, { k: 'Reorder at', v: p.reorder, u: unitOf(p, p.reorder), s: 'Order when it drops to this' }, { k: 'On the way', v: next ? `+${next.qty}` : 0, u: next ? unitOf(p, next.qty) : '', s: next ? `${next.po.no} · ${shortDate(next.po)}` : poErr ? 'Orders not loaded' : ol ? `${ol.line.qty} on the ${short(ol.list.sup)} list, not sent` : 'Nothing ordered' }].map((x) => (
-              <div key={x.k} className="flex flex-col"><span className="text-[13px] text-muted">{x.k}</span><span><b className="text-[28px] font-semibold leading-9">{x.v}</b> <span className="text-[14px] text-muted">{x.u}</span></span><span className="text-[13px] text-muted">{x.s}</span></div>
+      <div className="flex min-w-0 flex-col px-pad pb-12 pt-6 max-[640px]:px-4 max-[640px]:pb-[120px] max-[640px]:pt-4">
+        <div className="flex flex-wrap items-center gap-3 max-[640px]:items-start max-[640px]:gap-x-3 max-[640px]:gap-y-2"><h1 className="m-0 text-[22px] font-semibold leading-7 tracking-[-0.01em]">{p.name}</h1><StockStatus status={s} /></div>
+        <div className="-ml-[23px] mt-3 flex flex-wrap items-center gap-y-1 text-[13px] leading-5 text-muted [clip-path:inset(-6px_-6px_-6px_23px)]">{facts.map((x, i) => <span key={i} className="inline-flex items-center gap-1.5 whitespace-nowrap before:ml-[10px] before:mr-1 before:h-[3px] before:w-[3px] before:flex-none before:rounded-full before:bg-control before:content-['']">{x}</span>)}</div>
+        <section aria-label="Stock now" className="mt-8 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-[72px] gap-y-6 border-y border-border py-7 @max-[900px]/sheet:grid-cols-[minmax(0,1fr)] max-[640px]:mt-6 max-[640px]:py-6">
+          <div className="flex gap-14 @max-[900px]/sheet:gap-10 max-[640px]:justify-between max-[640px]:gap-5">
+            {[{ k: 'Left on the shelf', big: n, dim: false, u: unitOf(p, n), s: l.name + (l.holds ? ` · ${l.holds}` : '') }, { k: 'Reorder at', big: p.reorder, dim: true, u: unitOf(p, p.reorder), s: 'Order when it drops to this' }, { k: 'On the way', big: next ? `+${next.qty}` : 0, dim: true, u: next ? unitOf(p, next.qty) : '', s: next ? `${next.po.no} · ${shortDate(next.po)}` : poErr ? 'Orders not loaded' : ol ? `${ol.line.qty} on the ${short(ol.list.sup)} list, not sent` : 'Nothing ordered' }].map((x) => (
+              <div key={x.k} className="flex min-w-0 flex-col gap-1"><span className="text-[12px] text-muted">{x.k}</span><span className="text-[13px] text-muted"><b className={`text-[34px] leading-[38px] font-semibold tracking-[-0.01em] tabular-nums max-[640px]:text-[28px] max-[640px]:leading-8 ${x.dim ? 'font-medium text-muted' : 'text-text'}`}>{x.big}</b> {x.u ? <span>{x.u}</span> : null}</span><span className="max-w-[190px] text-[12px] text-muted max-[640px]:max-w-[100px]">{x.s}</span></div>
             ))}
           </div>
-          <p className="m-0 text-[14px] leading-[22px]">{words}</p>
-          {leda ? <LedaNote byline={`Leda, ${D.now.time}`}>{leda}</LedaNote> : null}
-          <div className="flex flex-wrap items-start gap-3 max-[640px]:fixed max-[640px]:inset-x-0 max-[640px]:bottom-0 max-[640px]:z-10 max-[640px]:border-t max-[640px]:border-rule max-[640px]:bg-surface max-[640px]:p-3">{actions}</div>
+          <div className="flex min-w-0 flex-col gap-4"><p className="m-0 flex max-w-[680px] items-start gap-3 text-[15px] leading-[22px] max-[640px]:flex-col max-[640px]:gap-2 max-[640px]:text-[14px]"><span>{words}</span></p></div>
+          {leda ? <div className="col-span-full flex max-w-[760px] items-start gap-2.5 text-[14px] leading-5"><span aria-hidden className="mt-[3px] shrink-0"><LedaMark size={16} tile decorative /></span><span>{leda}<span className="mt-0.5 block text-[12px] text-muted">{`Leda, ${D.now.time}`}</span></span></div> : null}
+          <div className="col-span-full flex flex-wrap items-start gap-3 max-[640px]:hidden">{actions}</div>
         </section>
         {panel === 'adjust' && can('stock_out') ? (
-          <section aria-label={can('adjust_stock') ? 'Adjust stock' : 'Record stock out'} className="flex flex-col gap-3 border border-rule p-4">
-            <div className="flex items-center gap-2"><ArrowsDownUp aria-hidden size={18} className="text-muted" /><h2 className="m-0 flex-1 text-[16px] font-semibold">{can('adjust_stock') ? 'Adjust stock' : 'Record stock out'}</h2><Button variant="text" onClick={() => setPanel(null)}>Close</Button></div>
-            <RecordMovementForm fixed product={rec} products={[rec]} likely={[]} permissions={(['stock_out', 'transfer', 'adjust_stock'] as const).filter((x) => can(x))} jobOrders={tenant === 'a'} manager={D.viewers.manager.manager.short} placeName={D.business.platform}
-              jobsFor={(id) => jobsFor(id).map((j) => j.jo)} onCancel={() => setPanel(null)}
-              onRecord={(e) => { setDelta((d) => ({ ...d, [p.id]: (d[p.id] || 0) + e.qty })); setLocal((m) => ({ ...m, [p.id]: [{ day: 'today', at: D.now.hm, type: e.type, qty: e.qty, ref: e.ref, note: e.note, by: V.viewer.id, after: e.after }, ...(m[p.id] || [])] })); setPanel(null); toast(`${p.name} recorded.`); }} />
+          <section aria-label={can('adjust_stock') ? 'Adjust stock' : 'Record stock out'} className="mt-8 flex max-w-[760px] flex-col max-[640px]:mt-6">
+            <PanelHead icon={ArrowsDownUp} title={can('adjust_stock') ? 'Adjust stock' : 'Record stock out'} right={<button type="button" className={VA} onClick={() => setPanel(null)}>Close</button>} />
+            <div className="flex flex-col gap-5 pb-1 pt-5">
+              <RecordMovementForm fixed product={rec} products={[rec]} likely={[]} permissions={(['stock_out', 'transfer', 'adjust_stock'] as const).filter((x) => can(x))} jobOrders={tenant === 'a'} manager={D.viewers.manager.manager.short} placeName={D.business.platform}
+                jobsFor={(id) => jobsFor(id).map((j) => j.jo)} onCancel={() => setPanel(null)}
+                onRecord={(e) => { setDelta((d) => ({ ...d, [p.id]: (d[p.id] || 0) + e.qty })); setLocal((m) => ({ ...m, [p.id]: [{ day: 'today', at: D.now.hm, type: e.type, qty: e.qty, ref: e.ref, note: e.note, by: V.viewer.id, after: e.after }, ...(m[p.id] || [])] })); setPanel(null); toast(`${p.name} recorded.`); }} />
+            </div>
           </section>
         ) : null}
         {panel === 'list' && can('draft_po') && !poErr ? (
-          <section aria-label="Order list" className="flex flex-col gap-3 border border-rule p-4">
-            <div className="flex items-center gap-2"><ListPlus aria-hidden size={18} className="text-muted" /><h2 className="m-0 text-[16px] font-semibold">{same ? 'Change the quantity' : 'Add to order list'}</h2><span className="flex-1 text-[13px] text-muted">{p.name}</span><Button variant="text" onClick={() => setPanel(null)}>Close</Button></div>
-            <div className="grid grid-cols-[148px_minmax(0,1fr)] items-center gap-x-4 gap-y-3 max-[640px]:grid-cols-1">
-              <span id="l-ros" className="text-[13px]">Supplier</span>
-              {sOpts.length > 1 ? <Select aria-labelledby="l-ros" size="sm" options={sOpts} value={rsup} onValueChange={(v) => setRo({ ...ro, sup: v })} /> : <span className="text-[14px]">{supOf(rsup).name}</span>}
-              <span className="text-[13px]">How many</span>
-              <span className="flex items-center gap-2.5"><QuantityStepper value={rqty} onValueChange={(v) => setRo({ ...ro, qty: v })} productName={p.name} /><span className="text-[13px] text-muted">{unitOf(p, 2)}</span></span>
+          <section aria-label="Order list" className="mt-8 flex max-w-[760px] flex-col max-[640px]:mt-6">
+            <PanelHead icon={ListPlus} title={same ? 'Change the quantity' : 'Add to order list'} sub={p.name} right={<button type="button" className={VA} onClick={() => setPanel(null)}>Close</button>} />
+            <div className="flex flex-col gap-5 pb-1 pt-5">
+              <div className="grid grid-cols-[148px_minmax(0,1fr)] items-center gap-x-4 @max-[760px]/sheet:grid-cols-[120px_minmax(0,1fr)] max-[640px]:grid-cols-[minmax(0,1fr)] max-[640px]:gap-y-2">
+                <span id="l-ros" className="text-[13px] text-text">Supplier</span>
+                {sOpts.length > 1 ? <div className="max-w-[300px] max-[640px]:max-w-none"><Select aria-labelledby="l-ros" size="sm" options={sOpts} value={rsup} onValueChange={(v) => setRo({ ...ro, sup: v })} /></div> : <span className="text-[14px]">{supOf(rsup).name}</span>}
+              </div>
+              <div className="grid grid-cols-[148px_minmax(0,1fr)] items-center gap-x-4 @max-[760px]/sheet:grid-cols-[120px_minmax(0,1fr)] max-[640px]:grid-cols-[minmax(0,1fr)] max-[640px]:gap-y-2">
+                <span className="text-[13px] text-text">How many</span>
+                <QuantityStepper value={rqty} onValueChange={(v) => setRo({ ...ro, qty: v })} productName={p.name} />
+              </div>
+              <p className="m-0 ml-[164px] text-[14px] leading-[21px] text-muted @max-[760px]/sheet:ml-[136px] max-[640px]:ml-0">Suggested {suggestQty(p)}, which brings stock to about {n + ord.reduce((a, x) => a + x.qty, 0) + suggestQty(p)}, twice the reorder level. {target ? <>The {short(rsup)} list {same ? 'has' : 'already has'} {others ? `${others} other ${others === 1 ? 'product' : 'products'}` : 'no other products'}{target.no ? ` (${target.no})` : ''}. </> : <>This starts a new {short(rsup)} list. </>}{can('valuation') ? <>Line total <b className="font-semibold text-text">{peso(rqty * costFor(p, rsup))}</b> for {rqty}.</> : null}</p>
+              <div className="ml-[164px] flex flex-wrap gap-2 @max-[760px]/sheet:ml-[136px] max-[640px]:ml-0"><Button actionBar onClick={() => addToList(p.id, rqty, rsup)} disabled={rqty < 1}>{same ? 'Save quantity' : `Add to the ${short(rsup)} order list`}</Button>{ol ? <Button actionBar variant="secondary" onClick={() => unlist(p)}>Remove from list</Button> : null}<Button actionBar variant="text" onClick={() => setPanel(null)}>Cancel</Button></div>
+              <p className="m-0 ml-[164px] text-[13px] text-muted @max-[760px]/sheet:ml-[136px] max-[640px]:ml-0">Nothing is sent to the supplier. You print the list and mark it sent on Purchase orders.</p>
             </div>
-            <p className="m-0 text-[14px] leading-[22px]">Suggested {suggestQty(p)}, which brings stock to about {n + ord.reduce((a, x) => a + x.qty, 0) + suggestQty(p)}, twice the reorder level. {target ? <>The {short(rsup)} list {same ? 'has' : 'already has'} {others ? `${others} other ${others === 1 ? 'product' : 'products'}` : 'no other products'}{target.no ? ` (${target.no})` : ''}. </> : <>This starts a new {short(rsup)} list. </>}{can('valuation') ? <>Line total <b>{peso(rqty * costFor(p, rsup))}</b> for {rqty}.</> : null}</p>
-            <div className="flex flex-wrap gap-2"><Button onClick={() => addToList(p.id, rqty, rsup)} disabled={rqty < 1}>{same ? 'Save quantity' : `Add to the ${short(rsup)} order list`}</Button>{ol ? <Button variant="secondary" onClick={() => unlist(p)}>Remove from list</Button> : null}<Button variant="text" onClick={() => setPanel(null)}>Cancel</Button></div>
-            <p className="m-0 text-[13px] text-muted">Nothing is sent to the supplier. You print the list and mark it sent on Purchase orders.</p>
           </section>
         ) : null}
-        <div className="grid grid-cols-2 gap-6 max-[900px]:grid-cols-1">
-          <section id="p-mv" className="flex min-w-0 flex-col gap-3">
-            <div className="flex items-baseline gap-2"><ArrowsDownUp aria-hidden size={18} className="self-center text-muted" /><h2 className="m-0 text-[16px] font-semibold">Stock in and out</h2><span className="text-[13px] text-muted">{rowsM.length}</span><span className="text-[13px] text-muted">newest first, with what was left after each</span></div>
-            <SegmentedControl aria-label="Show" value={mvf} onChange={(v) => setMvf(v)} options={[{ value: 'all', label: 'All' }, { value: 'in', label: 'Stock in' }, { value: 'out', label: 'Stock out' }]} />
+        <div className="mt-8 grid items-start gap-x-10 gap-y-12 [grid-template-areas:'mv_po'_'mv_su'_'mv_._'_'run_run'] [grid-template-columns:minmax(0,2fr)_minmax(0,1fr)] [grid-template-rows:auto_auto_1fr_auto] @max-[1100px]/sheet:[grid-template-areas:'mv'_'run'_'po'_'su'] @max-[1100px]/sheet:[grid-template-columns:minmax(0,1fr)] @max-[1100px]/sheet:[grid-template-rows:none]">
+          <section id="p-mv" className="flex min-w-0 flex-col [grid-area:mv]">
+            <PanelHead icon={ArrowsDownUp} title="Stock in and out" count={rowsM.length} sub="newest first, with what was left after each" />
+            <div className="pb-1 pt-4"><SegmentedControl aria-label="Show" value={mvf} onChange={(v) => setMvf(v)} options={[{ value: 'all', label: 'All' }, { value: 'in', label: 'Stock in' }, { value: 'out', label: 'Stock out' }]} /></div>
             {shown.length ? <ul className="m-0 list-none p-0">{shown.map((m, i) => {
-              const w = MVW[m.type] || 'Stock', when = m.day === 'today' ? `Today ${m.at.replace(/^0/, '')}` : m.day === 'yesterday' ? `Yesterday ${m.at.replace(/^0/, '')}` : `${m.day} ${m.at.replace(/^0/, '')}`;
+              const [w, Icn] = MVW[m.type] || ['Stock', ArrowsDownUp], when = m.day === 'today' ? `Today ${m.at.replace(/^0/, '')}` : m.day === 'yesterday' ? `Yesterday ${m.at.replace(/^0/, '')}` : `${m.day} ${m.at.replace(/^0/, '')}`;
               const note = m.note ? ` · ${m.note}` : '';
-              const what = m.type === 'received' && (m.ref === 'No order' || m.ref === 'New product') ? `${m.ref === 'No order' ? 'Received without an order' : 'Received, new product'}${note}` : m.type === 'received' ? `Received${m.ref ? ` on ${m.ref}` : ''}${note}` : m.type === 'sold' ? `${isId(m.ref) ? `Used on ${m.ref}` : m.ref || 'Used'}${note}` : m.type === 'transfer' ? `Transfer ${m.ref}${note}` : m.type === 'damaged' ? `Damaged${note}` : m.note || 'Count correction';
+              const what: React.ReactNode = m.type === 'received' && (m.ref === 'No order' || m.ref === 'New product') ? `${m.ref === 'No order' ? 'Received without an order' : 'Received, new product'}${note}` : m.type === 'received' ? <>Received{m.ref ? <> on <Ref r={m.ref} /></> : null}{note}</> : m.type === 'sold' ? <>{isId(m.ref) ? <>Used on <Ref r={m.ref} /></> : m.ref || 'Used'}{note}</> : m.type === 'transfer' ? <>Transfer <Ref r={m.ref} />{note}</> : m.type === 'damaged' ? `Damaged${note}` : m.note || 'Count correction';
               const who = D.people.find((x) => x.id === m.by);
-              return <li key={i} className="grid grid-cols-[minmax(0,1fr)_auto_72px] items-center gap-3 border-t border-rule py-2.5 first:border-t-0"><span className="flex min-w-0 flex-col"><span className="text-[14px] font-medium">{w}</span><span className="text-[13px] text-muted">{when} {'·'} {what}{who ? ` · ${who.short}` : ''}</span></span><span className={`text-[14px] font-medium ${m.qty > 0 ? 'text-text' : 'text-muted'}`}>{signed(m.qty)}</span><span className="text-right text-[13px] text-muted"><b>{m.after}</b> left</span></li>;
-            })}</ul> : <p className="m-0 text-[14px] text-muted">Nothing moved in this view.</p>}
-            {rowsM.length > 7 ? <div className="flex items-center justify-between text-[13px] text-muted"><span>Showing {shown.length} of {rowsM.length}</span><Button variant="text" onClick={() => setMvAll(!mvAll)}>{mvAll ? 'Show fewer' : 'Show all'}</Button></div> : null}
+              return <li key={i} className="grid min-h-16 grid-cols-[22px_minmax(0,1fr)_56px_88px] items-center gap-x-3 border-t border-rule py-4 first:border-t-transparent max-[640px]:grid-cols-[22px_minmax(0,1fr)_auto] max-[640px]:gap-y-1"><Icn aria-hidden size={18} className="mt-px self-start text-muted" /><span className="min-w-0"><span className="block text-[14px] font-medium leading-5">{w}</span><span className="mt-0.5 block text-[13px] leading-[19px] text-muted">{when} {'·'} {what}{who ? ` · ${who.short}` : ''}</span></span><span className={`text-right text-[16px] font-semibold tabular-nums max-[640px]:self-start ${m.qty > 0 ? 'text-ok' : ''}`}>{signed(m.qty)}</span><span className="text-right text-[13px] tabular-nums text-muted max-[640px]:col-[2/-1] max-[640px]:text-left"><b className="font-semibold text-text">{m.after}</b> left</span></li>;
+            })}</ul> : <p className="m-0 my-4 text-[13px] text-muted">Nothing moved in this view.</p>}
+            {rowsM.length > 7 ? <div className="flex items-center justify-between gap-4 pt-4 text-[13px] text-muted max-[640px]:flex-wrap"><span>Showing {shown.length} of {rowsM.length}</span><button type="button" className={`${VA} text-[13px] max-[640px]:min-h-10`} onClick={() => setMvAll(!mvAll)}>{mvAll ? 'Show fewer' : 'Show all'}<CaretRight aria-hidden size={12} /></button></div> : null}
           </section>
-          <div className="flex min-w-0 flex-col gap-6">
-            <RunwayPanel />
-            <section id="p-po" className="flex flex-col gap-3">
-              <div className="flex items-baseline gap-2"><Receipt aria-hidden size={18} className="self-center text-muted" /><h2 className="m-0 text-[16px] font-semibold">On order</h2>{poErr ? null : <span className="text-[13px] text-muted">{incoming(p.id).length}</span>}<span className="text-[13px] text-muted">purchase orders and order lists with this product</span></div>
-              {poErr ? <ErrorBlock thing="purchase orders" lastLoaded={lastLoaded} onRetry={() => setRetried(true)} retryLabel="Retry" /> : incoming(p.id).length ? incoming(p.id).map((x) => {
-                const word = x.draft ? 'On order list, not sent' : x.po.status === 'PARTIAL' ? `Part in · ${x.po.unitsReceived} of ${x.po.unitsOrdered}` : 'Sent';
-                const canRecv = can('receive') && !x.draft;
-                return <div key={x.po.no} className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 border-t border-rule py-2.5 first:border-t-0"><span className="flex min-w-0 flex-col"><span className="text-[14px]"><span className="font-mono">{x.po.no}</span> <span className="text-muted">{x.po.supplierName}</span></span><span className="text-[13px] text-muted">{word} {'·'} {x.draft ? x.po.expected.replace(/^\w{3} \d+ \w{3} · /, '') : `Expected ${x.po.expected.replace(/ \(rest\)/, '')}`}</span></span><span><b>+{x.qty}</b> <small className="text-muted">{unitOf(p, x.qty)}</small></span>{x.draft ? <span /> : <Button variant="text" onClick={canRecv ? () => receive(x.po.no, p.id, x.qty) : undefined}>{canRecv ? `Receive ${x.qty}` : 'View'}</Button>}</div>;
-              }) : <p className="m-0 text-[14px] text-muted">Nothing is on order or on an order list for this product.{s !== 'ok' ? ' It is below its reorder level, so it needs one.' : ''}</p>}
-            </section>
-            <section id="p-su" className="flex flex-col gap-3">
-              <div className="flex items-baseline gap-2"><Storefront aria-hidden size={18} className="self-center text-muted" /><h2 className="m-0 text-[16px] font-semibold">Suppliers</h2><span className="text-[13px] text-muted">{1 + (D.alt[p.id] ?? []).length}</span></div>
-              {[{ s: sp, cost: p.cost, pref: true, note: sp.leadTime }, ...(D.alt[p.id] ?? []).map((a) => ({ s: supOf(a.sup), cost: a.cost, pref: false, note: a.note ? `${supOf(a.sup).leadTime}. ${a.note}` : supOf(a.sup).leadTime }))].map((r) => (
-                <div key={r.s.id} className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 border-t border-rule py-2.5 first:border-t-0"><span className="flex flex-col"><span className="text-[14px]">{r.s.name}{r.pref ? <span className="ml-2 text-[12px] text-muted">Preferred</span> : null}</span><span className="text-[13px] text-muted">{r.note}</span></span>{can('valuation') && r.cost ? <span><b>{peso(r.cost)}</b> <small className="text-muted">per {p.unit}</small></span> : <span />}{can('draft_po') && !poErr ? (ol && ol.list.sup === r.s.id ? <span className="text-[13px] text-muted">On list {'·'} {ol.line.qty}</span> : <Button variant="text" aria-label={`Add ${p.name} to the ${r.s.name} order list`} onClick={() => { setPanel('list'); setRo({ qty: null, sup: r.s.id }); }}>Add to list</Button>) : null}</div>
-              ))}
-              <div className="flex items-center justify-between text-[13px] text-muted">{(D.alt[p.id] ?? []).length ? <span /> : <span>This is the only supplier on file.</span>}{can('setup') ? <Button variant="text" onClick={() => toast('Setup is coming next.')}>Suppliers and categories in Setup</Button> : <span>{Mgr} manages suppliers and categories.</span>}</div>
-            </section>
-          </div>
+          <RunwayPanel />
+          <section id="p-po" className="flex min-w-0 flex-col [grid-area:po]">
+            <PanelHead icon={Receipt} title="On order" count={poErr ? undefined : incoming(p.id).length} sub="purchase orders and order lists with this product" />
+            {poErr ? <ErrorBlock thing="purchase orders" lastLoaded={lastLoaded} onRetry={() => setRetried(true)} retryLabel="Retry" /> : incoming(p.id).length ? <div className="flex flex-col">{incoming(p.id).map((x) => {
+              const [word, tone] = x.draft ? ['On order list, not sent', 'dash'] as const : x.po.status === 'PARTIAL' ? [`Part in · ${x.po.unitsReceived} of ${x.po.unitsOrdered}`, 'warn'] as const : ['Sent', 'info'] as const;
+              const canRecv = can('receive') && !x.draft;
+              const inner = (<>
+                <span className="min-w-0"><span className={T1}><Ref r={x.po.no} /> <span className="ml-1 text-[13px] font-normal text-muted">{x.po.supplierName}</span></span><span className="mt-[3px] flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px] leading-[18px] text-muted"><Dot tone={tone}>{word}</Dot><span>{x.draft ? x.po.expected.replace(/^\w{3} \d+ \w{3} · /, '') : `Expected ${x.po.expected.replace(/ \(rest\)/, '')}`}</span></span></span>
+                <span className="flex flex-col items-end text-right tabular-nums"><b className="text-[15px] font-semibold">+{x.qty}</b><small className="text-[12px] text-muted">{unitOf(p, x.qty)}</small></span>
+                {x.draft ? null : <ActionLink caret className="max-[640px]:col-span-full">{canRecv ? `Receive ${x.qty}` : 'View'}</ActionLink>}
+              </>);
+              const cls = `${ROW} min-h-[66px] grid-cols-[minmax(0,1fr)_auto_auto] py-4 max-[640px]:grid-cols-[minmax(0,1fr)_auto] max-[640px]:gap-y-2`;
+              return x.draft ? <div key={x.po.no} className={cls}>{inner}</div> : <button key={x.po.no} type="button" className={`${cls} group/row hover:bg-raised`} onClick={canRecv ? () => receive(x.po.no, p.id, x.qty) : undefined}>{inner}</button>;
+            })}</div> : <p className="m-0 my-4 text-[13px] text-muted">Nothing is on order or on an order list for this product.{s !== 'ok' ? ' It is below its reorder level, so it needs one.' : ''}</p>}
+          </section>
+          <section id="p-su" className="flex min-w-0 flex-col [grid-area:su]">
+            <PanelHead icon={Storefront} title="Suppliers" count={1 + (D.alt[p.id] ?? []).length} />
+            <div className="flex flex-col">{[{ s: sp, cost: p.cost, pref: true, note: sp.leadTime }, ...(D.alt[p.id] ?? []).map((a) => ({ s: supOf(a.sup), cost: a.cost, pref: false, note: a.note ? `${supOf(a.sup).leadTime}. ${a.note}` : supOf(a.sup).leadTime }))].map((r) => (
+              <div key={r.s.id} className="grid min-h-[60px] w-full grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-x-3 border-t border-rule py-4 text-left first:border-t-transparent max-[640px]:grid-cols-[minmax(0,1fr)_auto] max-[640px]:gap-y-2"><span className="min-w-0"><span className={T1}>{r.s.name}{r.pref ? <span className="ml-1.5 text-[12px] font-normal text-muted">Preferred</span> : null}</span><span className="mt-[3px] block min-w-0 text-[13px] leading-[18px] text-muted">{r.note || ''}</span></span>{can('valuation') && r.cost ? <span className="flex flex-col items-end text-right tabular-nums"><b className="text-[15px] font-semibold">{peso(r.cost)}</b><small className="text-[12px] text-muted">per {p.unit}</small></span> : <span />}{can('draft_po') && !poErr ? (ol && ol.list.sup === r.s.id ? <span className="inline-flex min-h-8 items-center text-[13px] text-muted">On list {'·'} {ol.line.qty}</span> : <ActionLink caret aria-label={`Add ${p.name} to the ${r.s.name} order list`} className="h-7 max-[640px]:col-span-full" onClick={() => { setPanel('list'); setRo({ qty: null, sup: r.s.id }); }}>Add to list</ActionLink>) : null}</div>
+            ))}</div>
+            <div className="flex flex-wrap items-center justify-between gap-4 pt-4 text-[13px] text-muted">{(D.alt[p.id] ?? []).length ? <span /> : <span>This is the only supplier on file.</span>}{can('setup') ? <button type="button" className={`${VA} text-[13px] max-[640px]:min-h-10`} onClick={() => toast('Setup is coming next.')}>Suppliers and categories in Setup<CaretRight aria-hidden size={12} /></button> : <span className="inline-flex items-center gap-1.5"><Lock aria-hidden size={14} />{Mgr} manages suppliers and categories.</span>}</div>
+          </section>
         </div>
+        {!panel ? (
+          <div className="fixed inset-x-0 bottom-0 z-[25] hidden flex-wrap gap-2 bg-frame px-4 pb-[calc(8px+env(safe-area-inset-bottom))] pt-2 max-[640px]:flex">
+            {low ? <Tip id="addTipP" className="order-first mb-[5px] max-w-none basis-full" down={can('stock_out') ? '25%' : '50%'} /> : null}
+            <Button actionBar className="max-[640px]:flex-1 max-[640px]:text-[14px]" variant={ol || s === 'ok' ? 'secondary' : 'primary'} disabled={poErr} aria-describedby={low ? 'addTipP' : undefined} onClick={() => { setPanel('list'); setRo({ qty: null, sup: null }); }}>Add to order list</Button>
+            {can('stock_out') ? <Button actionBar variant="secondary" className="max-[640px]:flex-1 max-[640px]:text-[14px]" onClick={() => setPanel('adjust')}>{can('adjust_stock') ? 'Adjust stock' : 'Record stock out'}</Button> : null}
+          </div>
+        ) : null}
       </div>
     );
     function RunwayPanel() {
       const jb = jobs.length > 0, rate = !!p.usePerDay;
       const hours = `${D.business.hours.open}-${D.business.hours.close}`;
-      const head = <div className="flex items-baseline gap-2"><h2 className="m-0 text-[16px] font-semibold">Stock left today</h2><span className="text-[13px] text-muted">{jb || rate ? hours : `as of ${D.now.time}`}</span></div>;
-      if (!jb && !rate) return <section id="p-run" className="flex flex-col gap-3">{head}<p className="m-0 text-[14px] text-muted">{tenant === 'a' ? `No job is booked against this part today, and it has no steady use rate, so the stock stays at ${n}.` : `Nothing is planned to use this today, so the stock stays at ${n}.`}</p></section>;
-      const r = runway(p, false), dr = incoming(p.id).find((x) => x.draft);
+      const r = jb || rate ? runway(p, false) : null;
+      const head = <PanelHead icon={ChartLineDown} title="Stock left today" sub={jb || rate ? hours : `as of ${D.now.time}`} right={jb || rate ? <span className="flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-muted"><span className="inline-flex items-center gap-1.5 whitespace-nowrap"><i className="inline-block w-[18px] flex-none border-t-2 border-accent" />So far</span><span className="inline-flex items-center gap-1.5 whitespace-nowrap"><i className="inline-block w-[18px] flex-none border-t-2 border-dashed border-accent" />Projected</span>{jb && r && r.short.length ? <span className="inline-flex items-center gap-1.5 whitespace-nowrap"><i className="inline-block h-2.5 w-3.5 flex-none border-b-[1.5px] border-bad bg-bad-bg" />Short</span> : null}</span> : undefined} />;
+      if (!jb && !rate) return <section id="p-run" className="flex min-w-0 flex-col [grid-area:run]">{head}<p className="m-0 my-4 text-[13px] text-muted">{tenant === 'a' ? `No job is booked against this part today, and it has no steady use rate, so the stock stays at ${n}.` : `Nothing is planned to use this today, so the stock stays at ${n}.`}</p></section>;
+      const dr = incoming(p.id).find((x) => x.draft);
       return (
-        <section id="p-run" className="flex flex-col gap-3">{head}
-          <StockRunway name={p.name} hours={{ open: OPEN, close: CLOSE }} now={NOW} points={r.pts} rate={r.rate ? { vNow: r.vNow, tz: r.tz, end: r.end } : undefined} formatTime={hm} caption={jb ? `Projected from booked jobs, as of ${D.now.time}` : `Projected at about ${p.usePerDay} a day, as of ${D.now.time}`} />
-          {r.short.length ? <p className="m-0 flex flex-wrap items-center gap-2 text-[14px]"><b className="text-bad">Short</b><span>{r.short.map((x) => `${x.ref} ${hm(x.t)}`).join(' and ')} would be short.</span>{dr ? <a className="text-accent" href="#order-list">Review the {short(dr.po.supplier)} order list</a> : null}</p> : r.rate && r.tz ? <p className="m-0 text-[14px]"><b className="text-bad">Out</b> Runs out about {hm(r.tz)} at this rate.</p> : null}
+        <section id="p-run" className="flex min-w-0 flex-col [grid-area:run]">{head}
+          <div className="mt-3 min-h-[200px]"><StockRunway name={p.name} hours={{ open: OPEN, close: CLOSE }} now={NOW} points={r!.pts} rate={r!.rate ? { vNow: r!.vNow, tz: r!.tz, end: r!.end } : undefined} formatTime={hm} caption={jb ? `Projected from booked jobs, as of ${D.now.time}` : `Projected at about ${p.usePerDay} a day, as of ${D.now.time}`} /></div>
+          {r!.short.length ? <p className="m-0 mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-[14px] leading-[22px]"><Dot tone="bad">Short</Dot><span>{r!.short.map((x, i) => <span key={i}>{i ? ' and ' : ''}<Ref r={x.ref} /> {hm(x.t)}</span>)} would be short.</span>{dr ? <a className="inline-flex h-7 items-center gap-1 rounded-control border border-control bg-surface pl-2.5 pr-1.5 text-[13px] font-medium text-text no-underline hover:border-text hover:bg-raised max-[640px]:h-10" href="#order-list">Review the {short(dr.po.supplier)} order list<CaretRight aria-hidden size={12} className="text-faint" /></a> : null}</p> : r!.rate && r!.tz ? <p className="m-0 mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-[14px] leading-[22px]"><Dot tone="bad">Out</Dot><span>Runs out about {hm(r!.tz)} at this rate.</span></p> : null}
         </section>
       );
     }
@@ -341,7 +387,7 @@ export function ProductsPage({ tenant = 'a', as = 'manager', state = 'live', ope
     <>
       <InventoryChrome tenant={tenant} as={as} nav="products" page={openP ? '' : 'Products'} sheetBar={sheetBar} lists={lists.length} status={<InventoryStatusBar platform={platform} dataLink={dataLink} viewer={{ name: V.viewer.short, role: V.roleLabel }} leda={{ canDecide: can('confirm_po'), managerName: D.viewers.manager.viewer.short }} updatedAt={loading ? `Loading… last loaded ${lastLoaded}` : D.now.time} />}>
         {openP ? detail(openP) : (
-          <div className="flex min-w-0 flex-col gap-6 p-pad @container/sheet">
+          <div className="flex min-w-0 flex-col gap-6 p-pad">
             <div className="flex flex-wrap items-start justify-between gap-3"><div className="flex min-w-0 flex-col gap-1"><h1 className="m-0 text-[22px] font-semibold leading-7">Products</h1><p className="m-0 flex items-center gap-2 text-[14px] text-muted">{loading ? 'Loading…' : headline}</p></div>
               <div className="flex items-center gap-3"><span className="text-[13px] text-muted">{D.now.date} {'·'} {loading ? `Loading… last loaded ${lastLoaded}` : down ? `Last loaded ${lastLoaded}` : `Updated ${D.now.time}`}</span>{can('setup') ? <Button leftIcon={Package} onClick={() => setDlg(true)}>Add product</Button> : null}</div></div>
             {empty ? (

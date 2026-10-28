@@ -20,13 +20,28 @@ describe('Products page', () => {
   });
   it('detail: low-stock note, manager actions, no axe violations', async () => {
     render(<ProductsPage open="p07" />);
-    expect(screen.getByText('The stock is low and we need to restock soon.')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Adjust stock' })).toBeTruthy();
+    expect(screen.getAllByText('The stock is low and we need to restock soon.')).toBeTruthy();
+    expect(screen.getAllByRole('button', { name: 'Adjust stock' })).toBeTruthy();
     await axeOk();
   });
   it('clerk: Record stock out, no cost', () => {
     render(<ProductsPage as="clerk" open="p07" />);
-    expect(screen.getByRole('button', { name: 'Record stock out' })).toBeTruthy();
+    expect(screen.getAllByRole('button', { name: 'Record stock out' })).toBeTruthy();
     expect(screen.queryByText(/Stock value/)).toBeNull();
+  });
+  it.each([
+    ['adjust panel', { open: 'p07', panel: 'adjust' }],
+    ['list panel', { open: 'p07', panel: 'list' }],
+    ['steady use rate', { open: 'p01' }],
+    ['add dialog', { addDialog: true }],
+    ['loading', { state: 'loading' }],
+    ['down', { state: 'down' }],
+    ['error detail', { state: 'error', open: 'p07' }],
+    ['empty', { state: 'empty' }],
+    ['clerk detail', { as: 'clerk', open: 'p07' }],
+    ['tenant B', { tenant: 'b' }],
+  ] as const)('%s: no axe violations', async (_n, props) => {
+    render(<ProductsPage {...(props as object)} />);
+    await axeOk();
   });
 });

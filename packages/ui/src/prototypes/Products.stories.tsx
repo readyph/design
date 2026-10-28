@@ -4,7 +4,7 @@ import { ProductsPage } from './Products.page';
 /**
  * [For Review] RDY-404. Prototype only: stories are not exported from the package. Products (handover 2.2): list and product detail.
  * Source: inventory-home FINAL products.html, products.js, products.css. Data: Products.data.ts (dumped from data.js, stock.js, orders.js).
- * GAPs: Ask Leda palette, barcode sheet and Setup only toast; the order lists panel (RDY-392) is not wired to "Open order lists".
+ * GAPs: Needs setting up has no sample request (the workshop starts it empty; requests come from the stocker flow); Ask Leda palette, barcode sheet and Setup only toast; the order lists panel (RDY-392) is not wired to "Open order lists".
  */
 const meta: Meta<typeof ProductsPage> = { title: 'Prototypes/Inventory/[For Review] Products', component: ProductsPage, parameters: { layout: 'fullscreen' } };
 export default meta;
@@ -17,7 +17,6 @@ export const DetailRate: Story = { name: 'Detail, steady use rate', args: { open
 export const AdjustStock: Story = { name: 'Adjust stock panel', args: { open: 'p07', panel: 'adjust' } };
 export const AddToOrderList: Story = { name: 'Add to order list panel', args: { open: 'p07', panel: 'list' } };
 export const AddProduct: Story = { name: 'Add product dialog', args: { addDialog: true } };
-export const NeedsSettingUp: Story = { name: 'Needs setting up', args: { needsSetup: true } };
 export const Loading: Story = { name: 'Loading (?state=loading)', args: { state: 'loading' } };
 export const ErrorState: Story = { name: 'Error (?state=error)', args: { state: 'error', open: 'p07' } };
 export const Down: Story = { name: 'List did not load (?state=down)', args: { state: 'down' } };
