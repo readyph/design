@@ -1,5 +1,16 @@
 # @readyph/ui
 
+## 0.13.0
+
+### Minor Changes
+
+- a261ba3: RDY-379 Inventory tokens: stock-level bar (lv-fill, lv-track), link hover (lk-hover, lk-inv, lk-inv-hover), layout helpers (lane-h, panel, zone-gap, col-gap), stocker sizing (tabh, tap, tap-big, col), barcode sheet sizing (bt, bb).
+- fe91970: RDY-380 I1 ActionLink and BackLink (new): accent 600 action link with optional caret, quiet variant, colour-only hover; plain text back link (replaces the Breadcrumbs back control on Inventory).
+- b890001: RDY-381 Toaster (I22): `actions` option for several buttons (Undo, View order lists) and `actionStyle="inventory"` on Toaster. Existing `action` and default look are unchanged.
+- 40dcf1d: RDY-383 StockStatus (I4): stock dot and word (Low stock, Out of stock, In stock).
+- 8773a72: RDY-384 StockRunway (I5): stock runway step chart for a day or a week, with draft-PO, rate-part, loading and empty states.
+- 5086a9d: RDY-386 QuantityStepper (I2): minus, whole-number field and plus with a polite clamp note.
+
 ## 0.12.0
 
 ### Minor Changes
