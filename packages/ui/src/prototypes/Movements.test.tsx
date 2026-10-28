@@ -28,10 +28,33 @@ describe('MovementsPage (RDY-436)', () => {
   });
 });
 
+describe('Record movement (RDY-437)', () => {
+  it('opens from the button and shows the page, form and side note', () => {
+    render(<MovementsPage />);
+    fireEvent.click(screen.getAllByRole('button', { name: /Record movement/ })[0]);
+    expect(screen.getByRole('heading', { name: 'Record movement' })).toBeTruthy();
+    expect(screen.getByText('How stock moves')).toBeTruthy();
+  });
+  it('a product shows its latest movements', () => {
+    render(<MovementsPage record p="p01" />);
+    expect(screen.getByText(/Latest for SHX7/)).toBeTruthy();
+  });
+  it('recording lands on the ledger with an Undo note', () => {
+    render(<MovementsPage landed />);
+    expect(screen.getAllByText(/Stock out recorded/).length).toBeTruthy();
+    expect(screen.getAllByRole('button', { name: 'Undo' }).length).toBeGreaterThan(1);
+  });
+  it('Undo on a row asks first', () => {
+    render(<MovementsPage landed undoOpen />);
+    expect(screen.getByText('Undo this movement?')).toBeTruthy();
+  });
+});
+
 describe('axe', () => {
   const cases: [string, MovementsPageProps][] = [
     ['ledger', {}], ['filters', { io: 'out', reason: 'sold' }], ['custom dates', { range: 'custom', from: 20, to: 22 }], ['job note', { jo: 'JO-0413' }], ['loading', { state: 'loading' }],
     ['error', { state: 'error' }], ['none', { mv: 'none' }], ['no results', { qs: 'zzzz' }], ['quiet', { state: 'quiet' }], ['clerk', { as: 'clerk' }], ['tenant b', { tenant: 'b' }],
+    ['record', { record: true }], ['record product', { record: true, p: 'p01' }], ['record clerk', { record: true, p: 'p01', as: 'clerk' }], ['landed', { landed: true }], ['undo asks', { landed: true, undoOpen: true }],
   ];
   it.each(cases)('%s has no axe violations', async (_n, props) => {
     const { container } = render(<MovementsPage {...props} />);
