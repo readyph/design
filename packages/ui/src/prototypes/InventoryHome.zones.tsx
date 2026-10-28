@@ -11,6 +11,7 @@ import {
 } from '@phosphor-icons/react';
 import { base as btnBase, variants as btnVariants } from '../components/Button';
 import { LedaMark } from '../components/Leda';
+import { StepLine } from '../components/StepLine';
 import { cn } from '../utils/cn';
 import { createHomeModel, homeData, type HomeModel, type HomeRole, type HomeState, type HomeTenant } from './InventoryHome.data';
 
@@ -90,25 +91,12 @@ const MV_IC: Record<string, [ReactNode, string]> = { received: [<Truck key="t" /
 const mvIc = (k: string): [ReactNode, string] => MV_IC[k] || [<ArrowsDownUp key="a" />, ''];
 const Ref = ({ r, isId }: { r: string; isId: (s: string) => boolean }) => (isId(r) ? <span className={idCls}>{r}</span> : <>{r}</>);
 
-/* home.js 606-612: the runway shrunk to an inline step line (phone) */
-export function StepLine({ M, pid, W = 220, H = 30 }: { M: HomeModel; pid: string; W?: number; H?: number }) {
+/* home.js 606-612: the runway shrunk to an inline step line (phone); drawing lives in components/StepLine */
+export function HomeStepLine({ M, pid, W = 220, H = 30 }: { M: HomeModel; pid: string; W?: number; H?: number }) {
   const { runway, runConfirmed, NOW, OPEN, CLOSE, hm } = M;
   const r: any = runway(pid, runConfirmed(pid));
-  const lo = Math.min(0, ...r.pts.map((p: any) => (p.kind === 'del' ? 0 : p.v))), hi = Math.max(6, ...r.pts.filter((p: any) => p.kind !== 'del').map((p: any) => p.v));
-  const XT = (t: number) => Math.max(0, Math.min(100, ((t - OPEN) / (CLOSE - OPEN)) * 100));
-  const x = (t: number) => (XT(t) / 100) * W, y = (v: number) => (v > hi ? 1 : H - 3 - ((v - lo) / (hi - lo)) * (H - 6));
-  let d = `M0 ${y(r.pts[0].v)}`; r.pts.slice(1).forEach((p: any) => { d += ` H${x(p.t)} V${y(p.v)}`; }); d += ` H${W}`;
   const aria = `${r.p.name}: ${r.pts.map((p: any) => `${hm(p.t)} ${p.v}`).join(', ')}.${r.short.length ? ` Short for ${r.short.map((s: any) => s.ref).join(' and ')}.` : ''}`;
-  return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} role="img" aria-label={aria} className="overflow-visible">
-      <line x1="0" x2={W} y1={y(0)} y2={y(0)} className="stroke-control" />
-      <line x1={x(NOW)} x2={x(NOW)} y1="0" y2={H} strokeWidth="1.5" className="stroke-accent" />
-      <path d={d} fill="none" strokeWidth="2" className="stroke-accent" />
-      {r.end < 0
-        ? <text x={W + 6} y={y(r.end) + 4} className="fill-bad text-[12px] font-semibold">−{Math.abs(r.end)}</text>
-        : <text x={W + 6} y={y(Math.min(r.end, hi)) + 4} className="fill-text text-[12px] font-medium">{r.end}</text>}
-    </svg>
-  );
+  return <StepLine points={r.pts} now={NOW} open={OPEN} close={CLOSE} end={r.end} width={W} height={H} aria-label={aria} />;
 }
 
 /* receiving.js 70-100 (rule.words for a set of lines) */
@@ -155,7 +143,7 @@ export function HomeZones({ tenant = 'a', role = 'manager', state = 'live', view
     const act = done ? <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-[13px] font-medium text-ok"><CheckCircle />{doneLabel(d)}</span>
       : d.canDecide ? <span aria-hidden="true" className={cn(btn(i === 0 ? 'primary' : 'secondary'), 'min-w-[150px] [&>svg]:text-[13px]')}>{d.action.label}<CaretRight /></span>
       : <span className="inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-control bg-raised-2 px-2.5 text-[12px] text-muted"><HourglassMedium />{d.waitingFor}</span>;
-    const pid = todayPid(), step = d.p === pid && D.jobs.length && !done ? <span className="mt-2 hidden max-[640px]:block"><StepLine M={M} pid={pid as string} /></span> : null;
+    const pid = todayPid(), step = d.p === pid && D.jobs.length && !done ? <span className="mt-2 hidden max-[640px]:block"><HomeStepLine M={M} pid={pid as string} /></span> : null;
     const tm = done ? <span className="text-[13px] font-semibold leading-5 tabular-nums text-muted">Done</span>
       : t != null ? <span className={cn('text-[16px] font-semibold leading-5 tabular-nums', urgent ? 'text-bad' : '')}>{hm(t)}<small className={cn('mt-0.5 block whitespace-nowrap text-[12px] font-medium leading-4', urgent ? 'text-bad' : 'text-muted')}>{lf ? `${lf} left` : 'past due'}</small></span>
       : <span className="text-[13px] font-semibold leading-5 tabular-nums text-bad">Overdue<small className="mt-0.5 block whitespace-nowrap text-[12px] font-medium leading-4 text-muted">since yesterday</small></span>;
