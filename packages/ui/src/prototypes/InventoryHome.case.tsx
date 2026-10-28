@@ -15,7 +15,7 @@ import { InventoryStatusBar } from '../components/StatusBar';
 import { cn } from '../utils/cn';
 import { createHomeModel, homeData, type HomeModel, type HomeRole, type HomeState, type HomeTenant } from './InventoryHome.data';
 import { InventoryChrome } from './Products.chrome';
-import { StepLine } from './InventoryHome.zones';
+import { HomeStepLine } from './InventoryHome.zones';
 import { DayTimeline } from '../components/DayTimeline';
 import { homeTimelineProps } from './InventoryHome.timeline';
 
@@ -170,7 +170,7 @@ export function HomeCase(props: HomeCaseProps) {
       </div>
       {hasJobs ? (
         <div className="hidden pt-3 max-[640px]:block">
-          <StepLine M={M} pid={p.id} W={280} H={44} />
+          <HomeStepLine M={M} pid={p.id} W={280} H={44} />
           <p className="mt-2.5 text-[13px] text-muted">
             {r.short.length ? <>Short for {r.short.map((x: any, i: number) => <span key={i}>{i ? ', ' : ''}<span className={idCls}>{x.ref}</span> {hm(x.t)}</span>)}</> : `${r.end} on hand by close`}
             {d.po && d.po.status === 'DRAFT' ? ` · ${d.po.no} lands by ${hm((arrival(d.po) as any).t)} if sent by ${(d.due && d.due.at) || ''}` : ''}
