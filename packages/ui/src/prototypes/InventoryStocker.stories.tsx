@@ -5,6 +5,7 @@ import { StockerInPage } from './Stocker.in';
 import { StockerOutPage } from './Stocker.out';
 import { StockerFindPage } from './Stocker.find';
 import { StockerAccountPage, StockerSignedOutPage } from './Stocker.account';
+import { StockerApp } from './Stocker.app';
 
 /**
  * [For Review] RDY-429, Stocker 1/6 (a). Prototype only: stories are not exported from the package. Stocker (handover 2.7): the shared frame, tabs, steps and states.
@@ -106,3 +107,11 @@ const signedStory = (name: string, args: Record<string, unknown> = {}, parameter
 export const SignedOut: SignedStory = signedStory('');
 export const SignedOutSmall: SignedStory = signedStory(' (360)', {}, small);
 export const SignedOutTenantB: SignedStory = signedStory(' (tenant B)', { tenant: 'b' });
+
+/* RDY-408, Stocker 7/7 (g): the six pages joined; links and tabs move between them as the workshop's stocker*.html links do. */
+type AppStory = StoryObj<typeof StockerApp>;
+const appStory = (name: string, args: Record<string, unknown> = {}, parameters?: typeof small): AppStory => ({ name: `[For Review] Stocker flow${name}`, args, parameters, render: (a) => <StockerApp {...a} /> });
+export const Flow: AppStory = appStory(' (start at Home)');
+export const FlowSmall: AppStory = appStory(' (360)', {}, small);
+export const FlowTenantB: AppStory = appStory(' (tenant B)', { tenant: 'b' });
+export const FlowSignedOut: AppStory = appStory(' (signed out)', { page: 'stocker-signedout.html' });
