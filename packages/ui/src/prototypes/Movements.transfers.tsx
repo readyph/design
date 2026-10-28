@@ -6,7 +6,7 @@ import { PlatformLogo } from '../components/PlatformLogo';
 import { ProgressSteps } from '../components/ProgressSteps';
 import { TransferDetail } from '../components/TransferDetail';
 import { TransferForm, type TransferFormValue } from '../components/TransferForm';
-import { TransferList, type TransferActionKind, type TransferFilter, type TransferRowData } from '../components/TransferList';
+import { TransferList, TransferStatusBadge, type TransferActionKind, type TransferFilter, type TransferRowData } from '../components/TransferList';
 import type { MovementsModel, TrView } from './Movements.data';
 
 /* RDY-438. Page: Movements 4/6 (d), the Transfers view: list, detail, new transfer and change a draft. Transcribed from inventory-home FINAL movements.js 206-210 (waitNote), 230-260 (tmatches, tcounts, trRow, trResults, transfersHTML),
@@ -69,7 +69,7 @@ export function TransfersList({ M, filter, onFilter, onOpen, onNew, loading }: T
   }
   return (
     <div className="flex flex-col gap-3">
-      {can('transfer') && !loading ? <div className="hidden max-[640px]:block"><Button variant="secondary" leftIcon={ArrowSquareOut} onClick={onNew}>New transfer</Button></div> : null}
+      {can('transfer') && !loading ? <div className="hidden max-[640px]:flex"><Button variant="secondary" className="max-[640px]:h-11 max-[640px]:flex-1" leftIcon={ArrowSquareOut} onClick={onNew}>New transfer</Button></div> : null}
       <TransferList transfers={rows} filter={filter} counts={counts} onFilterChange={onFilter} onOpen={onOpen} onNew={can('transfer') ? onNew : undefined} loading={loading} />
     </div>
   );
@@ -135,7 +135,7 @@ export function TransferDetailView({ M, t, confirming, disabled, onAskSend, onNo
       number={t.id}
       meta={[
         { label: 'Date', value: (t.sentAt || t.createdAt || '').replace(/ \d{1,2}:\d{2}$/, '') },
-        { label: 'Status', value: M.TST[t.status], only: 'screen' },
+        { label: 'Status', value: <span><TransferStatusBadge status={t.status} className="!h-auto" /></span>, only: 'screen' },
         { label: 'Prepared by', value: who(t.createdBy) },
         ...(t.job ? [{ label: 'For job', value: <span className="font-mono text-[13px]">{t.job}</span> }] : []),
         { label: 'Items', value: qtyWords(t), only: 'print' },

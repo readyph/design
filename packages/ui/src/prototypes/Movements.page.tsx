@@ -321,7 +321,7 @@ export function MovementsPage({ tenant = 'a', as = 'manager', state = 'live', vi
     </div>
   );
   const goPO = <a className="inline-flex h-8 items-center gap-1.5 rounded-control border border-control px-3 text-[13px] font-medium text-text no-underline" href="#purchase-orders"><Receipt size={14} aria-hidden />Purchase orders</a>;
-  const recordBtn = (dis?: boolean) => can('stock_out') ? <Button variant="primary" leftIcon={ArrowsDownUp} disabled={dis} onClick={() => openRecord()}>Record movement</Button> : null;
+  const recordBtn = (dis?: boolean) => can('stock_out') ? <Button variant="primary" className="max-[640px]:px-3.5" leftIcon={ArrowsDownUp} disabled={dis} onClick={() => openRecord()}>Record movement</Button> : null;
 
   const skRows = [0, 1, 2, 3, 4].map((i) => (
     <div key={i} className="-mx-2 grid min-h-[56px] w-[calc(100%+16px)] grid-cols-[76px_minmax(0,1.3fr)_minmax(0,1.6fr)_130px_104px_64px] items-start gap-x-5 border-t border-rule px-2 py-3 first:border-t-transparent max-[1099px]:grid-cols-[68px_minmax(0,1.2fr)_minmax(0,1.4fr)_110px_100px_56px] max-[640px]:grid-cols-[minmax(0,1fr)_auto]">
@@ -420,7 +420,7 @@ export function MovementsPage({ tenant = 'a', as = 'manager', state = 'live', vi
         sheetBar={<SheetBar wrapChildren={false} actionsFirst={false} actions={<AskLedaBar variant="bar" scope={t ? t.id : 'Movements'} shortcuts={false} />}><BackLink onClick={backTr}>{f && f.id ? f.id : 'Transfers'}</BackLink><span className="self-center text-[13px] font-semibold text-text">/ {crumb}</span></SheetBar>}
         statusLabel="Status" status={statusEl}
       >
-        <div id="vbody-tr" className="min-w-0 px-pad pb-8 pt-5 max-[640px]:px-4 max-[640px]:pb-[112px] max-[640px]:pt-4">
+        <div id="vbody-tr" className="min-w-0 print:p-0 px-pad pb-8 pt-5 max-[640px]:px-4 max-[640px]:pb-[112px] max-[640px]:pt-4">
           {f ? <TransferFormView M={M} tick={tick} editing={f.id ? M.trBy(f.id) : null} productId={S.recP} onSave={saveTr} onCancel={backTr} />
             : <TransferDetailView M={M} tick={tick} t={t!} confirming={confirmSend && t!.status === 'draft'} disabled={trDisabled} onAskSend={() => setConfirmSend(true)} onNotYet={() => { setConfirmSend(false); setTimeout(() => [...document.querySelectorAll<HTMLButtonElement>('#vbody-tr button')].find((b) => b.textContent === 'Mark as sent')?.focus({ preventScroll: true }), 0); }} onSend={sendTr} onChange={() => startForm({ id: t!.id })} onCancelDraft={() => setCancelAsk(true)} onReceive={() => {}} onPrint={() => window.print()} />}
         </div>
@@ -456,7 +456,7 @@ export function MovementsPage({ tenant = 'a', as = 'manager', state = 'live', vi
       <div className="p-pad">
         <div className="flex flex-wrap items-start justify-between gap-6 max-[640px]:grid max-[640px]:grid-cols-[minmax(0,1fr)_auto] max-[640px]:items-center max-[640px]:gap-x-3 max-[640px]:gap-y-1.5">
           <div className="min-w-0 flex-1 max-[640px]:contents">
-            <h1 className="text-[22px] font-semibold max-[640px]:col-start-1 max-[640px]:row-start-1">Movements</h1>
+            <h1 className="text-[22px] font-semibold leading-7 tracking-[-0.01em] max-[640px]:text-[20px] max-[640px]:leading-[26px] max-[640px]:col-start-1 max-[640px]:row-start-1">Movements</h1>
             <p className="mt-2 flex items-start gap-2 text-[15px] leading-[22px] max-[640px]:col-span-2 max-[640px]:row-start-2 max-[640px]:mt-0 max-[640px]:text-[14px] max-[640px]:leading-[21px]">
               <LedaMark size={16} decorative active={loading} className="mt-[3px] shrink-0" />
               {loading ? <Skeleton width={460} height={14} className="max-w-full" /> : <span>{headline}</span>}

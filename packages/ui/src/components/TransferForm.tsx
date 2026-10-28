@@ -153,7 +153,7 @@ export function TransferForm({
   return (
     <div className={cn('', className)}>
       <h1 className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-[length:var(--fs-title)] leading-7 font-semibold tracking-[-0.01em]">
-        {editingId ? <>Change <span className="text-[22px] font-semibold">{editingId}</span></> : 'New transfer'}
+        {editingId ? <>Change <span className="text-[22px] font-semibold tracking-normal">{editingId}</span></> : 'New transfer'}
       </h1>
       <p className="mt-5 max-w-[720px] text-[14px] leading-[21px] text-muted max-[640px]:mt-3">
         One document for both places. Stock leaves {hereShort} when you mark it sent, and goes into the other place when they check it in. Nothing moves while it is a draft.
@@ -163,11 +163,11 @@ export function TransferForm({
           <div className="flex flex-col gap-5">
             <div className={fr}>
               <span className={fl}>From</span>
-              <span className="text-[14px]"><b className="font-semibold">{hereName}</b> · this stockroom</span>
+              <span className="text-[14px]"><b className="font-bold">{hereName}</b> · this stockroom</span>
             </div>
             <div className={fr}>
               <span className={fl} id={`${uid}-to-l`}>To</span>
-              <Select id={`${uid}-to`} aria-labelledby={`${uid}-to-l`} size="sm" value={to} onValueChange={(v: string) => setTo(v)} options={places.map((x) => ({ value: x.id, label: x.name }))} />
+              <div className="min-w-0 max-w-[300px] max-[640px]:max-w-none [&_button]:pl-2.5 [&_button]:pr-2 [&_button]:text-[13px]"><Select id={`${uid}-to`} aria-labelledby={`${uid}-to-l`} size="sm" value={to} onValueChange={(v: string) => setTo(v)} options={places.map((x) => ({ value: x.id, label: x.name }))} /></div>
             </div>
             {jobOrders && (
               <div className={fr}>

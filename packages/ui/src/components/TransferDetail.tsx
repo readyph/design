@@ -89,16 +89,16 @@ export function TransferDetail(p: TransferDetailProps) {
   const showSec = status === 'draft' && out && p.can.change;
   return (
     <div className={cn('', p.className)}>
-      <div className="flex items-center gap-4 max-[640px]:flex-wrap max-[640px]:items-start max-[640px]:gap-x-3 max-[640px]:gap-y-2">
+      <div className="flex items-center gap-4 print:hidden max-[640px]:flex-wrap max-[640px]:items-start max-[640px]:gap-x-3 max-[640px]:gap-y-2">
         <h1 className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-[length:var(--fs-title)] leading-7 font-semibold tracking-[-0.01em]">
-          <span className="text-[22px] font-semibold">{p.id}</span> <span className="font-normal text-muted">{out ? 'to' : 'from'} {p.otherName}</span>
+          <span className="text-[22px] font-semibold tracking-normal">{p.id}</span> <span className="font-normal text-muted">{out ? 'to' : 'from'} {p.otherName}</span>
         </h1>
         <TransferStatusBadge status={status} />
       </div>
-      <div className="mt-3 flex flex-wrap items-center gap-y-1 text-[13px] leading-5 text-muted [&>span]:inline-flex [&>span]:items-center [&>span]:gap-1.5 [&>span]:whitespace-nowrap [&>span+span]:before:mx-1 [&>span+span]:before:ml-2.5 [&>span+span]:before:h-[3px] [&>span+span]:before:w-[3px] [&>span+span]:before:rounded-full [&>span+span]:before:bg-control [&>span+span]:before:content-[''] [&_b]:font-semibold [&_b]:text-text">
+      <div className="mt-3 flex flex-wrap items-center gap-y-1 print:hidden text-[13px] leading-5 text-muted [&>span]:inline-flex [&>span]:items-center [&>span]:gap-1.5 [&>span]:whitespace-nowrap [&>span+span]:before:mx-1 [&>span+span]:before:ml-2.5 [&>span+span]:before:h-[3px] [&>span+span]:before:w-[3px] [&>span+span]:before:rounded-full [&>span+span]:before:bg-control [&>span+span]:before:content-[''] [&_b]:font-semibold [&_b]:text-text">
         {p.facts.map((f, i) => <span key={i}>{f}</span>)}
       </div>
-      <div className="mt-6">
+      <div className="mt-6 print:hidden">
         <div className="flex flex-wrap items-center gap-3">
           {actions}
           {showSec && (
@@ -109,8 +109,8 @@ export function TransferDetail(p: TransferDetailProps) {
           )}
         </div>
         {p.confirming && (
-          <div role="group" aria-label="Confirm marking as sent" className="mt-2 border-t border-text pt-3 text-[13px] leading-[19px] [&_p+p]:mt-1.5 [&_p+p]:text-muted">
-            <p><b className="font-semibold">Mark {p.id} as sent to {p.otherName}?</b></p>
+          <div role="group" aria-label="Confirm marking as sent" className="mt-2 max-w-[640px] border-t border-text pt-3 text-[13px] leading-[19px] [&_p+p]:mt-1.5 [&_p+p]:text-muted">
+            <p><b className="font-bold">Mark {p.id} as sent to {p.otherName}?</b></p>
             <p>{p.confirmText} The draft is locked once it is sent.</p>
             {p.issue && <p className="!mt-1.5 font-medium !text-bad">{p.issue} Change the draft first.</p>}
             <div className="mt-3 flex flex-wrap gap-2">
@@ -120,15 +120,15 @@ export function TransferDetail(p: TransferDetailProps) {
           </div>
         )}
       </div>
-      {p.steps}
+      <div className="print:hidden">{p.steps}</div>
       {p.note && (
-        <p className="mt-6 flex items-start gap-[10px] border-y border-rule py-3 text-[14px] leading-5">
+        <p className="mt-6 flex items-start gap-[10px] print:hidden border-y border-rule py-3 text-[14px] leading-5">
           {p.note.tone === 'transit' ? <Clock aria-hidden size={18} className="mt-px flex-none text-muted" /> : <WarningCircle aria-hidden size={18} className="mt-px flex-none text-muted" />}
           <span><b className="font-semibold">{p.note.title}</b> {p.note.text}</span>
         </p>
       )}
-      <div className="mt-9 grid grid-cols-[minmax(0,1fr)_340px] items-start gap-x-12 gap-y-10 max-[1099px]:grid-cols-[minmax(0,1fr)] max-[640px]:mt-7 max-[640px]:gap-7">
-        <div className="min-w-0 [&>article]:max-w-[880px]">{p.paper}</div>
+      <div className="mt-9 grid print:mt-0 print:block grid-cols-[minmax(0,1fr)_340px] items-start gap-x-12 gap-y-10 max-[1099px]:grid-cols-[minmax(0,1fr)] max-[640px]:mt-7 max-[640px]:gap-7">
+        <div className="min-w-0 [&>article]:max-w-[880px] print:[&>article]:max-w-none">{p.paper}</div>
         <div className="min-w-0 print:hidden">
           <section>
             <div className="flex min-h-8 items-baseline gap-[10px] border-b border-border pb-[10px]">
@@ -138,7 +138,7 @@ export function TransferDetail(p: TransferDetailProps) {
             </div>
             <ol className="m-0 list-none p-0">
               {p.history.map((e, i) => (
-                <li key={i} className={cn('grid grid-cols-[148px_minmax(0,1fr)] gap-x-4 border-t border-rule py-3 text-[14px] leading-5', i === 0 && 'border-t-0')}>
+                <li key={i} className={cn('grid grid-cols-[148px_minmax(0,1fr)] gap-x-4 max-[640px]:grid-cols-[minmax(0,1fr)] max-[640px]:gap-y-0.5 border-t border-rule py-3 text-[14px] leading-5', i === 0 && 'border-t-0')}>
                   <span className="text-[13px] text-muted">{e.at}</span>
                   <span>
                     {e.who ? <><b className="font-semibold">{e.who}</b>{' '}</> : null}
