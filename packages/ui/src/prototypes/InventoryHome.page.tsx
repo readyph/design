@@ -12,7 +12,7 @@ import { SheetBar, SheetBarWhere } from '../components/SheetBar';
 import { InventoryStatusBar } from '../components/StatusBar';
 import { cn } from '../utils/cn';
 import { createHomeModel, homeData, type HomeModel, type HomeRole, type HomeState, type HomeTenant } from './InventoryHome.data';
-import { HomeVerticalTimeline } from './InventoryHome.case';
+import { HomeCaseView, HomeVerticalTimeline } from './InventoryHome.case';
 import { HomeTimelinePanel } from './InventoryHome.timeline';
 import { HomeZones, Pill } from './InventoryHome.zones';
 import { InventoryChrome } from './Products.chrome';
@@ -100,11 +100,15 @@ export interface InventoryHomePageProps {
   state?: HomeState;
   /** Initial range; the segmented control changes it (?view=week). */
   view?: 'today' | 'week';
+  /** Decision id of the open case (?open=n1). */
+  open?: string;
 }
 
 /* home.js 628-640 */
-export function InventoryHomePage({ tenant = 'a', role = 'manager', state = 'live', view: initialView = 'today' }: InventoryHomePageProps) {
+export function InventoryHomePage({ tenant = 'a', role = 'manager', state = 'live', view: initialView = 'today', open: initialOpen }: InventoryHomePageProps) {
   const [view, setView] = useState<'today' | 'week'>(initialView);
+  const [open, setOpen] = useState<string | undefined>(initialOpen);
+  const [retried, setRetried] = useState(false);
   const M = useMemo(() => createHomeModel(homeData(tenant, role, state), { view }), [tenant, role, state, view]);
   const { D, F } = M;
   const platform = { name: D.business.platform, initials: D.business.platform.split(' ').map((w: string) => w[0]).join('') };
@@ -118,6 +122,7 @@ export function InventoryHomePage({ tenant = 'a', role = 'manager', state = 'liv
   const status = (
     <InventoryStatusBar platform={platform} dataLink={link ? { with: link.with, status: link.status === 'slow' ? 'slow' : 'linked', since: link.since, title: `${link.shares} · ${link.reads}` } : undefined} viewer={{ name: D.viewer.short, role: D.roleLabel }} leda={{ canDecide: D.decisions.some((x: any) => x.canDecide) || M.can('confirm_po'), managerName: D.manager.short }} updatedAt={F.loading ? `Loading… last loaded ${D.now.lastLoaded}` : D.now.time} />
   );
+  if (open && D.decisions.some((x: any) => x.id === open)) return <HomeCaseView tenant={tenant} role={role} state={state} view={view} open={open} onBack={() => setOpen(undefined)} />;
   return (
     <InventoryChrome tenant={D.business.key as 'a' | 'b'} as={D.role as any} nav="home" page="Home" lists={2} sheetBar={sheetBar} status={status}>
       <div id="today" className="min-w-0 px-pad pb-10 pt-6 max-[640px]:px-4 max-[640px]:pb-24 max-[640px]:pt-4">
@@ -131,7 +136,7 @@ export function InventoryHomePage({ tenant = 'a', role = 'manager', state = 'liv
             <SegmentedControl size="md" aria-label="Range" value={view} onChange={(v) => setView(v as 'today' | 'week')} options={[{ value: 'today', label: 'Today' }, { value: 'week', label: 'This week' }]} />
           </div>
         </div>
-        <Markers M={M} retried={false} />
+        <Markers M={M} retried={retried} />
         {F.empty ? (
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <Button variant="primary"><Plus aria-hidden="true" />Add your first product</Button>
@@ -140,7 +145,7 @@ export function InventoryHomePage({ tenant = 'a', role = 'manager', state = 'liv
         ) : null}
         <div className="mt-10 flex flex-col gap-12 max-[640px]:mt-6 max-[640px]:gap-8">
           <div className="max-[640px]:hidden"><HomeTimelinePanel key={`${tenant}${role}${state}${view}`} tenant={tenant} role={role} state={state} view={view} /></div>
-          <HomeZones tenant={tenant} role={role} state={state} view={view} mid={<div className="hidden max-[640px]:block"><HomeVerticalTimeline tenant={tenant} role={role} state={state} /></div>} />
+          <HomeZones tenant={tenant} role={role} state={state} view={view} onOpen={setOpen} retried={retried} onRetry={() => setRetried(true)} mid={<div className="hidden max-[640px]:block"><HomeVerticalTimeline tenant={tenant} role={role} state={state} /></div>} />
         </div>
       </div>
     </InventoryChrome>
