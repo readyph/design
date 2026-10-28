@@ -87,6 +87,9 @@ ${darkExplicit}
   /* Reduced motion is handled per component (spec 4.7 keeps the 140ms fade and the halo opacity fade). */
 }
 
+/* I9 paper document (inventory-home FINAL/order-list.css 228): no fixed paper size, so A4 and Letter both print one page. */
+@page { margin: 15mm 16mm 18mm; }
+
 `;
 writeFileSync(resolve(pkgRoot, 'src/styles/globals.css'), globals);
 
