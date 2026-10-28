@@ -64,3 +64,4 @@ export { focusIfLost } from './utils/focusIfLost';
 export * from './components/OpeningHours';
 export * from './components/TryIt';
 export * from './components/Chat';
+export * from './components/QuantityStepper';
