@@ -26,6 +26,23 @@ import { cn, focusForced } from "../utils/cn";
  * The workshop's data-tip popover (shell.js) is not part of this ticket: `tip` renders as the native `title`.
  */
 
+/*
+ * Data-driven positions (percent of the plot, derived from clock time) are continuous, so they cannot be fixed
+ * utility classes and must not be inline `style` attributes. Each distinct declaration becomes one generated class
+ * rule, rendered in a <style> element by the component that uses it (no style attribute, no inline styles).
+ */
+type Rules = Map<string, string>;
+function place(rules: Rules, decl: string): string {
+  let h = 5381;
+  for (let i = 0; i < decl.length; i++) h = (h * 33) ^ decl.charCodeAt(i);
+  const cls = `dtp-${(h >>> 0).toString(36)}`;
+  rules.set(cls, `.${cls}{${decl}}`);
+  return cls;
+}
+function Rules({ rules }: { rules: Rules }) {
+  return rules.size ? <style>{[...rules.values()].join("")}</style> : null;
+}
+
 export type DayTimelineTone =
   | "bad"
   | "wait"
@@ -255,6 +272,7 @@ function Lane({
   const laterEl = useRef<HTMLDivElement | null>(null);
   const known = useRef({ pastW: 0, wordW: 0 });
   const [lay, setLay] = useState<Layout>(emptyLayout);
+  const rules: Rules = new Map();
 
   useLayoutEffect(() => {
     if (!W) return;
@@ -397,6 +415,7 @@ function Lane({
           lane.runway ? "h-[128px]" : plotH[lay.maxr]
         )}
       >
+        <Rules rules={rules} />
         {children}
         {(lane.marks ?? []).map((m) => {
           const p = lay.rows[m.id] ?? { r: 0, left: false };
@@ -404,8 +423,8 @@ function Lane({
             <div
               key={m.id}
               data-mark={m.id}
-              style={{ left: `${m.x}%` }}
               className={cn(
+                place(rules, `left:${m.x}%`),
                 "absolute top-0 h-full w-0",
                 lane.dimmed && "opacity-45"
               )}
@@ -451,8 +470,8 @@ function Lane({
         })}
         {lane.note && (
           <p
-            style={{ left: noteLeft }}
             className={cn(
+              place(rules, `left:${noteLeft}`),
               "absolute top-1/2 z-[3] inline-flex -translate-y-1/2 items-center gap-1.5 whitespace-nowrap text-[12px] text-muted",
               lane.note.tone === "warn" && "text-warn",
               lane.note.tone === "bad" && "[&_svg]:text-bad",
@@ -470,8 +489,10 @@ function Lane({
         {lane.pastOut && (
           <div
             ref={pastEl}
-            style={{ right: `calc(${100 - nowPct}% + 8px)` }}
-            className="absolute top-[9px] z-[3] flex w-max gap-1.5"
+            className={cn(
+              place(rules, `right:calc(${100 - nowPct}% + 8px)`),
+              "absolute top-[9px] z-[3] flex w-max gap-1.5"
+            )}
           >
             <Chip
               tone="done"
@@ -497,12 +518,15 @@ function Lane({
         {lane.carry && lane.carry.length > 0 && (
           <div
             ref={carryEl}
-            style={
-              lay.carryLeft
-                ? { left: `calc(${nowPx} + 6px)` }
-                : { right: `calc(${100 - nowPct}% + 6px)` }
-            }
-            className="absolute top-[9px] z-[3] flex w-max gap-1.5"
+            className={cn(
+              place(
+                rules,
+                lay.carryLeft
+                  ? `left:calc(${nowPx} + 6px)`
+                  : `right:calc(${100 - nowPct}% + 6px)`
+              ),
+              "absolute top-[9px] z-[3] flex w-max gap-1.5"
+            )}
           >
             {lane.carry.map((c) => (
               <Chip key={c.id} chip={c} tone={c.tone} pos={chipPos} />
@@ -559,6 +583,7 @@ export function DayTimeline({
   className,
 }: DayTimelineProps) {
   const axisEl = useRef<HTMLDivElement | null>(null);
+  const rules: Rules = new Map();
   const [W, setW] = useState(0);
   useLayoutEffect(() => {
     const el = axisEl.current;
@@ -602,15 +627,19 @@ export function DayTimeline({
   const past = (
     <span
       aria-hidden="true"
-      style={{ width: `${nowPct}%` }}
-      className="pointer-events-none absolute bottom-0 left-0 top-0 bg-raised"
+      className={cn(
+        place(rules, `width:${nowPct}%`),
+        "pointer-events-none absolute bottom-0 left-0 top-0 bg-raised"
+      )}
     />
   );
   const nowLine = (
     <span
       aria-hidden="true"
-      style={{ left: `${nowPct}%` }}
-      className="pointer-events-none absolute bottom-0 top-0 z-[4] w-0 border-l-2 border-accent"
+      className={cn(
+        place(rules, `left:${nowPct}%`),
+        "pointer-events-none absolute bottom-0 top-0 z-[4] w-0 border-l-2 border-accent"
+      )}
     />
   );
   const hatch =
@@ -655,6 +684,7 @@ export function DayTimeline({
           </span>
         )}
       </div>
+      <Rules rules={rules} />
       <CompactCtx.Provider value={compact}>
         <div
           aria-busy={state === "loading" || undefined}
@@ -666,8 +696,8 @@ export function DayTimeline({
             {ticks.map((t) => (
               <span
                 key={t.h}
-                style={{ left: `${t.x}%` }}
                 className={cn(
+                  place(rules, `left:${t.x}%`),
                   "absolute top-2 whitespace-nowrap text-[12px] tabular-nums text-muted",
                   t.cls
                 )}
@@ -678,15 +708,19 @@ export function DayTimeline({
             {axisLabels?.map((a) => (
               <span
                 key={a.label}
-                style={{ left: `${a.x}%` }}
-                className="absolute top-2 whitespace-nowrap text-[12px] tabular-nums text-muted"
+                className={cn(
+                  place(rules, `left:${a.x}%`),
+                  "absolute top-2 whitespace-nowrap text-[12px] tabular-nums text-muted"
+                )}
               >
                 {a.label}
               </span>
             ))}
             <span
-              style={{ left: `${nowPct}%` }}
-              className="absolute top-[5px] z-[5] h-5 -translate-x-1/2 whitespace-nowrap rounded-chip bg-accent px-[7px] text-[12px] font-semibold leading-5 tabular-nums text-accent-ink"
+              className={cn(
+                place(rules, `left:${nowPct}%`),
+                "absolute top-[5px] z-[5] h-5 -translate-x-1/2 whitespace-nowrap rounded-chip bg-accent px-[7px] text-[12px] font-semibold leading-5 tabular-nums text-accent-ink"
+              )}
             >
               {nowLabel}
             </span>
@@ -701,11 +735,11 @@ export function DayTimeline({
                   {closedBand && (
                     <span
                       aria-hidden="true"
-                      style={{
-                        left: `${closedBand.x}%`,
-                        width: `${closedBand.w}%`,
-                      }}
                       className={cn(
+                        place(
+                          rules,
+                          `left:${closedBand.x}%;width:${closedBand.w}%`
+                        ),
                         "pointer-events-none absolute bottom-0 top-0",
                         hatch
                       )}
@@ -715,8 +749,10 @@ export function DayTimeline({
                     <span
                       key={x}
                       aria-hidden="true"
-                      style={{ left: `${x}%` }}
-                      className="pointer-events-none absolute bottom-0 top-0 w-0 border-l border-rule"
+                      className={cn(
+                        place(rules, `left:${x}%`),
+                        "pointer-events-none absolute bottom-0 top-0 w-0 border-l border-rule"
+                      )}
                     />
                   ))}
                   {nowLine}
@@ -738,6 +774,7 @@ function LoadingLane({
   index: number;
 }) {
   const last = index === 3;
+  const rules: Rules = new Map();
   return (
     <>
       <div className="flex min-w-0 items-center gap-2.5 border-t border-rule py-2 pr-3">
@@ -759,14 +796,18 @@ function LoadingLane({
           last ? "h-[128px]" : "h-[44px]"
         )}
       >
+        <Rules rules={rules} />
         <span
           aria-hidden="true"
-          style={{
-            left: `${12 + index * 9}%`,
-            top: last ? "calc(50% - 7px)" : "15px",
-            width: `${18 + index * 6}%`,
-          }}
-          className="absolute block h-[14px] rounded-[3px] bg-skeleton motion-safe:animate-pulse"
+          className={cn(
+            place(
+              rules,
+              `left:${12 + index * 9}%;top:${
+                last ? "calc(50% - 7px)" : "15px"
+              };width:${18 + index * 6}%`
+            ),
+            "absolute block h-[14px] rounded-[3px] bg-skeleton motion-safe:animate-pulse"
+          )}
         />
       </div>
     </>
