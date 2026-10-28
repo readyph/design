@@ -15,7 +15,7 @@ describe('Products page', () => {
   it('list: headline, tabs, no axe violations', async () => {
     render(<ProductsPage />);
     expect(screen.getByText(/products need stock: \d+ low stock, \d+ out of stock/)).toBeTruthy();
-    expect(screen.getByText('Order lists')).toBeTruthy();
+    expect(screen.getAllByText('Order lists').length).toBeGreaterThan(0);
     await axeOk();
   });
   it('detail: low-stock note, manager actions, no axe violations', async () => {
