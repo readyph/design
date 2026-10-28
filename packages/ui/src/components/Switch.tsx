@@ -1,4 +1,4 @@
-import { forwardRef, useId, type ReactNode } from 'react';
+import { forwardRef, useId, useState, type ReactNode } from 'react';
 import * as RadixSwitch from '@radix-ui/react-switch';
 import { Lock } from '@phosphor-icons/react';
 import { cn, focusRing } from '../utils/cn';
@@ -23,8 +23,10 @@ export interface SwitchProps {
   /** Id of the element naming the switch when there is no visible `label`. */
   'aria-labelledby'?: string;
   className?: string;
-  /** `workshop` (RDY-358): the prototype's track: off is the control grey with a white thumb, no hover change. Default keeps the design-system look. */
-  look?: 'default' | 'workshop';
+  /** `workshop` (RDY-358): the prototype's track: off is the control grey with a white thumb, no hover change. `settings` (RDY-401, I21): 40x22 track with a visible On/Off word, needs `aria-label`. Default keeps the design-system look. */
+  look?: 'default' | 'workshop' | 'settings';
+  /** `settings` look only: 48px touch target, as the `.compact` settings modal. */
+  compact?: boolean;
 }
 
 /**
@@ -32,7 +34,7 @@ export interface SwitchProps {
  * Stack rows with `gap-field-y`. Without a `label` it renders the bare switch.
  */
 export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(function Switch(
-  { checked, defaultChecked, onCheckedChange, disabled, name, id, label, description, example, lockNote, className, look = 'default', 'aria-label': ariaLabel, 'aria-labelledby': ariaLabelledby },
+  { checked, defaultChecked, onCheckedChange, disabled, name, id, label, description, example, lockNote, className, look = 'default', compact, 'aria-label': ariaLabel, 'aria-labelledby': ariaLabelledby },
   ref,
 ) {
   const auto = useId();
@@ -41,6 +43,10 @@ export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(function Switch
   const descId = `${switchId}-desc`;
   const noteId = `${switchId}-note`;
   const describedBy = [description || example ? descId : null, lockNote ? noteId : null].filter(Boolean).join(' ') || undefined;
+
+  if (look === 'settings') {
+    return <SettingsSwitch ref={ref} id={switchId} checked={checked} defaultChecked={defaultChecked} onCheckedChange={onCheckedChange} disabled={disabled} name={name} compact={compact} className={className} aria-label={ariaLabel} aria-labelledby={ariaLabelledby} aria-describedby={describedBy} />;
+  }
 
   const control = (
     <RadixSwitch.Root
@@ -97,5 +103,55 @@ export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(function Switch
         )}
       </div>
     </label>
+  );
+});
+
+type SettingsSwitchProps = Pick<SwitchProps, 'checked' | 'defaultChecked' | 'onCheckedChange' | 'disabled' | 'name' | 'id' | 'compact' | 'className' | 'aria-label' | 'aria-labelledby'> & { 'aria-describedby'?: string };
+
+/** I21: button role="switch", 40x22 track, 16px thumb, visible On/Off. Radix supplies aria-checked and Space; Enter toggles too. */
+const SettingsSwitch = forwardRef<HTMLButtonElement, SettingsSwitchProps>(function SettingsSwitch(
+  { checked, defaultChecked, onCheckedChange, disabled, name, id, compact, className, 'aria-label': ariaLabel, 'aria-labelledby': ariaLabelledby, 'aria-describedby': ariaDescribedby },
+  ref,
+) {
+  const [inner, setInner] = useState(defaultChecked ?? false);
+  const on = checked ?? inner;
+  return (
+    <RadixSwitch.Root
+      ref={ref}
+      id={id}
+      checked={on}
+      onCheckedChange={(v) => {
+        setInner(v);
+        onCheckedChange?.(v);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          e.currentTarget.click();
+        }
+      }}
+      disabled={disabled}
+      name={name}
+      aria-label={ariaLabel}
+      aria-labelledby={ariaLabelledby}
+      aria-describedby={ariaDescribedby}
+      className={cn(
+        'group inline-flex min-h-[40px] cursor-pointer items-center gap-[10px] rounded-md px-0.5 text-text max-[640px]:min-h-[48px] max-[640px]:min-w-[48px]',
+        compact && 'min-h-[48px] min-w-[48px]',
+        'disabled:cursor-not-allowed disabled:opacity-50',
+        focusRing,
+        className,
+      )}
+    >
+      <span
+        aria-hidden="true"
+        className="relative h-[22px] w-10 shrink-0 rounded-[11px] bg-control transition-colors duration-hover group-hover:outline group-hover:outline-[3px] group-hover:outline-accent-tint-2 group-data-[state=checked]:bg-accent"
+      >
+        <i className="absolute left-[3px] top-[3px] h-4 w-4 rounded-full bg-surface transition-transform duration-hover group-data-[state=checked]:translate-x-[18px] group-data-[state=checked]:bg-accent-ink" />
+      </span>
+      <span aria-hidden="true" className={cn('min-w-[24px] text-left text-[14px]', on ? 'font-semibold' : 'font-medium text-muted')}>
+        {on ? 'On' : 'Off'}
+      </span>
+    </RadixSwitch.Root>
   );
 });
