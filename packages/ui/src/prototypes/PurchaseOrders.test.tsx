@@ -62,7 +62,7 @@ describe('PurchaseOrdersPage one order (RDY-427)', () => {
 
 describe('axe', () => {
   const cases: [string, PurchaseOrdersPageProps][] = [
-    ['list', {}], ['group by supplier', { group: 'sup' }], ['no POs', { pos: 'none' }], ['no results', { qs: 'zzz' }], ['loading', { state: 'loading' }],
+    ['list', {}], ['quiet', { state: 'quiet' }], ['empty store', { state: 'empty' }], ['order sent, print', { po: 'PO-0223' }], ['group by supplier', { group: 'sup' }], ['no POs', { pos: 'none' }], ['no results', { qs: 'zzz' }], ['loading', { state: 'loading' }],
     ['error', { state: 'error' }], ['order draft', { po: 'PO-0224' }], ['order draft send question', { po: 'PO-0224', confirm: 'send' }], ['order sent', { po: 'PO-0222' }], ['order cancel question', { po: 'PO-0222', confirm: 'cancel' }], ['order part in', { po: 'PO-0223' }], ['order received', { po: 'PO-0221' }], ['order cancelled', { po: 'PO-0218' }], ['order short', { po: 'PO-0217' }], ['order undo', { po: 'PO-0222', receipt: true }], ['order clerk', { po: 'PO-0223', as: 'clerk' }], ['order tenant B', { po: 'PO-0046', tenant: 'b' }], ['late', { asof: 2 }], ['clerk', { as: 'clerk' }], ['tenant B', { tenant: 'b' }],
   ];
   it.each(cases)('%s has no violations', async (_n, props) => {

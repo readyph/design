@@ -248,16 +248,16 @@ export function PurchaseOrderView({ M, po, extras: X, stateBadge, confirm, onCon
         {facts.map((f, i) => <span key={i} className="inline-flex items-center gap-1.5 whitespace-nowrap before:ml-[10px] before:mr-1 before:h-[3px] before:w-[3px] before:flex-none before:rounded-full before:bg-control before:content-['']">{f}</span>)}
       </div>
       <div className={cn(hasActs || q ? 'mt-6' : '')}>
-        {hasActs ? <div className="flex flex-wrap items-center gap-3">{acts}{sec ? <span className="ml-3 inline-flex items-center gap-4 text-[13px] max-[640px]:ml-0">{sec}</span> : null}</div> : null}
-        {settle ? null : q}
+        {hasActs ? <div className="flex flex-wrap items-center gap-3 print:hidden">{acts}{sec ? <span className="ml-3 inline-flex items-center gap-4 text-[13px] max-[640px]:ml-0">{sec}</span> : null}</div> : null}
+        {settle ? null : <div className="print:hidden">{q}</div>}
       </div>
       {settle}
       <ProgressSteps steps={steps} />
       {note}
-      <div className="mt-10 grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)] grid-rows-[auto_1fr] items-start gap-x-12 gap-y-10 [grid-template-areas:'ln_prt'_'hi_prt'] max-[1099px]:grid-cols-[minmax(0,1fr)] max-[1099px]:grid-rows-[auto] max-[1099px]:[grid-template-areas:'ln'_'hi'_'prt'] max-[640px]:mt-8 max-[640px]:gap-8">
+      <div className="mt-10 grid print:mt-5 print:block grid-cols-[minmax(0,2fr)_minmax(0,1fr)] grid-rows-[auto_1fr] items-start gap-x-12 gap-y-10 [grid-template-areas:'ln_prt'_'hi_prt'] max-[1099px]:grid-cols-[minmax(0,1fr)] max-[1099px]:grid-rows-[auto] max-[1099px]:[grid-template-areas:'ln'_'hi'_'prt'] max-[640px]:mt-8 max-[640px]:gap-8">
         <section className="[grid-area:ln]"><PanelHead icon={ListBullets} title="What was ordered" count={po.lines.length} sub="against what has arrived" />{lines}</section>
-        <div className="flex flex-col gap-10 [grid-area:prt] max-[1099px]:grid max-[1099px]:grid-cols-2 max-[1099px]:gap-8 max-[640px]:flex max-[640px]:flex-col max-[640px]:gap-8">{supplier}{notes}</div>
-        <div className="[grid-area:hi]">{history}</div>
+        <div className="flex flex-col gap-10 print:hidden [grid-area:prt] max-[1099px]:grid max-[1099px]:grid-cols-2 max-[1099px]:gap-8 max-[640px]:flex max-[640px]:flex-col max-[640px]:gap-8">{supplier}{notes}</div>
+        <div className="[grid-area:hi] print:mt-5">{history}</div>
       </div>
       <ConfirmDialog open={undo} onOpenChange={setUndo} title="Undo this receipt?" icon={ArrowCounterClockwise} name={`${po.no} · ${po.supplierName}`}
         description={`${plural(undoN, 'item')} ${undoN === 1 ? 'comes' : 'come'} back out of stock and ${po.no} goes back to what it was. Use this only if it was entered by mistake.`} confirmLabel="Undo receipt" onConfirm={() => setUndo(false)} onCancel={() => setUndo(false)} />
