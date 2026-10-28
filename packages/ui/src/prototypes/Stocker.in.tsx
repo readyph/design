@@ -4,7 +4,7 @@ import { StockerRow, StockerId, StockerStatus } from '../components/StockerRow';
 import { BarcodeSheet, type BarcodeProduct } from '../components/BarcodeSheet';
 import { cn } from '../utils/cn';
 import { StockerActs, StockerButton, StockerEmpty, StockerPageFrame, StockerSection, StockerSkeleton, StockerError } from './Stocker.frame';
-import { stockerData, type Stocker, type StockerParams, type SProduct } from './Stocker.data';
+import { stockerData, type Stocker, type StockerPage, type StockerParams, type SProduct } from './Stocker.data';
 
 /*
  * RDY-431. Stocker Stock in (3/6 c). Transcribed from inventory-home round-1/final stocker.js 447-616 (inPage 449, inOther 470, lineHTML 508, lineCalc 520, noteHTML 524,
@@ -38,7 +38,7 @@ export function Va({ className, children, ...rest }: { className?: string; child
   return <button type="button" {...rest} className={cn('inline-flex min-h-[var(--tap)] items-center gap-1.5 rounded-[4px] px-1 text-[15px] font-semibold text-accent hover:text-lk-hover [&_svg]:h-3.5 [&_svg]:w-3.5', ring, className)}>{children}</button>;
 }
 /** shell.css:70 .id (13px) as used in the page lead, where stocker.css has no 12px override. */
-const LeadId = ({ children }: { children: ReactNode }) => <span className="font-mono text-[13px] tracking-[0]">{children}</span>;
+export const LeadId = ({ children }: { children: ReactNode }) => <span className="font-mono text-[13px] tracking-[0]">{children}</span>;
 export const Note = ({ children }: { children: ReactNode }) => <p className="mt-2 text-[13px] leading-[19px] text-muted [&_b]:font-semibold [&_b]:text-text">{children}</p>;
 export const Lbl = ({ htmlFor, children }: { htmlFor?: string; children: ReactNode }) => <label htmlFor={htmlFor} className="mt-5 block text-[15px] font-semibold [&_small]:text-[13px] [&_small]:font-normal [&_small]:text-muted">{children}</label>;
 export const tin = 'min-h-[var(--tap-big)] w-full rounded-[8px] border-[1.5px] border-control bg-surface px-[14px] text-[16px] text-text placeholder:text-faint focus-visible:border-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent';
@@ -137,11 +137,11 @@ function Line({ s, l, st, kind, set }: { s: Stocker; l: CLine; st: LineState; ki
 const goesInL = (s: Stocker, rows: { product: SProduct; n: number }[]) => { const ls = rows.filter((r) => r.n > 0), one = ls.length === 1 && ls[0].n === 1; return `${s.unitWords(ls)} ${one ? 'goes' : 'go'} into stock`; };
 
 /** .bar contents: the plain sentence and the one button. */
-export function BarBody({ sum, label, disabled, onClick, span }: { sum: ReactNode; label: ReactNode; disabled: boolean; onClick: () => void; span?: boolean }) {
+export function BarBody({ sum, label, disabled, onClick, span, icon }: { sum: ReactNode; label: ReactNode; disabled: boolean; onClick: () => void; span?: boolean; icon?: ReactNode }) {
   return (
     <>
       <p role="status" aria-live="polite" className="mb-2 text-[14px] leading-5 text-text [&_.mut]:text-muted [&_b]:font-semibold [&_.bad]:text-bad">{sum}</p>
-      <Sb primary disabled={disabled} onClick={onClick}><Check aria-hidden="true" />{span ? <span>{label}</span> : label}</Sb>
+      <Sb primary disabled={disabled} onClick={onClick}>{icon ?? <Check aria-hidden="true" />}{span ? <span>{label}</span> : label}</Sb>
     </>
   );
 }
@@ -174,7 +174,7 @@ export function Selected({ s, p, onChange }: { s: Stocker; p: SProduct; onChange
 export interface StockerFlash { title: string; text: string; sub?: string; again?: { href: string; label: string }; undoable?: boolean }
 
 /** doneView (stocker.js 182-196). */
-export function StockerDone({ s, fl, page = 'in' }: { s: Stocker; fl: StockerFlash; page?: 'in' | 'out' }) {
+export function StockerDone({ s, fl, page = 'in' }: { s: Stocker; fl: StockerFlash; page?: StockerPage }) {
   return (
     <StockerPageFrame s={s} page={page} title={fl.title}>
       <div className="mt-7"><span className="grid h-12 w-12 place-items-center rounded-full border-2 border-accent text-[26px] text-accent"><Check aria-hidden="true" /></span></div>

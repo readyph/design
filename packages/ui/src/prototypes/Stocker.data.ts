@@ -10,7 +10,7 @@ export type StockerState = 'live' | 'loading' | 'error' | 'empty' | 'quiet';
 export type StockerPage = 'home' | 'in' | 'out' | 'find' | 'me' | 'signedout';
 export type StockerUnit = string;
 
-export interface SProduct { id: string; sku: string; name: string; cat: string; unit: StockerUnit; onHand: number; reorder: number; supplier: string; loc: string; barcode?: string }
+export interface SProduct { id: string; sku: string; name: string; cat: string; unit: StockerUnit; onHand: number; reorder: number; supplier: string; loc: string; barcode?: string; expires?: { qty: number; on: string } }
 export interface SPoLine { p: string; ordered: number; received: number }
 export interface SPo { no: string; supplier: string; supplierName: string; status: string; expected: string; lines: SPoLine[] }
 export interface SMove { id: string; day: string; at: string; type: string; p: string; qty: number; ref?: string | null; by?: string | null; note?: string | null }
@@ -52,6 +52,8 @@ export interface StockerParams {
   via?: 'order' | 'other';
   /** stocker.html ?np=<barcode>: a new product to set up. */
   np?: string;
+  /** stocker.html ?np=<barcode>&from=find|out|in|ask: where the new-product view goes back to. */
+  from?: 'find' | 'out' | 'in' | 'ask';
   /** stocker.html ?ask=<topic>: tell your manager. */
   ask?: string;
   /** ?done=1: the done screen after a write. */
