@@ -141,6 +141,8 @@ const preset = {
         'sub-fade': { from: { opacity: '0' }, to: { opacity: '1' } },
         // I16 barcode sheet (inventory-home FINAL/barcode.css 7): rises 24px, from .6 opacity.
         'bc-up': { from: { transform: 'translateY(24px)', opacity: '.6' }, to: { transform: 'none', opacity: '1' } },
+        // I8 order lists panel (inventory-home FINAL/cart.css 6-7): slides in from the right.
+        'cart-in': { from: { transform: 'translateX(100%)' }, to: { transform: 'none' } },
         'town-flow-a': { to: { strokeDashoffset: '-27' } },
         'town-flow-b': { from: { strokeDashoffset: '13' }, to: { strokeDashoffset: '40' } },
         // Ask Leda halo (RDY-266, handover 4.7): one revolution + an opacity envelope; the reduced-motion fade has no rotation.
@@ -162,6 +164,7 @@ const preset = {
         'sub-back-r': 'sub-back-r var(--dur-subpage-out) var(--ease-subpage) backwards',
         'sub-fade': 'sub-fade var(--dur-reduced-fade) linear backwards',
         'bc-up': 'bc-up .22s cubic-bezier(.22, 1, .36, 1)',
+        'cart-in': 'cart-in .2s cubic-bezier(.2, .7, .2, 1)',
         'town-flow-a': 'town-flow-a 1.6s linear infinite',
         'town-flow-b': 'town-flow-b 1.6s linear infinite',
         'town-flow-a-slow': 'town-flow-a 5s linear infinite',

@@ -25,6 +25,7 @@ export * from './components/Checkbox';
 export * from './components/ButtonLink';
 export * from './components/Link';
 export * from './components/Spinner';
+export * from './components/OrderListsPanel';
 export * from './components/ProgressBar';
 export * from './components/DataList';
 export * from './components/EmptyState';
