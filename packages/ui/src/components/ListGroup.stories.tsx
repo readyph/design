@@ -120,13 +120,13 @@ export const LongTitlesNarrow: Story = {
 
 export const WithSecondaryList: Story = {
   name: 'Beside another list (shortcuts off)',
-  parameters: { docs: { description: { story: 'Only the main `ListGroups` keeps j / k. A side `List` gets `shortcuts={false}`.' } } },
+  parameters: { docs: { description: { story: 'The list last focused or pressed keeps j / k, so a side `List` needs no opt-out. `shortcuts={false}` still turns a list off.' } } },
   render: () => (
     <div className="grid gap-6 md:grid-cols-[1fr_280px]">
       <ListGroups aria-label="Main">
         <ListGroup title="Main" count={1}>{queue('m1', 'Main row', 'j / k work here')}</ListGroup>
       </ListGroups>
-      <List aria-label="Side" shortcuts={false}>{queue('s1', 'Side row', 'ignores j / k')}</List>
+      <List aria-label="Side">{queue('s1', 'Side row', 'ignores j / k')}</List>
     </div>
   ),
 };

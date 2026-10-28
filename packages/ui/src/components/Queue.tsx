@@ -14,7 +14,7 @@ import { cn, focusRing } from '../utils/cn';
 import { Button } from './Button';
 import { EmptyState } from './EmptyState';
 import { LedaMark } from './Leda';
-import { useListCursor } from './List';
+import { ownsPageKeys, useListCursor } from './List';
 import { Menu, type MenuItem } from './Menu';
 import { PlatformLogo } from './PlatformLogo';
 import { Skeleton } from './Skeleton';
@@ -125,7 +125,7 @@ export interface QueueProps {
   cursorId?: string | null;
   defaultCursorId?: string | null;
   onCursorChange?: (id: string) => void;
-  /** j / k / Enter / s on the page. Default true. Give any other list on the page `shortcuts={false}`: one component keeps them. */
+  /** j / k / Enter / s on the page. Default true. With several lists on one page the one last focused or pressed keeps them; `false` opts this one out. */
   shortcuts?: boolean;
   /** Pinned groups that start open. Default none (one folded line each). */
   defaultOpenGroups?: QueueGroupKey[];
@@ -310,8 +310,8 @@ function PinnedGroup({
  * three pinned groups folded to one line each (Leda is watching, Snoozed, Done today).
  *
  * Keys on the page: j / k move the cursor, Enter opens the cursor row, s snoozes it. They never fire while typing,
- * or inside a dialog or menu. ONE component per page keeps them: Queue uses the same cursor as `List` / `ListGroups`,
- * so give any other list on the page `shortcuts={false}`.
+ * or inside a dialog or menu. ONE list per page handles them: Queue uses the same cursor as `List` / `ListGroups`,
+ * and the list that was last focused or pressed owns them; `shortcuts={false}` opts one out.
  *
  * Fills the height its parent gives it (the list scrolls inside, the scroll never chains to the page). In a parent
  * with no fixed height it simply grows. Items are a list with `aria-current` on the cursor row, not a listbox: each
@@ -412,7 +412,7 @@ export const Queue = forwardRef<HTMLDivElement, QueueProps>(function Queue(
     if (!shortcuts) return;
     const onKey = (e: KeyboardEvent) => {
       const root = rootRef.current;
-      if (e.key !== 's' || !root || e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+      if (e.key !== 's' || !root || e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey || !ownsPageKeys(root)) return;
       const t = e.target instanceof HTMLElement ? e.target : null;
       if (t) {
         if (t.closest(EDITABLE)) return;
