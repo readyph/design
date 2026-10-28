@@ -78,3 +78,4 @@ export * from './components/SettingsModal';
 export * from './components/DayTimeline';
 export * from './components/PaperDocument';
 export * from './components/NewProductRequest';
+export * from './components/ProductList';
