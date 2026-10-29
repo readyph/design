@@ -51,6 +51,8 @@ function Host(p: Partial<BarcodeSheetProps> & { label?: string }) {
 export const Find: Story = { render: () => <Host ctx="find" unknown={{ label: 'Tell your manager', href: '#' }} /> };
 export const StockOut: Story = { render: () => <Host ctx="out" title="Scan the product going out" unknown={{ label: 'Tell your manager', href: '#' }} /> };
 export const StockIn: Story = { render: () => <Host ctx="in" title="Scan the product coming in" unknown={{ label: 'Tell your manager', href: '#' }} /> };
+/** Production: no samples, so no "Pretend you scanned one" section and no fake unknown product (RDY-479). */
+export const Production: Story = { render: () => <Host ctx="in" title="Scan the product coming in" samples={[]} unknown={{ label: 'Tell your manager', href: '#' }} /> };
 export const AlreadyRequested: Story = {
   render: () => <Host ctx="ask" alreadyRequested={() => true} unknown={{ label: 'Tell your manager', href: '#' }} value="4805550314158" />,
 };
