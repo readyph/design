@@ -46,8 +46,11 @@ export interface BarcodeSheetProps {
   /** product (default): a known or picked product goes to onFound; an unknown barcode shows the unknown state. capture: any code goes to onCode. */
   mode?: 'product' | 'capture';
   products: BarcodeProduct[];
-  /** The three products listed under "Pretend you scanned one"; the unknown sample is always added. */
-  samples: BarcodeProduct[];
+  /**
+   * Prototype only: the products listed under "Pretend you scanned one"; the unknown sample is added to them.
+   * Empty or omitted (production): the whole "Pretend you scanned one" section is not rendered.
+   */
+  samples?: BarcodeProduct[];
   onFound?: (product: BarcodeProduct, code: string) => void;
   onCode?: (code: string, product: BarcodeProduct | null) => void;
   /** The one action offered when the barcode is unknown. */
@@ -80,7 +83,7 @@ const h3 = 'text-[15px] leading-[22px] font-semibold';
  * results are `aria-live="polite"`, closing stops the camera tracks and returns focus, a backdrop click closes.
  */
 export function BarcodeSheet(props: BarcodeSheetProps) {
-  const { open, onOpenChange, title, ctx = 'find', mode = 'product', products, samples, unknown = null, manager, warnKnown, alreadyRequested, value } = props;
+  const { open, onOpenChange, title, ctx = 'find', mode = 'product', products, samples = [], unknown = null, manager, warnKnown, alreadyRequested, value } = props;
   const cap = mode === 'capture';
   const names = props.names != null ? props.names : !cap;
   const uid = useId();
@@ -396,6 +399,7 @@ export function BarcodeSheet(props: BarcodeSheetProps) {
           </p>
         </section>
         <div className="mt-[14px]" aria-live="polite">{results()}</div>
+        {samples.length > 0 ? (
         <section className={sec} aria-labelledby={hpId}>
           <h3 id={hpId} className={h3}>Pretend you scanned one</h3>
           <p className={help}>
@@ -414,6 +418,7 @@ export function BarcodeSheet(props: BarcodeSheetProps) {
             </button>
           </div>
         </section>
+        ) : null}
       </div>
     </dialog>
   );

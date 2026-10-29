@@ -21,6 +21,22 @@ const setup = (over = {}) => {
 };
 
 describe('BarcodeSheet', () => {
+  it('shows the prototype section when samples are given', () => {
+    setup();
+    expect(screen.getByText('Pretend you scanned one')).toBeTruthy();
+    expect(screen.getByText('A product we do not have')).toBeTruthy();
+  });
+  it('production: empty samples hide the whole prototype section', () => {
+    setup({ samples: [] });
+    expect(screen.queryByText('Pretend you scanned one')).toBeNull();
+    expect(screen.queryByText(/Prototype only/)).toBeNull();
+    expect(screen.queryByText('A product we do not have')).toBeNull();
+    expect(screen.queryByText(UNKNOWN_BARCODE)).toBeNull();
+  });
+  it('production: omitted samples hide it too', () => {
+    setup({ samples: undefined });
+    expect(screen.queryByText('Pretend you scanned one')).toBeNull();
+  });
   it('helpers', () => {
     expect(digitsOf('48 05-5')).toBe('48055');
     expect(isCode('12345678')).toBe(true);
