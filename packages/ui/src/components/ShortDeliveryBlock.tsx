@@ -110,7 +110,7 @@ const row =
   'mt-3 grid max-w-[520px] grid-cols-[120px_minmax(0,1fr)] items-center gap-x-4 max-[640px]:grid-cols-[minmax(0,1fr)] max-[640px]:gap-1';
 const fl = 'text-[13px] text-text';
 const para = 'm-0 mt-1.5 text-muted';
-const btnCls = 'disabled:opacity-50 max-[640px]:min-h-[44px]';
+const btnCls = 'max-w-full disabled:opacity-50 max-[640px]:h-auto max-[640px]:min-h-[44px] max-[640px]:whitespace-normal max-[640px]:py-2';
 
 /**
  * Short-delivery block (I12): the settle block on a purchase order that came in short. Heading and lines by state (still due,
@@ -170,7 +170,7 @@ export function ShortDeliveryBlock({
         {dispute.reason}. Opened by {dispute.by}, {dispute.at}
         {dispute.ref ? (
           <>
-            . Reference <b className="font-mono text-[13px] tracking-normal">{dispute.ref}</b>
+            . Reference <b className="font-mono text-[13px] tracking-normal [overflow-wrap:anywhere]">{dispute.ref}</b>
           </>
         ) : null}
         .{dispute.note ? ` “${dispute.note}”` : ''}
@@ -350,20 +350,20 @@ export function ShortDeliveryBlock({
     <section
       id="settle"
       aria-labelledby={`${uid}-h`}
-      className="mt-6 max-w-[760px] border-y border-rule pt-4 pb-[18px] max-[640px]:mt-5 print:max-w-none print:border-black"
+      className="mt-6 min-w-0 max-w-[760px] border-y border-rule pt-4 pb-[18px] max-[640px]:mt-5 print:max-w-none print:border-black"
     >
       <h2 id={`${uid}-h`} className="m-0 mb-1.5 flex items-center gap-2 text-[16px] leading-[22px] font-semibold">
         <Scales size={18} aria-hidden="true" className="flex-none text-muted" />
-        <span>{heading}</span>
+        <span className="min-w-0 [overflow-wrap:anywhere]">{heading}</span>
       </h2>
       {lines.map((x, i) => (
-        <p key={i} className="m-0 mt-1 text-[14px] leading-[21px]">
+        <p key={i} className="m-0 mt-1 text-[14px] leading-[21px] [overflow-wrap:anywhere]">
           {x}
         </p>
       ))}
       {acts ? <div className={cn('mt-[14px] flex flex-wrap gap-3 print:hidden', 'max-[640px]:[&>button]:basis-full max-[640px]:[&>button]:flex-[1_1_100%]')}>{acts}</div> : null}
       <div id="cfmslot" className={cn(form ? 'mt-4' : '', 'print:hidden')}>
-        {form ? <div className={'mt-2 max-w-[640px] border-t border-text pt-3 text-[13px] leading-[19px]'}>{form}</div> : null}
+        {form ? <div className={'mt-2 max-w-[640px] min-w-0 [overflow-wrap:anywhere] border-t border-text pt-3 text-[13px] leading-[19px]'}>{form}</div> : null}
       </div>
     </section>
   );
