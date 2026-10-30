@@ -8,6 +8,16 @@ const order = { no: 'PO-0221', supplierName: 'Petron Auto Parts', closed: false,
 const axeOpts = { rules: { 'color-contrast': { enabled: false }, region: { enabled: false } } };
 
 describe('ShortDeliveryBlock', () => {
+  it('lets long references and text wrap instead of overflowing a phone (RDY-481)', () => {
+    const dispute = { reason: 'Short delivery', by: 'Rica', at: '28 Oct', ref: 'CL-5521-ABCDEFGHIJKLMNOPQRSTUVWXYZ-0123456789', status: 'open' as const };
+    const { container } = render(<ShortDeliveryBlock order={order} canSettle dispute={dispute} />);
+    expect(container.querySelector('section')?.className).toContain('min-w-0');
+    expect(screen.getByText(dispute.ref).className).toContain('overflow-wrap:anywhere');
+    const btn = screen.getByRole('button', { name: 'Record the answer' });
+    expect(btn.className).toContain('max-w-full');
+    expect(btn.className).toContain('max-[640px]:whitespace-normal');
+  });
+
   it('shows the heading, line and manager actions', () => {
     render(<ShortDeliveryBlock order={order} canSettle />);
     expect(screen.getByRole('heading', { name: '6 still due (₱2,790 at cost)' })).toBeTruthy();

@@ -31,6 +31,21 @@ export const ShortAccepted: Story = {
 export const DisputedOpen: Story = {
   args: { dispute: { reason: 'Short delivery', by: 'Rica', at: '28 Oct, 9:12', ref: 'CL-5521', note: 'Driver will check', status: 'open' } },
 };
+/** RDY-481: long unbroken reference, note and supplier name must wrap inside the 390 px viewport (no horizontal overflow). */
+export const DisputedOpenLongText: Story = {
+  parameters: { viewport: { defaultViewport: 'bp375' } },
+  args: {
+    order: { ...partIn, supplierName: 'Petron-Auto-Parts-and-Accessories-Trading-Incorporated' },
+    dispute: {
+      reason: 'Short delivery',
+      by: 'Rica',
+      at: '28 Oct, 9:12',
+      ref: 'CL-5521-ABCDEFGHIJKLMNOPQRSTUVWXYZ-0123456789',
+      note: 'Driver will check the truck and call back with the signed delivery receipt number',
+      status: 'open',
+    },
+  },
+};
 export const DisputedOpenClerk: Story = {
   args: { canSettle: false, dispute: { reason: 'Short delivery', by: 'Rica', at: '28 Oct, 9:12', status: 'open' } },
 };
