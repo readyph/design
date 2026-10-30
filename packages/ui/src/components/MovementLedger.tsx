@@ -210,11 +210,11 @@ export function MovementFilters({ io, counts, onIoChange, query, onQueryChange, 
         'grid grid-cols-1 items-center gap-x-6 gap-y-6',
         'min-[641px]:max-[1259px]:grid-cols-4 min-[641px]:max-[1259px]:items-end min-[641px]:max-[1259px]:gap-x-4 min-[641px]:max-[1259px]:gap-y-3',
         'min-[1260px]:flex min-[1260px]:items-end min-[1260px]:gap-3',
-        'max-[640px]:flex max-[640px]:flex-col max-[640px]:items-stretch max-[640px]:gap-3',
+        'max-[640px]:flex max-[640px]:flex-col max-[640px]:items-stretch max-[640px]:gap-4',
         className,
       )}
     >
-      <div className="flex items-end gap-2 min-[641px]:max-[1259px]:col-[1/3] min-[1260px]:flex-none max-[640px]:order-2">
+      <div className="flex items-end gap-2 min-[641px]:max-[1259px]:col-[1/3] min-[1260px]:flex-none">
         <div className="max-[640px]:hidden">
           <SegmentedControl
             aria-label="Show"
@@ -258,9 +258,9 @@ export function MovementFilters({ io, counts, onIoChange, query, onQueryChange, 
       </div>
       <div
         role="search"
-        className="flex flex-wrap items-end gap-4 max-[640px]:order-1 max-[640px]:flex-col max-[640px]:items-stretch max-[640px]:gap-3 min-[641px]:max-[1259px]:contents min-[1260px]:min-w-0 min-[1260px]:flex-1 min-[1260px]:flex-nowrap min-[1260px]:gap-3"
+        className="flex flex-wrap items-end gap-4 max-[640px]:flex-col max-[640px]:items-stretch max-[640px]:gap-3 min-[641px]:max-[1259px]:contents min-[1260px]:min-w-0 min-[1260px]:flex-1 min-[1260px]:flex-nowrap min-[1260px]:gap-3"
       >
-        <label className="relative block max-w-[440px] flex-[1_1_280px] min-[641px]:max-[1259px]:col-[3/5] min-[641px]:max-[1259px]:max-w-none min-[1260px]:min-w-[140px] min-[1260px]:max-w-none min-[1260px]:flex-[1_1_160px] max-[640px]:max-w-none">
+        <label className="relative block max-w-[440px] flex-[1_1_280px] min-[641px]:max-[1259px]:col-[3/5] min-[641px]:max-[1259px]:max-w-none min-[1260px]:min-w-[140px] min-[1260px]:max-w-none min-[1260px]:flex-[1_1_160px] max-[640px]:max-w-none max-[640px]:flex-none">
           <span className="sr-only">Search movements</span>
           <MagnifyingGlass aria-hidden size={16} className="pointer-events-none absolute left-2.5 top-1/2 -mt-2 text-muted" />
           <input type="search" value={query} onChange={(e) => onQueryChange?.(e.target.value)} placeholder={searchPlaceholder} autoComplete="off" className={searchInput} />

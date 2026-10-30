@@ -23,4 +23,9 @@ export default defineConfig({
   treeshake: true,
   target: 'es2021',
   external: ['react', 'react-dom', '@phosphor-icons/react'],
+  // Keep non-ASCII in class strings (e.g. before:content-['·_']): esbuild's default escapes them to \xB7,
+  // which the consumer's Tailwind scan cannot compile.
+  esbuildOptions(options) {
+    options.charset = 'utf8';
+  },
 });
