@@ -1,5 +1,11 @@
 # @readyph/ui
 
+## 0.16.2
+
+### Patch Changes
+
+- 54f62a7: ShortDeliveryBlock: long references, notes, supplier names and action buttons wrap inside a phone viewport instead of overflowing horizontally (RDY-481).
+
 ## 0.16.1
 
 ### Patch Changes
