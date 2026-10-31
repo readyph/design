@@ -19,6 +19,11 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   fullWidth?: boolean;
   /** Phone action bars: 44px touch height at phone width (otherwise 40px phone, 32px desktop). */
   actionBar?: boolean;
+  /**
+   * Hero CTA (the Signed out screen's one Sign in, workshop signed-out.html `.so .go`): 44px tall, 24px side padding,
+   * 15px / 600, 16px icons; 52px tall at phone width. Not a size scale: one modifier for a single full-page call to action.
+   */
+  hero?: boolean;
   /** Phosphor icon before the label. */
   leftIcon?: PhosphorIcon;
   /** Phosphor icon after the label. */
@@ -31,6 +36,12 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 export const base =
   'relative inline-flex h-[var(--ctl-button)] items-center justify-center gap-2 whitespace-nowrap rounded-control border border-transparent px-3 text-ui font-medium leading-5 transition-colors duration-hover disabled:cursor-not-allowed disabled:opacity-70';
 
+/** `hero` geometry: overrides the height, padding and type of `base` (tailwind-merge keeps the later class). */
+export const heroGeometry = 'h-[var(--ctl-touch)] px-6 text-[15px] font-semibold leading-[22px] max-[640px]:h-[52px]';
+
+/** Icon size for a button: 14px in the standard geometry, 16px in the hero geometry. */
+export const iconSize = (hero: boolean) => (hero ? 16 : 14);
+
 export const variants: Record<ButtonVariant, string> = {
   primary: 'border-0 bg-accent text-accent-ink hover:bg-accent-hover',
   secondary: 'border-control bg-surface text-text hover:border-muted active:bg-raised',
@@ -39,7 +50,7 @@ export const variants: Record<ButtonVariant, string> = {
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-  { variant = 'primary', loading = false, keepFocus = false, fullWidth = false, actionBar = false, leftIcon: Left, rightIcon: Right, disabled, className, children, type = 'button', onClick, ...rest },
+  { variant = 'primary', loading = false, keepFocus = false, fullWidth = false, actionBar = false, hero = false, leftIcon: Left, rightIcon: Right, disabled, className, children, type = 'button', onClick, ...rest },
   ref,
 ) {
   return (
@@ -50,7 +61,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       aria-disabled={keepFocus && (disabled || loading) ? true : undefined}
       aria-busy={loading || undefined}
       onClick={keepFocus && (disabled || loading) ? (e) => e.preventDefault() : onClick}
-      className={cn(base, focusRing, keepFocus && 'aria-disabled:cursor-not-allowed aria-disabled:opacity-70', variants[variant], actionBar && 'max-[640px]:h-[var(--ctl-touch)]', fullWidth && 'w-full', className)}
+      className={cn(base, focusRing, keepFocus && 'aria-disabled:cursor-not-allowed aria-disabled:opacity-70', variants[variant], actionBar && 'max-[640px]:h-[var(--ctl-touch)]', hero && heroGeometry, fullWidth && 'w-full', className)}
       {...rest}
     >
       {loading && (
@@ -59,9 +70,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
         </span>
       )}
       <span className={cn('inline-flex items-center justify-center gap-2', loading && 'opacity-0')}>
-        {Left && <Left size={14} aria-hidden="true" />}
+        {Left && <Left size={iconSize(hero)} aria-hidden="true" />}
         {children}
-        {Right && <Right size={14} aria-hidden="true" />}
+        {Right && <Right size={iconSize(hero)} aria-hidden="true" />}
       </span>
     </button>
   );

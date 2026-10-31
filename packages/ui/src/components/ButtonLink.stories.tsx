@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { SignIn } from '@phosphor-icons/react';
 import { ButtonLink } from './ButtonLink';
 import { Link } from './Link';
 
@@ -23,6 +24,16 @@ export const Variants: Story = {
       <ButtonLink href="#" variant="danger">Danger</ButtonLink>
       <ButtonLink href="#" disabled>Disabled</ButtonLink>
       <ButtonLink href="https://example.com" target="_blank">External</ButtonLink>
+    </div>
+  ),
+};
+
+/** `hero`: the Signed out screen's Sign in (RDY-502): 44px tall, 24px side padding, 15px / 600, 16px icon; 52px tall at phone width. */
+export const Hero: Story = {
+  render: () => (
+    <div className="flex flex-wrap items-center gap-3">
+      <ButtonLink href="#" hero leftIcon={SignIn}>Sign in</ButtonLink>
+      <ButtonLink href="#">Default</ButtonLink>
     </div>
   ),
 };
