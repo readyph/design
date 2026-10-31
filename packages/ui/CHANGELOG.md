@@ -1,5 +1,11 @@
 # @readyph/ui
 
+## 0.17.0
+
+### Minor Changes
+
+- 1f1b2b7: RDY-501 SignedOutScreen: platform logo and name, "You are signed out" and one Sign in, unframed; exports the two workshop tenants (`signedOutTenants`).
+
 ## 0.16.3
 
 ### Patch Changes
