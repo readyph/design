@@ -12,7 +12,7 @@ const meta: Meta<typeof Button> = {
     leftIcon: { table: { disable: true } },
     rightIcon: { table: { disable: true } },
   },
-  parameters: { docs: { description: { component: 'C33. 32px tall (40 phone, 44 in phone action bars), 5px radius, 13px / 500. No pill, no sharp buttons. `text` replaces the legacy `subtle`; the `size` prop is gone.' } } },
+  parameters: { docs: { description: { component: 'C33. 32px tall (40 phone, 44 in phone action bars), 5px radius, 13px / 500. No pill, no sharp buttons. `text` replaces the legacy `subtle`; the `size` prop is gone. `hero` is the one exception: a full-page call to action (Signed out: 44px, px-6, 15px / 600; 52px on phone), not a size scale.' } } },
 };
 export default meta;
 type Story = StoryObj<typeof Button>;
@@ -57,6 +57,16 @@ export const ActionBar: Story = {
     <div className="flex gap-3">
       <Button variant="secondary" actionBar fullWidth>Cancel</Button>
       <Button actionBar fullWidth>Save</Button>
+    </div>
+  ),
+};
+
+/** `hero`: the Signed out screen's one Sign in (RDY-502): 44px tall, 24px side padding, 15px / 600, 16px icon; 52px tall at phone width. */
+export const Hero: Story = {
+  render: () => (
+    <div className="flex flex-wrap items-center gap-3">
+      <Button hero leftIcon={ArrowRight}>Sign in</Button>
+      <Button>Default</Button>
     </div>
   ),
 };

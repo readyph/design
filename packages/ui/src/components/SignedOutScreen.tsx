@@ -29,7 +29,8 @@ export interface SignedOutScreenProps {
 
 /**
  * Signed out (workshop signed-out.html 20-52): platform logo and name, a title, one primary Sign in. Flat, left-aligned, unframed,
- * on the page surface; follows the document theme. The Sign in button keeps the Button geometry.
+ * on the page surface; follows the document theme. The Sign in is the hero ButtonLink (workshop `.so .go`: 24px top margin, 44px tall,
+ * 24px side padding, 15px / 600; full width and 52px tall on phone).
  */
 export function SignedOutScreen({
   platform,
@@ -56,7 +57,7 @@ export function SignedOutScreen({
         </h1>
         <p className="mt-2 text-[15px] leading-[22px] text-muted">{lead}</p>
         <div className="mt-6 max-[640px]:grid">
-          <ButtonLink href={signInHref} leftIcon={SignIn} fullWidth={false}>
+          <ButtonLink href={signInHref} leftIcon={SignIn} hero>
             Sign in
           </ButtonLink>
         </div>
