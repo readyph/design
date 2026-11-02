@@ -1,0 +1,33 @@
+import { Meta, Canvas } from '@storybook/blocks';
+import * as Stories from './Wizard.stories';
+
+<Meta of={Stories} />
+
+# New service wizard (v2 Shop floor)
+
+<Canvas of={Stories.Live} />
+
+Live wizard over the Services page: add services (their parts come with them), pick or add a customer with cars, one service search (catalogue or custom), Review & confirm (every block editable in place, a visible Schedule and staff block, optional More details), Save as quotation or Book service (creates a JO number), View quotation. The wizard is reached the same way from Today, Services and Customers by clicking **New service**. **Open the story in the Canvas tab** for the Controls panel; the toolbar switches Viewport (phone = full screen).
+
+**States (Controls).** `mode` (new, view / book / edit a parked quote), `step` (1 Services & price, 2 Review & confirm), `editing` (which review block opens in its editor; more details = mileage and concerns), `prefill` (empty, 2 services, custom price, parts, not enough stock, out on order, custom service with a part, calendar slot), `quotationPreview`, `remarks`.
+
+## Purpose
+Take a car in and book it, or park a quotation: 2 steps (Services & price, Review & confirm; Schedule and staff is a visible block inside the review), modal on desktop and full screen on a phone. Esc or Cancel asks before losing typed work.
+
+## Rationale
+Source: `workshop/prototypes/sms/round-1/v2-floor/rationale.md` (Wizard + catalogue revision 1-2, Fixes revision 4). A parked quote is a job with status Quotation (QT- number, valid 7 days); adding a catalogue service adds its linked parts as indented sub-lines at Inventory price, with a stock warning.
+
+## Assumptions
+Pending reason is not in the wizard; valid-until is today + 7 days and not editable; a new JO number is the next in sequence; only new quotes are "parked".
+
+## Known weaknesses
+- Schedule and staff is always visible on the review; a booking without a mechanic or chosen slot uses the default time and no mechanic and says so in words, it never blocks. Quotations never need it.
+- Revision 6: step 1 and step 2 share one `WizardBlock` and the same rows and table grid; the only total on step 1 is the Subtotal row under the table (no side panel, no footer total). Not browser-checked.
+- Only one review block edits at a time; the footer actions wait for Done.
+- Per-line custom price has no manager-approval rule; Decline / Expired are missing.
+- Reserved-by-other-jobs is not subtracted in the stock warning; reserve on booking is copy only.
+
+## API today vs invented
+| Exists | Invented (needs API work) |
+|---|---|
+| `/services` CRUD and `/active`; job items `POST/PATCH/DELETE /jobs/{id}/items` | Service-to-product link; quote status lifecycle and QT- numbering; server-side parts add; reserve on booking |

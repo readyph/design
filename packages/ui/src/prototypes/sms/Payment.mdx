@@ -1,0 +1,48 @@
+import { Meta, Canvas } from '@storybook/blocks';
+import * as Stories from './Payment.stories';
+
+<Meta of={Stories} />
+
+# Payment
+
+<Canvas of={Stories.Live} />
+
+## Purpose
+One question: **what does this customer owe, and how much did they just hand me?** The statement of account is on the left (Add line under the last row, totals in the Amount column, then Payments received). The sticky Balance panel on the right holds Total due, Paid so far, Balance and the payment form (first on a phone). Download and Print sit once, top right of the header.
+
+## Reached from
+Services (Inspector and list) and Today ("Collect payment" on a ready, unpaid car). Back returns to where you were. Inside those stories the same screen opens in place and the totals update.
+
+## Rationale
+- Discount is collapsed: a single "Add discount" link on the Discount row. Pesos or percent, optional reason, cannot pass the subtotal.
+- Amount received starts at the whole balance; lower it for a down payment. Cash shows change. Other methods need a reference.
+- Paid in full shows "Paid", then "Release car" (for a car ready for pick-up). Void the last payment asks to confirm.
+- Lines can be added at billing and are marked "Added at billing".
+
+## Assumptions
+Only the manager discounts and records payments. The receipt is an acknowledgement, not a BIR official receipt. An amount over the balance is blocked. A completed job is closed.
+
+## Known weaknesses
+Download saves a self-contained HTML file (print it to PDF from the browser); the real app would return a PDF. Print opens a preview and is simulated. Not verified in a browser. Received-by is a name the API does not return. Receipt numbering is sample data.
+
+## API today vs invented
+| Item | Status |
+|---|---|
+| Record payment (amount, method, paid_at), list payments | API today |
+| Methods Cash, GCash, Maya, Bank, Card, Check, Other | API today |
+| Flat discount on the job, item price override | API today |
+| Invoice PDF | API today |
+| Percent discount, discount reason | Invented |
+| Void a payment | Invented (no endpoint) |
+| Reference no., cash tendered and change | Invented |
+| "Added at billing" marker, receipt/statement with A4 and slip | Invented |
+| Release car tied to paid | Invented |
+| Download statement / receipt as PDF (GET /jobs/{id}/statement.pdf, /receipt.pdf) | Invented (prototype saves HTML) |
+
+## Record payment confirmation (revision)
+
+Record payment opens a small confirmation modal once the form is valid: a muted caption (payment is recorded on the job and can only be voided), a ruled summary (amount, method, reference, change) and an optional Remarks textarea. Cancel or Esc keeps the form values. Confirming records the payment with its remarks, shown under Method in Payments received and on the receipt and downloaded file. Amount fields with PHP use the shared `MoneyField` (one joined group). Invented API: `remarks` on payment create.
+
+## Gap closure (2026-11-02)
+
+Tests now cover remarks in the receipt, the statement file and the download; focus returns to Record payment after the confirm modal closes (Cancel, Esc or confirm; fixed by an explicit close-focus on the button); and render/typing of the Discount, Add line unit price and catalogue Labour price money fields.

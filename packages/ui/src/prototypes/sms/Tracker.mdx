@@ -1,0 +1,46 @@
+import { Meta, Canvas } from '@storybook/blocks';
+import * as Stories from './Tracker.stories';
+
+<Meta of={Stories} />
+
+# Customer tracker
+
+<Canvas of={Stories.Live} />
+
+**The one question:** "What is happening with my car, and do I need to do anything?"  The status block answers it first; a quote card appears above everything else only when the customer must decide.
+
+## What the customer sees
+Business logo and name, first name, car, **masked plate**, service title and JO number. Status in a word (Received, Working on it, Waiting for parts, Ready for pick-up, Done), one sentence, the promised time and a four-step line. Service items with done state (no prices). Updates feed. Balance at pick-up (read only, no pay button). A chat panel with the manager, always open: header (who, open until), bubbles with times and day separators, docked composer (Enter sends), empty state "Say hi to the shop", a New line over unread replies. On a phone it ends the page under Updates (fixed 420px high); on desktop it sits beside the status column and stays in view (sticky, second column).
+
+## Visibility rule (binding)
+A post is **customer-visible by default**. It is hidden only when flagged internal. Internal by nature: mechanic questions to the manager, part requests, and notes the staff flag internal. Mechanic notes with photos are shown. Quote posts show only after the manager quotes. The staff side still sees everything.
+
+## Privacy
+Link is a 24 character random token (about 119 bits), not a job number. First name only, plate masked (first 3 and last 2), no phone, email or address. Prices appear only on a quote awaiting approval and on the balance at pick-up. Regenerate link stops the old one at once; expiry is 7 days after pick-up.
+
+## Manager side
+Services detail and the "booked" dialog after New service show the link row: Copy link, Show QR (a stand-in image, not scannable), Send by SMS (simulated toast), Regenerate (confirm). Layout is one 520px column on a phone and two columns from 1024px (status and updates left, chat right). A chat message from the customer becomes a "Customer message" item in Requests (Messages filter) with reply, and counts in the Today rail and phone Requests.
+
+## Assumptions and weaknesses
+Chat is per service, separate from the mechanic thread. No push to the customer: the SMS carries the link. Not browser-checked by the designer; the QR is a placeholder.
+
+## API today vs invented
+| Piece | Today | Invented |
+|---|---|---|
+| Job, status, items, payment | existing job order data | none |
+| Quote answer | existing quote flow | public endpoint `POST /public/tracker/{token}/quote/answer` |
+| Tracker read | none | `GET /public/tracker/{token}` (already redacted) |
+| Customer chat | none | `POST /public/tracker/{token}/messages`, staff inbox item |
+| Link | none | `POST /jobs/{id}/tracking-link`, `.../regenerate`, `GET .../qr.png` |
+| Internal flag on notes | none | `internal: boolean` on update |
+
+## Revision 2: cleanup and chat (2026-11-02)
+Owner: "the UI is sloppy ... contacting the manager should be a chatbox".
+- **Rhythm:** sections now use the Mechanic 40px gap (`flex flex-col gap-10 [&>section]:mt-0`), Who + Status are one group; skeleton uses the same gaps.
+- **Alignment:** Your service and Updates rows sit in `-mx-4` lists like MechService, so row text lines up with the caption; "Show older updates" aligns to the same edge. Update events use a 32px icon disc like the avatars, so titles line up in every row.
+- **Hierarchy:** car title 16px, plate 14px mono; the status word stays the only 18px line. Progress steps top-aligned, line centred on the dots. Items caption reads "2 of 3 done" (no stray count).
+- **Quote card:** p-4, Approve/Decline and the confirm pair are two equal-width buttons.
+- **Payment:** a due/paid list instead of a sentence.
+- **Manager link row:** copy/QR/SMS are three equal buttons; Regenerate is its own ruled row ("Shared by mistake?"); the empty reserved status line is gone (screen-reader only; the toast already says it).
+- **QR dialog:** QR in a framed quiet zone, "Scan to follow your service", the URL, and a "Preview only: not scannable" badge instead of a footnote.
+- **Chat:** `ext/CustomerChat.tsx` replaces the closed toggle. Control `chat` removed; the `thread` control gained "long conversation" (two days, scrolls).

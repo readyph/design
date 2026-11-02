@@ -1,0 +1,43 @@
+import { Meta, Canvas } from '@storybook/blocks';
+import * as Stories from './Settings.stories';
+
+<Meta of={Stories} />
+
+# Settings (v2 Shop floor)
+
+<Canvas of={Stories.Live} />
+
+Live page: the left menu switches Shop details, Team, Services & prices and Notifications. **Open the story in the Canvas tab** for the Controls panel; phone and dark come from the toolbar Viewport and Theme.
+
+**States (Controls).** `section`, `scenario` (default, new shop, 40 staff, long text, logo uploaded), `saveState` (clean, edited, invalid), `overlay` (edit staff, add staff, template modal, unsaved-changes dialog), `pushed` (phone: skip the menu), `servicesScenario` (the catalogue's own starting points).
+
+## Purpose
+One question: *is the shop set up so the rest of the app is right?* Business identity and hours, who is on the team and what they can do, who gets told what, and what the shop sells.
+
+## Rationale
+- Flat ruled forms, one section at a time; a sticky Save / Discard bar appears only when dirty. Leaving with unsaved changes (switching section, phone back) asks first (DirtyGuard).
+- Team and the customer text templates save per modal (like the catalogue), so they have no page-level bar.
+- Services & prices is the existing catalogue page, embedded unchanged (`embedded` prop only).
+- Phone: the menu is the first screen; a section is pushed with a back breadcrumb.
+- A logo saved in Shop details replaces the BizMark placeholder in the Mechanic header through a shared store (`settingsModel`), so no Mechanic file changes its look.
+
+## Assumptions
+Staff are the Today mechanics plus a front desk and an inactive mechanic. Sample logo, holidays and texts are invented. Role is not a prop here: Settings is manager-only.
+
+## Known weaknesses
+- Leaving the page through the rail does not ask about unsaved changes (rail links are plain anchors).
+- Not browser-checked; the 40-staff list uses the same infinite sentinel as Customers.
+- Notification grid is 3 channels x up to 3 roles per event; fine now, wide if a channel is added.
+
+## API today vs invented
+| Exists | Invented (needs API work) |
+|---|---|
+| `/sms/{id}/inventory-products` (read), `/services` CRUD (embedded section) | Shop settings (name, branch, TIN, hours, closed days), `logo_url` upload |
+| Users / roles (basic) | Staff create / invite / deactivate, shifts, bay, role-based visibility |
+| - | Notification preferences (event x role x channel), customer text templates with variables, SMS segment count |
+
+## Gap closure (2026-11-02)
+
+Leaving Settings through the left rail (or phone tabs) with unsaved edits opens the same "Discard your changes?" dialog (Discard / Keep editing); clean pages leave freely. Team edits (add, edit, role, bay, shift, deactivate) now write to a shared staff store; active mechanics feed the assignment menus on Today and Services and the Mechanic page. Deactivated staff are no longer assignable; new mechanics appear. The "new", "stress" and "long" scenarios stay local.
+
+Invented API: staff list that exposes an "assignable" flag (active + role mechanic) for assignment menus.

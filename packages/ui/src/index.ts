@@ -87,3 +87,4 @@ export * from './components/PaperDocument';
 export * from './components/NewProductRequest';
 export * from './components/ProductList';
 export * from './components/SignedOutScreen';
+export * from './components/MoneyField';
