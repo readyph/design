@@ -1,0 +1,38 @@
+import { Meta, Canvas } from '@storybook/blocks';
+import * as Stories from './ManagerToday.stories';
+
+<Meta of={Stories} />
+
+# Today (v2 Shop floor)
+
+<Canvas of={Stories.Live} />
+
+Live page: click chips, the feed tabs, Floor | Status, Leda. **Open the story in the Canvas tab** to use the Controls panel; the toolbar switches Viewport (phone: Small mobile) and Theme.
+
+**States (Controls).** state (loading, quiet, first-run), inventory (slow, down), as (mechanic), view, feedTab, panelCollapsed, stress (long titles), overlay (service, inquiry, Leda, phone updates / parts).
+
+## Purpose
+"What in the shop is stuck, and what do I move next?" The page is the floor as people and time: lanes per mechanic on 8:00-18:00 with a Now line, stuck jobs flagged where they sit, a right panel (Needs you, Inquiries, Parts activity) and an inspector for the open service. Arrival: Request transfer on JO-0412 is 1 click; any other stuck job is chip then action (2).
+
+## Rationale
+Source: `workshop/prototypes/sms/round-1/v2-floor/rationale.md` (Manager Today, Revisions 1-9). Phone is its own composition: lanes as a segmented control, two-line rows, tap pushes the inspector as a page, bottom nav.
+
+## Assumptions
+Chip length is a fixed 105 minutes; times are 24-hour; Leda's floor-read sentence is typed copy; role is a prop, not real permissions.
+
+## Known weaknesses
+- Jobs without a promised time sit in a narrow "No time" well that can be missed.
+- Drag is mouse only (the chip's "Move to..." menu is the alternative).
+- Ask Leda opens nothing yet; "Open full job" and New job are inert; transfer uses a Modal stand-in.
+
+## API today vs invented
+| In API today | Invented (sample data, needs API) |
+|---|---|
+| Jobs, mechanics, customers, vehicles | Proposals from Leda, floor read, parts activity feed, inquiries, promised-time lanes |
+
+## Payment
+A ready, unpaid car shows "Collect payment" on its row and in the Inspector; it opens the Payment page, Back returns to Today. Once paid, "Release car" moves it to Completed and the unpaid item leaves the Counter lane; payments recorded here add to the "collected" fact. Overlays: "payment page: collect on JO-0403", "payment page: discount open".
+
+## Gap closure (2026-11-02)
+
+The phone nav has a Requests tab after Services, with the same "needs you" count as the desktop rail entry (six tabs now, so each is slightly narrower).

@@ -1,0 +1,35 @@
+import { Meta, Canvas } from '@storybook/blocks';
+import * as Stories from './Services.stories';
+
+<Meta of={Stories} />
+
+# Services (v2 Shop floor)
+
+<Canvas of={Stories.Live} />
+
+Live page: click a vacant slot or drag to book (New service wizard), open a card (Inspector), switch Calendar | List, open a quotation, tick rows for the bulk bar. **Open the story in the Canvas tab** for the Controls panel; the toolbar switches Viewport (phone) and Theme.
+
+**States (Controls).** `scenario` (about 30 starting points: calendar ranges, list views, service / inquiry / customer open, wizard from a slot or inquiry, quotation open / book / edit, phone updates / filters / select), state (loading, first-run), inventory (slow, down), tab, needsOnly, panelCollapsed, leda, stress (long names).
+
+## Purpose
+"Where is there room, and what is booked when?" (calendar), and "Which service do I mean, and what do I do with it?" (list). Calendar first, dates across and hours down, book by clicking a vacant slot; List for search, filters and bulk work. The right panel is Today's.
+
+## Rationale
+Source: `workshop/prototypes/sms/round-1/v2-floor/rationale.md` (Services page, Services rework, revisions 2-7, Wizard + catalogue revisions). Calendar cards show identity first and never truncate it; the list shares one column template across header and rows; the wizard is a 3-step modal (full screen on a phone).
+
+## Assumptions
+Valid-until is today + 7 days; a new JO number is the next in sequence, a quote gets a QT- number; the 20-row page size and Leda's keyword parsing are stand-ins.
+
+## Known weaknesses
+- The list table (min about 1074px) scrolls sideways under about 1500px unless the panel is collapsed.
+- No sortable column headers (sort is one Select); Updated filter is not a date range.
+- Bulk Assign has no confirm (it has Undo); Export is a toast; flag text truncates in 3-lane days.
+- Not browser-checked beyond tsc and the render test.
+
+## API today vs invented
+| In API today | Invented (needs API) |
+|---|---|
+| `/jobs`, job items, `/services` CRUD and `/active`, inventory product search | Calendar blocks and mechanic shifts, quotation lifecycle (QT- numbers, valid-until, parked status), per-row parts summary, bulk actions, Leda scoping |
+
+## Payment
+"Collect payment" (Inspector, list row) and the Inspector's secondary "Payment" button open the Payment page in place; Back returns here. Payments and discount persist in the session and change the Paid / Balance shown on the list and Inspector. Scenarios: "Payment: collect on JO-0403", "Payment: discount editor open". See the Payment docs.

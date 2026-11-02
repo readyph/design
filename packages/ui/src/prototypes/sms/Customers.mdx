@@ -1,0 +1,34 @@
+import { Meta, Canvas } from '@storybook/blocks';
+import * as Stories from './Customers.stories';
+
+<Meta of={Stories} />
+
+# Customers (v2 Shop floor)
+
+<Canvas of={Stories.Live} />
+
+Live page: search a name, phone or plate (Enter opens a single match), click a row for the Customer page, Add car / Edit customer / Text / open a service, New service (wizard). **Open the story in the Canvas tab** for the Controls panel; the toolbar switches Viewport (phone) and Theme.
+
+**States (Controls).** `scenario` (searches and views, batches, Customer pages for 1 / 2 / 3 cars, filtered, overdue, long name, car and customer sheets, wizard entry points), state (loading, first-run, error), inventory, panelCollapsed, leda, stress.
+
+## Purpose
+"Who is this, what have we done for them, and what do I do next?" Lookup first: the search box takes a name, phone or plate. The Customer page (full page, Back to the list) shows cars with their spec strips, open services, history and notes.
+
+## Rationale
+Source: `workshop/prototypes/sms/round-1/v2-floor/rationale.md` (Customers page, revisions 1-4). One ruled row per car; contact details are plain labelled lines; the Text capability was dropped from the Customer page; Add / Edit / Remove car keep the plate unique (duplicate plate names its owner).
+
+## Assumptions
+Page size 10; "next due" and "last service" are derived in sample data; role is not modelled here.
+
+## Known weaknesses
+- A long last-service title wraps to 2-3 lines in its spec column.
+- Opening a service from a customer replaces the Customer page with the Inspector.
+- Not browser-checked beyond tsc and the render test.
+
+## API today vs invented
+| In API today | Invented (needs API work) |
+|---|---|
+| Customer: name, mobile, email, address. Vehicle: make, model, year, plate | Customer notes, reminder consent and interval, "customer since" |
+| | Vehicle colour, type, mileage, VIN, fuel, transmission, per-car notes and interval |
+| | Derived: last service, next due, services / open count per car, lifetime spend, visits, owed (needs a Vehicle-to-services link) |
+| | Reminders themselves (scheduling, sending, log) |
