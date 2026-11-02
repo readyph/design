@@ -30,11 +30,11 @@ describe('prototype navigation map', () => {
   });
 
   it('picks the default state story, and the phone one for phone-wide canvases', () => {
-    expect(storyIdFor({ to: 'home' })).toBe('prototypes-home--live');
-    expect(storyIdFor({ to: 'home' }, true)).toBe('prototypes-home--phone');
-    expect(storyIdFor({ to: 'team', person: 'grace' })).toBe('prototypes-team--person');
-    expect(storyIdFor({ to: 'team', person: 'nobody' })).toBe('prototypes-team--live');
-    expect(storyIdFor({ to: 'platforms', add: true })).toBe('prototypes-platforms--marketplace-from-add');
+    expect(storyIdFor({ to: 'home' })).toBe('prototypes-portal-home--live');
+    expect(storyIdFor({ to: 'home' }, true)).toBe('prototypes-portal-home--phone');
+    expect(storyIdFor({ to: 'team', person: 'grace' })).toBe('prototypes-portal-team--person');
+    expect(storyIdFor({ to: 'team', person: 'nobody' })).toBe('prototypes-portal-team--live');
+    expect(storyIdFor({ to: 'platforms', add: true })).toBe('prototypes-portal-platforms--marketplace-from-add');
   });
 
   it('destinations without a page have no story: reports, plan, settings, a platform without a Platform page', () => {

@@ -124,7 +124,7 @@ const preview: Preview = {
           'Components',
           ['Actions', 'Charts', 'Data display', 'Feedback', 'Forms', 'Identity', 'Layout', 'Leda', 'Lists', 'Navigation', 'Overlays'],
           'Prototypes',
-          ['Home', 'Platforms', 'Platform', 'Team', 'Memory'],
+          ['Portal', ['Home', 'Platforms', 'Platform', 'Team', 'Memory'], 'Inventory', 'SMS'],
         ],
       },
     },

@@ -30,25 +30,25 @@ export type PageGroup = 'home' | 'platforms' | 'platform' | 'team' | 'memory';
 
 /** Story ids, read from the stories' exports (title + export name). Tested against the real Storybook index. */
 export const STORY_IDS = {
-  home: 'prototypes-home--live',
-  platforms: 'prototypes-platforms--default',
-  marketplace: 'prototypes-platforms--marketplace-from-add',
-  platform: 'prototypes-platform--general-info',
-  team: 'prototypes-team--live',
-  person: 'prototypes-team--person',
-  memory: 'prototypes-memory--topics',
-  topic: 'prototypes-memory--topic-page',
+  home: 'prototypes-portal-home--live',
+  platforms: 'prototypes-portal-platforms--default',
+  marketplace: 'prototypes-portal-platforms--marketplace-from-add',
+  platform: 'prototypes-portal-platform--general-info',
+  team: 'prototypes-portal-team--live',
+  person: 'prototypes-portal-team--person',
+  memory: 'prototypes-portal-memory--topics',
+  topic: 'prototypes-portal-memory--topic-page',
 } as const;
 
 /** The same pages' phone stories, used when the canvas is phone-wide so the viewport survives navigation. */
 export const PHONE_STORY_IDS = {
-  home: 'prototypes-home--phone',
-  platforms: 'prototypes-platforms--phone',
-  platform: 'prototypes-platform--phone',
-  team: 'prototypes-team--phone',
-  person: 'prototypes-team--phone-person',
-  memory: 'prototypes-memory--phone-folders',
-  topic: 'prototypes-memory--phone-topics',
+  home: 'prototypes-portal-home--phone',
+  platforms: 'prototypes-portal-platforms--phone',
+  platform: 'prototypes-portal-platform--phone',
+  team: 'prototypes-portal-team--phone',
+  person: 'prototypes-portal-team--phone-person',
+  memory: 'prototypes-portal-memory--phone-folders',
+  topic: 'prototypes-portal-memory--phone-topics',
 } as const;
 
 /** Platforms that have a Platform page in this prototype (Platform.data.ts). */
@@ -72,7 +72,7 @@ export function storyIdFor(dest: Dest, phone = false): string | null {
 }
 
 export const groupOfStory = (storyId: string): PageGroup | null => {
-  const m = /^prototypes-(home|platforms|platform|team|memory)--/.exec(storyId);
+  const m = /^prototypes-portal-(home|platforms|platform|team|memory)--/.exec(storyId);
   return m ? (m[1] as PageGroup) : null;
 };
 
