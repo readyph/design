@@ -12,7 +12,7 @@ import { PlatformsPage } from './Platforms.page';
  * Anything that takes a click in the workshop page (row menu, Disconnect, the palette, Leda's panel) works the same here.
  */
 const meta: Meta<typeof PlatformsPage> = {
-  title: 'Prototypes/Platforms',
+  title: 'Prototypes/Portal/Platforms',
   component: PlatformsPage,
   parameters: { layout: 'fullscreen' },
 };
