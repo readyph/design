@@ -1,5 +1,15 @@
 # @readyph/ui
 
+## 0.18.0
+
+### Minor Changes
+
+- f697263: SMS "Shop floor" prototypes (owner-approved v2) added under Storybook `Prototypes/SMS`: Today, Services, Customers, New service wizard, Services & prices (embedded in Settings), Payment, Mechanic (mobile), Requests & messages, Settings (shop details, team, notifications and text templates) and the public Customer tracker. Each is one live story with Controls plus a docs page. Prototype pages are not exported from the package. New public component: `MoneyField`, a joined amount field (TextField with a PHP or % unit segment, outer corners only, right-aligned tabular value). No existing component changed.
+
+### Patch Changes
+
+- 807d787: Storybook tooling and sidebar: `@storybook/addon-essentials` and `@storybook/blocks` are pinned to 8.6.18 so every Storybook package matches (clears the "incompatible packages" warning), the `storybook` and `build-storybook` scripts silence the Node 24 `DEP0190` warning raised by the Storybook CLI, and the Home, Platforms, Platform, Team and Memory prototypes move into a `Prototypes/Portal` folder (story ids become `prototypes-portal-*`), with the sidebar order Portal, Inventory, SMS.
+
 ## 0.17.1
 
 ### Patch Changes
