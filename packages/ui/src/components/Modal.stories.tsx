@@ -47,7 +47,7 @@ const lines = (n: number) =>
     </p>
   ));
 
-function Demo({ size, rows, icon = Buildings, title = 'Edit place' }: { size: 'panel' | 'marketplace' | 'sm' | 'md' | 'lg'; rows: number; icon?: typeof Buildings; title?: string }) {
+function Demo({ size, rows, icon = Buildings, title = 'Edit place' }: { size: 'panel' | 'marketplace' | 'sm' | 'md' | 'lg' | 'form' | 'wizard'; rows: number; icon?: typeof Buildings; title?: string }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="p-pad">
@@ -75,6 +75,8 @@ function Demo({ size, rows, icon = Buildings, title = 'Edit place' }: { size: 'p
 export const Panel: Story = { name: 'Panel 720 x 640', render: () => <Demo size="panel" rows={4} /> };
 export const PanelLongContent: Story = { name: 'Panel, long content scrolls', render: () => <Demo size="panel" rows={40} /> };
 export const Marketplace: Story = { name: 'Marketplace 904 x 744', render: () => <Demo size="marketplace" rows={10} icon={Storefront} title="Marketplace" /> };
+export const Form: Story = { name: 'Form (1100 wide, 90vh max)', render: () => <Demo size="form" rows={4} /> };
+export const Wizard: Story = { name: 'Wizard (1080 x 840)', render: () => <Demo size="wizard" rows={4} /> };
 export const Small: Story = { name: 'Content-sized (sm)', render: () => <Demo size="sm" rows={2} /> };
 export const OpenOnLoad: Story = {
   name: 'Open (panel)',
