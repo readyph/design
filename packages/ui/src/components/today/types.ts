@@ -24,6 +24,8 @@ export interface TodayJob {
 export interface TodayInquiry {
   id: string; at: string; channel: 'Text' | 'Call' | 'Walk-in' | 'Messenger'; name: string; text: string; jobId?: string; repliedAt?: string;
 }
+/** A stock movement of the day (stock in / out), as Inventory reports it. */
+export interface TodayPartMovement { id: string; at: string; productId: string; qty: number; dir: 'in' | 'out'; ref: string; by: string }
 /** What a job row shows about the car and the customer. */
 export interface TodayJobView { vehicle: string; plate: string; customer: string }
 
@@ -68,3 +70,9 @@ export interface InspectorJob extends TodayJob {
 export interface InspectorMechanic extends TodayMechanic { bay: string }
 /** The quotation kept with a service. `open`: it is still waiting for the customer; `validUntil` is the display date. */
 export interface InspectorQuotation { number: string; open: boolean; validUntil: string }
+/** One lane of the shop floor: a mechanic, the counter or the unassigned queue. */
+export interface FloorLane<J extends TodayJob = TodayJob> { id: string; name: string; sub: string; initials?: string; jobs: J[]; manager?: boolean }
+/** A place a chip can be moved to (the "Move to..." menu): a mechanic, with their bay as the meta. */
+export interface FloorMoveTarget { id: string; label: string; meta?: string; /** Draws the separator above this entry. */ separatorBefore?: boolean }
+/** A row from another app that waits on the manager (a mechanic's part request or found issue). */
+export interface FeedMechItem { id: string; title: string; time: string; detail: string; tag: string }
