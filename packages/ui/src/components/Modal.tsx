@@ -1,4 +1,4 @@
-import { createContext, useContext, useLayoutEffect, useRef, type HTMLAttributes, type ReactNode, type RefObject } from 'react';
+import { createContext, useContext, useLayoutEffect, useRef, useState, useEffect, type HTMLAttributes, type ReactNode, type RefObject } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X, type Icon as PhosphorIcon } from '@phosphor-icons/react';
 import { cn, focusRing } from '../utils/cn';
@@ -9,7 +9,7 @@ import { cn, focusRing } from '../utils/cn';
  * the window less 24px each side and go full screen on a phone. Fixed size never changes with content.
  * `confirm` (C12) is 420 wide (the window less 48px), content-high, and stays a centred dialog on a phone.
  */
-export type ModalSize = 'sm' | 'md' | 'lg' | 'confirm' | 'panel' | 'marketplace';
+export type ModalSize = 'sm' | 'md' | 'lg' | 'confirm' | 'panel' | 'marketplace' | 'form' | 'wizard';
 
 export interface ModalProps {
   open?: boolean;
@@ -50,6 +50,8 @@ const sizes: Record<ModalSize, string> = {
   confirm: 'w-[min(420px,calc(100vw-32px))] max-h-[calc(100vh-48px)]',
   panel: 'h-[min(640px,calc(100vh-48px))] w-[min(720px,calc(100vw-48px))]',
   marketplace: 'h-[min(744px,calc(100vh-48px))] w-[min(904px,calc(100vw-48px))]',
+  form: 'max-h-[90vh] w-[min(1100px,calc(100vw-48px))]',
+  wizard: 'h-[min(840px,90vh)] w-[min(1080px,calc(100vw-48px))]',
 };
 
 const overlay = 'fixed inset-0 z-50 bg-scrim';
@@ -61,7 +63,7 @@ const content =
 const sheet =
   'max-[640px]:inset-0 max-[640px]:h-full max-[640px]:max-h-none max-[640px]:w-full max-[640px]:max-w-none max-[640px]:translate-x-0 max-[640px]:translate-y-0 max-[640px]:rounded-none max-[640px]:border-0';
 
-const ModalContext = createContext({ hideClose: false });
+const ModalContext = createContext<{ hideClose: boolean; scrolls: boolean; setScrolls: (v: boolean) => void }>({ hideClose: false, scrolls: false, setScrolls: () => undefined });
 
 /**
  * Radix FocusScope returns focus to the opener in a `setTimeout 0` after the content unmounts, which leaves a frame
@@ -119,7 +121,7 @@ export interface ModalHeaderProps extends Omit<HTMLAttributes<HTMLDivElement>, '
 export function ModalHeader({ icon, iconNode, description, titleClassName, descriptionClassName, className, children, ...rest }: ModalHeaderProps) {
   const { hideClose } = useContext(ModalContext);
   return (
-    <div className={cn('flex shrink-0 items-start gap-3 border-b border-rule px-pad py-4 max-[640px]:px-4', className)} {...rest}>
+    <div className={cn('flex shrink-0 items-start gap-3 px-pad pb-3 pt-5 max-[640px]:px-4', className)} {...rest}>
       {(icon || iconNode) && <ModalIconWell icon={icon}>{iconNode}</ModalIconWell>}
       <div className="min-w-0 flex-1">
         <Dialog.Title className={cn(titleClassName ?? 'text-dialog', 'text-text')}>{children}</Dialog.Title>
@@ -132,10 +134,24 @@ export function ModalHeader({ icon, iconNode, description, titleClassName, descr
 
 /** Body region: takes the remaining height and scrolls inside. */
 export function ModalBody({ className, children, ...rest }: HTMLAttributes<HTMLDivElement>) {
+  const { setScrolls } = useContext(ModalContext);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const check = () => setScrolls(el.scrollHeight - el.scrollTop - el.clientHeight > 1);
+    check();
+    el.addEventListener('scroll', check);
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    if (el.firstElementChild) ro.observe(el.firstElementChild);
+    return () => { el.removeEventListener('scroll', check); ro.disconnect(); };
+  }, [setScrolls]);
   return (
     <div
+      ref={ref}
       tabIndex={0}
-      className={cn('min-h-0 flex-1 overflow-y-auto px-pad py-5 text-body text-text max-[640px]:px-4', focusRing, 'focus-visible:-outline-offset-2', className)}
+      className={cn('min-h-0 flex-1 overflow-y-auto px-pad py-4 text-body text-text max-[640px]:px-4', focusRing, 'focus-visible:-outline-offset-2', className)}
       {...rest}
     >
       {children}
@@ -145,9 +161,10 @@ export function ModalBody({ className, children, ...rest }: HTMLAttributes<HTMLD
 
 /** Footer actions region (right-aligned; stacks full width on a phone). */
 export function ModalFooter({ className, children, ...rest }: HTMLAttributes<HTMLDivElement>) {
+  const { scrolls } = useContext(ModalContext);
   return (
     <div
-      className={cn('flex shrink-0 items-center justify-end gap-3 border-t border-rule px-pad py-3 max-[640px]:flex-col-reverse max-[640px]:items-stretch max-[640px]:px-4', className)}
+      className={cn('flex shrink-0 items-center justify-end gap-3 border-t px-pad py-3 transition-colors max-[640px]:flex-col-reverse max-[640px]:items-stretch max-[640px]:px-4', scrolls ? 'border-rule' : 'border-transparent', className)}
       {...rest}
     >
       {children}
@@ -156,6 +173,7 @@ export function ModalFooter({ className, children, ...rest }: HTMLAttributes<HTM
 }
 
 /**
+ * Studio-only Modal (copy of the library Modal): NO line under the header; the footer line shows only while the body scrolls; extra `form` size (1100 wide, 90vh max).
  * Accessible modal dialog (focus trap, Esc, backdrop click, focus returns to the trigger) on Radix Dialog.
  *
  * Quick: `title` / `icon` / `description` / `footer` props. Composed: `Modal.Header`, `Modal.Body`, `Modal.Footer`.
@@ -180,6 +198,7 @@ function ModalRoot({
   className,
 }: ModalProps) {
   const opener = useRef<HTMLElement | null>(null);
+  const [scrolls, setScrolls] = useState(false);
   const quick = title != null;
   const isFixed = size === 'panel' || size === 'marketplace';
   return (
@@ -201,6 +220,8 @@ function ModalRoot({
               if (document.activeElement !== initialFocus.current && e.currentTarget instanceof HTMLElement) e.currentTarget.focus();
             }
           }}
+          // A Combobox list is portalled to <body> (outside this dialog): pressing an option is not an outside click.
+          onInteractOutside={(e) => { if (e.target instanceof Element && e.target.closest('[role="listbox"]')) e.preventDefault(); }}
           onEscapeKeyDown={(e) => {
             // Esc on an open Select closes only its listbox; the next Esc closes the modal.
             const t = e.target;
@@ -217,7 +238,7 @@ function ModalRoot({
           }}
         >
           {!onCloseAutoFocus && <RestoreFocus opener={opener} />}
-          <ModalContext.Provider value={{ hideClose }}>
+          <ModalContext.Provider value={{ hideClose, scrolls, setScrolls }}>
             {quick ? (
               <>
                 <ModalHeader icon={icon} iconNode={iconNode} description={description}>{title}</ModalHeader>
