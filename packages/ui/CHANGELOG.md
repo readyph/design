@@ -1,5 +1,11 @@
 # @readyph/ui
 
+## 0.27.1
+
+### Patch Changes
+
+- 67a7436: WizardBlock editing state: Done and Cancel are 44px tall on phone (RDY-623).
+
 ## 0.27.0
 
 ### Minor Changes
