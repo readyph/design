@@ -5,11 +5,12 @@ import { FactsLine, Fact } from './FactsLine';
 import { Menu } from './Menu';
 import { SegmentedControl } from './SegmentedControl';
 import { Select } from './Select';
-import { mechanics, type Job } from './sms/data';
+import type { Job } from './sms/data';
+import { seedServicesApi, useServicesApi, type ServicesPerson } from './sms/servicesSource';
 import { RANGES, SORTS, VIEWS, describe, isFiltered, type Filters, type RangeId, type SortId, type ViewId } from './sms/servicesModel';
 import { SearchBox, ToggleChip } from './ServicesControls';
 
-export const mechanicOptions = () => [{ value: 'any', label: 'Any mechanic' }, { value: 'none', label: 'Not assigned' }, ...mechanics.map((m) => ({ value: m.id, label: m.short }))];
+export const mechanicOptions = (people: ServicesPerson[] = seedServicesApi.src.mechanics) => [{ value: 'any', label: 'Any mechanic' }, { value: 'none', label: 'Not assigned' }, ...people.map((m) => ({ value: m.id, label: m.short }))];
 
 export interface ToolbarProps {
   f: Filters;
@@ -22,11 +23,14 @@ export interface ToolbarProps {
   onClear: () => void;
   onExport: () => void;
   disabled?: boolean;
+  /** Mechanic options of the filter; defaults to the data provider's mechanics. */
+  mechanics?: ServicesPerson[];
 }
 
 /** Desktop filter area: saved views with counts, search, the four filters, then a result line with sort. */
-export function ServicesToolbar({ f, onChange, sort, onSort, counts, results, unpaidTotal, onClear, onExport, disabled }: ToolbarProps) {
-  const words = describe(f);
+export function ServicesToolbar({ f, onChange, sort, onSort, counts, results, unpaidTotal, onClear, onExport, disabled, mechanics }: ToolbarProps) {
+  const api = useServicesApi();
+  const words = describe(f, api);
   return (
     <div className="flex-none">
       <div className="flex items-center gap-4 px-6 pt-3">
@@ -35,7 +39,7 @@ export function ServicesToolbar({ f, onChange, sort, onSort, counts, results, un
       </div>
       <div className="flex flex-wrap items-center gap-2 px-6 py-3" role="group" aria-label="Filters">
         <SearchBox value={f.q} onChange={(q) => onChange({ q })} className="w-[360px] max-w-full" />
-        <Select size="sm" aria-label="Mechanic" className="w-[148px]" value={f.mechanic} onValueChange={(mechanic) => onChange({ mechanic })} options={mechanicOptions()} />
+        <Select size="sm" aria-label="Mechanic" className="w-[148px]" value={f.mechanic} onValueChange={(mechanic) => onChange({ mechanic })} options={mechanicOptions(mechanics ?? api.src.mechanics)} />
         <Select size="sm" aria-label="Updated" className="w-[148px]" value={f.range} onValueChange={(range) => onChange({ range: range as RangeId })} options={RANGES.map((r) => ({ value: r.id, label: r.id === 'any' ? 'Updated: any time' : r.label }))} />
         <ToggleChip pressed={f.unpaid} onChange={(unpaid) => onChange({ unpaid })}>Unpaid</ToggleChip>
         <ToggleChip pressed={f.parts} onChange={(parts) => onChange({ parts })}>Waiting on parts</ToggleChip>
@@ -61,17 +65,21 @@ export interface BulkBarProps {
   onAssign: (mechanicId: string) => void;
   onExport: () => void;
   className?: string;
+  /** Who the selection can be assigned to; defaults to the data provider's mechanics. */
+  mechanics?: ServicesPerson[];
 }
 
 /** The bar that replaces the result line while rows are selected. Reminders only count the selected quotes that are awaiting approval. */
-export function BulkBar({ selected, onClear, onRemind, onAssign, onExport, className }: BulkBarProps) {
+export function BulkBar({ selected, onClear, onRemind, onAssign, onExport, className, mechanics }: BulkBarProps) {
+  const api = useServicesApi();
+  const people = mechanics ?? api.src.mechanics;
   const quotes = selected.filter((j) => j.status === 'FOR_APPROVAL').length;
   const open = selected.filter((j) => j.status !== 'COMPLETED').length;
   return (
     <div role="region" aria-label="Bulk actions" className={cn('flex flex-wrap items-center gap-2 border-b border-control bg-raised px-6 py-2 max-[640px]:px-4', className)}>
       <p className="mr-2 text-[13px] font-semibold" aria-live="polite"><span className="tabular-nums">{selected.length}</span> selected</p>
       <Button variant="secondary" onClick={onRemind} disabled={quotes === 0}>Send quote reminders{quotes ? ` (${quotes})` : ''}</Button>
-      <Menu align="start" trigger={<Button variant="secondary" disabled={open === 0}>Assign to...</Button>} items={mechanics.map((m) => ({ label: m.short, meta: m.bay, onSelect: () => onAssign(m.id) }))} />
+      <Menu align="start" trigger={<Button variant="secondary" disabled={open === 0}>Assign to...</Button>} items={people.map((m) => ({ label: m.short, meta: m.bay, onSelect: () => onAssign(m.id) }))} />
       <Button variant="secondary" leftIcon={DownloadSimple} onClick={onExport}>Export</Button>
       <span className="flex-1" />
       {quotes === 0 && <span className="text-[12px] text-muted">Reminders need a quote awaiting OK.</span>}

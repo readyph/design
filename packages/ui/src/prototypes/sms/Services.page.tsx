@@ -134,7 +134,7 @@ export function ServicesPage({
   const rows = useMemo(() => sortJobs(pool.filter((j) => matches(j, f)), sort), [pool, f, sort]);
   const counts = useMemo(() => Object.fromEntries(VIEWS.map((v) => [v.id, pool.filter((j) => matches(j, { ...f, view: v.id })).length])) as Record<ViewId, number>, [pool, f]);
   const waiting = panelJobs.filter((j) => reasonOf(j)).length;
-  const unpaidSum = rows.filter(isUnpaid).reduce((a, j) => a + jobBalance(j), 0);
+  const unpaidSum = rows.filter((j) => isUnpaid(j)).reduce((a, j) => a + jobBalance(j), 0);
   const pageRows = rows.slice(0, count);
   const hasMore = pageRows.length < rows.length;
   const loadMore = () => {

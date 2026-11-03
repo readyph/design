@@ -170,6 +170,7 @@ export * from './components/NewServiceWizardPage';
 export * from './components/useServiceFlow';
 // Data contract for hosts (sms): real customers, catalogue, stock, assignees, jobs and calendar items.
 export * from './components/sms/wizardData';
+export * from './components/sms/servicesSource';
 export { jobFieldsOf, newJob, draftFromJob, docFromJob, docFromDraft, quoteNoOf, type WizardDraft, type WizardLine, type WizardAction, type QuoteDoc } from './components/sms/wizardModel';
 export type { Job, Customer, Vehicle, Product, StockLocation, OnOrder, ServiceLine, PartLine, Mechanic } from './components/sms/data';
 export type { ServiceType, ServicePart } from './components/sms/catalogue';
