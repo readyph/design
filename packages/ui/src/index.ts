@@ -119,6 +119,8 @@ export * from './components/WizardStepper';
 export * from './components/WizardBlock';
 export * from './components/CustomerField';
 export * from './components/CarFields';
+export * from './components/CustomerSheet';
+export * from './components/CarSheet';
 export * from './components/TrackingLink';
 export * from './components/QrStandIn';
 export * from './components/CustomerChat';
