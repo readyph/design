@@ -3,6 +3,8 @@ import { ChatCircleText, HourglassMedium } from '@phosphor-icons/react';
 import { Button } from './Button';
 import { Textarea } from './TextField';
 import { cn } from '../utils/cn';
+import { calendarEnv } from './sms/scheduleModel';
+import { viewOf } from './sms/floorModel';
 import { TODAY, customerOf, onHandHere, productOf, vehicleOf, type Job, type Mechanic, type PendingReason } from './sms/data';
 import { addNote, markDone, pauseWork, propose, resumeWork, sendMessage, startWork, tickService } from './sms/mechActions';
 import { feedOf, itemParts, plateOf, serviceTitle, shortName, stockWord, waitWord, type MechState } from './sms/mechModel';
@@ -102,7 +104,8 @@ export function ServiceHeader({ job, s }: { job: Job; s: MechState }) {
   const step = stepOfJob(job);
   return (
     <CalCard
-      placed={{ job, date: TODAY, start: 0, end: 60, lane: 0, lanes: 1 } as PlacedItem}
+      env={calendarEnv} jobView={viewOf}
+      placed={{ job, date: TODAY, start: 0, end: 60, lane: 0, lanes: 1 } as PlacedItem<Job>}
       selected={false} flash={false} dim={false} showMech={false} onOpen={() => {}} inline
       view={{ ...VIEW[step], staff: staffView(s, job, step) }}
     />

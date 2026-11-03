@@ -1,40 +1,27 @@
 /** Services calendar: dates, booking blocks, lane packing and availability. Pure functions; figures come from ../data and ./scheduleData. */
 import { HOURS, TODAY, mechanics, type Job, type Mechanic } from './data';
-import { minOf } from './floorModel';
+import { minOf, todayEnv } from './floorModel';
 import { minutesOfName, typeFor } from './catalogue';
+import {
+  SLOT, isClosedDay, isPastSlotAt, mechanicOptionsOf, pxAt, shiftWithin,
+  type CalendarEnv, type CalendarItem, type PlacedCalendarItem,
+} from '../calendar/model';
 
-export const SLOT = 30;
-/** Fixed scale: every hour is HOUR_H px tall; the calendar scrolls, it is never squeezed. */
-/** 144px an hour: a 30 minute service is 72px, enough for number, plate and a two-line customer name. Heights stay true to length, so cards never need a fake minimum or overlap. */
-export const HOUR_H = 144;
-/** Narrowest a side-by-side lane may get: number + plate + avatar fit on one line at this width. */
-export const LANE_MIN = 176;
-export const px = (min: number) => ((min - HOURS.open) / 60) * HOUR_H;
+// The pure calendar helpers live in ../calendar/model (data-agnostic, public). This module binds them to the sample data.
+export {
+  SLOT, HOUR_H, LANE_MIN, addDays, weekStart, dowShort, dayNum, monthShort, longDay, monthYear, rangeLabel, hmin, durLabel, packDay,
+  type Slot, type Booking,
+} from '../calendar/model';
+import type { Booking } from '../calendar/model';
 
-export interface Slot { date: string; start: number; dur: number; /** Picked by dragging: the duration is the manager's, not a default. */ dragged?: boolean }
-export interface Booking { date: string; start: number; dur: number }
+/** Sample closures (Portal Settings > company will own these). */
+export const CLOSED: Record<string, string> = { '2026-11-08': 'Closed Sunday', '2026-11-15': 'Closed Sunday' };
+export const px = (min: number) => pxAt(HOURS.open, min);
+/** The sample clock, hours and closed days, in the shape the calendar components take as `env`. */
+export const calendarEnv: CalendarEnv = { ...todayEnv, hours: HOURS, closed: CLOSED };
 
-// ---- dates (ISO yyyy-mm-dd, UTC arithmetic so the time zone never shifts a day) ----
-const utc = (d: string) => new Date(`${d}T00:00:00Z`);
-export const addDays = (d: string, n: number) => { const t = utc(d); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); };
-export const weekStart = (d: string) => addDays(d, -((utc(d).getUTCDay() + 6) % 7));
-const fmt = (d: string, o: Intl.DateTimeFormatOptions) => utc(d).toLocaleDateString('en-PH', { timeZone: 'UTC', ...o });
-export const dowShort = (d: string) => fmt(d, { weekday: 'short' });
-export const dayNum = (d: string) => String(utc(d).getUTCDate());
-export const monthShort = (d: string) => fmt(d, { month: 'short' });
-export const longDay = (d: string) => fmt(d, { weekday: 'short', day: 'numeric', month: 'short' });
-export const monthYear = (d: string) => fmt(d, { month: 'long', year: 'numeric' });
-export function rangeLabel(days: string[]): string {
-  const a = days[0]!; const b = days[days.length - 1]!;
-  if (a === b) return fmt(a, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  const sameMonth = monthShort(a) === monthShort(b);
-  return `${dayNum(a)}${sameMonth ? '' : ` ${monthShort(a)}`} - ${dayNum(b)} ${monthShort(b)} ${utc(b).getUTCFullYear()}`;
-}
-
-export const hmin = (m: number) => `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`;
 export const pad2 = (n: number) => String(n).padStart(2, '0');
 export const toIso = (date: string, min: number) => `${date}T${pad2(Math.floor(min / 60))}:${pad2(min % 60)}:00+08:00`;
-export const durLabel = (m: number) => (m < 60 ? `${m} min` : `${Math.floor(m / 60)}h${m % 60 ? ` ${m % 60}m` : ''}`);
 
 // ---- what the shop offers (sample prices and times; replace with the branch's service list) ----
 export interface MenuService { name: string; price: number; min: number }
@@ -62,35 +49,18 @@ export function bookingOf(j: Job): Booking | null {
 }
 
 // ---- lanes: overlapping services split side by side ----
-export interface CalItem { job: Job; date: string; start: number; end: number }
-export interface Placed extends CalItem { lane: number; lanes: number }
-export function packDay(items: CalItem[]): { placed: Placed[]; maxLanes: number } {
-  const sorted = [...items].sort((a, b) => a.start - b.start || b.end - a.end || a.job.number.localeCompare(b.job.number));
-  const out: Placed[] = [];
-  let group: Placed[] = []; let laneEnds: number[] = []; let groupEnd = -1; let maxLanes = 1;
-  const flush = () => { group.forEach((p) => { p.lanes = laneEnds.length; }); maxLanes = Math.max(maxLanes, laneEnds.length); out.push(...group); group = []; laneEnds = []; };
-  for (const it of sorted) {
-    if (group.length && it.start >= groupEnd) flush();
-    let lane = laneEnds.findIndex((e) => e <= it.start);
-    if (lane < 0) lane = laneEnds.length;
-    laneEnds[lane] = it.end; groupEnd = Math.max(groupEnd, it.end);
-    group.push({ ...it, lane, lanes: 1 });
-  }
-  if (group.length) flush();
-  return { placed: out, maxLanes };
-}
+export type CalItem<J extends Job = Job> = CalendarItem<J>;
+export type Placed<J extends Job = Job> = PlacedCalendarItem<J>;
 
 // ---- closures and shifts ----
-/** Sample closures (Portal Settings > company will own these). */
-export const CLOSED: Record<string, string> = { '2026-11-08': 'Closed Sunday', '2026-11-15': 'Closed Sunday' };
-export const isClosed = (date: string) => date in CLOSED;
-export const isPastSlot = (date: string, startMin: number, now: number) => date < TODAY || (date === TODAY && startMin + SLOT <= now);
+export const isClosed = (date: string) => isClosedDay(calendarEnv, date);
+export const isPastSlot = (date: string, startMin: number, now: number) => isPastSlotAt({ today: TODAY, now: `${TODAY}T${String(Math.floor(now / 60)).padStart(2, '0')}:${String(now % 60).padStart(2, '0')}` }, date, startMin);
 
-export const shiftOf = (m: Mechanic): { from: number; to: number } => {
-  const [a, b] = m.shift.split('-').map((t) => Number(t.split(':')[0]) * 60 + Number(t.split(':')[1] ?? 0));
-  return { from: Math.max(HOURS.open, a!), to: Math.min(HOURS.close, b!) };
-};
+export const shiftOf = (m: Mechanic): { from: number; to: number } => shiftWithin(m, HOURS);
 export const mechanicById = (id: string | null) => mechanics.find((m) => m.id === id) ?? null;
+
+/** The mechanic filter options for the sample mechanics. */
+export const calMechanicOptions = () => mechanicOptionsOf(mechanics);
 
 export const overlaps = (a: { start: number; end: number }, b: { start: number; end: number }) => a.start < b.end && b.start < a.end;
 /** The service that already holds this mechanic in this window, if any. */

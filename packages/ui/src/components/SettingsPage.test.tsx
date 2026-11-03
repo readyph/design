@@ -4,7 +4,7 @@ import { SettingsPage, type SettingsProps } from './SettingsPage';
 import { getShopLogo, setShopLogo, smsCount, summarizeWeek, SEED_STAFF, phoneValid, resetStaff, getStaff, setStaff } from './sms/settingsModel';
 import { lanesFor } from './sms/floorModel';
 import { mechanicOptions } from './ServicesToolbar';
-import { calMechanicOptions } from './CalendarToolbar';
+import { calMechanicOptions } from './sms/scheduleModel';
 import axe from 'axe-core';
 import { mechanics } from './sms/data';
 

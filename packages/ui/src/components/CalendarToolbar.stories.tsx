@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { CalendarToolbar, SPAN_DAYS, type Span } from './CalendarToolbar';
-import { addDays, weekStart } from './sms/scheduleModel';
+import { addDays, calMechanicOptions, weekStart } from './sms/scheduleModel';
 import { futureJobs } from './sms/scheduleData';
 
 const noop = () => {};
@@ -9,7 +9,7 @@ const meta = {
   title: 'SMS/CalendarToolbar',
   component: CalendarToolbar,
   parameters: { layout: 'fullscreen' },
-  args: { days: ['2026-11-02', '2026-11-03', '2026-11-04'], span: '3day', onSpan: noop, onPrev: noop, onNext: noop, onToday: noop, onJump: noop, q: '', onQ: noop, mechanic: 'any', onMechanic: noop, needsCount: 4 },
+  args: { days: ['2026-11-02', '2026-11-03', '2026-11-04'], span: '3day', onSpan: noop, onPrev: noop, onNext: noop, onToday: noop, onJump: noop, q: '', onQ: noop, mechanic: 'any', mechanicOptions: calMechanicOptions(), onMechanic: noop, needsCount: 4 },
 } satisfies Meta<typeof CalendarToolbar>;
 export default meta;
 type Story = StoryObj<typeof meta>;
