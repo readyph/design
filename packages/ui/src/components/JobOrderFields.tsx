@@ -1,7 +1,8 @@
 import { Notice } from './Notice';
 import { Select } from './Select';
 import { cn } from '../utils/cn';
-import { HOURS, NOW_MIN, TODAY, mechanics } from './sms/data';
+import { HOURS, NOW_MIN, TODAY } from './sms/data';
+import { seedWizardData, useWizardData, type WizardAssignee } from './sms/wizardData';
 import { CLOSED, SLOT, busyWith, durLabel, hmin, isClosed, isPastSlot, longDay, type CalItem } from './sms/scheduleModel';
 import { promisedOf, type WizardDraft } from './sms/wizardModel';
 import { Row } from './WizardBlock';
@@ -23,6 +24,7 @@ export function ScheduleFields({ draft, onChange, items = [], onDur, slotSet }: 
   const closed = isClosed(date);
   const past = isPastSlot(date, start, NOW_MIN);
   const over = start + dur > HOURS.close;
+  const mechanics = useWizardData().assignees;
   const mech = mechanics.find((m) => m.id === mechanicId);
   const promised = promisedOf(draft);
   const mechOptions = [{ value: 'none', label: 'Not yet' }, ...mechanics.map((m) => {
@@ -68,7 +70,7 @@ export function MoreFields({ draft, onChange }: P) {
 }
 
 /** One line for the Schedule block header: date, time range, mechanic. */
-export function scheduleSummary(draft: WizardDraft) {
+export function scheduleSummary(draft: WizardDraft, mechanics: WizardAssignee[] = seedWizardData().assignees) {
   const mech = mechanics.find((m) => m.id === draft.mechanicId);
   return `${longDay(draft.date)} · ${hmin(draft.start)}-${hmin(Math.min(draft.start + draft.dur, 1050))} · ${mech ? mech.short : 'No mechanic yet'}`;
 }

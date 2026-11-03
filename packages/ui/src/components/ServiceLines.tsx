@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { ArrowCounterClockwise, Plus, Warning, X } from '@phosphor-icons/react';
 import { cn } from '../utils/cn';
-import { onHandElsewhere, peso, productOf } from './sms/data';
-import { forVehicle, useCatalogue } from './sms/catalogue';
+import { onHandElsewhere, peso } from './sms/data';
+import { forVehicle } from './sms/catalogue';
+import { productIn, useWizardData } from './sms/wizardData';
 import { durLabel } from './sms/scheduleModel';
 import { customLine, insertPart, isCustomPrice, lineTotal, linesFromType, partLine, partNeed, removeLine, subtotal, type WizardLine } from './sms/wizardModel';
 import { Combobox, type ComboOption } from './Combobox';
@@ -19,7 +20,8 @@ const link = 'inline-flex items-center gap-0.5 text-[12px] font-semibold text-ac
  * Used by wizard step 1 and by the summary's inline lines editor.
  */
 export function ServiceAdder({ lines, kind, onChange, onFocusLine, autoFocus }: { lines: WizardLine[]; kind: Kind; onChange: (next: WizardLine[]) => void; /** The line to move focus to (a new custom service: its price). */ onFocusLine?: (key: string) => void; autoFocus?: boolean }) {
-  const catalogue = useCatalogue();
+  const data = useWizardData();
+  const catalogue = data.catalogue;
   const [q, setQ] = useState('');
   const t = q.trim().toLowerCase();
   const added = new Set(lines.map((l) => l.typeId));
@@ -44,7 +46,7 @@ export function ServiceAdder({ lines, kind, onChange, onFocusLine, autoFocus }: 
       label="Add a service" value={q} onValueChange={setQ} options={options} autoFocus={autoFocus} search
       placeholder="Search your services, e.g. brake" emptyText={typed ? 'Not in your catalogue.' : 'Every service is already on the job.'}
       hint="Not in the list? Use Add custom service, pinned under the matches."
-      onSelect={(id) => { onChange([...lines, ...linesFromType(id)]); setQ(''); }}
+      onSelect={(id) => { onChange([...lines, ...linesFromType(id, data)]); setQ(''); }}
       action={typed && exists ? null : {
         id: 'custom', label: typed ? `Add ${typed} as a custom service` : 'Add a custom service, not in catalogue',
         node: <><Plus size={16} weight="bold" aria-hidden className="flex-none" /><span className="min-w-0 truncate">{typed ? <>Add &ldquo;{typed}&rdquo; as a custom service</> : 'Add a custom service (not in catalogue)'}</span></>,
@@ -58,8 +60,10 @@ export function ServiceAdder({ lines, kind, onChange, onFocusLine, autoFocus }: 
 
 /** Stock of a part line: this branch's stock; a warning when the whole job needs more than is here; where else to find it. */
 function PartNote({ line, lines }: { line: WizardLine; lines: WizardLine[] }) {
-  const pr = productOf(line.productId!);
-  const { need, have, short } = partNeed(lines, pr.id);
+  const data = useWizardData();
+  const pr = productIn(data, line.productId!);
+  if (!pr) return null;
+  const { need, have, short } = partNeed(lines, pr.id, data);
   const away = onHandElsewhere(pr)[0];
   if (short === 0) return <p className="flex flex-wrap items-center gap-x-2 text-[12px] text-muted"><span className="tabular-nums">{have} {pr.unit} here</span><PartStock product={pr} /></p>;
   return (
@@ -75,6 +79,7 @@ function PartNote({ line, lines }: { line: WizardLine; lines: WizardLine[] }) {
  * so quantity, price and total line up. `readOnly` shows the same grid as plain text (summary); editable adds qty / price inputs, Reset, Add a part and Remove.
  */
 export function LinesTable({ lines, onChange, readOnly = false, totalLabel = 'Total', focusKey, empty = 'No service yet.' }: { lines: WizardLine[]; onChange?: (next: WizardLine[]) => void; readOnly?: boolean; /** Step 1 says Subtotal, the review says Total. */ totalLabel?: 'Total' | 'Subtotal'; focusKey?: string | null; empty?: string }) {
+  const data = useWizardData();
   const [partFor, setPartFor] = useState<string | null>(null);
   const set = (next: WizardLine[]) => onChange?.(next);
   const patch = (key: string, p: Partial<WizardLine>) => set(lines.map((l) => (l.key === key ? { ...l, ...p } : l)));
@@ -114,7 +119,7 @@ export function LinesTable({ lines, onChange, readOnly = false, totalLabel = 'To
                   : <p className="text-[12px] font-medium text-warn-ink">Custom price (set: {peso(l.listPrice!)}) <button type="button" className={cn(link, 'ml-1')} onClick={() => patch(l.key, { price: l.listPrice! })}><ArrowCounterClockwise size={12} aria-hidden />Reset</button></p>)}
                 {readOnly && <p className="text-[12px] text-muted min-[641px]:hidden">{part ? `${l.qty} x ${peso(l.price)} unit price` : `Labour ${peso(l.price)}${l.qty > 1 ? ` x ${l.qty}` : ''}`}</p>}
                 {!readOnly && l.kind === 'service' && (partFor === l.key
-                  ? <div className="mt-2 max-w-md"><PartPicker label={`Add a part to ${l.name}`} exclude={lines.filter((x) => x.parentKey === l.key).map((x) => x.productId!)} autoFocus onPick={(id) => { set(insertPart(lines, partLine(id, l.key))); setPartFor(null); }} /></div>
+                  ? <div className="mt-2 max-w-md"><PartPicker label={`Add a part to ${l.name}`} exclude={lines.filter((x) => x.parentKey === l.key).map((x) => x.productId!)} autoFocus onPick={(id) => { set(insertPart(lines, partLine(id, l.key, false, data))); setPartFor(null); }} /></div>
                   : <button type="button" className={cn(link, 'mt-0.5')} onClick={() => setPartFor(l.key)} aria-label={`Add a part to ${l.name}`}><Plus size={12} aria-hidden />Add a part</button>)}
               </div>
               {readOnly ? <span className={cn(num, 'leading-5', phoneHide)}>{l.qty}</span>

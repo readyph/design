@@ -4,6 +4,7 @@ import { Button } from './Button';
 import { cn } from '../utils/cn';
 import { longDay, type CalItem } from './sms/scheduleModel';
 import { validUntilDefault, type WizardDraft } from './sms/wizardModel';
+import { useWizardData } from './sms/wizardData';
 import { CustomerField } from './CustomerField';
 import { MoreFields, textareaField, ScheduleFields, scheduleSummary } from './JobOrderFields';
 import { Row, WizardBlock, editLink } from './WizardBlock';
@@ -23,6 +24,7 @@ export function WizardSummary({ draft, onChange, editing, setEditing, onPreview,
   draft: WizardDraft; onChange: (p: Partial<WizardDraft>) => void; editing: BlockId | null; setEditing: (b: BlockId | null) => void; onPreview: () => void; quoteNo?: string;
   /** Opened from a parked quote: the buttons say what happens to it. */ bookingQuote?: boolean; items?: CalItem[]; /** The slot came from the calendar (or the quote). */ slotSet?: boolean; onDur: (d: number) => void; onAddingChange?: (a: boolean) => void;
 }) {
+  const assignees = useWizardData().assignees;
   const [snap, setSnap] = useState<WizardDraft>(draft);
   const [focusKey, setFocusKey] = useState<string | null>(null);
   const c = draft.customer;
@@ -50,7 +52,7 @@ export function WizardSummary({ draft, onChange, editing, setEditing, onPreview,
         {partCount > 0 && <p className="mt-3 text-[13px] text-muted">{partCount} {partCount === 1 ? 'part' : 'parts'} will be reserved from Inventory. Nothing leaves stock until the mechanic requests it.</p>}
       </WizardBlock>
 
-      <WizardBlock id="schedule" title="Schedule and staff" open summary={scheduleSummary(draft)}>
+      <WizardBlock id="schedule" title="Schedule and staff" open summary={scheduleSummary(draft, assignees)}>
         <ScheduleFields draft={draft} onChange={onChange} items={items} onDur={onDur} slotSet={slotSet} />
       </WizardBlock>
 

@@ -4,7 +4,8 @@ import { Button } from './Button';
 import { Select } from './Select';
 import { TextField } from './TextField';
 import { cn } from '../utils/cn';
-import { customers, type Customer, type Vehicle } from './sms/data';
+import type { Customer, Vehicle } from './sms/data';
+import { useWizardData } from './sms/wizardData';
 import { Combobox, type ComboOption } from './Combobox';
 import { Row } from './WizardBlock';
 
@@ -44,6 +45,7 @@ let seq = 0;
  * Revision 6: renders the same label/value rows as the review block (Customer: name · phone + Change; Car: plate and make/model, a select when there are several, + Add car). No boxed cards.
  */
 export function CustomerField({ customer, vehicleId, onPick, onClear, initialQuery = '', onAddingChange }: CustomerFieldProps) {
+  const { customers } = useWizardData();
   const [q, setQ] = useState(initialQuery);
   const [adding, setAdding] = useState(false);
   const [d, setD] = useState<Draft>(EMPTY);
@@ -59,7 +61,7 @@ export function CustomerField({ customer, vehicleId, onPick, onClear, initialQue
       const byPlate = c.vehicles.find((v) => norm(v.plate).includes(norm(t)));
       return byPerson || byPlate ? [{ c, v: byPlate ?? c.vehicles[0]! }] : [];
     }).slice(0, 6);
-  }, [q]);
+  }, [q, customers]);
 
   const options: ComboOption[] = matches.map(({ c, v }) => ({
     id: `${c.id}|${v.id}`,

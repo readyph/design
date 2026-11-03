@@ -1,6 +1,7 @@
 import { useRef, useState, type ReactNode } from 'react';
 import { Button, toast } from '../index';
-import { NOW, customers, type Customer, type Job } from './sms/data';
+import { NOW, type Job } from './sms/data';
+import { WizardDataProvider, seedWizardData, type WizardData } from './sms/wizardData';
 import { NEXT_NUMBER } from './sms/scheduleData';
 import { hmin, longDay, type Booking, type CalItem, type Slot } from './sms/scheduleModel';
 import { docFromJob, jobFieldsOf, newJob, nextQuoteNo, quoteNoOf, type WizardAction, type WizardDraft } from './sms/wizardModel';
@@ -27,6 +28,12 @@ export interface FlowHost {
   /** After a new or booked service: jump the calendar to its day and flash the card. */
   after?: (date: string, id: string, customerId: string) => void;
   initial?: FlowState;
+  /** Real customers, catalogue, stock, assignees and shop details. Absent: the prototype's sample data (Storybook). */
+  data?: WizardData;
+  /** The next free job order number (pure: read on every submit; the host advances it when add/patch runs). Absent: the sample sequence. */
+  nextJobNo?: () => string;
+  /** The next free quotation number (pure: also read on render). Absent: the sample sequence from `count`. */
+  nextQuoteNo?: () => string;
 }
 
 /**
@@ -35,6 +42,8 @@ export interface FlowHost {
  * A parked quotation is a Job with status QUOTATION and a QT- number; booking it patches the SAME record to TODO with the next JO- number and keeps the quote number.
  */
 export function useServiceFlow(host: FlowHost) {
+  const data = host.data ?? seedWizardData();
+  const quoteNoNext = (n: number) => host.nextQuoteNo?.() ?? nextQuoteNo(n);
   const [state, setState] = useState<FlowState>(host.initial ?? null);
   /** After a service is booked: the confirmation with its customer tracking link. */
   const [booked, setBooked] = useState<Pick<Job, 'id' | 'number' | 'customerId' | 'vehicleId'> | null>(null);
@@ -45,13 +54,14 @@ export function useServiceFlow(host: FlowHost) {
   const bookQuote = (j: Job) => setState({ kind: 'book', jobId: j.id });
   const editQuote = (j: Job) => setState({ kind: 'edit', jobId: j.id });
 
-  const nextJo = () => `JO-0${NEXT_NUMBER + host.count + joSeq.current++}`;
+  const nextJo = () => host.nextJobNo?.() ?? `JO-0${NEXT_NUMBER + host.count + joSeq.current++}`;
 
   const submitNew = (d: WizardDraft, action: WizardAction) => {
     const n = host.count;
     const id = `n${n + 1}`;
-    const job = action === 'book' ? newJob(id, nextJo(), d, 'book') : newJob(id, nextQuoteNo(n), d, 'quote', nextQuoteNo(n));
-    if (!customers.some((c) => c.id === d.customer!.id)) customers.push(d.customer as Customer); // a customer added in the wizard joins the shared sample data
+    const job = action === 'book' ? newJob(id, nextJo(), d, 'book') : newJob(id, quoteNoNext(n), d, 'quote', quoteNoNext(n));
+    const known = data.customers.find((c) => c.id === d.customer!.id);
+    if (!known || known.vehicles.length !== d.customer!.vehicles.length) data.onSaveCustomer?.(d.customer!); // a customer or car added in the wizard goes to the host
     const booking = { date: d.date, start: d.start, dur: d.dur };
     host.add(job, booking);
     host.after?.(d.date, id, d.customer!.id);
@@ -80,9 +90,9 @@ export function useServiceFlow(host: FlowHost) {
 
   let node: ReactNode = null;
   if (state?.kind === 'new') {
-    const c = state.customerId ? customers.find((x) => x.id === state.customerId) ?? null : null;
+    const c = state.customerId ? data.customers.find((x) => x.id === state.customerId) ?? null : null;
     const k = `${state.customerId}${state.plate}${state.slot?.date}${state.slot?.start}${state.slot?.dur}${state.notes}`;
-    node = <NewServiceWizard key={k} slot={state.slot} customer={c} vehicleId={state.vehicleId} plate={state.plate} notes={state.notes} items={host.items} quoteNo={nextQuoteNo(host.count)}
+    node = <NewServiceWizard key={k} slot={state.slot} customer={c} vehicleId={state.vehicleId} plate={state.plate} notes={state.notes} items={host.items} quoteNo={quoteNoNext(host.count)}
       startStep={state.startStep} initialEdit={state.initialEdit} initialDraft={state.initialDraft} initialPreview={state.initialPreview} onSubmit={submitNew} onClose={close} />;
   } else if (state && (state.kind === 'book' || state.kind === 'edit')) {
     const job = host.find(state.jobId);
@@ -92,7 +102,7 @@ export function useServiceFlow(host: FlowHost) {
     const job = host.find(state.jobId);
     if (job) {
       const parked = job.status === 'QUOTATION' || job.status === 'FOR_APPROVAL';
-      node = <QuotationModal doc={docFromJob(job)} onClose={close} note={parked ? undefined : `Kept for reference. Booked as ${job.number}.`}
+      node = <QuotationModal doc={docFromJob(job, data)} onClose={close} note={parked ? undefined : `Kept for reference. Booked as ${job.number}.`}
         actions={parked ? { onBook: () => bookQuote(job), onEdit: () => editQuote(job) } : null} />;
     }
   }
@@ -102,7 +112,7 @@ export function useServiceFlow(host: FlowHost) {
       <TrackingLink job={booked} />
     </Modal>
   ) : null;
-  node = <>{node}{bookedNode}</>;
+  node = <WizardDataProvider data={data}>{node}{bookedNode}</WizardDataProvider>;
   const slot = state?.kind === 'new' ? state.slot ?? null : null;
   return { state, openNew, viewQuote, bookQuote, editQuote, close, node, slot };
 }
