@@ -71,3 +71,9 @@ export const STATUS_SHORT: Record<JobStatus, { label: string; dot: string }> = {
   FOR_PICKUP: { label: 'Ready', dot: 'bg-ok-dot' },
   COMPLETED: { label: 'Done', dot: 'bg-ok-dot' },
 };
+
+/** The latest promised minute today among a lane's active jobs, for "free from". Null when nothing is promised today. */
+export function freeFromMin(jobs: Pick<TodayJob, 'status' | 'promisedAt'>[], today: string): number | null {
+  const times = jobs.filter((j) => j.promisedAt?.startsWith(today) && ACTIVE.includes(j.status)).map((j) => minOf(j.promisedAt!));
+  return times.length ? Math.max(...times) : null;
+}

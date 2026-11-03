@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import axe from 'axe-core';
-import { FloorLanes } from './FloorLanes';
+import { FloorLanes } from './sms/FloorLanes';
 import { JobRow } from './JobRow';
 import { PartChip } from './PartChip';
 import { branch, jobs, mechanics, products, productOf } from './sms/data';

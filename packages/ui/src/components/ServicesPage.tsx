@@ -20,7 +20,7 @@ import { useSmsLeda } from './sms/LedaPanel';
 import { TodayDialogs, type DialogState } from './sms/TodayDialogs';
 import { Offcanvas } from './Offcanvas';
 import { Inspector } from './Inspector';
-import { InquiryDetail } from './InquiryDetail';
+import { InquiryDetail } from './sms/InquiryDetail';
 import { CustomerPanel } from './CustomerPanel';
 import { CardSkeletons, InfiniteSentinel, ListEnd, ResultCount, scrollTop } from './InfiniteList';
 import { useServiceFlow, type FlowState } from './useServiceFlow';

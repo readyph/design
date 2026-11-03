@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { FloorLanes } from './FloorLanes';
+import { FloorLanes } from './sms/FloorLanes';
 import { jobs, type Job } from './sms/data';
 import { applyOverrides, lanesFor, type LaneId } from './sms/floorModel';
 
