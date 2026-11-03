@@ -31,8 +31,8 @@ export function WizardBlock({ id, title, hint, summary, action, open = false, ed
         <div>
           {edit}
           <div className="mt-4 flex items-center gap-3">
-            <Button variant="primary" disabled={!canDone} onClick={onDone}>Done</Button>
-            <Button variant="text" onClick={onCancel}>Cancel</Button>
+            <Button variant="primary" actionBar disabled={!canDone} onClick={onDone}>Done</Button>
+            <Button variant="text" actionBar onClick={onCancel}>Cancel</Button>
           </div>
         </div>
       ) : children}
