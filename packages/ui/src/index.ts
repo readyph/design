@@ -14,6 +14,8 @@ export * from './components/Avatar';
 export * from './components/avatarTone';
 export * from './components/NotifyItem';
 export * from './components/BizMark';
+export * from './components/PaymentPanel';
+export * from './components/PaymentDiscount';
 export * from './components/PanelToggle';
 export * from './components/Select';
 export * from './components/Modal';
