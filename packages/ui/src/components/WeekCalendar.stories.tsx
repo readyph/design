@@ -1,19 +1,21 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { WeekCalendar, type WeekCalendarProps } from './WeekCalendar';
-import { addDays } from './sms/scheduleModel';
+import { addDays, calendarEnv } from './sms/scheduleModel';
+import { mechanics, type Job } from './sms/data';
+import { viewOf } from './sms/floorModel';
 import { calItems, weekDays } from './sms/calendarSample';
 
 const noop = () => {};
-const base: WeekCalendarProps = { days: weekDays('2026-11-04'), items: calItems, onOpen: noop, onBook: noop };
+const base: WeekCalendarProps<Job> = { env: calendarEnv, view: viewOf, mechanics, days: weekDays('2026-11-04'), items: calItems, onOpen: noop, onBook: noop };
 
 const meta = {
   title: 'SMS/WeekCalendar',
-  component: WeekCalendar,
+  component: WeekCalendar<Job>,
   parameters: { layout: 'fullscreen' },
   decorators: [(Story) => <div className="flex h-[720px] flex-col bg-surface"><Story /></div>],
   args: base,
-} satisfies Meta<typeof WeekCalendar>;
+} satisfies Meta<typeof WeekCalendar<Job>>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 

@@ -13,7 +13,7 @@ import {
 } from './sms/servicesModel';
 import { allServices } from './sms/scheduleData';
 import {
-  addDays, bookingOf, dayNum, dowShort, durLabel, freeMinutes, isClosed, longDay, mechanicById, weekStart,
+  addDays, bookingOf, calMechanicOptions, calendarEnv, dayNum, dowShort, durLabel, freeMinutes, isClosed, longDay, mechanicById, weekStart,
   type Booking, type CalItem, type Slot,
 } from './sms/scheduleModel';
 import { useSmsLeda } from './sms/LedaPanel';
@@ -27,7 +27,7 @@ import { useServiceFlow, type FlowState } from './useServiceFlow';
 import { FloorSidePanel as SidePanelLayout } from './sms/SidePanel';
 import { FloorFeed, type FeedTab } from './sms/FloorFeed';
 import { WeekCalendar } from './WeekCalendar';
-import { CalendarToolbar, SPAN_DAYS, calMechanicOptions, type Span } from './CalendarToolbar';
+import { CalendarToolbar, SPAN_DAYS, type Span } from './CalendarToolbar';
 import type { PartAction } from './PartChip';
 import { SearchBox, ToggleChip } from './ServicesControls';
 import { ServiceCard, ServicesTable, type InventoryLink } from './ServicesTable';
@@ -327,7 +327,7 @@ export function ServicesPage({
 
   const calendar = (
     <WeekCalendar
-      days={days} items={items} selectedId={service?.id} flashId={flash} dimmed={dimmed} needsOnly={needsOnly} mechanicId={mechanicId} freeLabel={freeLabel}
+      env={calendarEnv} view={viewOf} mechanics={mechanics} days={days} items={items} selectedId={service?.id} flashId={flash} dimmed={dimmed} needsOnly={needsOnly} mechanicId={mechanicId} freeLabel={freeLabel}
       onOpen={open} onBook={bookSlot} onPickDay={pickDay} state={loading ? 'loading' : 'ready'} demoHover={demoHover} demoSelect={demoSelect} held={heldSlot}
     />
   );
@@ -337,7 +337,7 @@ export function ServicesPage({
       <CalendarToolbar
         days={days} span={span} onSpan={changeSpan} onPrev={() => goto(-step)} onNext={() => goto(step)} onToday={() => { setBack(null); setAnchor(TODAY); }} onJump={(d) => { setBack(null); setAnchor(d); }}
         needsCount={needsCount} needsOnly={needsOnly} onNeedsOnly={setNeedsOnly} backLabel={back ? `Back to ${back.span === 'week' ? 'week' : '3 days'}` : undefined} onBack={back ? backToRange : undefined}
-        q={f.q} onQ={(q) => patch({ q })} mechanic={f.mechanic} onMechanic={(mechanic) => patch({ mechanic })} unscheduled={unscheduled} onOpen={open}
+        q={f.q} onQ={(q) => patch({ q })} mechanic={f.mechanic} mechanicOptions={calMechanicOptions()} onMechanic={(mechanic) => patch({ mechanic })} unscheduled={unscheduled} onOpen={open}
       />
       {invNotice}
       {calendar}
@@ -433,7 +433,7 @@ export function ServicesPage({
         {anchor !== TODAY && <Button variant="secondary" onClick={() => setAnchor(TODAY)}>Today</Button>}
       </div>
       <WeekCalendar
-        phone days={[anchor]} items={items} selectedId={service?.id} flashId={flash} dimmed={dimmed} needsOnly={needsOnly} mechanicId={mechanicId} freeLabel={freeLabel}
+        phone env={calendarEnv} view={viewOf} mechanics={mechanics} days={[anchor]} items={items} selectedId={service?.id} flashId={flash} dimmed={dimmed} needsOnly={needsOnly} mechanicId={mechanicId} freeLabel={freeLabel}
         onOpen={open} onBook={bookSlot} state={loading ? 'loading' : 'ready'} held={heldSlot}
       />
       <Button variant="primary" leftIcon={Plus} className="absolute bottom-4 right-4 z-[5] shadow-float" onClick={() => flow.openNew()}>New service</Button>

@@ -4,10 +4,10 @@ import { EmptyState } from './EmptyState';
 import { Skeleton } from './Skeleton';
 import { cn } from '../utils/cn';
 import { HOURS, NOW_MIN, TODAY, type Job, type Mechanic } from './sms/data';
-import { bookingOf, dayNum, dowShort, hmin } from './sms/scheduleModel';
+import { bookingOf, calendarEnv, dayNum, dowShort, hmin } from './sms/scheduleModel';
 import type { Day, MechScenario, MechState } from './sms/mechModel';
 import { CalCard, type CalCardView, type PlacedItem } from './CalCard';
-import { flagOf, reasonOf } from './sms/floorModel';
+import { flagOf, reasonOf, viewOf } from './sms/floorModel';
 import { staffHeight, staffView, type Step } from './mechCardView';
 
 /** Phone scale: 128px an hour (the desktop Floor view uses 144). Heights stay true to length above the minimum card height. */
@@ -96,7 +96,8 @@ export function MechHome({ me, day, scenario, s, onOpen }: MechHomeProps) {
               {slots.map((x) => (
                 <li key={x.job.id} data-step={x.step} data-top={Math.round(x.top)} data-height={Math.round(x.height)} className="contents">
                   <CalCard
-                    placed={{ job: x.job, date: TODAY, start: x.start, end: x.end, lane: 0, lanes: 1 } as PlacedItem}
+                    env={calendarEnv} jobView={viewOf}
+                    placed={{ job: x.job, date: TODAY, start: x.start, end: x.end, lane: 0, lanes: 1 } as PlacedItem<Job>}
                     selected={false} flash={false} dim={false} showMech={false} onOpen={(j) => onOpen(j.id)}
                     layout={{ top: x.top, height: x.height }} view={x.view}
                   />

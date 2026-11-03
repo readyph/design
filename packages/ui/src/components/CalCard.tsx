@@ -4,23 +4,29 @@ import { Badge } from './Badge';
 import { Avatar } from './Avatar';
 import { cn } from '../utils/cn';
 import { PersonAvatar } from './avatarTone';
-import type { Job } from './sms/data';
-import { STATUS_SHORT, flagOf, reasonOf, serviceTitle, viewOf } from './sms/floorModel';
-import { HOUR_H, hmin, mechanicById, px, type packDay } from './sms/scheduleModel';
+import type { TodayJob, TodayJobView } from './today/types';
+import { STATUS_SHORT, flagOf, reasonOf, serviceTitle } from './today/model';
+import { HOUR_H, hmin, pxAt, type CalMechanic, type CalendarEnv, type PlacedCalendarItem } from './calendar/model';
 
 const REASON_ICON: Record<string, Icon> = { OVERDUE: Clock, PARTS: Package, APPROVAL: Hourglass, PICKUP_UNPAID: Wallet };
 const REASON_WORD: Record<string, string> = { OVERDUE: 'Late', PARTS: 'Blocked, waiting on parts', APPROVAL: 'Waiting for approval', PICKUP_UNPAID: 'Ready, unpaid' };
 
-export type PlacedItem = ReturnType<typeof packDay>['placed'][number];
+export type PlacedItem<J extends TodayJob = TodayJob> = PlacedCalendarItem<J>;
 
-export interface CalCardProps {
-  placed: PlacedItem;
+export interface CalCardProps<J extends TodayJob = TodayJob> {
+  placed: PlacedItem<J>;
+  /** The clock, business hours and flag rules (see CalendarEnv). */
+  env: CalendarEnv;
+  /** The car and the customer of a service: the plate, the vehicle and the name the card shows. */
+  jobView: (job: J) => TodayJobView;
+  /** Who the service is assigned to (the avatar); null when it is not assigned. */
+  mechanic?: CalMechanic | null;
   selected: boolean;
   flash: boolean;
   dim: boolean;
   /** Hide the mechanic avatar (one mechanic is already chosen in the toolbar). */
   showMech: boolean;
-  onOpen: (j: Job) => void;
+  onOpen: (j: J) => void;
   /** One-column placement (phone, mechanic day): top and height in px, full width. Replaces the lane maths. */
   layout?: { top: number; height: number };
   /** Variants for the mechanic's own day (same anatomy): word and dot of the status, tint, hide money, show every line. */
@@ -53,8 +59,7 @@ export interface CalCardStaff {
 }
 
 /** The mechanic as a 24px initials avatar; the full name and bay on hover and focus (the card itself is the focus target, so the card carries the same words in its label). */
-function MechAvatar({ job }: { job: Job }) {
-  const m = mechanicById(job.assigneeId);
+function MechAvatar({ m }: { m: CalMechanic | null }) {
   const label = m ? `${m.name}, ${m.bay}` : 'Not assigned';
   return (
     <RadixTooltip.Root>
@@ -69,22 +74,22 @@ function MechAvatar({ job }: { job: Job }) {
 }
 
 /**
- * Studio-only CalCard (NEW): a calendar card that degrades by height.
+ * CalCard: a calendar card that degrades by height.
  * Always: number + plate (one line, no shrink), customer (wraps). 45 min: + title (1 line) and the flag or status. 60 min and up: title (2 lines), status and flag.
  * No fill (page surface) and no left bar; status stays dot + word. Blocked services use the warning tint and the same flag words as the List, JobRow and panel (flagOf / reasonOf).
  */
-export function CalCard({ placed, selected, flash, dim, showMech, onOpen, layout, view, inline }: CalCardProps) {
+export function CalCard<J extends TodayJob = TodayJob>({ placed, env, jobView, mechanic, selected, flash, dim, showMech, onOpen, layout, view, inline }: CalCardProps<J>) {
   const { job, start, end, lane, lanes } = placed;
-  const v = viewOf(job); const title = serviceTitle(job);
-  const hideMoney = !!view?.hideUnpaid && reasonOf(job) === 'PICKUP_UNPAID';
-  const flag = hideMoney ? null : flagOf(job); const reason = hideMoney ? null : reasonOf(job);
+  const v = jobView(job); const title = serviceTitle(job);
+  const hideMoney = !!view?.hideUnpaid && reasonOf(env, job) === 'PICKUP_UNPAID';
+  const flag = hideMoney ? null : flagOf(env, job); const reason = hideMoney ? null : reasonOf(env, job);
   const st = { ...STATUS_SHORT[job.status], ...(view?.label ? { label: view.label } : {}), ...(view?.dot ? { dot: view.dot } : {}) };
   const h = layout ? layout.height : ((end - start) / 60) * HOUR_H - 2;
   // Identity first: number + plate + customer (two lines) always fit (62px). Everything else is added only when the height pays for it.
   const room = h - 8;
   const full = !!view?.full;
   const showTitle = full || room >= 72; const showFlagOrStatus = full || room >= 88; const showBoth = full || room >= 120; const title2 = full || room >= 104;
-  const mech = mechanicById(job.assigneeId);
+  const mech = mechanic ?? null;
   const time = `${hmin(start)}-${hmin(end)}`;
   const ReasonIcon = reason ? REASON_ICON[reason] : null;
   const flagLine = flag && (
@@ -177,7 +182,7 @@ export function CalCard({ placed, selected, flash, dim, showMech, onOpen, layout
       type="button" onClick={() => onOpen(job)} aria-pressed={selected} title={`${job.number}, ${v.customer}, ${v.plate}, ${title}`}
       aria-label={`${job.number}, ${v.plate}, ${v.customer}, ${title}, ${v.vehicle}, ${time}, ${st.label}${flag ? `, ${REASON_WORD[reason!]}: ${flag.word}` : ''}${staff?.current ? ', currently working on' : ''}${staff?.unread ? `, ${staff.unread}` : ''}${mech ? `, ${mech.name}` : ', not assigned'}`}
       data-tone={view?.tone}
-      style={layout ? { top: layout.top, height: h, left: 0, right: 0 } : { top: px(start) + 1, height: h, left: `calc(${(lane / lanes) * 100}% + 2px)`, width: `calc(${100 / lanes}% - 4px)` }}
+      style={layout ? { top: layout.top, height: h, left: 0, right: 0 } : { top: pxAt(env.hours.open, start) + 1, height: h, left: `calc(${(lane / lanes) * 100}% + 2px)`, width: `calc(${100 / lanes}% - 4px)` }}
       className={cn(
         'group absolute z-[2] flex min-w-0 flex-col overflow-hidden rounded-control border text-left',
         staff ? 'p-3' : 'px-2 py-1',
@@ -195,7 +200,7 @@ export function CalCard({ placed, selected, flash, dim, showMech, onOpen, layout
         <span className="ml-auto flex flex-none items-center gap-1">
           {job.status === 'QUOTATION' && <Badge tone="accent" className="h-4 flex-none px-1 text-[11px] leading-4">Quote</Badge>}
           {!showFlagOrStatus && ReasonIcon && <ReasonIcon size={14} weight="bold" aria-hidden className={flag?.tone === 'bad' ? 'text-bad' : 'text-text'} />}
-          {showMech && <MechAvatar job={job} />}
+          {showMech && <MechAvatar m={mech} />}
         </span>
       </span>
       {/* Line 2: the customer wraps, it is never cut. */}
