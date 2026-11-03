@@ -91,3 +91,6 @@ export * from './components/NewProductRequest';
 export * from './components/ProductList';
 export * from './components/SignedOutScreen';
 export * from './components/MoneyField';
+export * from './components/FloorLanes';
+export * from './components/JobRow';
+export * from './components/PartChip';
