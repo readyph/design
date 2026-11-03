@@ -126,3 +126,6 @@ export * from './components/TrackingLink';
 export * from './components/QrStandIn';
 export * from './components/CustomerChat';
 export * from './components/TrackerBlocks';
+export * from './components/MechService';
+export * from './components/MechFeed';
+export * from './components/MechParts';
