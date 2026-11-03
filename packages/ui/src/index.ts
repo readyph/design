@@ -154,3 +154,6 @@ export * from './components/ServicesPricesPage';
 export * from './components/ServiceLines';
 export * from './components/JobOrderFields';
 export * from './components/WizardSummary';
+export * from './components/WizardStep1';
+export * from './components/NewServiceWizard';
+export * from './components/NewServiceWizardPage';
