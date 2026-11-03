@@ -138,6 +138,7 @@ export * from './components/TrackerBlocks';
 export * from './components/MechService';
 export * from './components/MechFeed';
 export * from './components/MechParts';
+export * from './components/MechRequest';
 export * from './components/SettingsNav';
 export * from './components/SettingsFields';
 export * from './components/NotificationsSection';
