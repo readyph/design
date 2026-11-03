@@ -1,5 +1,11 @@
 # @readyph/ui
 
+## 0.21.0
+
+### Minor Changes
+
+- 8ba66fb: Add the public, props-driven `TodayDialogs` (request a transfer, set expected time): the callers pass the job, part and locations.
+
 ## 0.20.0
 
 ### Minor Changes
