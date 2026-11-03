@@ -8,6 +8,9 @@ import { peso } from './sms/data';
 import { MoneyField } from './MoneyField';
 import { CATEGORIES, VEHICLE_SCOPE_LABEL, newTypeId, partsCost, partsStock, type Category, type ServicePart, type ServiceType, type VehicleScope } from './sms/catalogue';
 import { ServicePartsEditor } from './ServicePartsEditor';
+import type { PartSearch, PartsStatus } from './PartPicker';
+import { useWizardData } from './sms/wizardData';
+import type { Product } from './sms/data';
 import { useDirtyGuard } from './DirtyGuard';
 
 const MINS = [15, 30, 45, 60, 90, 120, 150, 180, 240, 300, 360].map((m) => ({ value: String(m), label: m < 60 ? `${m} min` : `${Math.floor(m / 60)}h${m % 60 ? ` ${m % 60}m` : ''}` }));
@@ -17,7 +20,10 @@ const digits = (s: string) => s.replace(/\D/g, '');
  * Studio-only ServiceTypeForm (NEW): add or edit one service in the catalogue, in a modal (full screen on a phone).
  * Name, category, default price, estimated time (sets the calendar card length), vehicle type, description. Deactivate / Reactivate sits in the footer.
  */
-export function ServiceTypeForm({ type, onSave, onClose, onToggleActive }: { type: ServiceType | null; onSave: (t: ServiceType) => void; onClose: () => void; /** Deactivate / Reactivate (the page asks to confirm). Only for an existing service. */ onToggleActive?: (t: ServiceType) => void }) {
+export function ServiceTypeForm({ type, onSave, onClose, onToggleActive, products, searchParts, partsStatus }: { /** Host data for the parts section (RDY-629): products to show linked parts, the Inventory search and how Inventory is answering. */ products?: Product[]; searchParts?: PartSearch; partsStatus?: PartsStatus; type: ServiceType | null; onSave: (t: ServiceType) => void; onClose: () => void; /** Deactivate / Reactivate (the page asks to confirm). Only for an existing service. */ onToggleActive?: (t: ServiceType) => void }) {
+  const wd = useWizardData();
+  const [picked, setPicked] = useState<Product[]>([]);
+  const listed = [...(products ?? wd.products), ...picked];
   const [name, setName] = useState(type?.name ?? '');
   const [category, setCategory] = useState<Category>(type?.category ?? 'Maintenance');
   const [price, setPrice] = useState(type ? String(type.price) : '');
@@ -37,8 +43,8 @@ export function ServiceTypeForm({ type, onSave, onClose, onToggleActive }: { typ
     onSave({ ...(type ?? { id: newTypeId(), active: true }), name: name.trim(), category, price: Number(price), mins: Number(mins), vehicle, description: description.trim() || undefined, parts: parts.length ? parts : undefined });
   };
   const labour = Number(price) || 0;
-  const pc = partsCost(parts);
-  const stock = partsStock(parts);
+  const pc = partsCost(parts, listed);
+  const stock = partsStock(parts, listed);
   const lbl = 'mb-1 block text-ui font-medium text-text';
   const summary = (
     <dl aria-label="Price at a glance" className="rounded-card border border-rule bg-raised p-4 text-[14px]">
@@ -67,7 +73,7 @@ export function ServiceTypeForm({ type, onSave, onClose, onToggleActive }: { typ
             <section aria-labelledby="st-parts" className="border-t border-rule pt-5">
               <h3 id="st-parts" className="text-[15px] font-semibold">Parts used</h3>
               <p className="mb-3 mt-0.5 text-[13px] text-muted">Inventory products this service normally uses. When you add the service to a job, these parts come with it, at today&rsquo;s Inventory price. You can change or remove them on the job.</p>
-              <ServicePartsEditor parts={parts} onChange={setParts} />
+              <ServicePartsEditor parts={parts} onChange={setParts} products={products} search={searchParts} status={partsStatus} onProduct={(p) => setPicked((l) => [...l.filter((x) => x.id !== p.id), p])} />
               {(stock.state === 'low' || stock.state === 'out' || stock.state === 'on_order') && <div className="mt-3"><Notice tone="warn" title={stock.state === 'low' ? 'A linked part is low on stock' : stock.state === 'on_order' ? 'A linked part is out of stock, on order' : 'A linked part is out of stock'}>{stock.worst}. The service can still be sold; the job will warn the manager.</Notice></div>}
             </section>
           </div>

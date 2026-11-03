@@ -13,6 +13,7 @@ const SCENARIOS: Record<string, ServicesPricesProps> = {
   'Confirm: Deactivate': { initialAsk: 'sv10' },
   'Empty (no services yet)': { state: 'empty' },
   'Loading': { state: 'loading' },
+  'Error (could not load)': { state: 'error', onRetry: () => {} },
 };
 type Args = { scenario: string; role: NonNullable<ServicesPricesProps['role']>; stress: boolean; embedded: boolean };
 
