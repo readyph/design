@@ -3,7 +3,9 @@
   "permissions": {
     "allow": [
       "Bash(gh pr comment:*)",
-      "Bash(gh pr merge:*)"
+      "Bash(gh pr merge:*)",
+      "Bash(git:*)",
+      "Bash(gh:*)"
     ]
   }
 }
