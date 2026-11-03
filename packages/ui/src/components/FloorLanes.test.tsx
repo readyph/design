@@ -4,8 +4,8 @@ import axe from 'axe-core';
 import { FloorLanes } from './FloorLanes';
 import { JobRow } from './JobRow';
 import { PartChip } from './PartChip';
-import { jobs, products, productOf } from './sms/data';
-import { lanesFor } from './sms/floorModel';
+import { branch, jobs, mechanics, products, productOf } from './sms/data';
+import { lanesFor, todayEnv, viewOf } from './sms/floorModel';
 import { getMech, dayOf } from './sms/mechModel';
 
 afterEach(cleanup);
@@ -35,14 +35,14 @@ describe('FloorLanes', () => {
 
 describe('JobRow', () => {
   it('has no axe violations in every density', async () => {
-    const { container } = render(<div>{(['row', 'compact', 'two-line'] as const).map((d) => <JobRow key={d} density={d} job={jobs[0]} onOpen={() => {}} onAction={() => {}} />)}</div>);
+    const { container } = render(<div>{(['row', 'compact', 'two-line'] as const).map((d) => <JobRow key={d} density={d} job={jobs[0]} env={todayEnv} view={viewOf(jobs[0])} mechanics={mechanics} onOpen={() => {}} onAction={() => {}} />)}</div>);
     expect((await axe.run(container, axeOpts)).violations).toEqual([]);
   });
 });
 
 describe('PartChip', () => {
   it('has no axe violations', async () => {
-    const { container } = render(<div>{products.slice(0, 4).map((p) => <PartChip key={p.id} product={p} />)}<PartChip product={productOf(products[0].id)} readOnly /></div>);
+    const { container } = render(<div>{products.slice(0, 4).map((p) => <PartChip key={p.id} product={p} env={todayEnv} inventoryName={branch.inventory.platform} />)}<PartChip product={productOf(products[0].id)} env={todayEnv} inventoryName={branch.inventory.platform} readOnly /></div>);
     expect((await axe.run(container, axeOpts)).violations).toEqual([]);
   });
 });

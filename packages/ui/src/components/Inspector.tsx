@@ -14,7 +14,7 @@ import { branch, customerOf, ledaProposals, loadError, mechanics, peso, productO
 import { dayWord, hm, money, nextAction, reasonOf, serviceTitle, type NextAction } from './sms/floorModel';
 import { PartChip, type PartAction } from './PartChip';
 import { PersonAvatar } from './avatarTone';
-import { viewOf } from './sms/floorModel';
+import { todayEnv, viewOf } from './sms/floorModel';
 import { hasQuotation, isQuote, quoteNoOf } from './sms/wizardModel';
 import { docFromJob } from './sms/wizardModel';
 import { longDay } from './sms/scheduleModel';
@@ -134,7 +134,7 @@ export function Inspector({
           <ul className="space-y-1.5">
             {job.parts.map((l) => {
               const pr = productOf(l.productId);
-              return <li key={l.productId} className="flex items-center gap-2"><span className="w-8 flex-none text-[13px] tabular-nums text-muted">{l.qty} x</span><PartChip product={pr} readOnly={job.status === 'FOR_PICKUP'} onResolve={(a) => onResolve(job, a, pr.id)} /></li>;
+              return <li key={l.productId} className="flex items-center gap-2"><span className="w-8 flex-none text-[13px] tabular-nums text-muted">{l.qty} x</span><PartChip product={pr} env={todayEnv} inventoryName={branch.inventory.platform} readOnly={job.status === 'FOR_PICKUP'} onResolve={(a) => onResolve(job, a, pr.id)} /></li>;
             })}
           </ul>
         )}

@@ -1,31 +1,37 @@
-import { forwardRef, type ReactNode } from 'react';
+import { forwardRef, type ForwardedRef, type ReactElement, type ReactNode, type Ref } from 'react';
 import { Button } from './Button';
 import { cn } from '../utils/cn';
 import { PersonAvatar } from './avatarTone';
-import { mechanics, type Job } from './sms/data';
-import { STATUS_SHORT, dayWord, flagOf, reasonOf, serviceTitle, type NextAction, nextAction, viewOf } from './sms/floorModel';
+import { STATUS_SHORT, dayWord, flagOf, nextAction, reasonOf, serviceTitle } from './today/model';
+import type { NextAction, TodayEnv, TodayJob, TodayJobView, TodayMechanic } from './today/types';
 
-export interface JobRowProps {
-  job: Job;
+export interface JobRowProps<J extends TodayJob = TodayJob> {
+  job: J;
+  /** The clock and the stock rules behind the flag and the next action. */
+  env: TodayEnv;
+  /** Car and customer shown on the row. */
+  view: TodayJobView;
+  /** The shop's mechanics; the assignee shows as an avatar. */
+  mechanics: TodayMechanic[];
   density?: 'row' | 'compact' | 'two-line';
   selected?: boolean;
-  onOpen?: (job: Job) => void;
-  onAction?: (job: Job, a: NextAction) => void;
+  onOpen?: (job: J) => void;
+  onAction?: (job: J, a: NextAction) => void;
   /** Slot under the row (part chip, Leda note). */
   below?: ReactNode;
   className?: string;
 }
 
 /**
- * Studio-only JobRow (NEW): plate in mono, make/model/year, customer, mechanic avatar, promised time against Now, flag, next action.
+ * JobRow: plate in mono, make/model/year, customer, mechanic avatar, promised time against Now, flag, next action.
  * `two-line` is the phone density: plate and time on line one, vehicle and flag on line two, the action as a 44px button.
+ * Data-agnostic: the job, its view, the mechanics and the clock all arrive as props.
  */
-export const JobRow = forwardRef<HTMLDivElement, JobRowProps>(function JobRow({ job, density = 'row', selected, onOpen, onAction, below, className }, ref) {
-  const v = viewOf(job);
-  const flag = flagOf(job);
-  const act = nextAction(job);
+function JobRowInner<J extends TodayJob>({ job, env, view: v, mechanics, density = 'row', selected, onOpen, onAction, below, className }: JobRowProps<J>, ref: ForwardedRef<HTMLDivElement>) {
+  const flag = flagOf(env, job);
+  const act = nextAction(env, job);
   const m = mechanics.find((x) => x.id === job.assigneeId);
-  const time = job.promisedAt ? dayWord(job.promisedAt) : 'no time';
+  const time = job.promisedAt ? dayWord(job.promisedAt, env.today) : 'no time';
   const title = serviceTitle(job);
   const open = () => onOpen?.(job);
   const tone = flag?.tone === 'bad' ? 'text-bad font-medium' : 'text-text font-medium';
@@ -34,7 +40,7 @@ export const JobRow = forwardRef<HTMLDivElement, JobRowProps>(function JobRow({ 
   );
   if (density === 'two-line') {
     return (
-      <div ref={ref} className={cn('-mx-2 border-b border-rule px-2 py-2', reasonOf(job) && 'bg-warn-bg', className)}>
+      <div ref={ref} className={cn('-mx-2 border-b border-rule px-2 py-2', reasonOf(env, job) && 'bg-warn-bg', className)}>
         <button type="button" onClick={open} className="flex w-full min-h-11 items-start gap-3 text-left" aria-label={`${job.number}, ${v.vehicle}, ${v.customer}`}>
           <span className="min-w-0 flex-1">
             <span className="flex items-baseline gap-2"><span className="font-mono text-[13px]">{job.number}</span><span className="min-w-0 flex-1 truncate text-[14px] font-medium">{v.vehicle.replace(/ \d{4}$/, '')}</span><span className="ml-auto flex-none whitespace-nowrap text-[13px] tabular-nums text-muted">{time}</span></span>
@@ -47,7 +53,7 @@ export const JobRow = forwardRef<HTMLDivElement, JobRowProps>(function JobRow({ 
     );
   }
   return (
-    <div ref={ref} className={cn('border-b border-rule', reasonOf(job) && 'bg-warn-bg', selected && 'bg-raised', className)}>
+    <div ref={ref} className={cn('border-b border-rule', reasonOf(env, job) && 'bg-warn-bg', selected && 'bg-raised', className)}>
       <div className={cn('flex items-center gap-3 px-2', density === 'compact' ? 'min-h-9' : 'min-h-11')}>
         <button type="button" onClick={open} className="flex min-w-0 flex-1 items-center gap-3 text-left" aria-label={`${job.number}, ${v.vehicle}, ${v.customer}`} aria-current={selected || undefined}>
           <span className="w-[68px] flex-none font-mono text-[13px]">{job.number}</span>
@@ -62,4 +68,6 @@ export const JobRow = forwardRef<HTMLDivElement, JobRowProps>(function JobRow({ 
       {below && <div className="px-2 pb-2 pl-[92px]">{below}</div>}
     </div>
   );
-});
+}
+
+export const JobRow = forwardRef(JobRowInner) as <J extends TodayJob = TodayJob>(props: JobRowProps<J> & { ref?: Ref<HTMLDivElement> }) => ReactElement | null;

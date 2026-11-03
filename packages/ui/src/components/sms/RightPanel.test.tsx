@@ -3,7 +3,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import axe from 'axe-core';
 import { PanelToggle } from '../PanelToggle';
 import { FloorFeed } from './FloorFeed';
-import { SidePanelLayout } from './SidePanel';
+import { FloorSidePanel as SidePanelLayout } from './SidePanel';
 import { useSmsLeda } from './LedaPanel';
 import { jobs } from './data';
 

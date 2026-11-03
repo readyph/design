@@ -5,7 +5,7 @@ import { PlatformLogo } from './PlatformLogo';
 import { Skeleton } from './Skeleton';
 import { PersonAvatar } from './avatarTone';
 import { branch, jobBalance, jobTotal, mechanics, peso, type Job } from './sms/data';
-import { STATUS_SHORT, dayWord, flagOf, reasonOf, serviceTitle, shortDate, viewOf } from './sms/floorModel';
+import { STATUS_SHORT, dayWord, flagOf, reasonOf, serviceTitle, shortDate, todayEnv, viewOf } from './sms/floorModel';
 import { isUnpaid, partsFor } from './sms/servicesModel';
 import { PartChip } from './PartChip';
 import { hasQuotation, quoteNoOf } from './sms/wizardModel';
@@ -51,7 +51,7 @@ export function PartsCell({ job, inventory = 'ok' }: { job: Job; inventory?: Inv
     <span className="flex min-w-0 items-center gap-1.5">
       {done
         ? <span className="inline-flex items-center gap-1.5 text-[12px] text-muted"><PlatformLogo decorative name={branch.inventory.platform} size={14} />{lines.length} {lines.length === 1 ? 'part' : 'parts'} issued</span>
-        : <PartChip product={lead.product} readOnly staleSince={inventory === 'slow' ? '10:02' : undefined} className="min-w-0 max-w-[116px] overflow-hidden" />}
+        : <PartChip product={lead.product} env={todayEnv} inventoryName={branch.inventory.platform} readOnly staleSince={inventory === 'slow' ? '10:02' : undefined} className="min-w-0 max-w-[116px] overflow-hidden" />}
       {!done && lines.length > 1 && <span className="flex-none text-[12px] text-muted">{shortCount > 1 ? `+${lines.length - 1}, ${shortCount} short` : `+${lines.length - 1}`}</span>}
     </span>
   );

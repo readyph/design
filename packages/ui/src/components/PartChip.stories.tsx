@@ -1,13 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { PartChip } from './PartChip';
-import { products } from './sms/data';
-import { stockState } from './sms/data';
+import { branch, products, stockState } from './sms/data';
+import { todayEnv } from './sms/floorModel';
 
 const meta: Meta<typeof PartChip> = {
   title: 'Components/Data/Part chip',
   component: PartChip,
   tags: ['autodocs'],
-  args: { product: products[0], onResolve: () => {} },
+  args: { product: products[0], env: todayEnv, inventoryName: branch.inventory.platform, onResolve: () => {} },
 };
 export default meta;
 type S = StoryObj<typeof PartChip>;

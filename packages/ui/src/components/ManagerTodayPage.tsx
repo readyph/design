@@ -8,9 +8,9 @@ import { useServiceFlow } from './useServiceFlow';
 import { HOURS, PIPELINE, branch, customers, productOf, manager, mechanics, firstRun, quietDay, jobBalance, jobs as allJobs, today as todayFacts, peso, inquiries, type Inquiry, type Job, type LedaProposalData } from './sms/data';
 import { getMech, useMech } from './sms/mechModel';
 import { needsCount } from './sms/requestsModel';
-import { applyOverrides, lanesFor, reasonOf, type LaneId, type NextAction, type Overrides } from './sms/floorModel';
+import { applyOverrides, lanesFor, reasonOf, todayEnv, viewOf, type LaneId, type NextAction, type Overrides } from './sms/floorModel';
 import { PaymentScreen, type PaymentOverlay } from './PaymentPage';
-import { SidePanelLayout } from './sms/SidePanel';
+import { FloorSidePanel as SidePanelLayout } from './sms/SidePanel';
 import { Offcanvas } from './Offcanvas';
 import { TrackingLink } from './TrackingLink';
 import { InquiryDetail } from './InquiryDetail';
@@ -210,7 +210,7 @@ export function ManagerTodayPage({ state = 'ready', inventory = 'ok', as = 'mana
         return (
           <section key={status} aria-label={label} className="pt-4">
             <h3 className="flex items-baseline gap-2 border-b border-control pb-1 text-[13px] font-semibold">{label}<span className="font-normal text-muted">{rows.length}</span></h3>
-            {rows.map((j) => <JobRow key={j.id} job={j} selected={j.id === selectedId} onOpen={(x) => setSelectedId(x.id)} onAction={act} />)}
+            {rows.map((j) => <JobRow key={j.id} env={todayEnv} view={viewOf(j)} mechanics={mechanics} job={j} selected={j.id === selectedId} onOpen={(x) => setSelectedId(x.id)} onAction={act} />)}
             {rows.length === 0 && <p className="py-2 text-[13px] text-muted">0</p>}
           </section>
         );
@@ -265,7 +265,7 @@ export function ManagerTodayPage({ state = 'ready', inventory = 'ok', as = 'mana
                 />
               </div>
               <div className="px-4 pb-6">
-                {state === 'loading' ? <Skeleton variant="text" lines={6} /> : laneJobs.map((j) => <JobRow key={j.id} density="two-line" job={j} onOpen={(x) => setPhoneJob(x.id)} onAction={act} />)}
+                {state === 'loading' ? <Skeleton variant="text" lines={6} /> : laneJobs.map((j) => <JobRow key={j.id} env={todayEnv} view={viewOf(j)} mechanics={mechanics} density="two-line" job={j} onOpen={(x) => setPhoneJob(x.id)} onAction={act} />)}
                 {state !== 'loading' && laneJobs.length === 0 && <p className="py-4 text-[14px] text-muted">Nothing in this lane.</p>}
               </div>
               </>
