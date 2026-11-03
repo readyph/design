@@ -4,7 +4,7 @@
  * Sample data to replace: in the real product this is a Settings-owned list per branch (API does not have it yet).
  */
 import { useSyncExternalStore } from 'react';
-import { onHandHere, productOf, products, stockState, type StockState } from './data';
+import { onHandHere, products, stockState, type Product, type StockState } from './data';
 
 export const CATEGORIES = ['Maintenance', 'Brakes', 'Engine', 'Electrical', 'Aircon', 'Suspension', 'Tires & wheels', 'Body'] as const;
 export type Category = (typeof CATEGORIES)[number];
@@ -134,14 +134,15 @@ export const forVehicle = (t: ServiceType, kind: 'car' | 'van' | 'pickup' | 'mot
   !kind || t.vehicle === 'all' || (kind === 'motorcycle' ? t.vehicle === 'motorcycle' : t.vehicle === 'car');
 
 // ---- parts link helpers ----
-/** Parts cost at today's Inventory sell price (for one service). */
-export const partsCost = (parts: ServicePart[] | undefined) => (parts ?? []).reduce((a, p) => a + (products.find((x) => x.id === p.productId)?.price ?? 0) * p.qty, 0);
-/** Worst stock state among the linked parts, for the tag in the list: out, low or on order beat in stock. */
-export function partsStock(parts: ServicePart[] | undefined): { state: StockState | 'none'; worst?: string } {
+/** Parts cost at today's Inventory sell price (for one service). `list` is the host's products (default: the sample products); an unknown product counts as 0. */
+export const partsCost = (parts: ServicePart[] | undefined, list: Product[] = products) => (parts ?? []).reduce((a, p) => a + (list.find((x) => x.id === p.productId)?.price ?? 0) * p.qty, 0);
+/** Worst stock state among the linked parts, for the tag in the list: out, low or on order beat in stock. Parts missing from `list` are skipped. */
+export function partsStock(parts: ServicePart[] | undefined, list: Product[] = products): { state: StockState | 'none'; worst?: string } {
   let rank = 0; let worst: string | undefined; let state: StockState | 'none' = (parts?.length ?? 0) ? 'in' : 'none';
   const order: Record<StockState, number> = { in: 0, low: 1, on_order: 2, out: 3 };
   for (const p of parts ?? []) {
-    const pr = productOf(p.productId);
+    const pr = list.find((x) => x.id === p.productId);
+    if (!pr) continue;
     const st = onHandHere(pr) < p.qty && stockState(pr) === 'in' ? 'low' : stockState(pr);
     if (order[st] > rank) { rank = order[st]; state = st; worst = pr.name; }
   }
