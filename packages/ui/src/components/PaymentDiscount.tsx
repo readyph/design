@@ -1,10 +1,9 @@
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { Button } from './Button';
 import { SegmentedControl } from './SegmentedControl';
 import { TextField } from './TextField';
 import { ToggleChip } from './ServicesControls';
 import { MoneyField } from './MoneyField';
-import { cn } from '../utils/cn';
 import type { Discount, Job } from './sms/data';
 import { DISCOUNT_REASONS, discountError, discountPreview, fmt } from './sms/paymentModel';
 import { jobSubtotal } from './sms/data';
