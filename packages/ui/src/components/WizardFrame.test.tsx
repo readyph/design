@@ -32,6 +32,8 @@ describe('WizardBlock', () => {
     render(<WizardBlock id="a" title="Schedule" editing edit={<p>controls</p>} onDone={() => {}} onCancel={() => {}} />);
     expect(screen.getByText('controls')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Done' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Done' }).className).toContain('var(--ctl-touch)');
+    expect(screen.getByRole('button', { name: 'Cancel' }).className).toContain('var(--ctl-touch)');
   });
   it('has no axe violations', async () => {
     const { container } = render(<WizardBlock id="a" title="Schedule" summary="Today" onEdit={() => {}}>read</WizardBlock>);
