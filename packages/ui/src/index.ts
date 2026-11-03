@@ -101,3 +101,5 @@ export * from './components/CalendarToolbar';
 export * from './components/FloorLanes';
 export * from './components/JobRow';
 export * from './components/PartChip';
+export * from './components/Inspector';
+export * from './components/InquiryDetail';
