@@ -2,22 +2,27 @@ import { ChatCircleText, X } from '@phosphor-icons/react';
 import { Badge } from './Badge';
 import { Button } from './Button';
 import { Fact, FactsLine } from './FactsLine';
-import type { Inquiry, Job } from './sms/data';
-import { hm, viewOf } from './sms/floorModel';
+import { Skeleton } from './Skeleton';
+import { hm } from './today/model';
+import type { TodayInquiry, TodayJob, TodayJobView } from './today/types';
 
-export interface InquiryDetailProps {
-  inquiry: Inquiry;
+export interface InquiryDetailProps<J extends TodayJob = TodayJob> {
+  inquiry: TodayInquiry;
   /** Reply time this session, if sent. */
   repliedAt?: string;
-  job?: Job | null;
-  onReply: (q: Inquiry) => void;
-  onNewService: (q: Inquiry) => void;
-  onOpenJob: (j: Job) => void;
+  /** The service the inquiry is linked to, with its car and customer. */
+  job?: J | null;
+  jobView?: TodayJobView;
+  /** `loading`: skeleton body while the inquiry loads. */
+  state?: 'ready' | 'loading';
+  onReply: (q: TodayInquiry) => void;
+  onNewService: (q: TodayInquiry) => void;
+  onOpenJob: (j: J) => void;
   onClose: () => void;
 }
 
-/** Studio-only InquiryDetail (NEW): the off-canvas body for an inquiry. Reply and New service live here, not on the list row. */
-export function InquiryDetail({ inquiry: q, repliedAt, job, onReply, onNewService, onOpenJob, onClose }: InquiryDetailProps) {
+/** InquiryDetail: the off-canvas body for an inquiry. Reply and New service live here, not on the list row. Data-agnostic: the inquiry, its linked job and that job's view are props. */
+export function InquiryDetail<J extends TodayJob = TodayJob>({ inquiry: q, repliedAt, job, jobView, state = 'ready', onReply, onNewService, onOpenJob, onClose }: InquiryDetailProps<J>) {
   const done = repliedAt ?? (q.repliedAt ? hm(q.repliedAt) : undefined);
   return (
     <div className="flex h-full flex-col">
@@ -29,18 +34,20 @@ export function InquiryDetail({ inquiry: q, repliedAt, job, onReply, onNewServic
         </div>
         <button type="button" aria-label="Close inquiry" onClick={onClose} className="inline-flex size-8 items-center justify-center rounded-control text-muted hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent max-[640px]:size-11"><X size={16} aria-hidden /></button>
       </div>
-      <p className="border-t border-rule px-4 py-3 text-[14px] leading-6">{q.text}</p>
+      {state === 'loading' ? (
+        <div role="status" aria-label="Loading the inquiry" className="space-y-2 border-t border-rule px-4 py-3"><Skeleton variant="rect" width="90%" height={14} /><Skeleton variant="rect" width="60%" height={14} /></div>
+      ) : <p className="border-t border-rule px-4 py-3 text-[14px] leading-6">{q.text}</p>}
       {job && (
         <div className="border-t border-rule px-4 py-3">
           <h3 className="mb-2 text-[13px] font-semibold">Linked service</h3>
-          <FactsLine><Fact value={job.number}>{viewOf(job).vehicle}</Fact></FactsLine>
+          <FactsLine><Fact value={job.number}>{jobView?.vehicle}</Fact></FactsLine>
           <Button variant="text" className="-ml-2 mt-1" onClick={() => onOpenJob(job)}>Open service {job.number}</Button>
         </div>
       )}
       <div className="mt-auto flex flex-wrap items-center gap-2 border-t border-rule px-4 py-3">
-        {!done && <Button variant="primary" onClick={() => onReply(q)}>Reply</Button>}
-        {!done && !job && <Button variant="secondary" onClick={() => onNewService(q)}>New service</Button>}
-        {done && <p className="text-[13px] text-muted">Replied at {done}.</p>}
+        {state === 'ready' && !done && <Button variant="primary" onClick={() => onReply(q)}>Reply</Button>}
+        {state === 'ready' && !done && !job && <Button variant="secondary" onClick={() => onNewService(q)}>New service</Button>}
+        {state === 'ready' && done && <p className="text-[13px] text-muted">Replied at {done}.</p>}
       </div>
     </div>
   );

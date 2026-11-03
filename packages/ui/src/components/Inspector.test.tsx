@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import axe from 'axe-core';
 import { Inspector } from './Inspector';
-import { InquiryDetail } from './InquiryDetail';
+import { InquiryDetail } from './sms/InquiryDetail';
 import { inquiries, jobs } from './sms/data';
 import { money } from './sms/floorModel';
 

@@ -107,6 +107,7 @@ export * from './components/WeekCalendar';
 export * from './components/CalCard';
 export * from './components/CalendarToolbar';
 export * from './components/FloorLanes';
+export * from './components/FloorFeed';
 export * from './components/JobRow';
 export * from './components/PartChip';
 export * from './components/TodayDialogs';

@@ -4,21 +4,27 @@ import { Menu } from './Menu';
 import { Skeleton } from './Skeleton';
 import { cn } from '../utils/cn';
 import { PersonAvatar } from './avatarTone';
-import { HOURS, NOW_MIN, TODAY, mechanics, type Job } from './sms/data';
-import { STATUS_SHORT, flagOf, reasonOf, serviceTitle, freeFrom, hm, minOf, viewOf, type LaneId, type LaneModel } from './sms/floorModel';
+import { STATUS_SHORT, flagOf, freeFromMin, hm, minOf, reasonOf, serviceTitle } from './today/model';
+import type { FloorLane, FloorMoveTarget, TodayEnv, TodayJob, TodayJobView } from './today/types';
 
-export interface FloorLanesProps {
-  lanes: LaneModel[];
+export interface FloorLanesProps<J extends TodayJob = TodayJob> {
+  lanes: FloorLane<J>[];
+  /** The clock (`today`) and the stock rules behind each chip's flag. */
+  env: TodayEnv;
+  /** Car and customer shown on a chip. */
+  view: (job: J) => TodayJobView;
+  /** The "Move to..." menu: every lane a chip can go to. */
+  moveTargets: FloorMoveTarget[];
   selectedId?: string;
   state?: 'ready' | 'loading';
   /** Business hours in minutes since midnight (Portal Settings > company > business hours). Half-hours allowed. */
-  open?: number;
-  close?: number;
+  open: number;
+  close: number;
   /** Current time in minutes since midnight. */
-  now?: number;
-  onSelect: (job: Job) => void;
+  now: number;
+  onSelect: (job: J) => void;
   /** Reassign (drag between lanes, or the "Move to..." menu). */
-  onMove: (job: Job, to: LaneId) => void;
+  onMove: (job: J, to: string) => void;
   className?: string;
 }
 
@@ -31,11 +37,11 @@ const ROW_H = 80; // chip height 72 + 8 gap: every chip is the same height whate
 const WELL_W = 116;
 const HEAD_W = 140;
 
-interface Placed { job: Job; left: number; width: number; row: number }
+interface Placed<J> { job: J; left: number; width: number; row: number }
 
 /** Greedy row packing: chips sit left of their promised time; a chip that would overlap drops to the next row. */
-function place(jobs: Job[], px: (m: number) => number, open: number, close: number): { placed: Placed[]; rows: number; well: Job[] } {
-  const inHours = (j: Job) => !!j.promisedAt?.startsWith(TODAY) && minOf(j.promisedAt) >= open && minOf(j.promisedAt) <= close;
+function place<J extends TodayJob>(jobs: J[], today: string, px: (m: number) => number, open: number, close: number): { placed: Placed<J>[]; rows: number; well: J[] } {
+  const inHours = (j: J) => !!j.promisedAt?.startsWith(today) && minOf(j.promisedAt) >= open && minOf(j.promisedAt) <= close;
   // No time, another day, or promised outside business hours: all wait in the well (the chip still shows its time).
   const timed = jobs.filter(inHours).sort((a, b) => a.promisedAt!.localeCompare(b.promisedAt!));
   const well = jobs.filter((j) => !inHours(j));
@@ -52,20 +58,17 @@ function place(jobs: Job[], px: (m: number) => number, open: number, close: numb
   return { placed, rows: Math.max(1, ends.length), well };
 }
 
-function Chip({ job, selected, style, onSelect, onMove, className }: { job: Job; selected: boolean; style?: React.CSSProperties; onSelect: () => void; onMove: (to: LaneId) => void; className?: string }) {
-  const v = viewOf(job);
-  const flag = flagOf(job);
+function Chip<J extends TodayJob>({ job, env, v, moveTargets, selected, style, onSelect, onMove, className }: { job: J; env: TodayEnv; v: TodayJobView; moveTargets: FloorMoveTarget[]; selected: boolean; style?: React.CSSProperties; onSelect: () => void; onMove: (to: string) => void; className?: string }) {
+  const flag = flagOf(env, job);
   const st = STATUS_SHORT[job.status];
   const title = serviceTitle(job);
-  const moveItems = [
-    ...mechanics.map((m) => ({ label: m.short, meta: m.bay, onSelect: () => onMove(m.id as LaneId) })),
-  ];
+  const moveItems = moveTargets.flatMap((t) => [...(t.separatorBefore ? [{ type: 'separator' as const }] : []), { label: t.label, meta: t.meta, onSelect: () => onMove(t.id) }]);
   return (
     <div
       style={style}
       draggable
       onDragStart={(e) => { e.dataTransfer.setData('text/job', job.id); e.dataTransfer.effectAllowed = 'move'; }}
-      className={cn('group absolute flex h-[72px] min-w-0 items-stretch overflow-hidden rounded-control border text-left', reasonOf(job) ? 'bg-warn-bg' : 'bg-surface', flag?.tone === 'bad' ? 'border-bad' : 'border-control', selected && 'ring-2 ring-accent', className)}
+      className={cn('group absolute flex h-[72px] min-w-0 items-stretch overflow-hidden rounded-control border text-left', reasonOf(env, job) ? 'bg-warn-bg' : 'bg-surface', flag?.tone === 'bad' ? 'border-bad' : 'border-control', selected && 'ring-2 ring-accent', className)}
     >
       <button
         type="button"
@@ -81,7 +84,7 @@ function Chip({ job, selected, style, onSelect, onMove, className }: { job: Job;
       </button>
       <Menu
         trigger={<button type="button" aria-label={`Move ${job.number} to...`} className="flex w-5 flex-none items-center justify-center rounded-r-control text-faint hover:bg-raised hover:text-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"><DotsSixVertical size={14} aria-hidden /></button>}
-        items={[{ type: 'label', label: 'Move to...' }, ...moveItems, { type: 'separator' }, { label: 'Counter', onSelect: () => onMove('counter') }]}
+        items={[{ type: 'label', label: 'Move to...' }, ...moveItems]}
         align="end"
       />
     </div>
@@ -89,10 +92,11 @@ function Chip({ job, selected, style, onSelect, onMove, className }: { job: Job;
 }
 
 /**
- * Studio-only FloorLanes: stand-in for the proposed DayTimeline CHANGE (chips draggable between lanes, a "no time" well at the lane's left edge,
- * keyboard alternative = the "Move to..." menu on every chip).
+ * FloorLanes: the shop floor as one lane per mechanic on a day timeline (chips draggable between lanes, a "no time" well at the lane's left edge,
+ * keyboard alternative = the "Move to..." menu on every chip). Data-agnostic: lanes, hours, the clock and the car/customer lookup all arrive as props.
+ * The only inline styles are computed geometry (a chip's left/top/width on the fixed hour scale), which no class can express.
  */
-export function FloorLanes({ lanes, selectedId, state = 'ready', open = HOURS.open, close = HOURS.close, now = NOW_MIN, onSelect, onMove, className }: FloorLanesProps) {
+export function FloorLanes<J extends TodayJob = TodayJob>({ lanes, env, view, moveTargets, selectedId, state = 'ready', open, close, now, onSelect, onMove, className }: FloorLanesProps<J>) {
   const dragOver = useRef<string | null>(null);
   const px = (min: number) => ((min - open) / 60) * HOUR_W;
   const TIMELINE_W = px(close);
@@ -110,7 +114,7 @@ export function FloorLanes({ lanes, selectedId, state = 'ready', open = HOURS.op
     el.scrollTo({ left: Math.max(0, left), behavior: smooth && !window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'smooth' : 'auto' });
   };
   useEffect(() => { if (state === 'ready') jumpToNow(false); }, [state, open, close, now]);
-  const packed = useMemo(() => lanes.map((l) => ({ lane: l, ...place(l.jobs, px, open, close) })), [lanes, open, close]);
+  const packed = useMemo(() => lanes.map((l) => ({ lane: l, ...place(l.jobs, env.today, px, open, close) })), [lanes, env.today, open, close]);
   if (state === 'loading') {
     return (
       <div className={cn('min-h-0 flex-1 overflow-auto p-pad', className)} aria-busy="true">
@@ -139,7 +143,7 @@ export function FloorLanes({ lanes, selectedId, state = 'ready', open = HOURS.op
         </div>
         {packed.map(({ lane, placed, rows, well }) => {
           const h = Math.max(rows, well.length) * ROW_H + 8;
-          const free = lane.id.startsWith('m-') ? freeFrom(lane) : null;
+          const free = lane.manager || !lane.initials ? null : freeFromMin(lane.jobs, env.today);
           return (
             <div
               key={lane.id}
@@ -153,13 +157,13 @@ export function FloorLanes({ lanes, selectedId, state = 'ready', open = HOURS.op
                 <div className="min-w-0"><div className="truncate text-[14px] font-semibold leading-5">{lane.name}</div><div className="truncate text-[12px] leading-4 text-muted">{lane.sub}</div></div>
               </div>
               <div className="w-[116px] relative flex-none border-l border-dashed border-rule">
-                {well.map((job, i) => <Chip key={job.id} job={job} selected={job.id === selectedId} onSelect={() => onSelect(job)} onMove={(to) => onMove(job, to)} style={{ top: 8 + i * ROW_H, left: 8, right: 8 }} />)}
+                {well.map((job, i) => <Chip key={job.id} job={job} env={env} v={view(job)} moveTargets={moveTargets} selected={job.id === selectedId} onSelect={() => onSelect(job)} onMove={(to) => onMove(job, to)} style={{ top: 8 + i * ROW_H, left: 8, right: 8 }} />)}
               </div>
               <div style={{ width: TIMELINE_W }} className="relative flex-none border-l border-rule">
                 {hours.map((t) => <span key={t} aria-hidden style={{ left: px(t * 60) }} className="absolute inset-y-0 w-px bg-rule" />)}
                 {nowIn && <span aria-hidden style={{ left: px(now) }} className="pointer-events-none absolute inset-y-0 z-[1] w-0.5 -translate-x-1/2 bg-accent" />}
-                {free && lane.jobs.length > 0 && lane.jobs.length <= 1 && <span style={{ left: px(minOf(`2026-11-02T${free.padStart(5, '0')}:00`)) }} className="absolute top-1/2 ml-2 -translate-y-1/2 whitespace-nowrap text-[12px] text-muted">free from {free}</span>}
-                {placed.map(({ job, left, width, row }) => <Chip key={job.id} job={job} selected={job.id === selectedId} onSelect={() => onSelect(job)} onMove={(to) => onMove(job, to)} style={{ top: 8 + row * ROW_H, left, width }} />)}
+                {free !== null && lane.jobs.length === 1 && <span style={{ left: px(free) }} className="absolute top-1/2 ml-2 -translate-y-1/2 whitespace-nowrap text-[12px] text-muted">free from {hmin(free)}</span>}
+                {placed.map(({ job, left, width, row }) => <Chip key={job.id} job={job} env={env} v={view(job)} moveTargets={moveTargets} selected={job.id === selectedId} onSelect={() => onSelect(job)} onMove={(to) => onMove(job, to)} style={{ top: 8 + row * ROW_H, left, width }} />)}
                 {placed.length === 0 && well.length === 0 && <span className="absolute left-4 top-4 text-[12px] text-muted">Nothing here</span>}
               </div>
             </div>
