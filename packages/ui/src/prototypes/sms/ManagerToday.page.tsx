@@ -10,7 +10,7 @@ import { getMech, useMech } from './mechModel';
 import { needsCount } from './requestsModel';
 import { applyOverrides, lanesFor, reasonOf, type LaneId, type NextAction, type Overrides } from './floorModel';
 import { PaymentScreen, type PaymentOverlay } from './Payment.page';
-import { SidePanelLayout } from './ext/SidePanel';
+import { FloorSidePanel as SidePanelLayout } from './ext/SidePanel';
 import { Offcanvas } from './ext/Offcanvas';
 import { InquiryDetail } from './ext/InquiryDetail';
 import { FloorLanes } from './ext/FloorLanes';

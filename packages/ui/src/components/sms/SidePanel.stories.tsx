@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { SidePanelLayout } from './SidePanel';
+import { FloorSidePanel as SidePanelLayout } from './SidePanel';
 import type { FeedTab } from './FloorFeed';
 import { jobs } from './data';
 

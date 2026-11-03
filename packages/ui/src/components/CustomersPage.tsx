@@ -23,7 +23,7 @@ import { CarSheet } from './CarSheet';
 import { CustomerCard, CustomersTable } from './CustomersTable';
 import { CardSkeletons, InfiniteSentinel, ListEnd, ResultCount, scrollTop } from './InfiniteList';
 import { useServiceFlow, type FlowState } from './useServiceFlow';
-import { SidePanelLayout } from './sms/SidePanel';
+import { FloorSidePanel as SidePanelLayout } from './sms/SidePanel';
 import { type FeedTab } from './sms/FloorFeed';
 import type { PartAction } from './PartChip';
 import { SearchBox, ToggleChip } from './ServicesControls';

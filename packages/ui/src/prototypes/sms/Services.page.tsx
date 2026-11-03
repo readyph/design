@@ -24,7 +24,7 @@ import { InquiryDetail } from './ext/InquiryDetail';
 import { CustomerPanel } from './ext/CustomerPanel';
 import { CardSkeletons, InfiniteSentinel, ListEnd, ResultCount, scrollTop } from './ext/InfiniteList';
 import { useServiceFlow, type FlowState } from './ext/useServiceFlow';
-import { SidePanelLayout } from './ext/SidePanel';
+import { FloorSidePanel as SidePanelLayout } from './ext/SidePanel';
 import { FloorFeed, type FeedTab } from './ext/FloorFeed';
 import { WeekCalendar } from './ext/WeekCalendar';
 import { CalendarToolbar, SPAN_DAYS, calMechanicOptions, type Span } from './ext/CalendarToolbar';
