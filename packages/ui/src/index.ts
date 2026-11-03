@@ -106,5 +106,6 @@ export * from './components/JobRow';
 export * from './components/PartChip';
 export * from './components/RequestList';
 export * from './components/RequestStepper';
+export * from './components/RequestModals';
 export * from './components/Inspector';
 export * from './components/InquiryDetail';
