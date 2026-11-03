@@ -1,0 +1,48 @@
+import { Meta, Canvas } from '@storybook/blocks';
+import * as Stories from './Mechanic.stories';
+
+<Meta of={Stories} />
+
+# Mechanic mobile (v2 Shop floor)
+
+<Canvas of={Stories.Live} />
+
+Live phone app for mechanics who are not tech savvy: one obvious thing at a time. Home is a vertical **day schedule** like the manager's Floor view, for your cars only (hour axis, blue now line at 10:20, the Floor cards placed by time, in the staff member's own view: number + plate left and a pulsing **Currently working on** pill right on the one service being worked on, customer and service, a bigger status with compact icon stats (1/2 items, 0/1 parts), flags as chips, a chat-bubble icon with a red dot when the manager wrote (until you open the service), and a hairline then the **last activity** with its time at the right). No greeting, no Continue button and no global Need a part: part requests live inside each service. Open a car and the service screen reads top to bottom: the **Customer** (no phone, no call), **Ask the manager**, the Service (what the customer asked for), the **Service items** (tap a row to mark it done), the **Parts for this service** checklist table (Part, Qty, Stock, Have it) with Request more parts and **Requests for this service** (each with its status), a Facebook-order **Updates** feed (one composer on top: avatar and a borderless note box, ghost Photo and Found a problem actions and a small Post button, with a removable photo chip; posts below as the same panel rows as Today's Needs you), and last, in normal flow, the actions (Start work, Mark done and Pause, Start again). The business logo and name sit left in the header and your own avatar right (it opens Profile; the ReadyPH mark is dropped). There is no bottom nav: a fixed breadcrumb bar sits under the header (Services; Services > JO-0410 NBC 4521; ... > Request a part; Services > Profile) whose ghost chevron and earlier crumbs go back up. Everything is built from Today's own parts (revision 8): plain `bg-surface` page, `NotifyItem` rows, Today's section captions, `Badge`, `Avatar`, `Button`, `Checkbox`, no boxes. **Open the story in the Canvas tab** for Controls; the toolbar Viewport (Small mobile) and Theme do phone and dark.
+
+**Controls.** `mechanic` (Jun, Arnel, Paolo, Ricky), `state` (normal, no services, day off, loading, all blocked), `stress` (8 extra services, long titles), `overlay` (service detail, request part, scan sheet, pause reason, mark-done confirm).
+
+## Purpose
+"What do I do on this car, and what is left?" Home is the day schedule (revisions 9 and 10): the Floor view's cards in one column, in the staff member's perspective, tap a card to open it. Revision 6: every list uses the manager right panel look (flat rows, no grey page or cards): Service items are NotifyItem rows (check circle marker, name, parts as a muted second line, quiet status chip). Finished today is one button.
+
+## Rationale
+Source: `rationale.md`, "Mechanic mobile revision 10" (staff cards) and "revision 9" (schedule) and "revision 8" (theme source: Today). Normal app sizing (14-15px body, 12-13px labels, 52-56px service rows, library button sizes), simple through structure, status as icon plus word (To do, Working, Waiting for part, Done), no clock, no money. Moves write to a shared store, so the manager's Today shows "I'm done" as For pick-up and part requests in its Parts feed.
+
+## Assumptions
+No clock; one car at a time; a mechanic only takes an in-stock part by requesting it and the manager approves; the manager answers found problems; Finished today is today only. Parts are service-level in the data, so each item card shows the part whose catalogue service normally uses it, else the first item; the Parts checklist lists the service's own parts plus the catalogue parts of its items. Business logo is a placeholder monogram.
+
+## Known weaknesses
+- Manager-side approve / reply UI is not built; Approved and Ready steps are seeded.
+- Tapping an item moves it to the bottom at once; an undo is not offered (tap again to undo).
+- Stockroom-issued parts are locked as ready; feed photos are placeholder tiles; no paging.
+- Not browser-checked beyond tsc and the render tests.
+
+## API today vs invented
+| Need | API today | Invented |
+|---|---|---|
+| Own services, status moves | `GET /jobs?assignee_id=`, `POST /jobs/{id}/status` | mechanic-scoped token that hides prices |
+| Tick a service item | `PUT /jobs/{id}/services/{line}/done` | - |
+| Parts under each item, parts checklist, "have it" | - | service to part link (catalogue `parts`), per-part have-it confirmation |
+| Updates feed | `/jobs/{id}/comments`, `/attachments` | one feed of notes, found problems (flagged posts), part requests, chat |
+| Unread manager message (chat bubble + red dot) per service, last activity per service | - | `unread_count` and `last_activity` (latest feed post) on the service list response |
+| Business logo | - | `logo_url` on company / branch (Portal upload) |
+| Notes, photos, messages | `/jobs/{id}/comments`, `/attachments` | question / reply kinds |
+| Found problem | `/jobs/{id}/comments` with `is_problem: true` | a flag on a feed post (the composer's Found a problem switch), not a separate form; category defaults to Other |
+| Part request | - | request object and flow, proposal that becomes a quote line |
+
+### Section spacing (revision 14)
+
+The service detail sections (card header, Customer, Ask the manager, Service, Service items, Parts, Updates, actions) sit 40px apart (`gap-10`, was 24px). Each caption stays 8px above its own rows, so it reads as belonging to its section. No boxes, grey or extra dividers; text sizes and row heights are unchanged, and the home does not change.
+
+## Gap closure (2026-11-02)
+
+The mechanic list is read from Settings > Team: new mechanics appear (with an empty queue) and deactivated ones leave. The story's mechanic control is built from the same list.
