@@ -162,3 +162,4 @@ export * from './components/NewServiceWizard';
 export * from './components/NewServiceWizardPage';
 export * from './components/useServiceFlow';
 export * from './components/ManagerTodayPage';
+export * from './components/ServicesPage';
