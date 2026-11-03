@@ -121,6 +121,7 @@ export * from './components/Inspector';
 export * from './components/InquiryDetail';
 export * from './components/InfiniteList';
 export * from './components/ServicesControls';
+export * from './components/CustomersTable';
 export * from './components/Combobox';
 export * from './components/WizardStepper';
 export * from './components/WizardBlock';
