@@ -14,16 +14,37 @@ import { SheetBar, SheetBarWhere } from './SheetBar';
 import { Toaster } from './toast/Toaster';
 import { toast } from './toast/toastStore';
 import { cn } from '../utils/cn';
-import { branch, manager, mechanics } from './sms/data';
+import { branch, manager, mechanics, type Product } from './sms/data';
 import { CATEGORIES, STRESS_ROWS, saveType, setActive, useCatalogue, type ServiceType } from './sms/catalogue';
 import { CatalogueTable } from './CatalogueTable';
 import { InfiniteSentinel, ListEnd, ResultCount } from './InfiniteList';
 import { ServiceTypeForm } from './ServiceTypeForm';
 import { SearchBox, ToggleChip } from './ServicesControls';
+import type { PartSearch, PartsStatus } from './PartPicker';
 
 export interface ServicesPricesProps {
   /** `loading`: skeleton rows. `empty`: the shop has not set up any services yet. */
-  state?: 'ready' | 'loading' | 'empty';
+  state?: 'ready' | 'loading' | 'empty' | 'error';
+  /** Shown in the `error` state: why the services could not load. */
+  errorMessage?: string;
+  /** Called by the Try again button in the `error` state. */
+  onRetry?: () => void;
+  /**
+   * Host data (RDY-629, same idea as WizardDataProvider). When `services` is passed the page shows exactly these and never touches the sample store;
+   * saves and Deactivate / Reactivate go to the handlers below (the host persists, then re-supplies `services`). Without `services` the sample store is used (Storybook).
+   */
+  services?: ServiceType[];
+  /** Host Inventory products, to show the cost and stock of the linked parts. */
+  products?: Product[];
+  /** Inventory search for the part picker, and how Inventory is answering. */
+  searchParts?: PartSearch;
+  partsStatus?: PartsStatus;
+  /** A new service was saved. May return a promise; if it rejects the form stays open. */
+  onCreate?: (t: ServiceType) => void | Promise<unknown>;
+  /** An existing service was saved (also called to undo an edit). */
+  onUpdate?: (t: ServiceType) => void | Promise<unknown>;
+  /** Deactivate / Reactivate confirmed (also called to undo): `active` is the new value. */
+  onToggleActive?: (t: ServiceType, active: boolean) => void | Promise<unknown>;
   /** The manager edits prices; a mechanic only reads them. */
   role?: 'manager' | 'mechanic';
   initialQuery?: string;
@@ -45,10 +66,12 @@ const SIDE = [{ id: 'services', label: 'Services & prices', live: true }, { id: 
 /**
  * v2 Shop floor, Settings > Services & prices (NEW page): the shop's service catalogue. One ruled table (search, category, show inactive),
  * Add service; the whole row opens the edit modal; a three-dot menu has Edit and Deactivate / Activate (confirm, then Undo). Services can link Inventory parts. Rail: Today, Services, Customers, Settings. Phone: the same list as cards, form full screen.
- * Sample data to replace: the catalogue is invented (the API has no services list yet), see rationale.
+ * Data: host-supplied through `services` and the handlers (RDY-629); without them the page runs on the sample catalogue.
  */
-export function ServicesPricesPage({ state = 'ready', role = 'manager', initialQuery = '', initialCategory = 'any', initialShowInactive = false, initialForm = null, initialAsk = null, stress = false, embedded = false }: ServicesPricesProps) {
-  const catalogue = useCatalogue();
+export function ServicesPricesPage({ state = 'ready', errorMessage, onRetry, services, products, searchParts, partsStatus, onCreate, onUpdate, onToggleActive, role = 'manager', initialQuery = '', initialCategory = 'any', initialShowInactive = false, initialForm = null, initialAsk = null, stress = false, embedded = false }: ServicesPricesProps) {
+  const sample = useCatalogue();
+  const hosted = services !== undefined;
+  const catalogue = services ?? sample;
   const [q, setQ] = useState(initialQuery);
   const [cat, setCat] = useState(initialCategory);
   const [inactive, setInactive] = useState(initialShowInactive);
@@ -60,7 +83,8 @@ export function ServicesPricesPage({ state = 'ready', role = 'manager', initialQ
   useEffect(() => () => window.clearTimeout(timer.current), []);
   const canEdit = role === 'manager';
   const loading = state === 'loading';
-  const source = state === 'empty' ? [] : stress ? [...STRESS_ROWS, ...catalogue] : catalogue;
+  const failed = state === 'error';
+  const source = state === 'empty' || failed ? [] : stress ? [...STRESS_ROWS, ...catalogue] : catalogue;
 
   const rows = useMemo(() => source.filter((t) => (inactive || t.active) && (cat === 'any' || t.category === cat) && `${t.name} ${t.category} ${t.description ?? ''}`.toLowerCase().includes(q.trim().toLowerCase())), [source, inactive, cat, q]);
   const page = rows.slice(0, count);
@@ -69,17 +93,25 @@ export function ServicesPricesPage({ state = 'ready', role = 'manager', initialQ
   const editing = form && form !== 'new' ? source.find((t) => t.id === form) ?? null : null;
   const filtered = !!q.trim() || cat !== 'any';
 
-  const save = (t: ServiceType) => {
+  /** Hosted: the host's handler; sample: the shared store. A rejected promise leaves the form open and says so. */
+  const persist = async (hostFn: (() => void | Promise<unknown>) | undefined, local: () => void): Promise<boolean> => {
+    if (!hosted) { local(); return true; }
+    try { await hostFn?.(); return true; } catch { toast.error('That did not save. Check the connection and try again.'); return false; }
+  };
+  const doSave = (t: ServiceType) => (!catalogue.some((x) => x.id === t.id) ? persist(onCreate && (() => onCreate(t)), () => saveType(t)) : persist(onUpdate && (() => onUpdate(t)), () => saveType(t)));
+  const doToggle = (t: ServiceType, active: boolean) => persist(onToggleActive && (() => onToggleActive(t, active)), () => setActive(t.id, active));
+  const save = async (t: ServiceType) => {
     const isNew = !catalogue.some((x) => x.id === t.id);
     const before = catalogue.find((x) => x.id === t.id);
-    saveType(t); setForm(null);
-    toast.undo(isNew ? `${t.name} added to your services.` : `${t.name} saved.`, () => { if (before) saveType(before); else setActive(t.id, false); });
+    if (!(await doSave(t))) return;
+    setForm(null);
+    toast.undo(isNew ? `${t.name} added to your services.` : `${t.name} saved.`, () => { if (before) void doSave(before); else void doToggle(t, false); });
   };
   const asked = ask ? catalogue.find((t) => t.id === ask) ?? null : null;
-  const toggle = (t: ServiceType) => {
+  const toggle = async (t: ServiceType) => {
     setForm(null);
-    setActive(t.id, !t.active);
-    toast.undo(t.active ? `${t.name} is inactive. It no longer shows when you pick services; past jobs keep it.` : `${t.name} is active again.`, () => setActive(t.id, t.active));
+    if (!(await doToggle(t, !t.active))) return;
+    toast.undo(t.active ? `${t.name} is inactive. It no longer shows when you pick services; past jobs keep it.` : `${t.name} is active again.`, () => void doToggle(t, t.active));
   };
 
   const rail = (
@@ -112,7 +144,9 @@ export function ServicesPricesPage({ state = 'ready', role = 'manager', initialQ
     </div>
   );
 
-  const emptyBlock = state === 'empty' ? (
+  const emptyBlock = failed ? (
+    <EmptyState title="Services could not load" description={errorMessage ?? 'Check the connection and try again. Nothing was changed.'} action={onRetry ? <Button variant="secondary" onClick={onRetry}>Try again</Button> : undefined} />
+  ) : state === 'empty' ? (
     <EmptyState title="No services yet" description="Add the services your shop sells, with a price and how long each takes. They appear when you start a new service." action={canEdit ? <Button variant="primary" leftIcon={Plus} onClick={() => setForm('new')}>Add a service</Button> : undefined} />
   ) : rows.length === 0 && !loading ? (
     <EmptyState title={q.trim() ? `No service matches "${q.trim()}"` : 'No services in this category'} description={q.trim() ? 'Check the spelling, or clear the search. If your shop offers it, add it now.' : 'Pick another category, or add a service.'}
@@ -126,14 +160,14 @@ export function ServicesPricesPage({ state = 'ready', role = 'manager', initialQ
           <h2 className="text-[18px] font-semibold">Services &amp; prices</h2>
           <p className="mt-0.5 max-w-xl text-[13px] text-muted">What your shop sells. Managers set the price here; each job starts at it and can be changed on the job. Mechanics can see prices but not change them.</p>
         </div>
-        {canEdit && state !== 'empty' && <Button variant="primary" leftIcon={Plus} onClick={() => setForm('new')} className="max-[640px]:w-full max-[640px]:min-h-11">Add service</Button>}
+        {canEdit && state !== 'empty' && !failed && <Button variant="primary" leftIcon={Plus} onClick={() => setForm('new')} className="max-[640px]:w-full max-[640px]:min-h-11">Add service</Button>}
       </div>
       {!canEdit && <div className="px-6 pt-3 max-[640px]:px-4"><Notice tone="info" title="View only">Only the branch manager can change services and prices. Ask {manager.short} to add or update one.</Notice></div>}
-      {state !== 'empty' && toolbar}
+      {state !== 'empty' && !failed && toolbar}
       <div className="min-h-0 flex-1 overflow-auto px-2 max-[640px]:px-4">
         {emptyBlock ?? (
           <>
-            <CatalogueTable rows={page} canEdit={canEdit} onEdit={(t) => setForm(t.id)} onToggle={(t) => setAsk(t.id)} loading={loading} loadingMore={more} />
+            <CatalogueTable rows={page} canEdit={canEdit} onEdit={(t) => setForm(t.id)} onToggle={(t) => setAsk(t.id)} loading={loading} loadingMore={more} products={products} />
             {!loading && <InfiniteSentinel hasMore={page.length < rows.length} loading={more} onLoadMore={loadMore} />}
             {!loading && page.length >= rows.length && rows.length > 0 && <ListEnd total={rows.length} noun="services" />}
           </>
@@ -161,7 +195,7 @@ export function ServicesPricesPage({ state = 'ready', role = 'manager', initialQ
   const platform = { name: branch.name, initials: 'DC' };
   const overlays = (
     <>
-      {form && canEdit && (form === 'new' || editing) && <ServiceTypeForm key={form} type={editing} onSave={save} onClose={() => setForm(null)} onToggleActive={editing ? (t) => setAsk(t.id) : undefined} />}
+      {form && canEdit && (form === 'new' || editing) && <ServiceTypeForm key={form} type={editing} products={products} searchParts={searchParts} partsStatus={partsStatus} onSave={save} onClose={() => setForm(null)} onToggleActive={editing ? (t) => setAsk(t.id) : undefined} />}
       {asked && (
         <ConfirmDialog open onOpenChange={(o) => !o && setAsk(null)} title={asked.active ? `Deactivate ${asked.name}?` : `Reactivate ${asked.name}?`}
           description={asked.active ? 'It will no longer show when you pick services for a new job. Existing quotes, bookings and past jobs keep the service and its price. You can reactivate it any time.' : 'It will show again when you pick services for a new job.'}
