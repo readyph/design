@@ -1,0 +1,44 @@
+import { Meta, Canvas } from '@storybook/blocks';
+import * as Stories from './Requests.stories';
+
+<Meta of={Stories} />
+
+# Requests & messages (v2 Shop floor)
+
+<Canvas of={Stories.Live} />
+
+The manager's inbox for what mechanics send from the Mechanic app. It closes the loop: **approve here and the mechanic's request changes status; reply here and the mechanic's unread bubble lights; quote or dismiss a found problem and the post shows the result.** Open the story in the Canvas tab for Controls; the toolbar Viewport (Small mobile) and Theme do phone and dark. To see the loop, act here, then open the Mechanic story (same store in one Storybook session; each story resets it when it mounts).
+
+**Layout.** Today's shell and rail (new Requests entry with a "needs you" count). Left, 420px: filter (All / Needs you / Parts / Problems / Messages, with counts), search by plate or mechanic, and the list, newest first (avatar, plate and service, kind icon plus word, one-line preview, time, unread dot, status chip). Right: header (plate, car, customer, service, mechanic, an "Open service" link that opens Today's Inspector), the item and its actions, then the service thread with a reply box and quick replies (Yes, No, On my way, Call me). Phone: the list, then the detail pushed (Esc or the back link returns).
+
+**Controls.** `state` (ready, loading), `scenario` (default, all clear, many, long text), `selected` (any seeded item), `filter`, `customer` (waiting or approved, for quotes), `overlay` (quote, decline, dismiss, Inspector).
+
+## Purpose
+"What did the mechanics ask for, and what do I answer?"
+
+## Rationale
+Source: `rationale.md`, "Requests & messages page (round 1)". Copies Today: flat ruled rows (NotifyItem), tinted = waiting for you, Badge, PersonAvatar, SegmentedControl, section captions. Master-detail so the main job (open a request, press Approve) is two clicks.
+
+## Assumptions
+One branch manager; every mechanic message is a question until answered; the customer's answer to a quote is not built (a story control sets it); Inventory is not touched.
+
+## Known weaknesses
+- "Open service" opens the Inspector read-only; the real quotation flow is on Today and Services.
+- No push or sound for a new request; the rail count is the only signal.
+- Not browser-checked beyond tsc and render tests.
+
+## API today vs invented
+| Need | API today | Invented |
+|---|---|---|
+| Thread per service | `/jobs/{id}/comments`, `/attachments` | thread read, `read_at` per side |
+| Approve, Ready, Decline a part request | - | `PATCH /part-requests/{id}` with status and reason |
+| Quote from a problem | quotation flow | `POST /found-problems/{id}/quote` (creates a quote line, sends it to the customer), `/dismiss` |
+| Answer a question | comments | reply linked to a question, `answered` flag |
+| Mark read, unread counts, rail badge | - | `PUT /threads/{id}/read`, `unread_count` and `needs_manager_count` |
+| Deduct from Inventory on Collected | inventory-products (read) | stock movement on handover |
+
+## Gap closure (2026-11-02)
+
+- **Open service** now navigates to the real service detail on the Services page (no read-only Inspector). Closing it returns to the same request.
+- **Customer answer.** After a quote is sent, a clearly labelled "Studio only" control (Customer approves / Customer declines) simulates the answer. The request status becomes Approved or Declined and the mechanic sees "customer said yes / no" through the shared store, plus a manager message. The story control `customer` (waiting / approved / declined) still seeds the state.
+- Invented API: `POST /quotations/{id}/answer` (customer approves or declines), replacing the studio control.
