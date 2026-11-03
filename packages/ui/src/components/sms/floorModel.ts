@@ -11,6 +11,10 @@ export type LaneId = (typeof LANE_IDS)[number];
 
 export const minOf = (iso: string) => Number(iso.slice(11, 13)) * 60 + Number(iso.slice(14, 16));
 export const hm = (iso: string) => iso.slice(11, 16);
+export const shortDate = (iso: string) => {
+  const d = new Date(`${iso.slice(0, 10)}T12:00:00+08:00`);
+  return iso.startsWith('2026-11-02') ? `Today ${hm(iso)}` : d.toLocaleDateString('en-PH', { day: 'numeric', month: 'short' });
+};
 export const dayWord = (iso: string) => {
   const d = iso.slice(0, 10);
   if (d === TODAY) return hm(iso);
