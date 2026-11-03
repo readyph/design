@@ -20,6 +20,7 @@ export * from './components/PanelToggle';
 export * from './components/Select';
 export * from './components/Modal';
 export * from './components/Offcanvas';
+export * from './components/ReceiptDoc';
 export * from './components/ConfirmDialog';
 export { LedaMark, LedaThinking, LedaWordmark, type LedaMarkProps, type LedaThinkingProps, type LedaWordmarkProps, type LedaEffect } from './components/Leda';
 export * from './components/LedaNote';
