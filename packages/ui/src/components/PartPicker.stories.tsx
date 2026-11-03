@@ -20,3 +20,5 @@ export const Excluding: S = { name: 'With parts already added', args: { exclude:
 export const NoMatch: S = {
   play: async ({ canvasElement }) => { await userEvent.type(within(canvasElement).getByRole('combobox'), 'zzzz'); },
 };
+export const InventorySlow: S = { args: { status: 'slow', search: () => [] } };
+export const InventoryDown: S = { name: 'Inventory not answering', args: { status: 'down', search: () => [] } };

@@ -6,6 +6,8 @@ import { StockStatus } from './StockStatus';
 import { cn } from '../utils/cn';
 import { peso } from './sms/data';
 import { partsCost, partsStock, type ServiceType } from './sms/catalogue';
+import { useWizardData } from './sms/wizardData';
+import type { Product } from './sms/data';
 import { durLabel } from './sms/scheduleModel';
 
 /** ONE column template for the header, every row and the loading rows (same array, same padding). Service takes what is left. */
@@ -32,15 +34,15 @@ function useWidth<T extends HTMLElement>() {
 const Head = ({ children, right }: { children?: ReactNode; right?: boolean }) => <div role="columnheader" className={cn('px-2 text-[12px] font-medium text-muted', right && 'text-right')}>{children}</div>;
 
 /** Linked parts as text: "2 parts" and, when one is short, the stock word of the worst one. Never colour alone. */
-function PartsInfo({ t, inline }: { t: ServiceType; inline?: boolean }) {
+function PartsInfo({ t, inline, products }: { t: ServiceType; inline?: boolean; products: Product[] }) {
   const n = t.parts?.length ?? 0;
   if (!n) return <span className="text-muted">{inline ? 'Labour only' : '-'}</span>;
-  const { state, worst } = partsStock(t.parts);
+  const { state, worst } = partsStock(t.parts, products);
   const word = state === 'out' ? <StockStatus status="out" /> : state === 'low' ? <StockStatus status="low" /> : state === 'on_order'
     ? <span className="inline-flex h-5 items-center gap-1.5 whitespace-nowrap text-[12px] font-medium text-text"><span aria-hidden className="size-[7px] rounded-full bg-warn" />On order</span> : null;
   return (
     <span className={cn('min-w-0', inline ? 'inline-flex flex-wrap items-center gap-x-2' : 'block')} title={word ? `${worst}` : undefined}>
-      <span className="text-text">{n} {n === 1 ? 'part' : 'parts'}</span>{!inline && <span className="text-muted tabular-nums"> · {peso(partsCost(t.parts))}</span>}
+      <span className="text-text">{n} {n === 1 ? 'part' : 'parts'}</span>{!inline && <span className="text-muted tabular-nums"> · {peso(partsCost(t.parts, products))}</span>}
       {word && <span className={inline ? '' : 'block'}>{word}</span>}
     </span>
   );
@@ -69,7 +71,9 @@ const rowCls = 'cursor-pointer border-b border-rule hover:bg-raised focus-visibl
  * Parts, Status, menu). Narrow list or phone: two-line rows. The whole row opens the edit modal (hover, pointer, focus ring); the three-dot menu has Edit and Deactivate / Activate.
  * A mechanic gets the same list, not clickable, without the menu.
  */
-export function CatalogueTable({ rows, canEdit, onEdit, onToggle, loading, loadingMore }: { rows: ServiceType[]; canEdit: boolean; onEdit: (t: ServiceType) => void; onToggle: (t: ServiceType) => void; loading?: boolean; loadingMore?: boolean }) {
+export function CatalogueTable({ rows, canEdit, onEdit, onToggle, loading, loadingMore, products: hostProducts }: { /** Host Inventory products, to show the linked parts' cost and stock. Default: the WizardDataProvider's, else the sample products. */ products?: Product[]; rows: ServiceType[]; canEdit: boolean; onEdit: (t: ServiceType) => void; onToggle: (t: ServiceType) => void; loading?: boolean; loadingMore?: boolean }) {
+  const wd = useWizardData();
+  const products = hostProducts ?? wd.products;
   const [ref, w] = useWidth<HTMLDivElement>();
   // Hysteresis: a classic scrollbar can appear when the tier flips and change the width by ~15px, which would flip it back (a resize loop). Switch down at WIDE_MIN, back up only 32px above.
   const wasWide = useRef(true);
@@ -99,7 +103,7 @@ export function CatalogueTable({ rows, canEdit, onEdit, onToggle, loading, loadi
               <div role="cell" className="min-w-0 px-2 text-[13px]"><span className="block truncate">{t.category}</span><span className="block truncate text-[12px] text-muted">{VEHICLE_SHORT[t.vehicle]}</span></div>
               <div role="cell" className="px-2 text-right text-[13px] tabular-nums">{durLabel(t.mins)}</div>
               <div role="cell" className={cn('px-2 text-right text-[14px] tabular-nums', t.active && 'text-text')}>{peso(t.price)}</div>
-              <div role="cell" className="min-w-0 px-2 text-[13px]"><PartsInfo t={t} /></div>
+              <div role="cell" className="min-w-0 px-2 text-[13px]"><PartsInfo t={t} products={products} /></div>
               <div role="cell" className="px-2 text-[13px]">{t.active ? 'Active' : 'Inactive'}</div>
               <div role="cell" className="flex justify-end">{canEdit && <RowMenu t={t} onEdit={onEdit} onToggle={onToggle} />}</div>
             </div>
@@ -118,7 +122,7 @@ export function CatalogueTable({ rows, canEdit, onEdit, onToggle, loading, loadi
                 </span>
                 <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[12px] text-muted">
                   <span>{t.category}</span><span aria-hidden>·</span><span>{VEHICLE_SHORT[t.vehicle]}</span><span aria-hidden>·</span><span className="tabular-nums">{durLabel(t.mins)}</span>
-                  <span aria-hidden>·</span><PartsInfo t={t} inline />{!t.active && <><span aria-hidden>·</span><span className="font-medium text-text">Inactive</span></>}
+                  <span aria-hidden>·</span><PartsInfo t={t} inline products={products} />{!t.active && <><span aria-hidden>·</span><span className="font-medium text-text">Inactive</span></>}
                 </span>
               </div>
               {canEdit ? <RowMenu t={t} onEdit={onEdit} onToggle={onToggle} /> : <span className="w-2" />}
