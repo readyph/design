@@ -140,3 +140,7 @@ export * from './components/SettingsFields';
 export * from './components/NotificationsSection';
 export * from './components/TemplateModal';
 export * from './components/ShopDetailsSection';
+export * from './components/CatalogueTable';
+export * from './components/ServiceTypeForm';
+export * from './components/ServicePartsEditor';
+export * from './components/PartPicker';
