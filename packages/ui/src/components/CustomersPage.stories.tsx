@@ -55,7 +55,7 @@ const toProps = (a: Args): CustomersProps => {
 const meta: Meta<Args> = {
   ...liveMeta,
   tags: ['!autodocs'], // literal on purpose: the CSF indexer cannot read tags through a spread
-  title: 'Prototypes/SMS/Customers',
+  title: 'Components/SMS/Customers page',
   argTypes: {
     scenario: control.select(Object.keys(SCENARIOS), 'Where the page opens: a list search / view, a Customer page, a car or customer sheet, the New service wizard.', 'Open on load'),
     state: control.select(['ready', 'loading', 'first-run', 'error'], 'Data state (error = the list did not load)'),

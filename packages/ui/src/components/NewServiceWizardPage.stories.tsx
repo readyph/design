@@ -46,7 +46,7 @@ function toProps(a: Args): NewServiceWizardPageProps {
 const meta: Meta<Args> = {
   ...liveMeta,
   tags: ['!autodocs'], // literal on purpose: the CSF indexer cannot read tags through a spread
-  title: 'Prototypes/SMS/New service wizard',
+  title: 'Components/SMS/New service wizard page',
   argTypes: {
     mode: control.select(MODES, 'New service, or open a parked quotation (view, Customer agreed - Book it, Edit)', 'Open on load'),
     step: { control: 'inline-radio', options: [1, 2], description: 'Step it opens on: 1 Services & price, 2 Review & confirm (needs a customer and a service)', table: { category: 'Open on load' } },

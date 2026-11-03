@@ -34,7 +34,7 @@ const toProps = (a: Args): ManagerTodayProps => {
 const meta: Meta<Args> = {
   ...liveMeta,
   tags: ['!autodocs'], // literal on purpose: the CSF indexer cannot read tags through a spread
-  title: 'Prototypes/SMS/Today',
+  title: 'Components/SMS/Today page',
   argTypes: {
     state: control.select(['ready', 'loading', 'quiet', 'first-run'], 'Data state'),
     inventory: control.select(['ok', 'slow', 'down'], 'Inventory link (down shows an ErrorBlock in the inspector parts)'),

@@ -18,7 +18,7 @@ export const toProps = (a: Args): PaymentProps => ({ jobId: JOBS[a.job], role: a
 const meta: Meta<Args> = {
   ...liveMeta,
   tags: ['!autodocs'], // literal on purpose: the CSF indexer cannot read tags through a spread
-  title: 'Prototypes/SMS/Payment',
+  title: 'Components/SMS/Payment page',
   argTypes: {
     job: control.select(Object.keys(JOBS), 'Which job the page opens on: unpaid, part paid, paid, with a discount, a booked quotation, no parts, many lines, still in progress, completed, no lines.', 'Data'),
     role: control.select(['manager', 'mechanic'], 'Manager takes payments and discounts. Mechanic reads the statement only.', 'Data'),
