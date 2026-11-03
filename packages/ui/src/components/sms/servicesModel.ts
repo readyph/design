@@ -1,6 +1,7 @@
 /** Services page: filter, sort and view logic. Pure functions over Job[]; figures come from ../data and ./servicesData. */
-import { TODAY, jobBalance, mechanics, productOf, shortLines, type Job } from './data';
-import { reasonOf, serviceTitle, viewOf } from './floorModel';
+import type { Job } from './data';
+import { serviceTitle } from './floorModel';
+import { seedServicesApi, type ServicesApi } from './servicesSource';
 
 export type ViewId = 'all' | 'waiting' | 'quotes' | 'shop' | 'ready' | 'done';
 export type RangeId = 'any' | 'today' | '7d' | '30d';
@@ -25,12 +26,13 @@ export const SORTS: { id: SortId; label: string }[] = [
 ];
 
 const isQuote = (j: Job) => j.status === 'QUOTATION' || j.status === 'FOR_APPROVAL';
-export const isUnpaid = (j: Job) => !isQuote(j) && jobBalance(j) > 0;
-export const isWaitingOnParts = (j: Job) => j.status !== 'COMPLETED' && (shortLines(j).length > 0 || (j.status === 'PENDING' && j.pendingReason === 'WAITING_FOR_PARTS'));
+/** Every model function takes the data source last; without one it reads the sample data. */
+export const isUnpaid = (j: Job, s: ServicesApi = seedServicesApi) => !isQuote(j) && s.balance(j) > 0;
+export const isWaitingOnParts = (j: Job, s: ServicesApi = seedServicesApi) => j.status !== 'COMPLETED' && (s.shortLines(j).length > 0 || (j.status === 'PENDING' && j.pendingReason === 'WAITING_FOR_PARTS'));
 
-export const inView = (j: Job, v: ViewId) => {
+export const inView = (j: Job, v: ViewId, s: ServicesApi = seedServicesApi) => {
   switch (v) {
-    case 'waiting': return !!reasonOf(j);
+    case 'waiting': return !!s.reasonOf(j);
     case 'quotes': return isQuote(j);
     case 'shop': return j.status === 'TODO' || j.status === 'IN_PROGRESS' || j.status === 'PENDING';
     case 'ready': return j.status === 'FOR_PICKUP';
@@ -38,18 +40,18 @@ export const inView = (j: Job, v: ViewId) => {
     default: return true;
   }
 };
-const inRange = (j: Job, r: RangeId) => r === 'any' || (r === 'today' ? j.statusSince.startsWith(TODAY) : j.statusSince.slice(0, 10) >= (r === '7d' ? '2026-10-26' : '2026-10-03'));
+const inRange = (j: Job, r: RangeId, s: ServicesApi) => r === 'any' || (r === 'today' ? j.statusSince.startsWith(s.today) : j.statusSince.slice(0, 10) >= s.rangeFrom(r));
 
 const digits = (s: string) => s.replace(/\D/g, '');
-export function matches(j: Job, f: Filters, skip?: 'view'): boolean {
-  if (skip !== 'view' && !inView(j, f.view)) return false;
+export function matches(j: Job, f: Filters, skip?: 'view', s: ServicesApi = seedServicesApi): boolean {
+  if (skip !== 'view' && !inView(j, f.view, s)) return false;
   if (f.mechanic !== 'any' && (f.mechanic === 'none' ? j.assigneeId : j.assigneeId !== f.mechanic)) return false;
-  if (!inRange(j, f.range)) return false;
-  if (f.unpaid && !isUnpaid(j)) return false;
-  if (f.parts && !isWaitingOnParts(j)) return false;
+  if (!inRange(j, f.range, s)) return false;
+  if (f.unpaid && !isUnpaid(j, s)) return false;
+  if (f.parts && !isWaitingOnParts(j, s)) return false;
   const q = f.q.trim().toLowerCase();
   if (q) {
-    const v = viewOf(j);
+    const v = s.viewOf(j);
     const hay = `${j.number} ${v.plate} ${v.customer} ${v.vehicle} ${serviceTitle(j)} ${j.complaint}`.toLowerCase();
     const d = digits(q);
     if (!(hay.includes(q) || hay.replace(/\s/g, '').includes(q.replace(/\s/g, '')) || (d.length >= 3 && digits(v.phone).includes(d)))) return false;
@@ -58,13 +60,13 @@ export function matches(j: Job, f: Filters, skip?: 'view'): boolean {
 }
 
 const ORDER = ['OVERDUE', 'PARTS', 'PICKUP_UNPAID', 'APPROVAL'];
-export function sortJobs(js: Job[], s: SortId): Job[] {
+export function sortJobs(js: Job[], sort: SortId, api: ServicesApi = seedServicesApi): Job[] {
   const out = [...js];
   const newest = (a: Job, b: Job) => (a.statusSince < b.statusSince ? 1 : -1);
-  if (s === 'newest') return out.sort(newest);
-  if (s === 'promised') return out.sort((a, b) => (a.promisedAt ?? '9') < (b.promisedAt ?? '9') ? -1 : 1);
-  if (s === 'balance') return out.sort((a, b) => jobBalance(b) * (b.status === 'COMPLETED' || isQuote(b) ? 0 : 1) - jobBalance(a) * (a.status === 'COMPLETED' || isQuote(a) ? 0 : 1));
-  const rank = (j: Job) => { const r = reasonOf(j); return r ? ORDER.indexOf(r) : j.status === 'COMPLETED' ? 9 : 5; };
+  if (sort === 'newest') return out.sort(newest);
+  if (sort === 'promised') return out.sort((a, b) => (a.promisedAt ?? '9') < (b.promisedAt ?? '9') ? -1 : 1);
+  if (sort === 'balance') return out.sort((a, b) => api.balance(b) * (b.status === 'COMPLETED' || isQuote(b) ? 0 : 1) - api.balance(a) * (a.status === 'COMPLETED' || isQuote(a) ? 0 : 1));
+  const rank = (j: Job) => { const r = api.reasonOf(j); return r ? ORDER.indexOf(r) : j.status === 'COMPLETED' ? 9 : 5; };
   return out.sort((a, b) => rank(a) - rank(b) || newest(a, b));
 }
 
@@ -72,10 +74,10 @@ export const activeCount = (f: Filters) => (f.mechanic !== 'any' ? 1 : 0) + (f.r
 export const isFiltered = (f: Filters) => !!f.q.trim() || f.view !== 'all' || activeCount(f) > 0;
 
 /** Words for the "filtered by" line. */
-export function describe(f: Filters): string[] {
+export function describe(f: Filters, s: ServicesApi = seedServicesApi): string[] {
   const out: string[] = [];
   if (f.view !== 'all') out.push(VIEWS.find((v) => v.id === f.view)!.label);
-  if (f.mechanic !== 'any') out.push(f.mechanic === 'none' ? 'Not assigned' : mechanics.find((m) => m.id === f.mechanic)?.short ?? '');
+  if (f.mechanic !== 'any') out.push(f.mechanic === 'none' ? 'Not assigned' : s.mechanicOf(f.mechanic)?.short ?? '');
   if (f.range !== 'any') out.push(RANGES.find((r) => r.id === f.range)!.label);
   if (f.unpaid) out.push('Unpaid');
   if (f.parts) out.push('Waiting on parts');
@@ -84,7 +86,7 @@ export function describe(f: Filters): string[] {
 }
 
 /** Leda's reading of a sentence into filters. Returns null when it is not a list question. */
-export function parseAsk(text: string): Partial<Filters> | null {
+export function parseAsk(text: string, s: ServicesApi = seedServicesApi): Partial<Filters> | null {
   const t = text.toLowerCase();
   if (!/(show|list|find|which|who|filter|ready|unpaid|owe|waiting|late|overdue|completed|quote)/.test(t)) return null;
   const f: Partial<Filters> = { q: '', mechanic: 'any', range: 'any', unpaid: false, parts: false, view: 'all' };
@@ -98,13 +100,14 @@ export function parseAsk(text: string): Partial<Filters> | null {
   if (/last week|7 days/.test(t)) { f.range = '7d'; hit = true; }
   if (/last month|30 days/.test(t)) { f.range = '30d'; hit = true; }
   if (/today/.test(t)) { f.range = 'today'; hit = true; }
-  const m = mechanics.find((x) => t.includes(x.short.toLowerCase()));
+  const m = s.src.mechanics.find((x) => t.includes(x.short.toLowerCase()));
   if (m) { f.mechanic = m.id; hit = true; }
   return hit ? f : null;
 }
 
-export const partsFor = (j: Job) => {
-  const lines = j.parts.map((l) => ({ line: l, product: productOf(l.productId), short: shortLines(j).some((s) => s.productId === l.productId) }));
+export const partsFor = (j: Job, s: ServicesApi = seedServicesApi) => {
+  const shorts = s.shortLines(j);
+  const lines = j.parts.flatMap((l) => { const product = s.productOf(l.productId); return product ? [{ line: l, product, short: shorts.some((x) => x.productId === l.productId) }] : []; });
   const lead = lines.find((l) => l.short) ?? lines[0] ?? null;
   return { lines, lead, shortCount: lines.filter((l) => l.short).length };
 };
