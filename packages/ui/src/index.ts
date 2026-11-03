@@ -115,3 +115,5 @@ export * from './components/InquiryDetail';
 export * from './components/Combobox';
 export * from './components/WizardStepper';
 export * from './components/WizardBlock';
+export * from './components/TrackingLink';
+export * from './components/QrStandIn';
