@@ -1,3 +1,10 @@
+import { useState } from 'react';
+import { DownloadSimple, Printer } from '@phosphor-icons/react';
+import { Button } from './Button';
+import { SegmentedControl } from './SegmentedControl';
+import { toast } from './toast/toastStore';
+import { Modal } from './Modal';
+import { downloadDoc } from './sms/statementFile';
 import { cn } from '../utils/cn';
 import { dayWord } from './sms/floorModel';
 import { PAY_WORD, fmt, methodLabel, type ReceiptData } from './sms/paymentModel';
@@ -61,5 +68,23 @@ export function ReceiptDoc({ doc, paper, className }: { doc: ReceiptData; paper:
       </section>
       <p className="mt-5 border-t border-rule pt-2 text-[12px] text-muted">Amounts are in Philippine pesos. This is an acknowledgement of payment, not an official receipt. Thank you for choosing {doc.shop.business}.</p>
     </article>
+  );
+}
+
+export function ReceiptModal({ doc, onClose, initialPaper = 'a4' }: { doc: ReceiptData; onClose: () => void; initialPaper?: Paper }) {
+  const [paper, setPaper] = useState<Paper>(initialPaper);
+  return (
+    <Modal open onOpenChange={(o) => !o && onClose()} size="panel" aria-label={`Receipt ${doc.number}`}>
+      <Modal.Header description="Check it, then print. The same page prints on A4 or Letter; the slip is for the till printer.">{doc.state === 'paid' ? 'Receipt' : 'Statement of account'} {doc.number}</Modal.Header>
+      <Modal.Body className="bg-raised">
+        <div className="mb-3 flex justify-center"><SegmentedControl size="md" aria-label="Paper" value={paper} onChange={(v) => setPaper(v as Paper)} options={[{ value: 'a4', label: 'A4 / Letter' }, { value: 'slip', label: 'Receipt slip (80 mm)' }]} /></div>
+        <ReceiptDoc doc={doc} paper={paper} />
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="secondary" onClick={onClose}>Close</Button>
+        <Button variant="secondary" leftIcon={DownloadSimple} onClick={() => downloadDoc(doc, paper)}>Download</Button>
+        <Button variant="primary" leftIcon={Printer} onClick={() => toast.info(`Sent to the printer: ${paper === 'a4' ? 'A4 / Letter' : 'receipt slip'} for ${doc.number}.`)}>Print</Button>
+      </Modal.Footer>
+    </Modal>
   );
 }
