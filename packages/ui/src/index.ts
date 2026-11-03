@@ -128,3 +128,4 @@ export * from './components/CustomerChat';
 export * from './components/TrackerBlocks';
 export * from './components/SettingsNav';
 export * from './components/SettingsFields';
+export * from './components/ShopDetailsSection';
