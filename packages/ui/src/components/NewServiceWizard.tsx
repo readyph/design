@@ -4,6 +4,7 @@ import { Modal } from './Modal';
 import type { Customer, Job } from './sms/data';
 import { bookingOf, minutesFor, type CalItem, type Slot } from './sms/scheduleModel';
 import { dirtyKey, docFromDraft, draftFromJob, emptyDraft, type WizardAction, type WizardDraft } from './sms/wizardModel';
+import { useWizardData } from './sms/wizardData';
 import { useDirtyGuard } from './DirtyGuard';
 import { PrintButton, QuotationDoc } from './QuotationDoc';
 import { WizardStep1 } from './WizardStep1';
@@ -46,8 +47,9 @@ const STEPS = [{ id: 1, label: 'Services & price' }, { id: 2, label: 'Review & c
  * Next stays disabled until a customer and a service exist; the reason is said in words. Esc and Cancel ask before dropping edits.
  */
 export function NewServiceWizard({ slot, customer, vehicleId, plate = '', notes = '', items = [], quote, quoteNo, editOnly, startStep, initialEdit = null, initialDraft, initialPreview = false, onSubmit, onClose }: NewServiceWizardProps) {
+  const data = useWizardData();
   const initial = useMemo<WizardDraft>(() => {
-    const base = quote ? draftFromJob(quote, bookingOf(quote)) : {
+    const base = quote ? draftFromJob(quote, bookingOf(quote), data) : {
       ...(customer ? { customer, vehicleId: vehicleId ?? customer.vehicles[0]?.id ?? '' } : {}),
       ...(slot ? { date: slot.date, start: slot.start, dur: slot.dur } : {}), concerns: notes,
     };
@@ -75,7 +77,7 @@ export function NewServiceWizard({ slot, customer, vehicleId, plate = '', notes 
   const leave = () => guard(onClose);
   const booking = !!quote;
 
-  const doc = docFromDraft(draft, quoteNo, quote?.quoteValidUntil);
+  const doc = docFromDraft(draft, quoteNo, quote?.quoteValidUntil, data.shop);
   return (
     <Modal open onOpenChange={(o) => !o && leave()} size="wizard" aria-label={quote ? `Quotation ${quoteNo}` : 'New service'}>
       <Modal.Header description={preview ? 'Printable document, as the customer receives it.' : quote ? `Quotation ${quoteNo}, waiting for the customer.` : undefined}>{preview ? `Quotation ${quoteNo}` : quote ? (editOnly ? 'Edit quotation' : 'Book quoted service') : 'New service'}</Modal.Header>

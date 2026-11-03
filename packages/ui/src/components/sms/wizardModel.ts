@@ -1,7 +1,7 @@
 /** New service wizard: the draft, totals, and how a draft becomes a job order or a quotation (and back). Pure functions. */
-import { HOURS, NOW, TODAY, branch, customers, manager, onHandHere, productOf, type Customer, type Job, type PartLine, type ServiceLine } from './data';
+import { HOURS, NOW, TODAY, onHandHere, type Customer, type Job, type PartLine, type ServiceLine } from './data';
 import { SLOT, addDays, toIso } from './scheduleModel';
-import { typeById } from './catalogue';
+import { productIn, seedWizardData, typeIn, type WizardData } from './wizardData';
 
 export interface WizardLine {
   key: string;
@@ -48,16 +48,16 @@ export const promisedOf = (d: Pick<WizardDraft, 'start' | 'dur' | 'promisedMin'>
 let seq = 0;
 export const newKey = () => `wl-${++seq}`;
 
-export const lineFromType = (id: string): WizardLine | null => {
-  const t = typeById(id);
+export const lineFromType = (id: string, data: WizardData = seedWizardData()): WizardLine | null => {
+  const t = typeIn(data, id);
   return t ? { key: newKey(), kind: 'service', typeId: t.id, name: t.name, qty: 1, price: t.price, listPrice: t.price, custom: false } : null;
 };
 /** A catalogue service plus its linked Inventory parts as sub-lines (qty from the link, price from Inventory). The manager never maps them by hand. */
-export const linesFromType = (id: string): WizardLine[] => {
-  const svc = lineFromType(id);
+export const linesFromType = (id: string, data: WizardData = seedWizardData()): WizardLine[] => {
+  const svc = lineFromType(id, data);
   if (!svc) return [];
-  const t = typeById(id)!;
-  return [svc, ...(t.parts ?? []).map((lp): WizardLine => ({ ...partLine(lp.productId, svc.key, true), qty: lp.qty }))];
+  const t = typeIn(data, id)!;
+  return [svc, ...(t.parts ?? []).filter((lp) => productIn(data, lp.productId)).map((lp): WizardLine => ({ ...partLine(lp.productId, svc.key, true, data), qty: lp.qty }))];
 };
 /** Insert a part under its service (after the service's last sub-line), or at the end when it has no service. */
 export function insertPart(lines: WizardLine[], part: WizardLine): WizardLine[] {
@@ -70,14 +70,15 @@ export function insertPart(lines: WizardLine[], part: WizardLine): WizardLine[] 
 /** Removing a service removes its sub-lines too. */
 export const removeLine = (lines: WizardLine[], key: string) => lines.filter((l) => l.key !== key && l.parentKey !== key);
 /** How many of a product the whole draft needs, and what this branch has: short when needed > on hand. */
-export function partNeed(lines: WizardLine[], productId: string) {
+export function partNeed(lines: WizardLine[], productId: string, data: WizardData = seedWizardData()) {
   const need = lines.filter((l) => l.kind === 'part' && l.productId === productId).reduce((a, l) => a + l.qty, 0);
-  const have = onHandHere(productOf(productId));
+  const p = productIn(data, productId);
+  const have = p ? onHandHere(p) : 0;
   return { need, have, short: Math.max(0, need - have) };
 }
 export const customLine = (name: string, price: number): WizardLine => ({ key: newKey(), kind: 'service', name, qty: 1, price, listPrice: null, custom: true });
-export const partLine = (productId: string, parentKey?: string, auto = false): WizardLine => {
-  const p = productOf(productId);
+export const partLine = (productId: string, parentKey?: string, auto = false, data: WizardData = seedWizardData()): WizardLine => {
+  const p = productIn(data, productId)!;
   return { key: newKey(), kind: 'part', productId, name: p.name, qty: 1, price: p.price, listPrice: p.price, custom: false, parentKey, auto: auto || undefined };
 };
 
@@ -123,11 +124,11 @@ export function newJob(id: string, number: string, d: WizardDraft, action: Wizar
 }
 
 /** Back from a job to a draft (Edit quote, Book it). The booking length is the stored one when given. */
-export function draftFromJob(j: Job, booking?: { date: string; start: number; dur: number } | null): Partial<WizardDraft> {
-  const c = customers.find((x) => x.id === j.customerId) ?? null;
+export function draftFromJob(j: Job, booking?: { date: string; start: number; dur: number } | null, data: WizardData = seedWizardData()): Partial<WizardDraft> {
+  const c = data.customers.find((x) => x.id === j.customerId) ?? null;
   const lines: WizardLine[] = [
     ...j.services.map((s): WizardLine => ({ key: newKey(), kind: 'service', typeId: s.typeId ?? undefined, name: s.name, qty: s.qty, price: s.price, listPrice: s.custom ? null : s.listPrice ?? s.price, custom: !!s.custom })),
-    ...j.parts.map((p): WizardLine => ({ key: newKey(), kind: 'part', productId: p.productId, name: productOf(p.productId).name, qty: p.qty, price: productOf(p.productId).price, listPrice: productOf(p.productId).price, custom: false })),
+    ...j.parts.map((p): WizardLine => { const pr = productIn(data, p.productId); return { key: newKey(), kind: 'part', productId: p.productId, name: pr?.name ?? p.productId, qty: p.qty, price: p.price ?? pr?.price ?? 0, listPrice: pr?.price ?? null, custom: false }; }),
   ];
   const date = booking?.date ?? j.promisedAt?.slice(0, 10) ?? TODAY;
   const end = j.promisedAt ? Number(j.promisedAt.slice(11, 13)) * 60 + Number(j.promisedAt.slice(14, 16)) : undefined;
@@ -152,21 +153,21 @@ export interface QuoteDoc {
   remarks: string;
   shop: { business: string; branch: string; address: string; phone: string; preparedBy: string };
 }
-const shop = { business: branch.business, branch: branch.name, address: branch.address, phone: manager.phone, preparedBy: manager.name };
 
-export function docFromDraft(d: WizardDraft, number: string, validUntil = validUntilDefault()): QuoteDoc {
+export function docFromDraft(d: WizardDraft, number: string, validUntil = validUntilDefault(), shop: QuoteDoc['shop'] = seedWizardData().shop): QuoteDoc {
   const v = d.customer?.vehicles.find((x) => x.id === d.vehicleId) ?? d.customer?.vehicles[0];
   return {
     number, issued: TODAY, validUntil, customer: d.customer?.name ?? '', phone: d.customer?.phone ?? '', car: v ? `${v.make} ${v.model} ${v.year}` : '', plate: v?.plate ?? '',
     lines: d.lines.map((l) => ({ name: l.name, qty: l.qty, price: l.price, custom: l.custom || isCustomPrice(l), part: l.kind === 'part' || undefined })), total: subtotal(d.lines), remarks: d.remarks.trim(), shop,
   };
 }
-export function docFromJob(j: Job): QuoteDoc {
-  const c = customers.find((x) => x.id === j.customerId);
+export function docFromJob(j: Job, data: WizardData = seedWizardData()): QuoteDoc {
+  const shop = data.shop;
+  const c = data.customers.find((x) => x.id === j.customerId);
   const v = c?.vehicles.find((x) => x.id === j.vehicleId);
   const lines = [
     ...j.services.map((s) => ({ name: s.name, qty: s.qty, price: s.price, custom: !!s.custom || (s.listPrice !== undefined && s.listPrice !== s.price) })),
-    ...j.parts.map((p) => ({ name: productOf(p.productId).name, qty: p.qty, price: productOf(p.productId).price, custom: false, part: true })),
+    ...j.parts.map((p) => { const pr = productIn(data, p.productId); return { name: pr?.name ?? p.productId, qty: p.qty, price: p.price ?? pr?.price ?? 0, custom: false, part: true }; }),
   ];
   return {
     number: quoteNoOf(j), issued: (j.quoteSentAt ?? j.createdAt).slice(0, 10), validUntil: j.quoteValidUntil ?? addDays((j.quoteSentAt ?? j.createdAt).slice(0, 10), 7),

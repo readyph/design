@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { StockStatus } from './StockStatus';
 import { cn } from '../utils/cn';
-import { onHandHere, peso, products, stockState, type Product } from './sms/data';
+import { onHandHere, peso, stockState, type Product } from './sms/data';
+import { useWizardData } from './sms/wizardData';
 import { Combobox, type ComboOption } from './Combobox';
 
 /** Stock of one Inventory product at this branch as a word: In stock / Low stock / Out of stock, or "On order". */
@@ -19,6 +20,7 @@ const matches = (p: Product, q: string) => { const n = q.trim().toLowerCase(); r
  */
 export function PartPicker({ label = 'Add a part from Inventory', exclude = [], onPick, autoFocus, hint = 'Search by name or SKU. Prices and stock come from Inventory.', className }: { label?: string; exclude?: string[]; onPick: (productId: string) => void; autoFocus?: boolean; hint?: string; className?: string }) {
   const [q, setQ] = useState('');
+  const { products } = useWizardData();
   const options: ComboOption[] = useMemo(() => products.filter((p) => !exclude.includes(p.id) && matches(p, q)).map((p) => ({
     id: p.id,
     label: `${p.name}, SKU ${p.sku}, ${peso(p.price)} per ${p.unit}, ${onHandHere(p)} in stock here`,
@@ -28,7 +30,7 @@ export function PartPicker({ label = 'Add a part from Inventory', exclude = [], 
         <span className="flex flex-none flex-col items-end"><span className="text-[13px] tabular-nums text-text">{peso(p.price)}<span className="text-muted"> / {p.unit}</span></span><PartStock product={p} /></span>
       </span>
     ),
-  })), [q, exclude]);
+  })), [q, exclude, products]);
   return (
     <Combobox className={className} label={label} value={q} onValueChange={setQ} options={options} onSelect={(id) => { onPick(id); setQ(''); }} placeholder="Search parts, e.g. oil filter or BRK-PAD" minChars={0} search emptyText="No Inventory product matches." hint={hint} autoFocus={autoFocus} />
   );
