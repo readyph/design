@@ -119,6 +119,8 @@ export * from './components/MechHome';
 export * from './components/mechCardView';
 export * from './components/Inspector';
 export * from './components/InquiryDetail';
+export * from './components/InfiniteList';
+export * from './components/ServicesControls';
 export * from './components/Combobox';
 export * from './components/WizardStepper';
 export * from './components/WizardBlock';
