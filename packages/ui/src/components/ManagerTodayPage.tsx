@@ -12,10 +12,10 @@ import { applyOverrides, lanesFor, reasonOf, todayEnv, viewOf, type LaneId, type
 import { PaymentScreen, type PaymentOverlay } from './PaymentPage';
 import { FloorSidePanel as SidePanelLayout } from './sms/SidePanel';
 import { Offcanvas } from './Offcanvas';
-import { TrackingLink } from './TrackingLink';
+import { LiveTrackingLink as TrackingLink } from './sms/LiveTrackingLink';
 import { InquiryDetail } from './InquiryDetail';
 import { FloorLanes } from './FloorLanes';
-import { Inspector } from './Inspector';
+import { LiveInspector as Inspector } from './sms/LiveInspector';
 import { JobRow } from './JobRow';
 import type { PartAction } from './PartChip';
 import { FloorFeed, type FeedTab } from './sms/FloorFeed';

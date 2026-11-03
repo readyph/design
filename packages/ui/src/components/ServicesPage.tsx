@@ -19,7 +19,7 @@ import {
 import { useSmsLeda } from './sms/LedaPanel';
 import { TodayDialogs, type DialogState } from './sms/TodayDialogs';
 import { Offcanvas } from './Offcanvas';
-import { Inspector } from './Inspector';
+import { LiveInspector as Inspector } from './sms/LiveInspector';
 import { InquiryDetail } from './InquiryDetail';
 import { CustomerPanel } from './CustomerPanel';
 import { CardSkeletons, InfiniteSentinel, ListEnd, ResultCount, scrollTop } from './InfiniteList';

@@ -8,7 +8,7 @@ import { NewServiceWizard } from './NewServiceWizard';
 import type { BlockId } from './WizardSummary';
 import { QuotationModal } from './QuotationDoc';
 import { Modal } from './Modal';
-import { TrackingLink } from './TrackingLink';
+import { LiveTrackingLink as TrackingLink } from './sms/LiveTrackingLink';
 
 export type FlowState =
   | { kind: 'new'; slot?: Slot; customerId?: string; vehicleId?: string; plate?: string; notes?: string; startStep?: 1 | 2 | 3; initialEdit?: BlockId; initialDraft?: Partial<WizardDraft>; initialPreview?: boolean }

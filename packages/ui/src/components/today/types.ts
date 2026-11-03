@@ -49,3 +49,22 @@ export interface TodayEnv {
   balance(j: TodayJob): number;
   peso(n: number): string;
 }
+
+/**
+ * A change Leda proposes and the manager confirms. `jobIds` scopes it to services (the Inspector lists a service's own proposals);
+ * `writes` / `cannot` are the plain lines the card shows; nothing is written until the consumer's confirm callback runs.
+ */
+export interface LedaProposalData {
+  id: string; title: string; why: string; jobIds: string[];
+  writes: string[]; cannot?: string; confirmLabel: string; platform: 'SMS' | 'Inventory' | 'SMS + Inventory';
+}
+
+/** What the Inspector reads from a service beyond `TodayJob`. Structural: an API job with these fields fits. */
+export interface InspectorJob extends TodayJob {
+  complaint: string;
+  services: { name: string; price: number; qty: number; done?: boolean }[];
+  parts: { productId: string; qty: number }[];
+}
+export interface InspectorMechanic extends TodayMechanic { bay: string }
+/** The quotation kept with a service. `open`: it is still waiting for the customer; `validUntil` is the display date. */
+export interface InspectorQuotation { number: string; open: boolean; validUntil: string }

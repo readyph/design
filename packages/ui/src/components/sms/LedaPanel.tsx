@@ -1,23 +1,10 @@
-import { useCallback, useRef, useState } from 'react';
 import { ArrowsLeftRight, ClipboardText, Hash, PencilSimple, Table, Wrench } from '@phosphor-icons/react';
-import {
-  Chat, ChatComposer, ChatEmpty, ChatHeader, ChatMessage, ChatThread, usePersistedChat,
-  type ChatMessageData, type ChatProposalData,
-} from '../Chat';
-import { CommandPalette, type CommandPaletteGroup, type CommandPaletteItem } from '../CommandPalette';
-import { toast } from '../toast/toastStore';
-import { jobs, ledaChips, ledaProposals, manager, peso, jobBalance, customerOf, type LedaProposalData } from './data';
+import { useLedaPanel } from '../LedaPanel';
+import type { ChatMessageData } from '../Chat';
+import type { CommandPaletteGroup } from '../CommandPalette';
+import { jobs, ledaChips, ledaProposals, manager, peso, jobBalance, customerOf } from './data';
 
-const clock = () => '10:20 AM';
-let seq = 100;
-
-const toProposal = (p: LedaProposalData): ChatProposalData => ({
-  id: p.id.toUpperCase(), title: p.title, writes: p.writes, cannot: p.cannot, confirmLabel: p.confirmLabel,
-  notes: [p.why], after: `${p.confirmLabel}: done.`, extraLabel: undefined,
-});
-const lp = (id: string) => ledaProposals.find((p) => p.id === id)!;
-
-function reply(q: string): ChatMessageData['blocks'] {
+function reply(q: string, ctx: { proposal: (id: string) => ChatMessageData['blocks'] }): ChatMessageData['blocks'] {
   const t = q.toLowerCase();
   const chips = [{ id: 'f1', label: 'Who still owes us money?' }, { id: 'f2', label: 'What is Jun working on?' }];
   if (t.includes('12:00') || t.includes('finish'))
@@ -47,13 +34,13 @@ function reply(q: string): ChatMessageData['blocks'] {
       { type: 'chips', chips: [{ id: 'f4', label: 'Add Bendix front pads to the order list' }] },
     ];
   if (t.includes('alternator') || t.includes('0412') || t.includes('transfer'))
-    return [{ type: 'text', text: 'Here is the change. Nothing is written until you confirm.' }, { type: 'proposal', blockId: `lp1-${seq}`, proposal: toProposal(lp('lp1')) }];
+    return ctx.proposal('lp1');
   if (t.includes('ricky') || t.includes('0417') || t.includes('move'))
-    return [{ type: 'text', text: 'Here is the change. Nothing is written until you confirm.' }, { type: 'proposal', blockId: `lp2-${seq}`, proposal: toProposal(lp('lp2')) }];
+    return ctx.proposal('lp2');
   if (t.includes('remind') || t.includes('quote'))
-    return [{ type: 'text', text: 'Here is the change. Nothing is written until you confirm.' }, { type: 'proposal', blockId: `lp3-${seq}`, proposal: toProposal(lp('lp3')) }];
+    return ctx.proposal('lp3');
   if (t.includes('order list'))
-    return [{ type: 'text', text: 'Here is the change. Nothing is written until you confirm.' }, { type: 'proposal', blockId: `lp4-${seq}`, proposal: toProposal(lp('lp4')) }];
+    return ctx.proposal('lp4');
   if (t.includes('pay') || t.includes('refund'))
     return [{ type: 'refusal', text: "Leda can't record payments or refunds. That stays with you at the counter.", actions: [{ id: 'go', label: 'Open the Counter lane', href: '#counter' }] }];
   return [{ type: 'text', text: "Sorry, I can't answer that in this prototype.", stream: true }, { type: 'chips', chips: ledaChips.slice(0, 2).map((c, i) => ({ id: `u${i}`, label: c })) }];
@@ -76,93 +63,19 @@ const PALETTE: CommandPaletteGroup[] = [
   ] },
 ];
 
+
 /**
- * The Portal's Leda behaviour on SMS: the Ask Leda bar opens the command palette; Enter on "Ask Leda: ..." (or a row) opens the 440px conversation
- * panel (Chat family, workshop layout) with the page's scope. The thread persists in sessionStorage until the panel's "New conversation".
+ * The Portal's Leda behaviour on SMS, bound to the mock data: `useLedaPanel` with the workshop's answers, palette and proposals.
+ * Page-specific answers (Services: filter the list) come in `handle`; return null to fall through to the shared replies.
  */
-export function useSmsLeda({ onConfirmed, startOpen = false, scope: SCOPE = 'Today', handle, chips = ledaChips }: {
+export function useSmsLeda({ onConfirmed, startOpen = false, scope = 'Today', handle, chips = ledaChips }: {
   onConfirmed?: (proposalId: string) => void; startOpen?: boolean;
-  /** Page scope shown in the composer and placeholder. */
   scope?: string;
-  /** Page-specific answers (Services: filter the list). Return null to fall through to the shared replies. */
   handle?: (q: string) => ChatMessageData['blocks'] | null;
-  /** Starter questions in the empty conversation. */
   chips?: string[];
 } = {}) {
-  const [palette, setPalette] = useState(false);
-  const [chat, setChatRaw] = useState(startOpen);
-  const [chatClosing, setChatClosing] = useState(false);
-  const [query, setQuery] = useState('');
-  const [text, setText] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [messages, setMessages] = usePersistedChat<ChatMessageData[]>([], 'rph-sms-leda-v1');
-  const handleRef = useRef(handle);
-  handleRef.current = handle;
-  const opener = useRef<HTMLElement | null>(null);
-  const paletteReturn = useRef<HTMLElement | null>(null);
-
-  /** Closing keeps the panel mounted for the library's 220ms slide-out (Chat `closing`), then unmounts. */
-  const setChat = (on: boolean) => {
-    if (on) { setChatClosing(false); setChatRaw(true); return; }
-    setChatClosing(true);
-    window.setTimeout(() => { setChatRaw(false); setChatClosing(false); }, 220);
-  };
-  const capture = () => { const a = document.activeElement as HTMLElement | null; opener.current = a && a !== document.body ? a : null; };
-  const openPalette = () => { capture(); setPalette(true); };
-  const openChat = () => { if (!palette) capture(); setPalette(false); setChat(true); };
-
-  const send = useCallback((q: string) => {
-    const id = `m${++seq}`;
-    setText(''); setBusy(true);
-    setMessages((m) => [...m,
-      { id, from: 'owner', name: manager.short, time: clock(), scope: `About ${SCOPE}`, blocks: [{ type: 'text', text: q }] },
-      { id: `${id}l`, from: 'leda', name: 'Leda', time: clock(), thinking: true, blocks: [] },
-    ]);
-    window.setTimeout(() => { setMessages((m) => m.map((x) => (x.id === `${id}l` ? { ...x, thinking: false, blocks: handleRef.current?.(q) ?? reply(q) } : x))); setBusy(false); }, 1000);
-  }, [setMessages]);
-  const ask = (q: string) => { openChat(); send(q); };
-  const setBlock = (blockId: string, st: ChatProposalData['state'], extra: Partial<ChatProposalData> = {}) =>
-    setMessages((ms) => ms.map((m) => ({ ...m, blocks: m.blocks.map((b) => (b.type === 'proposal' && b.blockId === blockId ? { ...b, proposal: { ...b.proposal, state: st, ...extra } } : b)) })));
-
-  paletteReturn.current = chat ? document.querySelector<HTMLElement>('[data-chat-composer]') : palette ? opener.current : null;
-
-  const node = (
-    <>
-      <CommandPalette
-        open={palette} onOpenChange={setPalette} groups={PALETTE}
-        onSelect={(i: CommandPaletteItem) => { if (i.id.startsWith('ask:')) ask(i.id.slice(4)); }}
-        onAsk={ask} query={query} onQueryChange={setQuery}
-        conversationMessages={messages.length} onOpenConversation={openChat}
-        returnFocusRef={paletteReturn} placeholder={`Ask Leda about ${SCOPE} or tell her what to do`}
-      />
-      {chat && (
-        <Chat onClose={() => setChat(false)} closing={chatClosing} returnFocusTo={opener}>
-          <ChatHeader layout="inline" busy={busy} empty={messages.length === 0} onNewConversation={() => setMessages([])} onClose={() => setChat(false)} />
-          {messages.length === 0 ? (
-            <div className="min-h-0 flex-1 overflow-y-auto pt-2"><ChatEmpty layout="workshop" scope={SCOPE} chips={chips.map((q) => ({ id: q, label: q }))} onPick={(c) => send(c.label)} /></div>
-          ) : (
-            <ChatThread>
-              {messages.map((m) => (
-                <ChatMessage
-                  key={m.id} message={m} layout="workshop" initials={manager.initials} onChip={(c) => send(c.label)}
-                  onConfirm={(bid) => {
-                    setBlock(bid, 'writing');
-                    return new Promise<void>((res) => window.setTimeout(() => {
-                      setBlock(bid, 'done', { doneAt: clock() });
-                      onConfirmed?.(bid.split('-')[0]!);
-                      toast.undo('Done. Leda wrote the change.', () => setBlock(bid, 'waiting'), { leda: true });
-                      res();
-                    }, 800));
-                  }}
-                  onDiscard={(bid) => setBlock(bid, 'discarded')}
-                />
-              ))}
-            </ChatThread>
-          )}
-          <ChatComposer layout="workshop" label="Message Leda" placeholder="Reply to Leda" value={text} onChange={setText} onSend={send} busy={busy} scope={`About ${SCOPE}`} />
-        </Chat>
-      )}
-    </>
-  );
-  return { node, openPalette, openChat, paused: palette || chat, chatOpen: chat };
+  return useLedaPanel({
+    person: manager, proposals: ledaProposals, palette: PALETTE, onConfirmed, startOpen, scope, chips, clock: () => '10:20 AM', storageKey: 'rph-sms-leda-v1',
+    answer: (q, ctx) => handle?.(q) ?? reply(q, ctx),
+  });
 }
