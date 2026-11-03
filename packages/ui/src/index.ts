@@ -138,6 +138,7 @@ export * from './components/CustomerSheet';
 export * from './components/CustomerPage';
 export * from './components/CarSheet';
 export * from './components/TrackingLink';
+export * from './components/LedaPanel';
 export * from './components/QrStandIn';
 export * from './components/CustomerChat';
 export * from './components/TrackerBlocks';

@@ -307,10 +307,8 @@ export const today = {
 };
 
 // ---------- Leda (manager scope; every write is confirmed) ----------
-export interface LedaProposalData {
-  id: string; title: string; why: string; jobIds: string[];
-  writes: string[]; cannot?: string; confirmLabel: string; platform: 'SMS' | 'Inventory' | 'SMS + Inventory';
-}
+export type { LedaProposalData } from '../today/types';
+import type { LedaProposalData } from '../today/types';
 const alt = productOf('pr04');
 export const ledaHeadline =
   `JO-0412 is promised at 11:00 but the alternator is out here; ${onHandElsewhere(alt)[0].name} has ${onHandElsewhere(alt)[0].qty}. ` +

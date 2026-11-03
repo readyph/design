@@ -14,8 +14,8 @@ import {
 import { useSmsLeda } from './sms/LedaPanel';
 import { TodayDialogs, type DialogState } from './sms/TodayDialogs';
 import { Offcanvas } from './Offcanvas';
-import { Inspector } from './Inspector';
-import { TrackingLink } from './TrackingLink';
+import { LiveInspector as Inspector } from './sms/LiveInspector';
+import { LiveTrackingLink as TrackingLink } from './sms/LiveTrackingLink';
 import { InquiryDetail } from './sms/InquiryDetail';
 import { CustomerPage, type StatusId } from './CustomerPage';
 import { CustomerSheet } from './CustomerSheet';
