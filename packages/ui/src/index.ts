@@ -137,3 +137,4 @@ export * from './components/SettingsNav';
 export * from './components/SettingsFields';
 export * from './components/NotificationsSection';
 export * from './components/TemplateModal';
+export * from './components/ShopDetailsSection';
