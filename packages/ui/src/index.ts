@@ -112,6 +112,8 @@ export * from './components/RequestModals';
 export * from './components/MechFrame';
 export * from './components/DirtyGuard';
 export * from './components/MechMe';
+export * from './components/MechHome';
+export * from './components/mechCardView';
 export * from './components/Inspector';
 export * from './components/InquiryDetail';
 export * from './components/Combobox';
