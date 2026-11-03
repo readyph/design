@@ -108,3 +108,6 @@ export * from './components/RequestList';
 export * from './components/RequestStepper';
 export * from './components/Inspector';
 export * from './components/InquiryDetail';
+export * from './components/Combobox';
+export * from './components/WizardStepper';
+export * from './components/WizardBlock';
