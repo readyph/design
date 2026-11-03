@@ -126,3 +126,5 @@ export * from './components/TrackingLink';
 export * from './components/QrStandIn';
 export * from './components/CustomerChat';
 export * from './components/TrackerBlocks';
+export * from './components/SettingsNav';
+export * from './components/SettingsFields';
