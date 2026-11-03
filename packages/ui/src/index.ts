@@ -150,6 +150,7 @@ export * from './components/CatalogueTable';
 export * from './components/ServiceTypeForm';
 export * from './components/ServicePartsEditor';
 export * from './components/PartPicker';
+export * from './components/ServicesPricesPage';
 export * from './components/ServiceLines';
 export * from './components/JobOrderFields';
 export * from './components/WizardSummary';
