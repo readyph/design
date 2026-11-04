@@ -3,23 +3,29 @@
  * written back to it, so approve here -> the mechanic's request status changes; reply here -> the mechanic's unread bubble; quote / dismiss -> the post's status.
  * Invented API (see rationale): PATCH /part-requests/{id}, POST /found-problems/{id}/quote|dismiss, GET/POST /services/{id}/thread, PUT /threads/{id}/read.
  */
-import { TODAY, jobs as allJobs, mechanics, productOf, vehicleOf, customerOf, type Job } from './data';
+import { TODAY, jobs as allJobs, mechanics, productOf, vehicleOf, customerOf, onHandHere, type Job } from './data';
 import type { CustMsg } from './mechModel';
 import { minOf, serviceTitle, shortName } from './floorModel';
-import { nextId, nowIso, patchMech, resetMech, getMech, type MechState, type PartRequest, type Proposal, type QuoteState, type Msg } from './mechModel';
+import { threadOf, whenWord } from './trackerModel';
+import { agoWord, stockWord, feedOf, nextId, nowIso, patchMech, resetMech, getMech, type MechState, type PartRequest, type Proposal, type QuoteState, type Msg } from './mechModel';
 
-export type ItemKind = 'part' | 'problem' | 'question' | 'note' | 'customer';
-export type ItemStatus = 'Needs you' | 'Approved' | 'Ready' | 'Collected' | 'Declined' | 'Quoted' | 'Dismissed' | 'Answered' | 'Seen';
+import type { ChatPostView, ThreadPostView, ItemStatus, RequestDisplay, RequestListItem, RequestPerson } from './requestTypes';
+export { KIND_LABEL } from './requestTypes';
+export type { ChatPostView, ThreadPostView, ItemKind, ItemStatus, RequestDisplay, RequestListItem, RequestPerson } from './requestTypes';
+
 export type Filter = 'all' | 'needs' | 'parts' | 'problems' | 'messages';
 
-export interface InboxItem {
-  id: string; kind: ItemKind; jobId: string | null; mechId: string; at: string; seq: number;
-  title: string; preview: string; status: ItemStatus; needsYou: boolean; unread: boolean;
+/** Part request as the detail shows it, supplied by the caller. */
+export interface PartView { name: string; sku: string; unit: string; price: number; stock: { word: string; tone: 'ok' | 'warn' | 'bad' }; enough: boolean }
+export interface InboxItem extends RequestListItem {
+  jobId: string | null; mechId: string; at: string; seq: number;
   /** Underlying record. */
   part?: PartRequest; problem?: Proposal; msg?: Msg; photos?: number; cust?: CustMsg;
+  /** Detail display (optional; studio itemsOf fills them). `partView` for kind part; `quotePartsLabel` e.g. "Brake pad x2, Oil x1". */
+  partView?: PartView; quotePartsLabel?: string;
 }
+type InboxBase = Omit<InboxItem, keyof RequestDisplay | 'partView' | 'quotePartsLabel'>;
 
-export const KIND_LABEL: Record<ItemKind, string> = { part: 'Part', problem: 'Problem', question: 'Question', note: 'Note', customer: 'Customer' };
 export const DECLINE_REASONS = ['Not needed for this job', 'Use stock we already have', 'Customer has not approved it', 'Too expensive, find another way', 'Other'] as const;
 const t = (hm: string) => `${TODAY}T${hm}:00+08:00`;
 export const jobOf = (id: string | null) => allJobs.find((j) => j.id === id) ?? null;
@@ -28,9 +34,18 @@ const num = (id: string) => Number(id.replace(/\D/g, '')) || 0;
 
 const PART_STATUS: Record<PartRequest['status'], ItemStatus> = { Requested: 'Needs you', Approved: 'Approved', 'Ready at stockroom': 'Ready', Collected: 'Collected', Declined: 'Declined' };
 
+/** Studio only: fills the display fields from the fixtures. A real caller supplies them from the API. */
+function decorate(b: InboxBase): InboxItem {
+  const j = jobOf(b.jobId); const v = j ? vehicleOf(j) : null;
+  const item: InboxItem = { ...b, plate: v?.plate ?? null, jobTitle: j ? serviceTitle(j) : null, sender: senderOf(b), agoLabel: agoWord(b.at), vehicleLabel: v ? `${v.make} ${v.model}` : null, customerName: j ? customerOf(j).name : null, jobNumber: j?.number ?? null };
+  if (b.part) { const pr = productOf(b.part.productId); item.partView = { name: pr.name, sku: pr.sku, unit: pr.unit, price: pr.price, stock: stockWord(pr), enough: onHandHere(pr) >= b.part.qty }; }
+  const q = b.problem?.quote; if (q && q.parts.length) item.quotePartsLabel = q.parts.map((x) => `${productOf(x.productId).name.split(',')[0]} x${x.qty}`).join(', ');
+  return item;
+}
+
 /** Every item the mechanics sent, newest first. */
 export function itemsOf(s: MechState): InboxItem[] {
-  const out: InboxItem[] = [];
+  const out: InboxBase[] = [];
   for (const r of s.requests) {
     const pr = productOf(r.productId); const j = jobOf(r.jobId);
     const st = PART_STATUS[r.status];
@@ -54,7 +69,7 @@ export function itemsOf(s: MechState): InboxItem[] {
     const j = jobOf(c.jobId); const st: ItemStatus = c.answered ? 'Answered' : 'Needs you';
     out.push({ id: `customer:${c.id}`, kind: 'customer', jobId: c.jobId, mechId: j?.assigneeId ?? 'm-jun', at: c.at, seq: num(c.id), title: 'Customer message', preview: c.text, status: st, needsYou: st === 'Needs you', unread: !s.managerRead[`customer:${c.id}`], cust: c });
   }
-  return out.sort((a, b) => minOf(b.at) - minOf(a.at) || b.seq - a.seq);
+  return out.map(decorate).sort((a, b) => minOf(b.at) - minOf(a.at) || b.seq - a.seq);
 }
 
 export function matches(i: InboxItem, f: Filter, q = ''): boolean {
@@ -120,7 +135,7 @@ export function replyToCustomer(jobId: string, text: string) {
   patchMech((s) => ({ custMsgs: [...s.custMsgs.map((m) => (m.jobId === jobId && m.from === 'customer' ? { ...m, answered: true } : m)), { id: nextId('cm'), jobId, from: 'manager' as const, text: body, at: nowIso() }] }));
 }
 /** Who sent an item, as a person: the customer's first name for a customer message, else the mechanic. */
-export function senderOf(i: InboxItem): { id: string; name: string; short: string; initials: string } {
+export function senderOf(i: Pick<InboxItem, 'kind' | 'jobId' | 'mechId'>): RequestPerson {
   if (i.kind === 'customer') {
     const j = jobOf(i.jobId); const c = j ? customerOf(j) : null; const name = c?.name ?? 'Customer';
     return { id: c?.id ?? 'customer', name, short: name.split(' ')[0]!, initials: name.split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase() };
@@ -129,6 +144,14 @@ export function senderOf(i: InboxItem): { id: string; name: string; short: strin
 }
 export const pesos = (n: number) => `₱${n.toLocaleString('en-PH')}`;
 
+/** Studio only: the service's posts as plain thread views (oldest first). A real caller maps its API rows to ThreadPostView. */
+export function threadPostsOf(s: MechState, job: Job | null): ThreadPostView[] {
+  return job ? feedOf(s, job).slice().reverse().map((p) => ({ id: p.id, mine: p.by === 'you', kind: p.kind, text: p.text, photos: p.photos, meta: p.meta, agoLabel: agoWord(p.at) })) : [];
+}
+/** Studio only: the customer chat as plain views. */
+export function customerChatOf(s: MechState, job: Job): ChatPostView[] {
+  return threadOf(s, job.id).map((p) => ({ id: p.id, mine: p.from === 'manager', text: p.text, whenLabel: whenWord(p.at), read: p.read }));
+}
 /** The thread a manager sees under an item: the service's posts, oldest first. */
 export type { FeedPost } from './mechModel';
 

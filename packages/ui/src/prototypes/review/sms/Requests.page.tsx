@@ -8,7 +8,7 @@ import { branch, manager, productOf, vehicleOf } from '../../../components/sms/d
 import { shortName } from '../../../components/sms/floorModel';
 import { useMech, type QuoteState } from '../../../components/sms/mechModel';
 import {
-  KIND_LABEL, answerQuote, countsOf, declinePart, dismissProblem, itemsOf, jobOf, markItemRead, matches, mechOf, needsCount, pesos, quoteProblem, replyInThread, replyToCustomer, senderOf, seedRequests, setPartStatus,
+  KIND_LABEL, answerQuote, countsOf, declinePart, dismissProblem, itemsOf, jobOf, markItemRead, matches, mechOf, needsCount, pesos, quoteProblem, replyInThread, replyToCustomer, senderOf, seedRequests, setPartStatus, customerChatOf, threadPostsOf,
   type Filter, type RequestsScenario,
 } from '../../../components/sms/requestsModel';
 import { ServicesPage } from '../../sms/Services.page';
@@ -136,7 +136,7 @@ export function RequestsPage({ state = 'ready', scenario = 'default', initialSel
         <article aria-label={`${KIND_LABEL[item.kind]} from ${mech!.short}`} key={item.id} className="pb-4">
           <RequestHeader item={item} job={job} a={a} />
           <RequestBody item={item} job={job} a={a} />
-          {item.kind === 'customer' && job ? <CustomerThread job={job} s={s} onSend={(t) => { replyToCustomer(job.id, t); toast.info(`Sent to ${mech!.short}.`); }} /> : <RequestThread job={job} s={s} mech={mechOf(item.mechId)} itemKey={item.id} onSend={(t) => { if (!item.jobId) return; replyInThread(item.jobId, mech!.id, t, item.id); toast.info(`Sent to ${mech!.short}.`); }} />}
+          {item.kind === 'customer' && job ? <CustomerThread customer={item.sender} you={manager} posts={customerChatOf(s, job)} onSend={(t) => { replyToCustomer(job.id, t); toast.info(`Sent to ${mech!.short}.`); }} /> : <RequestThread posts={threadPostsOf(s, job)} hasService={!!job} you={manager} mech={mechOf(item.mechId)} itemKey={item.id} onSend={(t) => { if (!item.jobId) return; replyInThread(item.jobId, mech!.id, t, item.id); toast.info(`Sent to ${mech!.short}.`); }} />}
         </article>
       ) : (
         <div className="grid h-full place-items-center p-6"><EmptyState icon={Tray} title={counts.needs ? 'Pick a request' : 'All clear'} description={counts.needs ? `${counts.needs} waiting for you. Choose one on the left.` : 'Nothing is waiting for you.'} /></div>

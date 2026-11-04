@@ -2,11 +2,10 @@ import { useRef, type KeyboardEvent, type ReactNode } from 'react';
 import { ChatCircleText, ChatTeardropText, NotePencil, Package, Warning } from '@phosphor-icons/react';
 import { Badge, type BadgeProps } from './Badge';
 import { cn } from '../utils/cn';
-import { vehicleOf } from './sms/data';
-import { agoWord } from './sms/mechModel';
-import { serviceTitle } from './sms/floorModel';
-import { KIND_LABEL, jobOf, senderOf, type InboxItem, type ItemKind, type ItemStatus } from './sms/requestsModel';
+import { KIND_LABEL, type ItemKind, type ItemStatus, type RequestListItem } from './sms/requestTypes';
 import { PersonAvatar } from './avatarTone';
+
+export type { ItemKind, ItemStatus, RequestListItem, RequestPerson, RequestDisplay } from './sms/requestTypes';
 
 export const KIND_ICON: Record<ItemKind, typeof Package> = { part: Package, problem: Warning, question: ChatCircleText, note: NotePencil, customer: ChatTeardropText };
 export const STATUS_TONE: Record<ItemStatus, BadgeProps['tone']> = { 'Needs you': 'warn', Approved: 'accent', Ready: 'ok', Collected: 'neutral', Declined: 'bad', Quoted: 'accent', Dismissed: 'neutral', Answered: 'ok', Seen: 'neutral' };
@@ -22,13 +21,12 @@ export function StatusChip({ status }: { status: ItemStatus }) {
   return <Badge tone={STATUS_TONE[status]} dot={status === 'Needs you'}>{status}</Badge>;
 }
 
-export const labelOf = (i: InboxItem) => {
-  const j = jobOf(i.jobId);
-  return [i.unread ? 'Unread' : '', j ? vehicleOf(j).plate : 'Shop use', i.title, KIND_LABEL[i.kind], i.status === 'Seen' ? '' : i.status, senderOf(i).short].filter(Boolean).join(', ');
-};
+export const labelOf = (i: RequestListItem) =>
+  [i.unread ? 'Unread' : '', i.plate ?? 'Shop use', i.title, KIND_LABEL[i.kind], i.status === 'Seen' ? '' : i.status, i.sender.short].filter(Boolean).join(', ');
 
 export interface RequestListProps {
-  items: InboxItem[];
+  /** Rows with plain display fields (plate, jobTitle, sender, agoLabel). Nothing is looked up from studio data. */
+  items: RequestListItem[];
   selectedId: string | null;
   onOpen: (id: string) => void;
   /** Shown when the filter leaves nothing. */
@@ -56,7 +54,7 @@ export function RequestList({ items, selectedId, onOpen, empty }: RequestListPro
   return (
     <ul ref={ref} role="listbox" aria-label="Requests and messages from mechanics" onKeyDown={onKey} className="px-1 py-1">
       {items.map((i, n) => {
-        const j = jobOf(i.jobId); const m = senderOf(i); const sel = i.id === selectedId;
+        const m = i.sender; const sel = i.id === selectedId;
         return (
           <li
             key={i.id} role="option" aria-selected={sel} aria-label={labelOf(i)} tabIndex={n === focusIdx ? 0 : -1}
@@ -68,8 +66,8 @@ export function RequestList({ items, selectedId, onOpen, empty }: RequestListPro
             <span className="min-w-0 flex-1">
               <span className="flex items-start gap-2">
                 {i.unread && <span aria-hidden data-unread className="mt-[7px] size-2 flex-none rounded-full bg-accent" />}
-                <span className="min-w-0 flex-1 truncate text-[14px] font-medium leading-5"><span className="font-mono text-[13px]">{j ? vehicleOf(j).plate : 'Shop use'}</span><span className="text-muted"> · </span>{j ? serviceTitle(j) : i.title}</span>
-                <span className="flex-none whitespace-nowrap text-[13px] tabular-nums text-muted">{agoWord(i.at)}</span>
+                <span className="min-w-0 flex-1 truncate text-[14px] font-medium leading-5"><span className="font-mono text-[13px]">{i.plate ?? 'Shop use'}</span><span className="text-muted"> · </span>{i.jobTitle ?? i.title}</span>
+                <span className="flex-none whitespace-nowrap text-[13px] tabular-nums text-muted">{i.agoLabel}</span>
               </span>
               <span className="mt-0.5 block truncate text-[13px] leading-5 text-muted" title={i.preview}>{i.kind === 'part' || i.kind === 'problem' ? `${i.title}: ` : ''}{i.preview}</span>
               <span className="mt-2 flex flex-wrap items-center gap-2"><KindChip kind={i.kind} /><StatusChip status={i.status} /><span className="text-[12px] text-muted">{m.short}</span></span>

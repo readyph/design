@@ -5,7 +5,8 @@ import { RequestBody, RequestHeader, type DetailActions } from './RequestDetail'
 import { RequestThread } from './RequestThread';
 import { CustomerThread } from './CustomerThread';
 import { getMech } from './sms/mechModel';
-import { itemsOf, jobOf, mechOf, seedRequests } from './sms/requestsModel';
+import { customerChatOf, itemsOf, jobOf, mechOf, seedRequests, threadPostsOf } from './sms/requestsModel';
+import { manager } from './sms/data';
 import { SCENARIO_JOB, seedTracker } from './sms/trackerModel';
 
 afterEach(cleanup);
@@ -49,7 +50,7 @@ describe('RequestThread and CustomerThread', () => {
     seedRequests({ scenario: 'default', customer: 'waiting' });
     const item = itemsOf(getMech()).find((i) => i.kind === 'question')!;
     const onSend = vi.fn();
-    const { container } = render(<RequestThread job={jobOf(item.jobId)} s={getMech()} mech={mechOf(item.mechId)} itemKey={item.id} onSend={onSend} />);
+    const { container } = render(<RequestThread posts={threadPostsOf(getMech(), jobOf(item.jobId))} hasService you={manager} mech={mechOf(item.mechId)} itemKey={item.id} onSend={onSend} />);
     fireEvent.click(screen.getByRole('button', { name: 'Quick reply: Yes' }));
     expect(onSend).toHaveBeenCalledWith('Yes');
     fireEvent.change(screen.getByRole('textbox'), { target: { value: ' Hello ' } });
@@ -58,13 +59,13 @@ describe('RequestThread and CustomerThread', () => {
     expect((await axe.run(container, axeOpts)).violations).toEqual([]);
   });
   it('RequestThread without a service has no reply box', () => {
-    render(<RequestThread job={null} s={getMech()} mech={mechOf('m-jun')} onSend={() => {}} />);
+    render(<RequestThread posts={[]} hasService={false} you={manager} mech={mechOf('m-jun')} onSend={() => {}} />);
     expect(screen.queryByRole('textbox')).toBeNull();
   });
   it('CustomerThread sends and passes axe', async () => {
     seedTracker('in progress', 'conversation');
     const onSend = vi.fn();
-    const { container } = render(<CustomerThread job={jobOf(SCENARIO_JOB['in progress'])!} s={getMech()} onSend={onSend} />);
+    const { container } = render(<CustomerThread customer={{ id: 'c1', name: 'Ana Reyes', short: 'Ana', initials: 'AR' }} you={manager} posts={customerChatOf(getMech(), jobOf(SCENARIO_JOB['in progress'])!)} onSend={onSend} />);
     fireEvent.click(screen.getByRole('button', { name: 'Quick reply: Call the shop' }));
     expect(onSend).toHaveBeenCalledWith('Call the shop');
     expect((await axe.run(container, axeOpts)).violations).toEqual([]);
