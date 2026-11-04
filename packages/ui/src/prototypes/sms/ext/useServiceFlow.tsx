@@ -3,7 +3,7 @@ import { Button, toast } from '../../../index';
 import { NOW, customers, type Customer, type Job } from '../data';
 import { NEXT_NUMBER } from '../scheduleData';
 import { hmin, longDay, type Booking, type CalItem, type Slot } from '../scheduleModel';
-import { docFromJob, jobFieldsOf, newJob, nextQuoteNo, quoteNoOf, type WizardAction, type WizardDraft } from '../wizardModel';
+import { docFromJob, jobFieldsOf, vehicleIdOf, newJob, nextQuoteNo, quoteNoOf, type WizardAction, type WizardDraft } from '../wizardModel';
 import { NewServiceWizard } from './NewServiceWizard';
 import type { BlockId } from './WizardSummary';
 import { QuotationModal } from './QuotationDoc';
@@ -68,7 +68,7 @@ export function useServiceFlow(host: FlowHost) {
     if (action === 'book') {
       const number = nextJo();
       host.patch(job.id, { ...fields, number, quoteNo: qn, quoteParked: false, statusSince: NOW }, booking);
-      setBooked({ id: job.id, number, customerId: d.customer!.id, vehicleId: d.vehicleId || d.customer!.vehicles[0]!.id });
+      setBooked({ id: job.id, number, customerId: d.customer!.id, vehicleId: vehicleIdOf(d) });
       toast.undo(`${qn} is now ${number}: booked for ${d.customer!.name}, ${longDay(d.date)} ${hmin(d.start)}.`, () => host.patch(job.id, prev));
     } else {
       host.patch(job.id, { ...fields, status: job.status, quoteParked: true, quoteNo: qn }, booking);

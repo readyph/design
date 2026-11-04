@@ -3,7 +3,9 @@ import { render, cleanup, act, fireEvent } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import axe from 'axe-core';
 import { NewServiceWizardPage } from './NewServiceWizardPage';
-import { linesFromType } from './sms/wizardModel';
+import { linesFromType, emptyDraft, jobFieldsOf, vehicleIdOf, wizardMissing } from './sms/wizardModel';
+import { customers } from './sms/data';
+import { emptyDraft as protoEmptyDraft, jobFieldsOf as protoJobFields, wizardMissing as protoMissing } from '../prototypes/sms/wizardModel';
 
 /** [For Review] RDY-528. Regression guard: opening the wizard (any step, prefilled, from a quote) must settle. Fails on "Maximum update depth" or a render-count blow-up. */
 beforeAll(() => {
@@ -99,6 +101,39 @@ describe('Wizard revision 7', () => {
     const dlg = document.body.querySelector('[role="dialog"]') as HTMLElement;
     expect(dlg.querySelector('[data-group="parts"]')?.textContent).toBe('Parts');
     expect(dlg.textContent).toMatch(/Labour/);
+  });
+});
+
+/** RDY-640: a customer with no car cannot be booked; no vehicles[0]! left to throw. */
+const noCar = { ...customers[0]!, vehicles: [] };
+describe('Wizard with a customer who has no car (RDY-640)', () => {
+  it('model: "a car" is missing, and job fields no longer throw (both copies)', () => {
+    for (const [mk, miss, fields] of [[emptyDraft, wizardMissing, jobFieldsOf], [protoEmptyDraft, protoMissing, protoJobFields]] as const) {
+      const d = mk({ customer: noCar, lines: lines() });
+      expect(miss(d)).toEqual(['a car']);
+      expect(() => fields(d, 'book')).not.toThrow();
+      expect(fields(d, 'book').vehicleId).toBe('');
+      const withCar = mk({ customer: customers[0]!, lines: lines() });
+      expect(miss(withCar)).toEqual([]);
+      expect(fields(withCar, 'quote').vehicleId).toBe(customers[0]!.vehicles[0]!.id);
+    }
+    expect(vehicleIdOf(emptyDraft({ customer: noCar }))).toBe('');
+  });
+  it('Next is disabled with "Still needed: a car", and Add car enables it with the new car on the job', async () => {
+    const { screen, within } = await import('@testing-library/react');
+    await mount(<NewServiceWizardPage initialFlow={{ kind: 'new', customerId: 'c01', initialDraft: { customer: noCar, vehicleId: '', lines: lines() } } as never} />);
+    const dlg = document.body.querySelector('[role="dialog"]') as HTMLElement;
+    expect(dlg.textContent).toMatch(/Still needed: a car\./);
+    const next = within(dlg).getByRole('button', { name: 'Next' }) as HTMLButtonElement;
+    expect(next.disabled).toBe(true);
+    await act(async () => { fireEvent.click(within(dlg).getByRole('button', { name: /^Add car$/ })); });
+    const type = async (label: RegExp, value: string) => act(async () => { fireEvent.change(within(dlg).getByLabelText(label), { target: { value } }); });
+    await type(/Plate/, 'ABC 123'); await type(/Make/, 'Toyota'); await type(/Model/, 'Vios');
+    await act(async () => { fireEvent.click(within(dlg).getAllByRole('button', { name: /^Add car$/ }).pop()!); });
+    expect(dlg.textContent).not.toMatch(/Still needed/);
+    expect((within(dlg).getByRole('button', { name: 'Next' }) as HTMLButtonElement).disabled).toBe(false);
+    await act(async () => { fireEvent.click(within(dlg).getByRole('button', { name: 'Next' })); });
+    expect(screen.getByRole('button', { name: /Book service/ })).toBeTruthy();
   });
 });
 
