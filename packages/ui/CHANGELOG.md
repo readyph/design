@@ -1,5 +1,11 @@
 # @readyph/ui
 
+## 0.27.3
+
+### Patch Changes
+
+- cb4afb0: New service wizard: a customer with no car can no longer be booked or saved as a quotation. The wizard asks for a car first ("Still needed: a car") and no longer reads vehicles[0] when there is none.
+
 ## 0.27.2
 
 ### Patch Changes
