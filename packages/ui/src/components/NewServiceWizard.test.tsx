@@ -137,6 +137,19 @@ describe('Wizard with a customer who has no car (RDY-640)', () => {
   });
 });
 
+/** RDY-624. Footer buttons carry actionBar (44px --ctl-touch at phone width, 40px on desktop). */
+describe('New service wizard footer touch target', () => {
+  const touch = 'max-[640px]:h-[var(--ctl-touch)]';
+  const check = async (flow: object, names: RegExp[]) => {
+    const { within } = await import('@testing-library/react');
+    await mount(<NewServiceWizardPage initialFlow={flow as never} />);
+    const dlg = document.body.querySelector('[role="dialog"]') as HTMLElement;
+    for (const n of names) expect(within(dlg).getByRole('button', { name: n }).className).toContain(touch);
+  };
+  it('step 1: Cancel and Next', () => check({ kind: 'new', customerId: 'c01', initialDraft: { lines: lines() } }, [/^Cancel$/, /^Next$/]));
+  it('step 2: Back, Cancel, Save as quotation, Book service', () => check({ kind: 'new', customerId: 'c01', startStep: 2, initialDraft: { lines: lines() } }, [/^Back$/, /^Cancel$/, /^Save as quotation$/, /^Book service$/]));
+});
+
 describe('New service wizard axe', () => {
   const axeOpts = { rules: { 'color-contrast': { enabled: false }, region: { enabled: false } } };
   for (const [name, f] of flows) {
