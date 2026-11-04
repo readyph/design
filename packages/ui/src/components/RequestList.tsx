@@ -21,6 +21,13 @@ export function StatusChip({ status }: { status: ItemStatus }) {
   return <Badge tone={STATUS_TONE[status]} dot={status === 'Needs you'}>{status}</Badge>;
 }
 
+/** Row detail line: parts and problems lead with the title; no separator when there is no body. */
+export const previewOf = (i: RequestListItem) => {
+  const body = i.preview.trim();
+  if (i.kind !== 'part' && i.kind !== 'problem') return i.preview;
+  return body ? `${i.title}: ${i.preview}` : i.title;
+};
+
 export const labelOf = (i: RequestListItem) =>
   [i.unread ? 'Unread' : '', i.plate ?? 'Shop use', i.title, KIND_LABEL[i.kind], i.status === 'Seen' ? '' : i.status, i.sender.short].filter(Boolean).join(', ');
 
@@ -69,7 +76,7 @@ export function RequestList({ items, selectedId, onOpen, empty }: RequestListPro
                 <span className="min-w-0 flex-1 truncate text-[14px] font-medium leading-5"><span className="font-mono text-[13px]">{i.plate ?? 'Shop use'}</span><span className="text-muted"> · </span>{i.jobTitle ?? i.title}</span>
                 <span className="flex-none whitespace-nowrap text-[13px] tabular-nums text-muted">{i.agoLabel}</span>
               </span>
-              <span className="mt-0.5 block truncate text-[13px] leading-5 text-muted" title={i.preview}>{i.kind === 'part' || i.kind === 'problem' ? `${i.title}: ` : ''}{i.preview}</span>
+              <span className="mt-0.5 block truncate text-[13px] leading-5 text-muted" title={i.preview}>{previewOf(i)}</span>
               <span className="mt-2 flex flex-wrap items-center gap-2"><KindChip kind={i.kind} /><StatusChip status={i.status} /><span className="text-[12px] text-muted">{m.short}</span></span>
             </span>
           </li>
