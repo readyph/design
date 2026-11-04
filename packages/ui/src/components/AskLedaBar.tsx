@@ -175,7 +175,7 @@ export const AskLedaBar = forwardRef<HTMLButtonElement, AskLedaBarProps>(functio
       <button
         ref={ref}
         type="button"
-        aria-label={`${placeholder} ${kbd}`}
+        aria-keyshortcuts={shortcuts ? 'Control+K Meta+K' : undefined}
         onClick={() => open.current?.('click')}
         {...rest}
         className={cn(
@@ -187,7 +187,7 @@ export const AskLedaBar = forwardRef<HTMLButtonElement, AskLedaBarProps>(functio
         <span className="inline-flex shrink-0 items-center">
           <LedaMark key={pass} size={v.mark} effect="scan" active={scan} once decorative className={cn(variant === 'bar' && 'max-[640px]:h-6 max-[640px]:w-6')} />
         </span>
-        <span data-ph className={cn('min-w-0 flex-1 truncate text-muted', variant === 'bar' && 'max-[640px]:hidden')} aria-hidden="true">{placeholder}</span>
+        <span data-ph className={cn('min-w-0 flex-1 truncate text-muted', variant === 'bar' && 'max-[640px]:sr-only')}>{placeholder}</span>
         <kbd aria-hidden="true" className={cn('inline-block h-4 min-w-[18px] shrink-0 rounded-[3px] bg-raised-2 px-1 text-center font-sans text-tiny leading-4 text-text max-[640px]:hidden')}>{kbd}</kbd>
       </button>
       {halo && (

@@ -57,7 +57,7 @@ export function WizardSummary({ draft, onChange, editing, setEditing, onPreview,
       </WizardBlock>
 
       <WizardBlock {...props('job')} title="More details" hint="(optional)" edit={<MoreFields draft={draft} onChange={onChange} />} action={
-        <button type="button" className={editLink} aria-expanded={false} onClick={() => open('job')} aria-label="More details, optional: expand">{moreTouched ? 'Edit' : 'Add'}<CaretDown size={14} weight="bold" aria-hidden /></button>
+        <button type="button" className={editLink} aria-expanded={false} onClick={() => open('job')}>{moreTouched ? 'Edit' : 'Add'}<span className="sr-only"> more details, optional</span><CaretDown size={14} weight="bold" aria-hidden /></button>
       }>
         {moreTouched ? (
           <dl>

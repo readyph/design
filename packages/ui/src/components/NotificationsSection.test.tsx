@@ -16,7 +16,7 @@ describe('NotificationsSection', () => {
   });
   it('template modal opens, shows count and preview, has no axe violations', async () => {
     render(ui());
-    fireEvent.click(screen.getAllByRole("button", { name: /^Edit text:/ })[0]!);
+    fireEvent.click(screen.getAllByRole("button", { name: /edit text/ })[0]!);
     expect(screen.getByTestId('sms-count')).toBeTruthy();
     expect(screen.getByTestId('sms-preview')).toBeTruthy();
     expect((await axe.run(document.body, axeOpts)).violations).toEqual([]);

@@ -17,7 +17,10 @@ describe('PlatformToday', () => {
   it('shows at most maxRows rows and View all N only when there are more', () => {
     const { rerender } = render(<PlatformToday platform={autoWorks} lists={[jobs]} maxRows={2} />);
     expect(screen.getAllByRole('listitem').filter((li) => li.hasAttribute('data-row-id'))).toHaveLength(2);
-    expect(screen.getByRole('button', { name: /View all 7 in Open jobs/ })).toBeTruthy();
+    const more = screen.getByRole('button', { name: /View all 7 in Open jobs/ });
+    // WCAG 2.5.3: no aria-label; the name is the visible text first ("View all 7") then an sr-only cue.
+    expect(more.hasAttribute('aria-label')).toBe(false);
+    expect(more.textContent!.startsWith('View all 7')).toBe(true);
     rerender(<PlatformToday platform={autoWorks} lists={[{ ...jobs, total: 4 }]} maxRows={4} />);
     expect(screen.queryByRole('button', { name: /View all/ })).toBeNull();
   });

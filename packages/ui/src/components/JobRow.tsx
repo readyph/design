@@ -41,7 +41,7 @@ function JobRowInner<J extends TodayJob>({ job, env, view: v, mechanics, density
   if (density === 'two-line') {
     return (
       <div ref={ref} className={cn('-mx-2 border-b border-rule px-2 py-2', reasonOf(env, job) && 'bg-warn-bg', className)}>
-        <button type="button" onClick={open} className="flex w-full min-h-11 items-start gap-3 text-left" aria-label={`${job.number}, ${v.vehicle}, ${v.customer}`}>
+        <button type="button" onClick={open} className="flex w-full min-h-11 items-start gap-3 text-left">
           <span className="min-w-0 flex-1">
             <span className="flex items-baseline gap-2"><span className="font-mono text-[13px]">{job.number}</span><span className="min-w-0 flex-1 truncate text-[14px] font-medium">{v.vehicle.replace(/ \d{4}$/, '')}</span><span className="ml-auto flex-none whitespace-nowrap text-[13px] tabular-nums text-muted">{time}</span></span>
             <span title={title} className="mt-0.5 line-clamp-2 break-words text-[13px] leading-5">{title}</span>
@@ -55,7 +55,7 @@ function JobRowInner<J extends TodayJob>({ job, env, view: v, mechanics, density
   return (
     <div ref={ref} className={cn('border-b border-rule', reasonOf(env, job) && 'bg-warn-bg', selected && 'bg-raised', className)}>
       <div className={cn('flex items-center gap-3 px-2', density === 'compact' ? 'min-h-9' : 'min-h-11')}>
-        <button type="button" onClick={open} className="flex min-w-0 flex-1 items-center gap-3 text-left" aria-label={`${job.number}, ${v.vehicle}, ${v.customer}`} aria-current={selected || undefined}>
+        <button type="button" onClick={open} className="flex min-w-0 flex-1 items-center gap-3 text-left" aria-current={selected || undefined}>
           <span className="w-[68px] flex-none font-mono text-[13px]">{job.number}</span>
           <span title={`${title} · ${v.vehicle} · ${v.plate} · ${v.customer}`} className="min-w-0 flex-1 truncate text-[14px]"><span className="font-medium">{title}</span> <span className="text-muted">{v.vehicle}</span> <span className="font-mono text-[12px] text-muted">{v.plate}</span> <span className="text-muted">· {v.customer}</span></span>
           {m ? <PersonAvatar personId={m.id} name={m.name} initials={m.initials} size={24} /> : <span className="w-6" />}

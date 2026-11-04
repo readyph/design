@@ -105,7 +105,7 @@ export function CustomerPage({ rec, notes, onOpenService, onNewService, onEdit, 
                     <div className="min-w-0">
                       <p className="break-all font-mono text-[15px] font-semibold leading-6">{v.plate}</p>
                       <p className="flex flex-wrap items-center gap-x-2 text-[13px] text-muted"><span className="break-words">{carLine(v)}</span><span aria-hidden>·</span>
-                        <button type="button" onClick={() => showHistory(v.id)} aria-label={`Show services for ${v.plate}`} className={cn(link, 'inline-flex min-h-8 items-center max-[640px]:min-h-11')}>{mine.length} {mine.length === 1 ? 'service' : 'services'}{open ? `, ${open} open` : ''}</button></p>
+                        <button type="button" onClick={() => showHistory(v.id)} className={cn(link, 'inline-flex min-h-8 items-center max-[640px]:min-h-11')}>{mine.length} {mine.length === 1 ? 'service' : 'services'}{open ? `, ${open} open` : ''}<span className="sr-only"> for {v.plate}</span></button></p>
                     </div>
                     <div className="flex flex-none items-center gap-3">
                       <button type="button" onClick={() => onCar(v.id)} aria-label={`Edit car ${v.plate}`} className={cn(link, 'inline-flex min-h-8 items-center gap-1 px-1 max-[640px]:min-h-11')}><PencilSimple size={14} aria-hidden />Edit</button>
@@ -141,7 +141,7 @@ export function CustomerPage({ rec, notes, onOpenService, onNewService, onEdit, 
             <ul className="border-t border-rule">
               {rows.map((j) => (
                 <li key={j.id} className="border-b border-rule">
-                  <button type="button" onClick={() => onOpenService(j)} aria-label={`Open ${j.number}, ${serviceTitle(j)}`}
+                  <button type="button" onClick={() => onOpenService(j)}
                     className={cn('-mx-2 flex min-h-12 w-[calc(100%+16px)] items-center gap-3 rounded-control px-2 py-2 text-left transition-colors duration-150 motion-reduce:transition-none hover:bg-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent', reasonOf(j) && 'bg-warn-bg hover:bg-warn-bg')}>
                     <span className="w-14 flex-none text-[13px] tabular-nums text-muted max-[640px]:w-12">{shortDate(j.statusSince)}</span>
                     <span className="min-w-0 flex-1">

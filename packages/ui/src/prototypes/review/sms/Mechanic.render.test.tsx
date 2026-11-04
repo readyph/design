@@ -46,12 +46,13 @@ describe('Mechanic app', () => {
     expect(document.getElementById('mech-main')!.className).toMatch(/bg-surface/); expect(document.getElementById('mech-main')!.className).not.toMatch(/bg-raised/);
     for (const r of rows) { const mark = r.querySelector('span[aria-hidden]') as HTMLElement; expect(mark.className).toMatch(/size-\[18px\]/); }
     const row = rows.find((r) => r.getAttribute('aria-checked') === 'false')!;
-    const name = row.getAttribute('aria-label')!;
+    const name = row.querySelector('span.font-medium, span[class*="font-medium"]')!.textContent!.trim();
     await act(async () => { fireEvent.click(row); });
-    expect(screen.getByRole('checkbox', { name }).getAttribute('aria-checked')).toBe('true');
+    expect(screen.getAllByRole('checkbox', { name: new RegExp(`^${name}`) }).some((r) => r.getAttribute('aria-checked') === 'true')).toBe(true);
     expect(Object.values(getMech().ov).some((o) => o.services?.some((x) => x.name === name && x.done))).toBe(true);
-    await act(async () => { fireEvent.click(screen.getByRole('checkbox', { name })); });
-    expect(screen.getByRole('checkbox', { name }).getAttribute('aria-checked')).toBe('false');
+    const again = () => screen.getAllByRole('checkbox', { name: new RegExp(`^${name}`) })[0]!;
+    await act(async () => { fireEvent.click(again()); });
+    expect(again().getAttribute('aria-checked')).toBe('false');
   });
   it('revision 17: ticking or unticking a service item never changes the row order; parts order is unchanged', async () => {
     render(<MechanicPage mechanicId="m-arnel" overlay="service detail open" />);
@@ -117,7 +118,7 @@ describe('Mechanic app', () => {
       expect(document.querySelectorAll('nav').length).toBe(1);
     };
     noNav();
-    await open('Profile'); noNav();
+    await open(/Profile/); noNav();
     unmount();
     render(<MechanicPage mechanicId="m-jun" overlay="service detail open" />); noNav();
     await open('Request more parts'); noNav();
@@ -128,7 +129,7 @@ describe('Mechanic app', () => {
     expect(within(header).queryByRole('img', { name: 'Ready' })).toBeNull();
     expect(header.textContent).not.toMatch(/\bReady(PH)?\b/);
     const biz = within(header).getByRole('img', { name: 'Dela Cruz Auto Works' });
-    const prof = within(header).getByRole('button', { name: 'Profile' });
+    const prof = within(header).getByRole('button', { name: /Profile/ });
     expect(biz.compareDocumentPosition(prof) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(within(prof).getByRole('img', { name: 'Jun Bautista' })).toBeTruthy();
     expect(prof.textContent).toMatch(/JB|J/);

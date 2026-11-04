@@ -180,7 +180,6 @@ export function CalCard<J extends TodayJob = TodayJob>({ placed, env, jobView, m
   return (
     <button
       type="button" onClick={() => onOpen(job)} aria-pressed={selected} title={`${job.number}, ${v.customer}, ${v.plate}, ${title}`}
-      aria-label={`${job.number}, ${v.plate}, ${v.customer}, ${title}, ${v.vehicle}, ${time}, ${st.label}${flag ? `, ${REASON_WORD[reason!]}: ${flag.word}` : ''}${staff?.current ? ', currently working on' : ''}${staff?.unread ? `, ${staff.unread}` : ''}${mech ? `, ${mech.name}` : ', not assigned'}`}
       data-tone={view?.tone}
       style={layout ? { top: layout.top, height: h, left: 0, right: 0 } : { top: pxAt(env.hours.open, start) + 1, height: h, left: `calc(${(lane / lanes) * 100}% + 2px)`, width: `calc(${100 / lanes}% - 4px)` }}
       className={cn(
@@ -214,6 +213,7 @@ export function CalCard<J extends TodayJob = TodayJob>({ placed, env, jobView, m
       )}
         </>
       )}
+      <span className="sr-only">{`, ${v.vehicle}, ${time}${reason ? `, ${REASON_WORD[reason]}` : ''}${staff?.current ? ', currently working on' : ''}${mech ? `, ${mech.name}` : ', not assigned'}`}</span>
     </button>
   );
 }

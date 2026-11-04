@@ -22,11 +22,13 @@ describe('AskLedaBar semantics', () => {
     render(<AskLedaBar scope="Stockroom" />);
     expect(screen.getByRole('button', { name: /^Ask Leda about Stockroom/ })).toBeTruthy();
   });
-  it('name starts with the visible placeholder and includes the visible shortcut (WCAG 2.5.3)', () => {
-    render(<AskLedaBar />);
-    const name = screen.getByRole('button').getAttribute('aria-label')!;
-    expect(name.startsWith(document.querySelector('[data-ph]')!.textContent!)).toBe(true);
-    expect(name).toContain(document.querySelector('kbd')!.textContent!);
+  it('name comes from the visible placeholder (no aria-label that could drift from it; WCAG 2.5.3)', () => {
+    render(<AskLedaBar scope="Customers" />);
+    const btn = screen.getByRole('button');
+    expect(btn.hasAttribute('aria-label')).toBe(false);
+    expect(document.querySelector('[data-ph]')!.hasAttribute('aria-hidden')).toBe(false);
+    expect(btn.textContent!.startsWith('Ask Leda about Customers')).toBe(true);
+    expect(btn.getAttribute('aria-keyshortcuts')).toBe('Control+K Meta+K');
   });
   it('click, Cmd/Ctrl+K and / call onOpen; / is ignored while typing', () => {
     const onOpen = vi.fn();

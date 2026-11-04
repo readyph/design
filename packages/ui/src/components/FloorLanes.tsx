@@ -75,10 +75,9 @@ function Chip<J extends TodayJob>({ job, env, v, moveTargets, selected, style, o
         onClick={onSelect}
         aria-pressed={selected}
         title={`${job.number} · ${title} · ${v.vehicle} · ${v.customer}`}
-        aria-label={`${job.number}, ${v.vehicle}, ${v.customer}, ${title}${job.promisedAt ? `, promised ${hm(job.promisedAt)}` : ', no promised time'}${STATUS_SHORT[job.status].label}${flag ? `, ${flag.word}` : ''}`}
         className="flex min-w-0 flex-1 flex-col justify-center overflow-hidden px-2 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
       >
-        <span className="flex items-baseline gap-1.5 text-[12px] leading-4"><span className="font-mono">{job.number.replace('JO-', '')}</span><span className="min-w-0 flex-1 truncate text-muted">{v.vehicle.replace(/^\S+ /, '').replace(/ \d{4}$/, '')}</span>{job.promisedAt && <span className="ml-auto flex-none tabular-nums text-muted">{hm(job.promisedAt)}</span>}</span>
+        <span className="flex items-baseline gap-1.5 text-[12px] leading-4"><span className="font-mono">{job.number.replace('JO-', '')}</span>{' '}<span className="min-w-0 flex-1 truncate text-muted">{v.vehicle.replace(/^\S+ /, '').replace(/ \d{4}$/, '')}</span>{job.promisedAt && <span className="ml-auto flex-none tabular-nums text-muted">{hm(job.promisedAt)}</span>}</span>
         <span className="line-clamp-2 break-words text-[12px] font-medium leading-4">{title}</span>
         <span className="flex items-center gap-1.5 text-[12px] leading-4"><span aria-hidden className={cn('size-1.5 flex-none rounded-full', st.dot)} /><span className="flex-none">{st.label}</span>{flag && <span className={cn('truncate', flag.tone === 'bad' ? 'font-medium text-bad' : 'text-muted')}>· {flag.word}</span>}</span>
       </button>

@@ -115,10 +115,10 @@ export const ServicesTable = forwardRef<HTMLDivElement, ServicesTableProps>(func
           >
             <div role="cell" className="flex min-w-0 justify-center"><Checkbox aria-label={`Select ${j.number}`} checked={on} onChange={() => onToggle(j.id)} /></div>
             <div role="cell" className="min-w-0 px-2">
-              <button type="button" onClick={() => onOpen(j)} aria-label={`Open ${j.number}, ${v.vehicle}, ${v.customer}`} className="block rounded-chip text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent">
+              <button type="button" onClick={() => onOpen(j)} className="block rounded-chip text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent">
                 <span className="block font-mono text-[13px]">{j.number}</span>{!(onViewQuote && hasQuotation(j)) && <span className="block text-[12px] text-muted">{shortDate(j.createdAt)}</span>}
               </button>
-              {onViewQuote && hasQuotation(j) && <button type="button" onClick={() => onViewQuote(j)} aria-label={`View quotation ${quoteNoOf(j)}`} className="block rounded-chip text-[12px] font-medium text-accent underline underline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent">Quotation</button>}
+              {onViewQuote && hasQuotation(j) && <button type="button" onClick={() => onViewQuote(j)} className="block rounded-chip text-[12px] font-medium text-accent underline underline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent">Quotation<span className="sr-only"> {quoteNoOf(j)}</span></button>}
             </div>
             <div role="cell" className="min-w-0 cursor-pointer px-2" onClick={() => onOpen(j)} title={`${title} · ${v.vehicle} · ${v.plate}`}>
               <span className="block truncate text-[14px] font-medium">{title}</span>
@@ -162,7 +162,7 @@ export function ServiceCard({ job, onOpen, selectMode, checked, onToggle, invent
   return (
     <div className={cn('-mx-2 flex items-start gap-1 border-b border-rule px-2', reasonOf(job) && 'bg-warn-bg')}>
       {selectMode && <div className="flex min-h-11 w-11 flex-none items-center justify-center"><Checkbox aria-label={`Select ${job.number}`} checked={!!checked} onChange={() => onToggle?.(job.id)} /></div>}
-      <button type="button" onClick={() => (selectMode ? onToggle?.(job.id) : onOpen(job))} aria-label={`${job.number}, ${v.vehicle}, ${v.customer}`} className="block min-h-11 min-w-0 flex-1 py-2 text-left">
+      <button type="button" onClick={() => (selectMode ? onToggle?.(job.id) : onOpen(job))} className="block min-h-11 min-w-0 flex-1 py-2 text-left">
         <span className="flex items-baseline gap-2"><span className="font-mono text-[13px]">{job.number}</span><span className="min-w-0 flex-1 truncate font-mono text-[13px] text-muted">{v.plate}</span><span className="flex-none text-[13px] tabular-nums text-muted">{job.promisedAt ? dayWord(job.promisedAt) : shortDate(job.statusSince)}</span></span>
         <span title={serviceTitle(job)} className="mt-0.5 line-clamp-2 break-words text-[14px] font-medium leading-5">{serviceTitle(job)}</span>
         <span className="mt-0.5 flex min-w-0 items-center gap-2 text-[13px] text-muted"><span className="inline-flex flex-none items-center gap-1.5 text-text"><span aria-hidden className={cn('size-1.5 rounded-full', STATUS_SHORT[job.status].dot)} />{STATUS_SHORT[job.status].label}</span><span className="min-w-0 truncate">{v.customer}</span></span>
