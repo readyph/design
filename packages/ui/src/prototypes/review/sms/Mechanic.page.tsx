@@ -1,15 +1,21 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button, EmptyState } from '../../../index';
 import { SignOut } from '@phosphor-icons/react';
-import { mechanics, type Job } from '../../../components/sms/data';
+import { branch, mechanics, type Job } from '../../../components/sms/data';
 import { useDirtyGuard } from '../../../components/DirtyGuard';
 import { MechFrame, type MechCrumb } from '../../../components/MechFrame';
 import { MechHome } from '../../../components/MechHome';
 import { MechMe } from '../../../components/MechMe';
 import { MechRequestForm, MechRequestSent } from '../../../components/MechRequest';
 import { MechServiceBody, type ServiceDialog } from '../../../components/MechService';
-import { markRead, requestPart } from '../../../components/sms/mechActions';
+import { markRead, requestPart, setPref } from '../../../components/sms/mechActions';
 import { dayOf, plateOf, poolFor, resetMech, useMech, type MechScenario } from '../../../components/sms/mechModel';
+
+const ME_PREFS = [
+  { id: 'assigned', label: 'Tell me when I get a new car' },
+  { id: 'reply', label: 'Tell me when my manager replies' },
+  { id: 'part', label: 'Tell me when a part is ready' },
+];
 
 export type MechOverlay = 'none' | 'service detail open' | 'request part open' | 'scan sheet' | 'pause reason' | 'mark-done confirm';
 export interface MechanicProps {
@@ -65,7 +71,7 @@ export function MechanicPage({ mechanicId = 'm-jun', scenario = 'normal', stress
       <div className="grid min-h-dvh place-items-center bg-surface p-6"><EmptyState icon={SignOut} title="You are logged out" description="Log in again to see your services." action={<Button variant="primary" onClick={() => setSignedOut(false)}>Log in as {me.short}</Button>} /></div>
     );
   }
-  const common = { me, onProfile, profileActive: screen.k === 'me', snack } as const;
+  const common = { me, business: branch.business, branchName: branch.name, onProfile, profileActive: screen.k === 'me', snack } as const;
 
   if (screen.k === 'service') {
     const job = pool.find((j) => j.id === screen.id);
@@ -88,7 +94,7 @@ export function MechanicPage({ mechanicId = 'm-jun', scenario = 'normal', stress
       </MechFrame>
     );
   }
-  if (screen.k === 'me') return <MechFrame {...common} title="Profile" crumbs={[homeCrumb, { label: 'Profile' }]}><MechMe me={me} s={s} offToday={scenario === 'day off'} onSignOut={() => setSignedOut(true)} /></MechFrame>;
+  if (screen.k === 'me') return <MechFrame {...common} title="Profile" crumbs={[homeCrumb, { label: 'Profile' }]}><MechMe name={me.name} initials={me.initials} id={me.id} subtitle={`${me.bay} · ${branch.name}`} prefs={ME_PREFS.map((p) => ({ ...p, checked: !!s.prefs[p.id] }))} onPref={setPref} hoursText={scenario === 'day off' ? 'Today you are off.' : `Today ${me.shift}.`} onSignOut={() => setSignedOut(true)} /></MechFrame>;
 
   return (
     <MechFrame {...common} title="Services" crumbs={[{ label: 'Services' }]} flush>

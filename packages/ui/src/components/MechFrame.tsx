@@ -2,10 +2,8 @@ import { type ReactNode } from 'react';
 import { Check, CaretLeft, CaretRight, CheckCircle, Circle, HourglassMedium, Wrench } from '@phosphor-icons/react';
 import { Badge } from './Badge';
 import { cn } from '../utils/cn';
-import { branch } from './sms/data';
 import { PersonAvatar } from './avatarTone';
 import { BizMark } from './BizMark';
-import type { Mechanic } from './sms/data';
 
 /**
  * Studio-only MechFrame: the mechanic's own phone shell. Revision 13: no bottom nav. Two fixed bars sit above the scroller (flex-none, opaque, outside `#mech-main`):
@@ -18,7 +16,14 @@ export interface MechFrameProps {
   title: string;
   /** Root first, current last. Every crumb but the last is tappable and goes back to that level. */
   crumbs: MechCrumb[];
-  me: Mechanic;
+  /** The signed-in mechanic as the host knows them. The studio `Mechanic` is assignable (its `id` tints the avatar). */
+  me: { name: string; initials?: string; id?: string };
+  /** Business name in the header (host-supplied). */
+  business: string;
+  /** Branch line under the business name; omitted when the host has none. */
+  branchName?: string;
+  /** Uploaded business logo URL; falls back to the monogram. */
+  logoSrc?: string;
   onProfile: () => void;
   profileActive?: boolean;
   /** A pinned action bar above the bottom edge (only on pushed forms such as Need a part). */
@@ -61,7 +66,7 @@ export function MechCrumbs({ crumbs }: { crumbs: MechCrumb[] }) {
   );
 }
 
-export function MechFrame({ title, crumbs, me, onProfile, profileActive, bar, snack, children, overlay, flush }: MechFrameProps) {
+export function MechFrame({ title, crumbs, me, business, branchName, logoSrc, onProfile, profileActive, bar, snack, children, overlay, flush }: MechFrameProps) {
   return (
     <div className="flex min-h-dvh justify-center bg-surface">
       <div className="relative flex h-dvh w-full max-w-[520px] flex-col border-x border-rule bg-surface text-text">
@@ -69,13 +74,13 @@ export function MechFrame({ title, crumbs, me, onProfile, profileActive, bar, sn
         <header className="flex-none border-b border-rule bg-surface px-4 pb-2 pt-[calc(4px+env(safe-area-inset-top))]">
           <div className="flex min-h-11 items-center gap-2">
             <div className="flex min-w-0 items-center gap-2.5">
-              <BizMark size={32} />
-              <p className="min-w-0 leading-5"><span className="block truncate text-[14px] font-semibold text-text">{branch.business}</span><span className="block truncate text-[12px] text-muted">{branch.name}</span></p>
+              <BizMark size={32} name={business} src={logoSrc} />
+              <p className="min-w-0 leading-5"><span className="block truncate text-[14px] font-semibold text-text">{business}</span>{branchName && <span className="block truncate text-[12px] text-muted">{branchName}</span>}</p>
             </div>
             <span className="flex-1" />
             <button type="button" onClick={onProfile} aria-current={profileActive ? 'page' : undefined} title={me.name}
               className={cn('-mr-1 grid size-10 flex-none place-items-center rounded-full bg-transparent p-0 transition-shadow hover:ring-2 hover:ring-control', crumbFocus, profileActive && 'ring-2 ring-accent')}>
-              <PersonAvatar personId={me.id} name={me.name} initials={me.initials} size={32} />
+              <PersonAvatar personId={me.id ?? me.name} name={me.name} initials={me.initials} size={32} />
               <span className="sr-only">Profile</span>
             </button>
           </div>
