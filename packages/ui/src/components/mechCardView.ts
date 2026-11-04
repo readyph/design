@@ -2,6 +2,7 @@ import { ChatCircleText, Note, Package, Warning, type Icon } from '@phosphor-ico
 import type { Job } from './sms/data';
 import { LAST_KIND, agoWord, staffInfoOf, type FeedKind, type MechState } from './sms/mechModel';
 import type { CalCardStaff, CalCardStat } from './CalCard';
+import type { TodayJob } from './today/types';
 
 export type Step = 'done' | 'now' | 'next' | 'waiting';
 const KIND_ICON: Record<FeedKind, Icon> = { note: Note, found: Warning, part: Package, manager: ChatCircleText, question: ChatCircleText, you: ChatCircleText };
@@ -25,6 +26,6 @@ export function staffHeight(v: CalCardStaff, hasFlag: boolean): number {
 }
 
 /** The card step of one service from its status (the service screen shows the same card as the list). */
-export function stepOfJob(job: Job): Step {
+export function stepOfJob(job: Pick<TodayJob, 'status'>): Step {
   return job.status === 'IN_PROGRESS' ? 'now' : job.status === 'PENDING' ? 'waiting' : job.status === 'TODO' ? 'next' : 'done';
 }
