@@ -199,7 +199,7 @@ export function agoWord(iso: string): string {
 }
 
 export type FeedKind = 'note' | 'found' | 'part' | 'manager' | 'question' | 'you';
-export interface FeedPost { id: string; kind: FeedKind; by: 'you' | 'manager'; at: string; text: string; photos?: number; meta?: string; answered?: boolean; seq: number }
+export interface FeedPost { id: string; kind: FeedKind; by: 'you' | 'manager'; at: string; text: string; photos?: number; meta?: string; answered?: boolean; seq: number; /** Real author name (else the sample manager). */ author?: string; /** Real relative time label (else derived from `at` on the sample clock). */ time?: string }
 /** One service's Updates feed, newest first: notes and photos, found problems, part requests, and the chat with the manager. */
 export function feedOf(s: MechState, j: Job): FeedPost[] {
   const out: FeedPost[] = [];

@@ -6,7 +6,7 @@ import { MechServiceBody, type ServiceDialog } from './MechService';
 import { jobs, mechanics } from './sms/data';
 import { feedOf, getMech } from './sms/mechModel';
 import { MechFeed } from './MechFeed';
-import { MechParts } from './MechParts';
+import { MechPartsSample } from './MechParts';
 
 afterEach(cleanup);
 const axeOpts = { rules: { 'color-contrast': { enabled: false }, region: { enabled: false } } };
@@ -42,7 +42,7 @@ describe('MechService', () => {
       void container; unmount();
     }
     const job = jobs.find((j) => j.status === 'IN_PROGRESS' && j.parts.length)!;
-    const { unmount } = render(<><MechParts job={job} s={getMech()} readOnly={false} onRequest={noop} /><MechFeed posts={feedOf(getMech(), job)} me={me} readOnly={false} onPost={noop} flash={noop} /></>);
+    const { unmount } = render(<><MechPartsSample job={job} s={getMech()} readOnly={false} onRequest={noop} /><MechFeed posts={feedOf(getMech(), job)} me={me} readOnly={false} onPost={noop} flash={noop} /></>);
     expect((await axe.run(document.body, axeOpts)).violations).toEqual([]);
     unmount();
   });

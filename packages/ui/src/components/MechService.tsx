@@ -13,7 +13,7 @@ import { PersonAvatar } from './avatarTone';
 import { CheckMark, MechSection } from './MechFrame';
 import { NotifyItem } from './NotifyItem';
 import { MechFeed } from './MechFeed';
-import { MechParts } from './MechParts';
+import { MechPartsSample } from './MechParts';
 import { CalCard, type PlacedItem } from './CalCard';
 import { VIEW } from './sms/mechCardView';
 import { staffView, stepOfJob } from './sms/mechCardView';
@@ -140,7 +140,7 @@ export function MechServiceBody({ job, s, me, flash, onNeedPart, dialog, setDial
         {!readOnly && job.status === 'TODO' && <p className="pt-1 text-[13px] text-muted">Tap a service item when it is done.</p>}
       </MechSection>
 
-      <MechParts job={job} s={s} readOnly={readOnly} onRequest={onNeedPart} />
+      <MechPartsSample job={job} s={s} readOnly={readOnly} onRequest={onNeedPart} />
 
       <MechFeed posts={posts} me={me} readOnly={readOnly} onPost={(t, n, isProblem) => (isProblem ? propose(job.id, me.id, t, n) : addNote(job.id, t, n))} flash={flash} />
 
