@@ -82,7 +82,7 @@ export function NewServiceWizard({ slot, customer, vehicleId, plate = '', notes 
       {preview ? (
         <>
           <Modal.Body className="bg-raised"><QuotationDoc doc={doc} /></Modal.Body>
-          <Modal.Footer><Button variant="text" onClick={() => setPreview(false)}>Back to review</Button><PrintButton /></Modal.Footer>
+          <Modal.Footer><Button actionBar variant="text" onClick={() => setPreview(false)}>Back to review</Button><PrintButton /></Modal.Footer>
         </>
       ) : (
         <>
@@ -97,11 +97,11 @@ export function NewServiceWizard({ slot, customer, vehicleId, plate = '', notes 
               {!ready ? <span>Still needed: {missing.join(' and ')}.</span> : step === 2 && editing ? <span>Press Done on the block you are editing to continue.</span> : null}
             </p>
             <div className="flex items-center gap-3 max-[640px]:flex-col-reverse max-[640px]:items-stretch">
-              {step === 2 && <Button variant="text" onClick={() => go(1)}>Back</Button>}
-              <Button variant="text" onClick={leave}>Cancel</Button>
-              {step === 1 && <Button variant="primary" disabled={!ready} onClick={() => go(2)}>Next</Button>}
-              {step === 2 && <Button variant={editOnly ? 'primary' : 'secondary'} disabled={!ready || !!editing} onClick={() => onSubmit(draft, 'quote')}>{booking ? 'Save quote changes' : 'Save as quotation'}</Button>}
-              {step === 2 && !editOnly && <Button variant="primary" disabled={!ready || !!editing} onClick={() => onSubmit(draft, 'book')}>{booking ? 'Customer agreed - Book it' : 'Book service'}</Button>}
+              {step === 2 && <Button actionBar variant="text" onClick={() => go(1)}>Back</Button>}
+              <Button actionBar variant="text" onClick={leave}>Cancel</Button>
+              {step === 1 && <Button actionBar variant="primary" disabled={!ready} onClick={() => go(2)}>Next</Button>}
+              {step === 2 && <Button actionBar variant={editOnly ? 'primary' : 'secondary'} disabled={!ready || !!editing} onClick={() => onSubmit(draft, 'quote')}>{booking ? 'Save quote changes' : 'Save as quotation'}</Button>}
+              {step === 2 && !editOnly && <Button actionBar variant="primary" disabled={!ready || !!editing} onClick={() => onSubmit(draft, 'book')}>{booking ? 'Customer agreed - Book it' : 'Book service'}</Button>}
             </div>
           </Modal.Footer>
         </>

@@ -53,7 +53,7 @@ export function QuotationDoc({ doc, className }: { doc: QuoteDoc; className?: st
 }
 
 export const PrintButton = ({ onPrint }: { onPrint?: () => void }) => (
-  <Button variant="secondary" leftIcon={Printer} onClick={onPrint ?? (() => window.print())}>Print</Button>
+  <Button variant="secondary" actionBar leftIcon={Printer} onClick={onPrint ?? (() => window.print())}>Print</Button>
 );
 
 export interface QuotationModalProps {
