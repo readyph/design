@@ -28,8 +28,18 @@ export const previewOf = (i: RequestListItem) => {
   return body ? `${i.title}: ${i.preview}` : i.title;
 };
 
+/** The accessible name carries every visible word of the row (WCAG 2.5.3 label-in-name), in reading order, plus the "Unread" cue the dot only shows. */
 export const labelOf = (i: RequestListItem) =>
-  [i.unread ? 'Unread' : '', i.plate ?? 'Shop use', i.title, KIND_LABEL[i.kind], i.status === 'Seen' ? '' : i.status, i.sender.short].filter(Boolean).join(', ');
+  [
+    i.unread ? 'Unread' : '',
+    i.plate ?? 'Shop use',
+    i.jobTitle ?? i.title,
+    previewOf(i),
+    i.agoLabel,
+    KIND_LABEL[i.kind],
+    i.status === 'Seen' ? '' : i.status,
+    i.sender.short,
+  ].filter(Boolean).join(', ');
 
 export interface RequestListProps {
   /** Rows with plain display fields (plate, jobTitle, sender, agoLabel). Nothing is looked up from studio data. */

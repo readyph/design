@@ -33,7 +33,7 @@ describe('Requests & messages', () => {
     const rows = options();
     const times = itemsOf(getMech()).map((i) => i.id);
     expect(rows.length).toBe(times.length);
-    expect(rows[0].getAttribute('aria-label')).toMatch(/Unread, .*Question for you, Question, Needs you, Arnel/);
+    expect(rows[0].getAttribute('aria-label')).toMatch(/Unread, .*, Question, Needs you, Arnel/);
     const mins = itemsOf(getMech()).map((i) => Number(i.at.slice(11, 13)) * 60 + Number(i.at.slice(14, 16)));
     expect([...mins].sort((a, b) => b - a)).toEqual(mins);
     const needsRow = rows.find((r) => /Found a problem.*Needs you/.test(r.getAttribute('aria-label')!))!;

@@ -24,6 +24,16 @@ describe('RequestList', () => {
     render(<RequestList items={[]} selectedId={null} onOpen={() => {}} empty={<p>Nothing here.</p>} />);
     expect(screen.getByText('Nothing here.')).toBeTruthy();
   });
+  it('puts every visible row word in the accessible name (label-in-name)', () => {
+    render(<RequestList items={items} selectedId={null} onOpen={() => {}} />);
+    for (const row of screen.getAllByRole('option')) {
+      const name = row.getAttribute('aria-label') ?? '';
+      for (const el of row.querySelectorAll('span.truncate, span.tabular-nums')) {
+        const text = (el.textContent ?? '').replace(/\s+/g, ' ').trim().replace(/ · /, ', ');
+        expect(name).toContain(text);
+      }
+    }
+  });
   it('has no axe violations', async () => {
     const { container } = render(<RequestList items={items} selectedId={items[0]?.id ?? null} onOpen={() => {}} />);
     expect((await axe.run(container, axeOpts)).violations).toEqual([]);
