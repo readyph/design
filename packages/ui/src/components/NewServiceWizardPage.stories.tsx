@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { NewServiceWizardPage, type NewServiceWizardPageProps } from './NewServiceWizardPage';
 import { customLine, lineFromType, linesFromType, partLine } from './sms/wizardModel';
+import { customers } from './sms/data';
 import { Remount, control, liveMeta } from './sms/live';
 
 /**
@@ -8,7 +9,7 @@ import { Remount, control, liveMeta } from './sms/live';
  * Book service / Save as quotation / Book it run for real. The wizard is also reachable by clicking New service on Today, Services and Customers.
  * Controls open it at any step, with any prefill, or on a parked quote.
  */
-const PREFILLS = ['empty (customer first)', 'customer + 2 services', 'custom price + custom line', 'services with their parts', 'not enough stock', 'part out of stock, on order', 'custom service with an Inventory part', 'from a calendar slot (date, time, length)'] as const;
+const PREFILLS = ['empty (customer first)', 'customer + 2 services', 'custom price + custom line', 'services with their parts', 'not enough stock', 'part out of stock, on order', 'custom service with an Inventory part', 'from a calendar slot (date, time, length)', 'customer with no car ("Still needed: a car")'] as const;
 const MODES = ['new service', 'view parked quote', 'book parked quote', 'edit parked quote'] as const;
 const EDITS = ['none', 'customer and car', 'services and price', 'more details', 'remarks'] as const;
 const EDIT_ID = { 'none': undefined, 'customer and car': 'customer', 'services and price': 'lines', 'more details': 'job', 'remarks': 'remarks' } as const;
@@ -27,6 +28,7 @@ const draftLines: Record<(typeof PREFILLS)[number], () => ReturnType<typeof two>
   'part out of stock, on order': () => linesFromType('sv17'),
   'custom service with an Inventory part': customWithPart,
   'from a calendar slot (date, time, length)': two,
+  'customer with no car ("Still needed: a car")': two,
 };
 
 function toProps(a: Args): NewServiceWizardPageProps {
@@ -38,7 +40,7 @@ function toProps(a: Args): NewServiceWizardPageProps {
   return {
     initialFlow: {
       kind: 'new', customerId: empty ? undefined : 'c01', startStep: a.step, initialEdit: EDIT_ID[a.editing], initialPreview: a.quotationPreview && a.step === 2, slot,
-      initialDraft: empty ? undefined : { lines: draftLines[a.prefill](), ...(a.remarks ? { remarks: 'Customer wants the old pads back. Call before replacing the wiper arm.' } : {}) },
+      initialDraft: empty ? undefined : { ...(a.prefill.startsWith('customer with no car') ? { customer: { ...customers[0]!, vehicles: [] }, vehicleId: '' } : {}), lines: draftLines[a.prefill](), ...(a.remarks ? { remarks: 'Customer wants the old pads back. Call before replacing the wiper arm.' } : {}) },
     } as never,
   };
 }

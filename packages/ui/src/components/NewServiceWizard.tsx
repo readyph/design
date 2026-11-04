@@ -3,7 +3,7 @@ import { Button } from './Button';
 import { Modal } from './Modal';
 import type { Customer, Job } from './sms/data';
 import { bookingOf, minutesFor, type CalItem, type Slot } from './sms/scheduleModel';
-import { dirtyKey, docFromDraft, draftFromJob, emptyDraft, type WizardAction, type WizardDraft } from './sms/wizardModel';
+import { dirtyKey, docFromDraft, draftFromJob, emptyDraft, wizardMissing, type WizardAction, type WizardDraft } from './sms/wizardModel';
 import { useWizardData } from './sms/wizardData';
 import { useDirtyGuard } from './DirtyGuard';
 import { PrintButton, QuotationDoc } from './QuotationDoc';
@@ -56,7 +56,7 @@ export function NewServiceWizard({ slot, customer, vehicleId, plate = '', notes 
     return emptyDraft({ ...base, ...initialDraft });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [draft, setDraft] = useState<WizardDraft>(initial);
-  const [step, setStep] = useState<number>(() => ((startStep ?? (quote ? 2 : 1)) >= 2 && !(initial.customer && initial.lines.length) ? 1 : (startStep ?? (quote ? 2 : 1)) >= 2 ? 2 : 1));
+  const [step, setStep] = useState<number>(() => ((startStep ?? (quote ? 2 : 1)) >= 2 && wizardMissing(initial).length ? 1 : (startStep ?? (quote ? 2 : 1)) >= 2 ? 2 : 1));
   const [editing, setEditing] = useState<BlockId | null>(initialEdit);
   const [preview, setPreview] = useState(initialPreview);
   const [adding, setAdding] = useState(false);
@@ -70,7 +70,7 @@ export function NewServiceWizard({ slot, customer, vehicleId, plate = '', notes 
     if (p.lines && !durSet.current && p.lines.length) n.dur = Math.min(240, minutesFor(p.lines.map((l) => l.name)));
     return n;
   });
-  const missing = [...(draft.customer ? [] : [adding ? 'save the new customer' : 'a customer']), ...(draft.lines.length ? [] : ['at least one service'])];
+  const missing = wizardMissing(draft, adding);
   const ready = missing.length === 0;
   const go = (s: number) => { if (s === 1 || (ready && !adding)) { setEditing(null); setStep(s); } };
   const stepper = STEPS.map((s) => ({ ...s, blocked: s.id > 1 && !ready ? `Still needed: ${missing.join(' and ')}.` : undefined }));

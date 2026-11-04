@@ -89,6 +89,14 @@ export const emptyDraft = (init: Partial<WizardDraft> = {}): WizardDraft => ({
 /** What the wizard compares to know whether anything was changed (customer object left out; its id is enough). */
 export const dirtyKey = (d: WizardDraft) => JSON.stringify({ ...d, customer: d.customer?.id ?? null });
 
+/** The car the draft is for: the picked one, else the customer's first. '' when the customer has no car yet. */
+export const vehicleIdOf = (d: Pick<WizardDraft, 'customer' | 'vehicleId'>): string => d.vehicleId || d.customer?.vehicles[0]?.id || '';
+/** What is still needed before Next / Book / Save quote. */
+export const wizardMissing = (d: Pick<WizardDraft, 'customer' | 'vehicleId' | 'lines'>, adding = false): string[] => [
+  ...(d.customer ? (vehicleIdOf(d) ? [] : ['a car']) : [adding ? 'save the new customer' : 'a customer']),
+  ...(d.lines.length ? [] : ['at least one service']),
+];
+
 // ---- numbers ----
 const pad4 = (n: number) => String(n).padStart(4, '0');
 export const quoteNoOf = (j: Job) => j.quoteNo ?? `QT-${pad4(Number(j.number.replace(/\D/g, '')) || 0)}`;
@@ -107,7 +115,7 @@ const toPartLines = (d: WizardDraft): PartLine[] => d.lines.filter((l) => l.kind
 /** The job fields a draft sets. `number` is given by the caller (JO- for a booking, QT- for a parked quotation). */
 export function jobFieldsOf(d: WizardDraft, action: WizardAction): Partial<Job> {
   return {
-    status: action === 'book' ? 'TODO' : 'QUOTATION', customerId: d.customer!.id, vehicleId: d.vehicleId || d.customer!.vehicles[0]!.id, assigneeId: d.mechanicId,
+    status: action === 'book' ? 'TODO' : 'QUOTATION', customerId: d.customer!.id, vehicleId: vehicleIdOf(d), assigneeId: d.mechanicId,
     promisedAt: toIso(d.date, promisedOf(d)), complaint: d.concerns.trim() || d.lines.filter((l) => l.kind === 'service').map((l) => l.name).join(', '),
     services: toServiceLines(d), parts: toPartLines(d), remarks: d.remarks.trim() || undefined, mileageIn: Number(d.mileageIn.replace(/\D/g, '')) || undefined,
     quoteParked: action === 'quote' ? true : undefined,
