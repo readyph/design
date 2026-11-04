@@ -1,5 +1,11 @@
 # @readyph/ui
 
+## 0.32.0
+
+### Minor Changes
+
+- 734761d: Add `MechSchedule`, the mechanic's day schedule from any data (props: items, env, jobView, onOpen, scenario). `MechHome` is now its sample-data adapter with the same output. Export the `MechScenario` type; `stepOfJob` takes any `{ status }`.
+
 ## 0.31.0
 
 ### Minor Changes
