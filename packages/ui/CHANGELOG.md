@@ -1,5 +1,11 @@
 # @readyph/ui
 
+## 0.31.0
+
+### Minor Changes
+
+- 24a9d33: RDY-662: MechFrame, MechMe and BizMark no longer read studio sample data. MechFrame now takes `business`, `branchName?`, `logoSrc?` and a minimal `me` ({ name, initials?, id? }); BizMark takes `name`; MechMe is props-driven (`name`, `subtitle`, `prefs`, `onPref`, `hoursText`, `onSignOut`). Breaking for MechMe callers (`me`, `s`, `offToday` removed).
+
 ## 0.30.7
 
 ### Patch Changes
