@@ -1,5 +1,11 @@
 # @readyph/ui
 
+## 0.30.3
+
+### Patch Changes
+
+- ea37a50: RDY-656: Requests prototype empty state reads "Nothing from mechanics yet." for the All filter instead of "No all from mechanics yet."
+
 ## 0.30.2
 
 ### Patch Changes
