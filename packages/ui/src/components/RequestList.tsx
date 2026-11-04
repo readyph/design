@@ -28,19 +28,6 @@ export const previewOf = (i: RequestListItem) => {
   return body ? `${i.title}: ${i.preview}` : i.title;
 };
 
-/** The accessible name carries every visible word of the row (WCAG 2.5.3 label-in-name), in reading order, plus the "Unread" cue the dot only shows. */
-export const labelOf = (i: RequestListItem) =>
-  [
-    i.unread ? 'Unread' : '',
-    i.plate ?? 'Shop use',
-    i.jobTitle ?? i.title,
-    previewOf(i),
-    i.agoLabel,
-    KIND_LABEL[i.kind],
-    i.status === 'Seen' ? '' : i.status,
-    i.sender.short,
-  ].filter(Boolean).join(', ');
-
 export interface RequestListProps {
   /** Rows with plain display fields (plate, jobTitle, sender, agoLabel). Nothing is looked up from studio data. */
   items: RequestListItem[];
@@ -53,7 +40,7 @@ export interface RequestListProps {
 /**
  * Studio-only RequestList (NEW): the inbox list as an ARIA listbox with roving focus (Up / Down / Home / End move, Enter or Space opens).
  * Rows copy the Today feed row (NotifyItem): no fill at rest, `hover:bg-raised`, a 32px PersonAvatar, 14px title, 13px muted detail; rows waiting for the
- * manager are tinted `bg-warn-bg` (as in Today), the open one is `bg-raised`. Unread = accent dot + the word "Unread" in the accessible name.
+ * manager are tinted `bg-warn-bg` (as in Today), the open one is `bg-raised`. Unread = accent dot + a screen-reader-only "Unread". The row has no aria-label: its name comes from its content, so it always equals the visible text (WCAG 2.5.3; axe `label-content-name-mismatch` only inspects an explicit label).
  */
 export function RequestList({ items, selectedId, onOpen, empty }: RequestListProps) {
   const ref = useRef<HTMLUListElement>(null);
@@ -74,7 +61,7 @@ export function RequestList({ items, selectedId, onOpen, empty }: RequestListPro
         const m = i.sender; const sel = i.id === selectedId;
         return (
           <li
-            key={i.id} role="option" aria-selected={sel} aria-label={labelOf(i)} tabIndex={n === focusIdx ? 0 : -1}
+            key={i.id} role="option" aria-selected={sel} tabIndex={n === focusIdx ? 0 : -1}
             onClick={() => onOpen(i.id)}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(i.id); } }}
             className={cn('mx-1 mb-1 flex cursor-pointer gap-3 rounded-control px-3 py-3 text-left transition-colors duration-150 ease-out hover:bg-raised motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent', sel ? 'bg-raised' : i.needsYou && 'bg-warn-bg hover:bg-raised')}
@@ -83,6 +70,7 @@ export function RequestList({ items, selectedId, onOpen, empty }: RequestListPro
             <span className="min-w-0 flex-1">
               <span className="flex items-start gap-2">
                 {i.unread && <span aria-hidden data-unread className="mt-[7px] size-2 flex-none rounded-full bg-accent" />}
+                {i.unread && <span className="sr-only">Unread</span>}
                 <span className="min-w-0 flex-1 truncate text-[14px] font-medium leading-5"><span className="font-mono text-[13px]">{i.plate ?? 'Shop use'}</span><span className="text-muted"> · </span>{i.jobTitle ?? i.title}</span>
                 <span className="flex-none whitespace-nowrap text-[13px] tabular-nums text-muted">{i.agoLabel}</span>
               </span>
