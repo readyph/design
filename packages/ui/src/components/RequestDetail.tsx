@@ -2,10 +2,8 @@ import type { ReactNode } from 'react';
 import { ArrowLeft, ArrowSquareOut, Camera, CheckCircle, Hourglass, Package, XCircle } from '@phosphor-icons/react';
 import { Button } from './Button';
 import { cn } from '../utils/cn';
-import { customerOf, onHandHere, peso, productOf, vehicleOf, type Job } from './sms/data';
-import { serviceTitle } from './sms/floorModel';
-import { agoWord, stockWord } from './sms/mechModel';
-import { senderOf, pesos, type InboxItem } from './sms/requestsModel';
+import { peso, type Job } from './sms/data';
+import { pesos, type InboxItem } from './sms/requestsModel';
 import { KindChip, StatusChip } from './RequestList';
 import { RequestStepper } from './RequestStepper';
 import { PersonAvatar } from './avatarTone';
@@ -21,15 +19,15 @@ const Section = ({ title, children }: { title: string; children: ReactNode }) =>
 
 /** Header of the detail: plate, car, customer, service, mechanic, and the "Open service" link (a link only: the Today Inspector opens, nothing is edited here). */
 export function RequestHeader({ item, job, a }: { item: InboxItem; job: Job | null; a: DetailActions }) {
-  const m = senderOf(item);
+  const m = item.sender;
   return (
     <header className="px-4 pt-3">
       <button type="button" onClick={a.onBack} className="mb-2 hidden min-h-11 items-center gap-1 text-[14px] font-semibold text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent max-[640px]:inline-flex"><ArrowLeft size={18} aria-hidden />Requests</button>
-      <div className="flex flex-wrap items-center gap-2"><KindChip kind={item.kind} /><StatusChip status={item.status} /><span className="text-[13px] tabular-nums text-muted">{agoWord(item.at)}</span></div>
+      <div className="flex flex-wrap items-center gap-2"><KindChip kind={item.kind} /><StatusChip status={item.status} /><span className="text-[13px] tabular-nums text-muted">{item.agoLabel}</span></div>
       <h2 className="mt-2 flex flex-wrap items-baseline gap-x-3 text-[18px] font-semibold leading-6">
-        {job ? <><span className="font-mono text-[16px]">{vehicleOf(job).plate}</span><span>{`${vehicleOf(job).make} ${vehicleOf(job).model}`}</span></> : 'Shop use'}
+        {item.plate ? <><span className="font-mono text-[16px]">{item.plate}</span>{item.vehicleLabel && <span>{item.vehicleLabel}</span>}</> : 'Shop use'}
       </h2>
-      <p className="mt-0.5 break-words text-[14px] leading-5">{job ? `${customerOf(job).name} · ${job.number} · ${serviceTitle(job)}` : 'Not tied to a service'}</p>
+      <p className="mt-0.5 break-words text-[14px] leading-5">{item.plate ? [item.customerName, item.jobNumber, item.jobTitle].filter(Boolean).join(' · ') : 'Not tied to a service'}</p>
       <p className="mt-2 flex items-center gap-2 text-[13px] text-muted"><PersonAvatar personId={m.id} name={m.name} initials={m.initials} size={24} decorative />From {m.name}{job && <> · <a href="#today" onClick={(e) => { e.preventDefault(); a.onOpenService(job); }} className="inline-flex items-center gap-1 font-semibold text-accent underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent">Open service<ArrowSquareOut size={14} aria-hidden /></a></>}</p>
     </header>
   );
@@ -37,8 +35,8 @@ export function RequestHeader({ item, job, a }: { item: InboxItem; job: Job | nu
 
 /** The item itself and what the manager can do with it, by kind. */
 export function RequestBody({ item, job, a }: { item: InboxItem; job: Job | null; a: DetailActions }) {
-  if (item.kind === 'part' && item.part) {
-    const r = item.part; const pr = productOf(r.productId); const st = stockWord(pr); const enough = onHandHere(pr) >= r.qty;
+  if (item.kind === 'part' && item.part && item.partView) {
+    const r = item.part; const pr = item.partView; const st = pr.stock; const enough = pr.enough;
     return (
       <Section title="Part request">
         <dl className="mt-2">
@@ -46,7 +44,7 @@ export function RequestBody({ item, job, a }: { item: InboxItem; job: Job | null
           <Fact k="Quantity">{r.qty} {pr.unit}{r.qty > 1 ? 's' : ''}</Fact>
           <Fact k="In stock here"><span className={cn(st.tone === 'bad' && 'text-bad-ink', st.tone === 'warn' && 'text-warn-ink')}>{st.word}</span>{!enough && <span className="block text-[12px] text-muted">Not enough here for this request.</span>}</Fact>
           <Fact k="Price">{peso(pr.price)} each · {peso(pr.price * r.qty)} total</Fact>
-          <Fact k="For service">{job ? `${job.number} · ${vehicleOf(job).plate}` : 'Shop use'}</Fact>
+          <Fact k="For service">{item.plate ? [item.jobNumber, item.plate].filter(Boolean).join(' · ') : 'Shop use'}</Fact>
           {r.note && <Fact k="Note">{r.note}</Fact>}
         </dl>
         <RequestStepper status={r.status} className="mt-4" />
@@ -77,7 +75,7 @@ export function RequestBody({ item, job, a }: { item: InboxItem; job: Job | null
           <div className="mt-4 rounded-control border border-control p-3">
             <p className="flex flex-wrap items-center gap-2 text-[14px] font-medium">Quote {pesos(q.amount)}<span className="inline-flex items-center gap-1 rounded-chip bg-raised-2 px-2 text-[12px] font-medium">{q.customer === 'approved' ? <><CheckCircle size={12} weight="fill" aria-hidden className="text-ok" />Approved by customer</> : q.customer === 'declined' ? <><XCircle size={12} weight="fill" aria-hidden className="text-bad" />Declined by customer</> : <><Hourglass size={12} aria-hidden />Waiting for customer</>}</span></p>
             <p className="mt-1 break-words text-[13px] leading-5 text-muted">{q.note}</p>
-            {q.parts.length > 0 && <p className="mt-1 text-[13px] text-muted">Parts: {q.parts.map((x) => `${productOf(x.productId).name.split(',')[0]} x${x.qty}`).join(', ')}</p>}
+            {item.quotePartsLabel && <p className="mt-1 text-[13px] text-muted">Parts: {item.quotePartsLabel}</p>}
             {job && <p className="mt-2 text-[13px]"><a href="#today" onClick={(e) => { e.preventDefault(); a.onOpenService(job); }} className="font-semibold text-accent underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent">View the service's quotation</a></p>}
             {q.customer === 'waiting' && (
               <div role="group" aria-label="Studio only: simulate the customer's answer" className="mt-3 flex flex-wrap items-center gap-2 border-t border-rule pt-3">

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import axe from 'axe-core';
-import { RequestList } from './RequestList';
+import { RequestList, type RequestListItem } from './RequestList';
 import { RequestStepper } from './RequestStepper';
 import { getMech } from './sms/mechModel';
 import { itemsOf, seedRequests } from './sms/requestsModel';
@@ -27,6 +27,22 @@ describe('RequestList', () => {
   it('has no axe violations', async () => {
     const { container } = render(<RequestList items={items} selectedId={items[0]?.id ?? null} onOpen={() => {}} />);
     expect((await axe.run(container, axeOpts)).violations).toEqual([]);
+  });
+});
+
+describe('RequestList with API rows (RDY-652)', () => {
+  const row = (o: Partial<RequestListItem>): RequestListItem => ({ id: 'a1', kind: 'part', status: 'Needs you', needsYou: true, unread: true, title: 'Brake pad x2', preview: '2 sets for JO-9', plate: 'ZZZ 999', jobTitle: 'Brake service', sender: { id: '9f1c-uuid', name: 'Nena Cruz', short: 'Nena', initials: 'NC' }, agoLabel: '5 min ago', ...o });
+  it('shows the supplied plate, title, sender and time, nothing from studio fixtures', () => {
+    render(<RequestList items={[row({}), row({ id: 'a2', plate: null, jobTitle: null, title: 'Shop rags', sender: { id: 'x', name: 'Oscar Lim', short: 'Oscar', initials: 'OL' }, agoLabel: '2 h ago' })]} selectedId={null} onOpen={() => {}} />);
+    const [r1, r2] = screen.getAllByRole('option');
+    expect(r1!.textContent).toContain('ZZZ 999');
+    expect(r1!.textContent).toContain('Brake service');
+    expect(r1!.textContent).toContain('Nena');
+    expect(r1!.textContent).toContain('5 min ago');
+    expect(r1!.getAttribute('aria-label')).toContain('ZZZ 999');
+    expect(r2!.textContent).toContain('Shop use');
+    expect(r2!.textContent).toContain('Oscar');
+    expect(r2!.textContent).toContain('2 h ago');
   });
 });
 
