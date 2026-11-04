@@ -1,5 +1,11 @@
 # @readyph/ui
 
+## 0.28.0
+
+### Minor Changes
+
+- 3aa4bea: RDY-649: PaymentStatement, AddLine, BalancePanel, RecordPayment, PaymentDiscount, StatementActions and ReceiptDoc are data-driven. They take a structural `BillJob` (lines with the part's own name, SKU, unit and prices; discount; payments) and a `StatementHeader` (customer, car, plate, mechanic) instead of the studio `Job` and its mock lookups, so a real API job renders. PaymentStatement/AddLine take `catalogue` (the shop's price list), `partSearch` and `partsStatus` (the host's Inventory query, via PartPicker). New public pure helpers (`payment/model`): `BillJob`, `BillService`, `BillPart`, `StatementHeader`, `ReceiptShop`, `statementOf`, `receiptOf(job, header, shop)` (BREAKING: was `receiptOf(job)` in the studio file, which was not exported), `billSubtotal/billDiscount/billTotal/billPaid/billBalance`, `payStateOf`, `fmt`, `checkPayment`, `discountError`, `METHODS`; `downloadDoc` unchanged. ReceiptDoc/ReceiptModal and BalancePanel were affected only through the mock-bound money helpers. Stories look the same.
+
 ## 0.27.4
 
 ### Patch Changes
