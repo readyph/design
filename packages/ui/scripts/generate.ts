@@ -90,6 +90,14 @@ ${darkExplicit}
 /* I9 paper document (inventory-home FINAL/order-list.css 228): no fixed paper size, so A4 and Letter both print one page. */
 @page { margin: 15mm 16mm 18mm; }
 
+/* Receipt print isolation (RDY-650): ReceiptModal's Print sets body[data-print-receipt]; only the receipt article (data-receipt-doc), its ancestors and its contents are printed. */
+@media print {
+  body[data-print-receipt] *:not(:has([data-receipt-doc])):not([data-receipt-doc]):not([data-receipt-doc] *) { display: none !important; }
+  body[data-print-receipt] :has([data-receipt-doc]) { display: block !important; position: static !important; transform: none !important; overflow: visible !important; width: auto !important; max-width: none !important; height: auto !important; max-height: none !important; margin: 0 !important; padding: 0 !important; border: 0 !important; background: none !important; box-shadow: none !important; }
+  body[data-print-receipt] { background: #fff !important; }
+  body[data-print-receipt] [data-receipt-doc] { margin: 0 auto !important; border: 0 !important; border-radius: 0 !important; }
+}
+
 `;
 writeFileSync(resolve(pkgRoot, 'src/styles/globals.css'), globals);
 
