@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { MechFrame, MechStatus, MechSection, CheckMark } from './MechFrame';
-import { mechanics } from './sms/data';
+import { branch, mechanics } from './sms/data';
 
 const me = mechanics[0];
 const meta: Meta<typeof MechFrame> = {
@@ -11,6 +11,8 @@ const meta: Meta<typeof MechFrame> = {
   args: {
     title: 'Services',
     me,
+    business: branch.business,
+    branchName: branch.name,
     onProfile: () => {},
     crumbs: [{ label: 'Services' }],
     children: (
@@ -40,3 +42,4 @@ export const Statuses: S = {
     </div>
   ),
 };
+export const OtherShop: S = { args: { business: 'Reyes Motor Works', branchName: undefined, me: { name: 'Jun Reyes' } } };
