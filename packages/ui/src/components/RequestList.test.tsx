@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import axe from 'axe-core';
-import { RequestList, type RequestListItem } from './RequestList';
+import { RequestList, previewOf, type RequestListItem } from './RequestList';
 import { RequestStepper } from './RequestStepper';
 import { getMech } from './sms/mechModel';
 import { itemsOf, seedRequests } from './sms/requestsModel';
@@ -53,6 +53,25 @@ describe('RequestList with API rows (RDY-652)', () => {
     expect(r2!.textContent).toContain('Shop use');
     expect(r2!.textContent).toContain('Oscar');
     expect(r2!.textContent).toContain('2 h ago');
+  });
+});
+
+describe('RequestList preview', () => {
+  const part = (preview: string) => ({ id: 'p', kind: 'part', status: 'Needs you', needsYou: true, unread: false, title: 'Brake fluid DOT 4 x1', preview, plate: null, jobTitle: null, sender: { id: 's', name: 'Nena Cruz', short: 'Nena', initials: 'NC' }, agoLabel: 'now' }) as RequestListItem;
+  it('has no trailing colon when the body is empty', () => {
+    expect(previewOf(part(''))).toBe('Brake fluid DOT 4 x1');
+    expect(previewOf(part('  '))).toBe('Brake fluid DOT 4 x1');
+  });
+  it('renders the row without a trailing colon and keeps label-in-name', () => {
+    const { container } = render(<RequestList items={[part(''), { ...part('2 sets'), id: 'q' }]} selectedId={null} onOpen={() => {}} />);
+    const lines = Array.from(container.querySelectorAll('span.truncate')).map((e) => e.textContent);
+    expect(lines).toContain('Brake fluid DOT 4 x1');
+    expect(lines).toContain('Brake fluid DOT 4 x1: 2 sets');
+    expect(lines.some((l) => l?.endsWith(':'))).toBe(false);
+    expect(screen.getAllByRole('option')[0].getAttribute('aria-label')).not.toMatch(/:/);
+  });
+  it('joins title and body when there is one', () => {
+    expect(previewOf(part('2 sets'))).toBe('Brake fluid DOT 4 x1: 2 sets');
   });
 });
 
