@@ -225,7 +225,6 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
                   href={p.href}
                   onSelect={p.onSelect}
                   selected={p.selected}
-                  aria-label={bad ? `${p.name} ${words(p)}` : p.name}
                   title={`${p.name}: ${words(p)}`}
                   className="min-w-0"
                 >
@@ -240,7 +239,11 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
                       <span>{words(p)}</span>
                     </>
                   ) : (
-                    namesAlways && !collapseHealthy && !(ledaFirst && platforms.length > 3) && <span className={cn('max-w-[16ch] truncate', ledaFirst && 'text-ui font-medium text-text')}>{p.name}</span>
+                    namesAlways && !collapseHealthy && !(ledaFirst && platforms.length > 3) ? (
+                      <span className={cn('max-w-[16ch] truncate', ledaFirst && 'text-ui font-medium text-text')}>{p.name}</span>
+                    ) : (
+                      <span className="sr-only">{p.name}</span>
+                    )
                   )}
                 </Item>
               </li>
@@ -267,7 +270,7 @@ export const StatusBar = forwardRef<HTMLDivElement, StatusBarProps>(function Sta
 
   if (people && !hidden.has('people')) {
     sections.push({ key: 'people', cls: "flex shrink-0", node: (
-        <Item href={people.href} onSelect={people.onSelect} aria-label={plural(people.count, 'person', 'people') + (ledaFirst && invites && invites.count > 0 ? ` · ${plural(invites.count, 'invite', 'invites')} pending` : '')}>
+        <Item href={people.href} onSelect={people.onSelect}>
           <Users size={14} aria-hidden="true" />
           <span className="tabular-nums">{plural(people.count, 'person', 'people')}</span>
           {ledaFirst && invites && invites.count > 0 ? (

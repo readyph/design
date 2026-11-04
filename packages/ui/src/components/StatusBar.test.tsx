@@ -26,7 +26,7 @@ describe('StatusBar', () => {
     render(<StatusBar ledaFirst={false} platforms={p(2)} people={{ count: 12 }} invites={{ count: 2 }} plan="Starter" updatedAt="9:12 AM" />);
     expect(screen.getByText('Starter plan')).toBeTruthy();
     expect(screen.getByText('Updated 9:12 AM')).toBeTruthy();
-    expect(screen.getByLabelText('12 people')).toBeTruthy();
+    expect(screen.getByText('12 people')).toBeTruthy();
     expect(screen.getByLabelText('2 invites waiting')).toBeTruthy();
   });
   it('hides invites at 0 and drops text at narrow widths via container classes', () => {
@@ -46,7 +46,7 @@ describe('StatusBar', () => {
     expect(text.indexOf('9 people')).toBeLessThan(text.indexOf('Starter plan'));
     expect(screen.getByText('· all running')).toBeTruthy();
     expect(screen.getByText('· 1 invite pending')).toBeTruthy();
-    expect(screen.getByLabelText('9 people · 1 invite pending')).toBeTruthy();
+    expect(document.querySelector('[aria-label*="people"]')).toBeNull();
     expect(screen.queryByLabelText(/invite waiting/)).toBeNull();
     // shell.css breakpoints: days left and the summary go at 960, invites, plan and Updated at 1180
     expect(screen.getByText('7 days left').className).toContain('max-[960px]:hidden');
@@ -58,13 +58,14 @@ describe('StatusBar', () => {
     const { container } = render(<StatusBar platforms={p(2)} people={{ count: 3 }} />);
     expect(container.querySelector('ul')!.className).toContain('gap-0.5');
     expect(container.querySelector('li > span[aria-hidden]')!.className).toContain('ml-1.5 mr-2');
-    const item = screen.getByLabelText('3 people');
+    const item = screen.getByText('3 people').parentElement!;
     expect(item.className).toMatch(/h-\[26px\].*px-\[9px\].*leading-5/);
   });
   it('non-running platform shows a plain word, is named and announced', () => {
     render(<StatusBar platforms={[{ id: 'a', name: 'Books', health: 'bad' }, { id: 'b', name: 'Stock' }]} />);
     expect(screen.getByText('offline')).toBeTruthy();
-    expect(screen.getByLabelText('Books offline')).toBeTruthy();
+    expect(screen.getByText('Books')).toBeTruthy();
+    expect(document.querySelector('[aria-label="Books offline"]')).toBeNull();
   });
   it('live region starts empty, stays silent on same-props rerender, announces a health change', () => {
     const ok = [{ id: 'a', name: 'Books' }, { id: 'b', name: 'Stock' }];
@@ -85,8 +86,8 @@ describe('StatusBar', () => {
   it('4+ platforms: running are logo-only with a title; a non-running keeps name and word; All running summary', () => {
     const { rerender } = render(<StatusBar ledaFirst={false} platforms={p(4)} />);
     expect(screen.getByText('All running')).toBeTruthy();
-    expect(screen.queryByText('Plat 0')).toBeNull();
-    expect(screen.getByLabelText('Plat 0').getAttribute('title')).toBe('Plat 0: running');
+    expect(screen.getByText('Plat 0').className).toContain('sr-only');
+    expect(screen.getByTitle('Plat 0: running')).toBeTruthy();
     rerender(<StatusBar platforms={p(4).map((x, i) => (i === 1 ? { ...x, health: 'warn' as const } : x))} />);
     expect(screen.getByText('Plat 1')).toBeTruthy();
     expect(screen.getByText('slow')).toBeTruthy();
@@ -116,6 +117,11 @@ describe('StatusBar', () => {
     expect(screen.getByRole('link', { name: 'B' }).getAttribute('href')).toBe('#b');
     expect(screen.getAllByRole('button')).toHaveLength(1);
   });
+  it('platform chips have no aria-label, so the name comes from the visible text (axe label-content-name-mismatch)', () => {
+    const { container } = render(<StatusBar platforms={[{ id: 'a', name: 'Main shop', initials: 'MS', onSelect: () => {} }, { id: 'b', name: 'Books', health: 'bad', onSelect: () => {} }]} />);
+    expect(container.querySelectorAll('button[aria-label]')).toHaveLength(0);
+    expect(screen.getByRole('button', { name: /^MS Main shop$|^Main shop$/ })).toBeTruthy();
+  });
   it('caps platforms with +N', () => {
     render(<StatusBar platforms={p(11)} maxPlatforms={8} />);
     expect(screen.getByLabelText('+3 more platforms').textContent).toBe('+3');
@@ -140,9 +146,9 @@ describe('StatusBar text (RDY-315)', () => {
     expect(screen.queryByText('· all running')).toBeNull();
     expect(screen.getByText('Plat 1')).toBeTruthy();
     expect(screen.getByText('offline')).toBeTruthy();
-    expect(screen.queryByText('Plat 0')).toBeNull();
-    expect(screen.queryByText('Plat 2')).toBeNull();
-    expect(screen.getByLabelText('Plat 0').getAttribute('title')).toBe('Plat 0: running');
+    expect(screen.getByText('Plat 0').className).toContain('sr-only');
+    expect(screen.getByText('Plat 2').className).toContain('sr-only');
+    expect(screen.getByTitle('Plat 0: running')).toBeTruthy();
     rerender(<StatusBar platforms={four(2)} />);
     expect(screen.getAllByText('offline')).toHaveLength(1);
   });
