@@ -62,6 +62,14 @@ describe('RequestList preview', () => {
     expect(previewOf(part(''))).toBe('Brake fluid DOT 4 x1');
     expect(previewOf(part('  '))).toBe('Brake fluid DOT 4 x1');
   });
+  it('renders the row without a trailing colon and keeps label-in-name', () => {
+    const { container } = render(<RequestList items={[part(''), { ...part('2 sets'), id: 'q' }]} selectedId={null} onOpen={() => {}} />);
+    const lines = Array.from(container.querySelectorAll('span.truncate')).map((e) => e.textContent);
+    expect(lines).toContain('Brake fluid DOT 4 x1');
+    expect(lines).toContain('Brake fluid DOT 4 x1: 2 sets');
+    expect(lines.some((l) => l?.endsWith(':'))).toBe(false);
+    expect(screen.getAllByRole('option')[0].getAttribute('aria-label')).not.toMatch(/:/);
+  });
   it('joins title and body when there is one', () => {
     expect(previewOf(part('2 sets'))).toBe('Brake fluid DOT 4 x1: 2 sets');
   });
