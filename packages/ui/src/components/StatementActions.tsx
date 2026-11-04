@@ -2,7 +2,7 @@ import { CaretDown, DotsThree, DownloadSimple, Printer } from '@phosphor-icons/r
 import { Button } from './Button';
 import { IconButton } from './IconButton';
 import { Menu, type MenuItem } from './Menu';
-import type { ReceiptData } from './sms/paymentModel';
+import type { ReceiptData } from './payment/model';
 import { downloadDoc } from './sms/statementFile';
 
 /**

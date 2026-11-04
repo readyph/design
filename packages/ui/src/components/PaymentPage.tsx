@@ -4,9 +4,10 @@ import {
   AccountMenu, Button, ConfirmDialog, DetailTopBar, IconRailContent, IconRailFoot, IconRailItem, IconRailMark, IconRailSpacer, InventoryStatusBar, Notice,
   PlatformShell, SheetBar, SheetBarWhere, Skeleton, Toaster, cn, toast,
 } from '../index';
-import { NOW, branch, customerOf, jobBalance, jobPaid, jobSubtotal, jobTotal, manager, type Discount, type Job, type PartLine, type Payment, type PaymentMethod, type ServiceLine } from './sms/data';
+import { NOW, branch, customerOf, manager, type Discount, type Job, type Payment, type PaymentMethod } from './sms/data';
+import { useCatalogue } from './sms/catalogue';
 import { STATUS_SHORT } from './sms/floorModel';
-import { fmt, isClosed, isFinalPrice, isQuoteStatus, jobFor, methodLabel, payStateOf, receiptOf } from './sms/paymentModel';
+import { billBalance, billPaid, billSubtotal, billTotal, fmt, isClosed, isFinalPrice, isQuoteStatus, jobFor, methodLabel, payStateOf, receiptOfJob, billOf, headerOf, type BillPart, type BillService } from './sms/paymentModel';
 import { PaymentDiscount } from './PaymentDiscount';
 import { PaymentStatement } from './PaymentStatement';
 import { BalancePanel, PaidNotice, PaymentList, RecordPayment } from './PaymentPanel';
@@ -44,7 +45,8 @@ export function PaymentScreen({ job, role = 'manager', state = 'ready', backLabe
   const mgr = role === 'manager';
   const quote = isQuoteStatus(job); const closed = isClosed(job);
   const editable = mgr && !quote && !closed;
-  const st = payStateOf(job); const bal = jobBalance(job);
+  const bill = billOf(job); const header = headerOf(job); const catalogue = useCatalogue().filter((t) => t.active);
+  const st = payStateOf(bill); const bal = billBalance(bill);
   const c = customerOf(job);
   const title = isFinalPrice(job) ? 'Final price' : 'Price so far';
 
@@ -67,12 +69,13 @@ export function PaymentScreen({ job, role = 'manager', state = 'ready', backLabe
   };
   const applyDiscount = (d: Discount) => { setDiscountOpen(false); patchWithUndo({ discount: d }, `Discount of ${d.kind === 'percent' ? `${d.value}%` : fmt(d.value)} added to ${job.number}.`); };
   const removeDiscount = () => { setDiscountOpen(false); patchWithUndo({ discount: undefined }, `Discount removed from ${job.number}.`); };
-  const addLine = (l: { service?: ServiceLine; part?: PartLine }) => {
-    patchWithUndo(l.service ? { services: [...job.services, l.service] } : { parts: [...job.parts, l.part!] }, `Line added at billing on ${job.number}.`);
+  const addLine = (l: { service?: BillService; part?: BillPart }) => {
+    const part = l.part && { productId: l.part.productId, qty: l.part.qty, issued: l.part.issued ?? l.part.qty, billing: l.part.billing, price: l.part.price };
+    patchWithUndo(l.service ? { services: [...job.services, { ...l.service, done: l.service.done ?? true }] } : { parts: [...job.parts, part!] }, `Line added at billing on ${job.number}.`);
   };
   const removeLine = (kind: 'service' | 'part', index: number) => {
     const next = kind === 'service' ? { services: job.services.filter((_, i) => i !== index) } : { parts: job.parts.filter((_, i) => i !== index) };
-    if (jobTotal({ ...job, ...next }) < jobPaid(job)) { toast.info(`That would put the total under what is already paid (${fmt(jobPaid(job))}). Void a payment first.`); return; }
+    if (billTotal(billOf({ ...job, ...next })) < billPaid(bill)) { toast.info(`That would put the total under what is already paid (${fmt(billPaid(bill))}). Void a payment first.`); return; }
     patchWithUndo(next, `Line removed from ${job.number}.`);
   };
   const release = () => patchWithUndo({ status: 'COMPLETED' }, `${job.number} released to ${c.name}.`);
@@ -105,7 +108,7 @@ export function PaymentScreen({ job, role = 'manager', state = 'ready', backLabe
             <h1 className="flex flex-wrap items-baseline gap-x-3 text-[22px] font-semibold leading-8">Payment<span className="font-mono text-[18px] text-muted">{job.number}</span></h1>
             <p className="mt-1 inline-flex items-center gap-1.5 text-[14px]"><span aria-hidden className={cn('size-1.5 rounded-full', STATUS_SHORT[job.status].dot)} />{STATUS_SHORT[job.status].label}<span aria-hidden className="text-faint">·</span><span className="tabular-nums text-muted">{c.phone}</span></p>
           </div>
-          {!quote && <StatementActions doc={receiptOf(job)} onPrint={() => setReceipt('a4')} />}
+          {!quote && <StatementActions doc={receiptOfJob(job)} onPrint={() => setReceipt('a4')} />}
         </div>
       </header>
 
@@ -116,7 +119,7 @@ export function PaymentScreen({ job, role = 'manager', state = 'ready', backLabe
 
       <div className="grid items-start gap-y-6 px-4 max-[640px]:px-3 min-[1100px]:grid-cols-[minmax(0,1fr)_360px] min-[1100px]:gap-x-8">
         <div className="min-[1100px]:sticky min-[1100px]:top-6 min-[1100px]:col-start-2 min-[1100px]:row-start-1">
-          <BalancePanel job={job}>
+          <BalancePanel job={bill}>
             {last && st !== 'paid' && <PaidNotice>{fmt(last.amount)} received by {methodLabel(last.method)}.{last.change > 0 ? ` Give ${fmt(last.change)} change.` : ''} Balance {fmt(bal)}.</PaidNotice>}
             {st === 'paid' && !closed && !quote ? (
               <>
@@ -126,19 +129,19 @@ export function PaymentScreen({ job, role = 'manager', state = 'ready', backLabe
               </>
             ) : (
               <RecordPayment
-                job={job} onRecord={record} initialMethod={initialMethod}
-                disabledReason={!mgr ? 'Payments are taken at the counter by the manager.' : quote ? 'Not available for a quotation.' : closed ? 'This service is completed, so no more payments can be recorded.' : jobTotal(job) <= 0 ? 'Add a line first. There is nothing to pay yet.' : undefined}
+                job={bill} onRecord={record} initialMethod={initialMethod}
+                disabledReason={!mgr ? 'Payments are taken at the counter by the manager.' : quote ? 'Not available for a quotation.' : closed ? 'This service is completed, so no more payments can be recorded.' : billTotal(bill) <= 0 ? 'Add a line first. There is nothing to pay yet.' : undefined}
               />
             )}
           </BalancePanel>
         </div>
         <div className="min-w-0 space-y-6 min-[1100px]:col-start-1 min-[1100px]:row-start-1">
           <PaymentStatement
-            job={job} title={title} editable={editable} onAdd={addLine} onRemove={removeLine} addOpen={addOpen} onAddOpen={setAddOpen}
+            job={bill} header={header} catalogue={catalogue} title={title} editable={editable} onAdd={addLine} onRemove={removeLine} addOpen={addOpen} onAddOpen={setAddOpen}
             discountAction={discountAction}
-            discountSlot={discountOpen && editable ? <PaymentDiscount job={job} onApply={applyDiscount} onRemove={removeDiscount} onCancel={() => setDiscountOpen(false)} /> : undefined}
+            discountSlot={discountOpen && editable ? <PaymentDiscount job={bill} onApply={applyDiscount} onRemove={removeDiscount} onCancel={() => setDiscountOpen(false)} /> : undefined}
           />
-          {jobSubtotal(job) > 0 && bal < 0 && <p className="text-[13px] text-bad">Paid is more than the total. Void the last payment or add a line.</p>}
+          {billSubtotal(bill) > 0 && bal < 0 && <p className="text-[13px] text-bad">Paid is more than the total. Void the last payment or add a line.</p>}
           <PaymentList payments={job.payments} canVoid={editable} onVoid={() => setVoidOpen(true)} />
         </div>
       </div>
@@ -164,7 +167,7 @@ export function PaymentScreen({ job, role = 'manager', state = 'ready', backLabe
         <div className="h-full overflow-auto">{body}</div>
       </PlatformShell>
 
-      {receipt && <ReceiptModal doc={receiptOf(job)} initialPaper={receipt} onClose={() => setReceipt(null)} />}
+      {receipt && <ReceiptModal doc={receiptOfJob(job)} initialPaper={receipt} onClose={() => setReceipt(null)} />}
       <ConfirmDialog
         open={voidOpen} onOpenChange={setVoidOpen} title="Void the last payment?"
         description="It comes off the payments and the balance goes back up. You can undo this right after."

@@ -7,10 +7,8 @@ import { Select } from './Select';
 import { TextField } from './TextField';
 import { cn } from '../utils/cn';
 import { MoneyField } from './MoneyField';
-import { jobSubtotal, discountOf, jobTotal, products, customerOf, vehicleOf, mechanicOf, type Job, type PartLine, type ServiceLine } from './sms/data';
-import { useCatalogue } from './sms/catalogue';
-import { discountWord, fmt, statementOf, type StatementLine } from './sms/paymentModel';
-import { PartPicker } from './PartPicker';
+import { billDiscount, billSubtotal, billTotal, discountWord, fmt, statementOf, type BillCatalogueItem, type BillJob, type BillPart, type BillProduct, type BillService, type StatementHeader, type StatementLine } from './payment/model';
+import { PartPicker, type PartSearch, type PartsStatus } from './PartPicker';
 
 const GRID = 'grid grid-cols-[minmax(0,1fr)_56px_112px_120px] items-baseline gap-x-3 max-[640px]:grid-cols-[minmax(0,1fr)_auto]';
 
@@ -44,16 +42,21 @@ const Group = ({ title, children }: { title: string; children: ReactNode }) => (
 );
 
 /** Add a last-minute line: a service (catalogue or custom) or a part from Inventory, with qty and price. Marked "Added at billing" once added. */
-function AddLine({ onAdd, onCancel }: { onAdd: (l: { service?: ServiceLine; part?: PartLine }) => void; onCancel: () => void }) {
-  const catalogue = useCatalogue().filter((t) => t.active);
+export interface AddLineProps {
+  onAdd: (l: { service?: BillService; part?: BillPart }) => void; onCancel: () => void;
+  /** The shop's price list (active services); empty means only custom services. */
+  catalogue?: BillCatalogueItem[];
+  /** The host's Inventory query for the part picker, and how Inventory is answering. Without `search` the picker shows the sample products. */
+  partSearch?: PartSearch; partsStatus?: PartsStatus;
+}
+export function AddLine({ onAdd, onCancel, catalogue = [], partSearch, partsStatus }: AddLineProps) {
   const [kind, setKind] = useState<'service' | 'part'>('service');
   const [typeId, setTypeId] = useState('custom');
   const [name, setName] = useState('');
-  const [productId, setProductId] = useState<string | null>(null);
+  const [product, setProduct] = useState<BillProduct | null>(null);
   const [qty, setQty] = useState('1');
   const [price, setPrice] = useState('');
   const [tried, setTried] = useState(false);
-  const product = products.find((p) => p.id === productId) ?? null;
   const n = Number(qty); const pr = Number(price);
   const errs = {
     name: kind === 'service' && !name.trim() ? 'Give the line a name.' : null,
@@ -66,7 +69,7 @@ function AddLine({ onAdd, onCancel }: { onAdd: (l: { service?: ServiceLine; part
     setTried(true);
     if (bad) return;
     if (kind === 'service') onAdd({ service: { name: name.trim(), price: pr, qty: n, done: true, billing: true, typeId: typeId === 'custom' ? null : typeId, custom: typeId === 'custom', listPrice: typeId === 'custom' ? undefined : catalogue.find((t) => t.id === typeId)?.price } });
-    else onAdd({ part: { productId: product!.id, qty: n, issued: n, billing: true, price: pr !== product!.price ? pr : undefined } });
+    else onAdd({ part: { productId: product!.id, name: product!.name, sku: product!.sku, unit: product!.unit, qty: n, issued: n, listPrice: product!.price, billing: true, price: pr !== product!.price ? pr : undefined } });
   };
   return (
     <form onSubmit={(e) => { e.preventDefault(); submit(); }} aria-label="Add a line at billing" className="border-t border-rule bg-raised px-4 py-4 max-[640px]:px-3">
@@ -89,9 +92,9 @@ function AddLine({ onAdd, onCancel }: { onAdd: (l: { service?: ServiceLine; part
       ) : (
         <div>
           {product ? (
-            <p className="mb-2 flex flex-wrap items-center gap-x-3 text-[14px]"><span className="font-medium">{product.name}</span><span className="font-mono text-[12px] text-muted">{product.sku}</span><button type="button" onClick={() => { setProductId(null); setPrice(''); }} className="min-h-8 text-[13px] font-semibold text-accent underline">Change</button></p>
+            <p className="mb-2 flex flex-wrap items-center gap-x-3 text-[14px]"><span className="font-medium">{product.name}</span><span className="font-mono text-[12px] text-muted">{product.sku}</span><button type="button" onClick={() => { setProduct(null); setPrice(''); }} className="min-h-8 text-[13px] font-semibold text-accent underline">Change</button></p>
           ) : (
-            <PartPicker label="Part from Inventory" onPick={(id) => { setProductId(id); setPrice(String(products.find((p) => p.id === id)!.price)); }} />
+            <PartPicker label="Part from Inventory" search={partSearch} status={partsStatus} onPick={(id, p) => { setProduct({ id, name: p.name, sku: p.sku, unit: p.unit, price: p.price }); setPrice(String(p.price)); }} />
           )}
           {tried && errs.part && <p className="text-[13px] text-bad">{errs.part}</p>}
         </div>
@@ -106,8 +109,14 @@ function AddLine({ onAdd, onCancel }: { onAdd: (l: { service?: ServiceLine; part
 }
 
 export interface PaymentStatementProps {
-  job: Job; title: string; editable: boolean;
-  onAdd: (l: { service?: ServiceLine; part?: PartLine }) => void;
+  /** The job's lines, discount and numbers (structural: an API job whose parts carry the product fits). */
+  job: BillJob;
+  /** Customer, car and mechanic under the title. */
+  header: StatementHeader;
+  title: string; editable: boolean;
+  /** Add-line form data: the shop's price list and the host's part search (see AddLine). */
+  catalogue?: BillCatalogueItem[]; partSearch?: PartSearch; partsStatus?: PartsStatus;
+  onAdd: (l: { service?: BillService; part?: BillPart }) => void;
   onRemove: (kind: 'service' | 'part', index: number) => void;
   discountSlot?: ReactNode;
   /** The Discount row's action ("Add discount" / "Change"): omitted for a role that cannot discount. */
@@ -116,22 +125,21 @@ export interface PaymentStatementProps {
 }
 
 /**
- * Studio-only PaymentStatement (NEW): the statement of account as one card. Header (job, customer, car), a ruled table
+ * PaymentStatement (data-driven, RDY-649; studio samples come from sms/paymentModel): the statement of account as one card. Header (job, customer, car), a ruled table
  * (Description | Qty | Unit | Amount) with "Add line" directly under the last row in the Description column, then Subtotal, Discount and Total
  * right-aligned in the Amount column. The discount editor opens under the totals. The balance and the payment form are NOT here: they live in the Balance panel.
  */
-export function PaymentStatement({ job, title, editable, onAdd, onRemove, discountSlot, discountAction, addOpen, onAddOpen }: PaymentStatementProps) {
+export function PaymentStatement({ job, header, title, editable, catalogue, partSearch, partsStatus, onAdd, onRemove, discountSlot, discountAction, addOpen, onAddOpen }: PaymentStatementProps) {
   const st = statementOf(job);
   const none = st.services.length + st.parts.length === 0;
-  const off = discountOf(job);
-  const c = customerOf(job); const v = vehicleOf(job); const mech = mechanicOf(job);
+  const off = billDiscount(job);
   const labelCls = 'col-span-3 text-right max-[640px]:col-span-1 max-[640px]:text-left';
   return (
     <section aria-label={title} className="rounded-card border border-rule bg-surface">
       <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-1 px-4 py-3 max-[640px]:px-3">
         <div className="min-w-0">
           <h2 className="text-[15px] font-semibold">{title}</h2>
-          <p className="mt-0.5 text-[13px] text-muted">{c.name} · {v.make} {v.model} {v.year} · <span className="font-mono">{v.plate}</span>{mech ? ` · ${mech.short}` : ''}</p>
+          <p className="mt-0.5 text-[13px] text-muted">{header.customer} · {header.car} · <span className="font-mono">{header.plate}</span>{header.mechanicShort ? ` · ${header.mechanicShort}` : ''}</p>
         </div>
         <p className="font-mono text-[13px] text-muted">{job.number}{job.quoteNo ? ` · from ${job.quoteNo}` : ''}</p>
       </header>
@@ -149,9 +157,9 @@ export function PaymentStatement({ job, title, editable, onAdd, onRemove, discou
           )}
         </>
       )}
-      {addOpen && <AddLine onAdd={(l) => { onAdd(l); onAddOpen(false); }} onCancel={() => onAddOpen(false)} />}
+      {addOpen && <AddLine catalogue={catalogue} partSearch={partSearch} partsStatus={partsStatus} onAdd={(l) => { onAdd(l); onAddOpen(false); }} onCancel={() => onAddOpen(false)} />}
       <dl className="py-1 text-[14px]">
-        <div className={cn(GRID, 'px-4 py-1.5 max-[640px]:px-3')}><dt className={cn(labelCls, 'text-muted')}>Subtotal</dt><dd className="text-right tabular-nums">{fmt(jobSubtotal(job))}</dd></div>
+        <div className={cn(GRID, 'px-4 py-1.5 max-[640px]:px-3')}><dt className={cn(labelCls, 'text-muted')}>Subtotal</dt><dd className="text-right tabular-nums">{fmt(billSubtotal(job))}</dd></div>
         {(off > 0 || discountAction) && (
           <div className={cn(GRID, 'px-4 py-1.5 max-[640px]:px-3')}>
             <dt className={cn(labelCls, 'flex flex-wrap items-baseline justify-end gap-x-3 text-muted max-[640px]:justify-start')}>
@@ -161,7 +169,7 @@ export function PaymentStatement({ job, title, editable, onAdd, onRemove, discou
             <dd className="text-right tabular-nums">{off > 0 ? `−${fmt(off)}` : ''}</dd>
           </div>
         )}
-        <div className={cn(GRID, 'mt-1 border-t border-control px-4 py-3 max-[640px]:px-3')}><dt className={cn(labelCls, 'text-[15px] font-semibold')}>Total</dt><dd className="text-right text-[18px] font-semibold tabular-nums" data-testid="statement-total">{fmt(jobTotal(job))}</dd></div>
+        <div className={cn(GRID, 'mt-1 border-t border-control px-4 py-3 max-[640px]:px-3')}><dt className={cn(labelCls, 'text-[15px] font-semibold')}>Total</dt><dd className="text-right text-[18px] font-semibold tabular-nums" data-testid="statement-total">{fmt(billTotal(job))}</dd></div>
       </dl>
       {discountSlot}
     </section>

@@ -6,24 +6,23 @@ import { TextField, Textarea } from './TextField';
 import { cn } from '../utils/cn';
 import { MoneyField } from './MoneyField';
 import { Modal } from './Modal';
-import { jobBalance, jobPaid, jobTotal, type Job, type Payment, type PaymentMethod } from './sms/data';
 import { dayWord } from './sms/floorModel';
-import { METHODS, PAY_WORD, checkPayment, fmt, methodLabel, payStateOf, refLabelOf } from './sms/paymentModel';
+import { METHODS, PAY_WORD, billBalance, billPaid, billTotal, checkPayment, fmt, methodLabel, payStateOf, refLabelOf, type BillJob, type BillPayment as Payment, type PaymentMethod } from './payment/model';
 
 /**
  * Studio-only BalancePanel (NEW, same recipe as the accepted "Price at a glance" box in the service form: rounded-card, border-rule, bg-raised):
  * the headline amount, Paid so far and Balance, then whatever the host puts under it (the payment form, or Release car). Total due lives here only.
  */
-export function BalancePanel({ job, children, className }: { job: Job; children?: ReactNode; className?: string }) {
-  const st = payStateOf(job); const bal = jobBalance(job);
+export function BalancePanel({ job, children, className }: { job: BillJob; children?: ReactNode; className?: string }) {
+  const st = payStateOf(job); const bal = billBalance(job);
   return (
     <aside aria-label="Balance" className={cn('rounded-card border border-rule bg-raised p-4 text-[14px]', className)}>
       <p className={cn('flex items-center gap-1.5 text-[12px] font-medium uppercase tracking-wide', st === 'paid' ? 'text-ok-ink' : 'text-muted')}>
         {st === 'paid' ? <><CheckCircle size={16} aria-hidden />Paid in full</> : 'Total due'}
       </p>
-      <p className="mt-1 text-[26px] font-semibold leading-8 tabular-nums" data-testid="total-due">{fmt(jobTotal(job))}</p>
+      <p className="mt-1 text-[26px] font-semibold leading-8 tabular-nums" data-testid="total-due">{fmt(billTotal(job))}</p>
       <dl className="mt-3 space-y-1.5">
-        <div className="flex justify-between gap-3"><dt className="text-muted">Paid so far</dt><dd className="tabular-nums">{fmt(jobPaid(job))}</dd></div>
+        <div className="flex justify-between gap-3"><dt className="text-muted">Paid so far</dt><dd className="tabular-nums">{fmt(billPaid(job))}</dd></div>
         <div className="flex items-baseline justify-between gap-3 border-t border-control pt-2">
           <dt className="font-semibold">Balance</dt>
           <dd className={cn('text-[20px] font-semibold tabular-nums', st === 'paid' ? 'text-ok-ink' : bal > 0 ? 'text-warn-ink' : '')} data-testid="balance">{fmt(Math.max(0, bal))}</dd>
@@ -63,7 +62,7 @@ export function PaymentList({ payments, canVoid, onVoid }: { payments: Payment[]
 }
 
 export interface RecordPaymentProps {
-  job: Job; onRecord: (p: Omit<Payment, 'at' | 'by'>) => void; disabledReason?: ReactNode;
+  job: BillJob; onRecord: (p: Omit<Payment, 'at' | 'by'>) => void; disabledReason?: ReactNode;
   /** Story helper: open with a method already chosen. */
   initialMethod?: PaymentMethod;
 }
@@ -73,7 +72,7 @@ export interface RecordPaymentProps {
  * and for cash the amount handed over with the change worked out. "Record payment" is the one primary. Partial amounts are normal (down payment).
  */
 export function RecordPayment({ job, onRecord, disabledReason, initialMethod = 'CASH' }: RecordPaymentProps) {
-  const bal = jobBalance(job);
+  const bal = billBalance(job);
   const [amount, setAmount] = useState<string | null>(null);
   const [method, setMethod] = useState<PaymentMethod>(initialMethod);
   const [ref, setRef] = useState('');

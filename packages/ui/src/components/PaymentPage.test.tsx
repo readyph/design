@@ -2,7 +2,7 @@ import { render, cleanup, act, fireEvent, screen, within } from '@testing-librar
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { PaymentPage } from './PaymentPage';
 import { documentHtml, docFileName } from './sms/statementFile';
-import { receiptOf, jobFor } from './sms/paymentModel';
+import { receiptOfJob, jobFor } from './sms/paymentModel';
 import { ReceiptDoc } from './ReceiptDoc';
 import axe from 'axe-core';
 
@@ -47,7 +47,7 @@ describe('Payment page layout', () => {
     let name = '';
     vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) { name = this.download; });
     await mount(<PaymentPage jobId="unpaid" />);
-    const doc = receiptOf(jobFor('unpaid'));
+    const doc = receiptOfJob(jobFor('unpaid'));
     await act(async () => { fireEvent.click(screen.getAllByRole('button', { name: /Download/ })[0]!, { button: 0 }); fireEvent.keyDown(screen.getAllByRole('button', { name: /Download/ })[0]!, { key: 'Enter' }); });
     const item = await screen.findByRole('menuitem', { name: /Download statement/ }).catch(() => null);
     if (item) await act(async () => { fireEvent.click(item); });
@@ -58,7 +58,7 @@ describe('Payment page layout', () => {
     expect(await screen.findByText(/Downloaded statement-/)).toBeTruthy();
   });
   it('generated documents are self-contained and escape text', () => {
-    const doc = receiptOf(jobFor('paid'));
+    const doc = receiptOfJob(jobFor('paid'));
     const a4 = documentHtml({ ...doc, customer: '<b>X</b>' }, 'a4');
     expect(a4).toContain('<!doctype html>'); expect(a4).not.toContain('<b>X</b>'); expect(a4).toContain('&lt;b&gt;X');
     expect(documentHtml(doc, 'slip')).toContain('80mm');
@@ -160,7 +160,7 @@ const readBlob = (b: Blob) => new Promise<string>((res) => { const r = new FileR
 
 describe('Payment remarks reach the documents', () => {
   it('ReceiptDoc shows a payment\'s remarks (and escapes nothing into markup)', async () => {
-    const doc = receiptOf(jobFor('paid'));
+    const doc = receiptOfJob(jobFor('paid'));
     const withRemarks = { ...doc, payments: doc.payments.map((p, i) => (i === 0 ? { ...p, remarks: 'paid by customer\'s sister' } : p)) };
     await act(async () => { render(<ReceiptDoc doc={withRemarks} paper="a4" />); });
     expect(screen.getByText(/Remarks: paid by customer's sister/)).toBeTruthy();
@@ -169,7 +169,7 @@ describe('Payment remarks reach the documents', () => {
     expect(screen.queryByText(/Remarks:/)).toBeNull();
   });
   it('the downloaded statement file carries the remarks, escaped', async () => {
-    const doc = receiptOf(jobFor('paid'));
+    const doc = receiptOfJob(jobFor('paid'));
     const html = documentHtml({ ...doc, payments: doc.payments.map((p, i) => (i === 0 ? { ...p, remarks: 'by sister <i>x</i>' } : p)) }, 'a4');
     expect(html).toContain('Remarks: by sister &lt;i&gt;x&lt;/i&gt;');
     expect(html).not.toContain('<i>x</i>');
@@ -188,7 +188,7 @@ describe('Payment remarks reach the documents', () => {
     fireEvent.click(within(dlg).getByRole('button', { name: 'Record payment' })); await settleMs();
     const { downloadDoc } = await import('./sms/statementFile');
     const job = jobFor('unpaid');
-    const doc = receiptOf({ ...job, payments: [...job.payments, { at: job.statusSince, amount: 100, method: 'CASH', remarks: 'paid by sister' }] });
+    const doc = receiptOfJob({ ...job, payments: [...job.payments, { at: job.statusSince, amount: 100, method: 'CASH', remarks: 'paid by sister' }] });
     await act(async () => { downloadDoc(doc, 'a4'); });
     expect(await readBlob(blobs[0]!)).toContain('Remarks: paid by sister');
     expect(screen.getByTestId('pay-remarks').textContent).toContain('paid by sister');

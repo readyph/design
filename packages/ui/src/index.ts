@@ -102,6 +102,7 @@ export * from './components/ProductList';
 export * from './components/SignedOutScreen';
 export * from './components/MoneyField';
 export * from './components/PaymentStatement';
+export * from './components/payment/model';
 export * from './components/StatementActions';
 export * from './components/WeekCalendar';
 export * from './components/CalCard';
