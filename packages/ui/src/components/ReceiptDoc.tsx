@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { DownloadSimple, Printer } from '@phosphor-icons/react';
 import { Button } from './Button';
 import { SegmentedControl } from './SegmentedControl';
-import { toast } from './toast/toastStore';
 import { Modal } from './Modal';
 import { downloadDoc } from './sms/statementFile';
 import { cn } from '../utils/cn';
@@ -19,7 +18,7 @@ type Paper = ReceiptPaper;
 export function ReceiptDoc({ doc, paper, className }: { doc: ReceiptData; paper: Paper; className?: string }) {
   const slip = paper === 'slip';
   return (
-    <article aria-label={`Receipt ${doc.number}`} className={cn('mx-auto rounded-card border border-rule bg-surface text-text', slip ? 'w-[300px] max-w-full p-4 font-mono text-[12px]' : 'p-8 text-[13px] max-[640px]:p-4', className)}>
+    <article data-receipt-doc aria-label={`Receipt ${doc.number}`} className={cn('mx-auto rounded-card border border-rule bg-surface text-text', slip ? 'w-[300px] max-w-full p-4 font-mono text-[12px]' : 'p-8 text-[13px] max-[640px]:p-4', className)}>
       <header className={cn('border-b border-control pb-3', slip ? 'text-center' : 'flex flex-wrap items-start justify-between gap-4')}>
         <div>
           <p className={cn('font-semibold', slip ? 'text-[14px]' : 'text-[16px]')}>{doc.shop.business}</p>
@@ -71,7 +70,16 @@ export function ReceiptDoc({ doc, paper, className }: { doc: ReceiptData; paper:
   );
 }
 
-export function ReceiptModal({ doc, onClose, initialPaper = 'a4' }: { doc: ReceiptData; onClose: () => void; initialPaper?: Paper }) {
+/** Default Print action: flags <body data-print-receipt> so the print CSS in styles.css shows only the receipt, then opens the browser print dialog. The flag clears on afterprint. */
+export function printReceipt() {
+  if (typeof window === 'undefined') return;
+  const body = document.body;
+  body.setAttribute('data-print-receipt', '');
+  window.addEventListener('afterprint', () => body.removeAttribute('data-print-receipt'), { once: true });
+  window.print();
+}
+
+export function ReceiptModal({ doc, onClose, initialPaper = 'a4', onPrint = printReceipt }: { doc: ReceiptData; onClose: () => void; initialPaper?: Paper; /** Called by Print. Defaults to printReceipt (window.print with only the receipt visible). */ onPrint?: () => void }) {
   const [paper, setPaper] = useState<Paper>(initialPaper);
   return (
     <Modal open onOpenChange={(o) => !o && onClose()} size="panel" aria-label={`Receipt ${doc.number}`}>
@@ -83,7 +91,7 @@ export function ReceiptModal({ doc, onClose, initialPaper = 'a4' }: { doc: Recei
       <Modal.Footer>
         <Button variant="secondary" onClick={onClose}>Close</Button>
         <Button variant="secondary" leftIcon={DownloadSimple} onClick={() => downloadDoc(doc, paper)}>Download</Button>
-        <Button variant="primary" leftIcon={Printer} onClick={() => toast.info(`Sent to the printer: ${paper === 'a4' ? 'A4 / Letter' : 'receipt slip'} for ${doc.number}.`)}>Print</Button>
+        <Button variant="primary" leftIcon={Printer} onClick={() => onPrint()}>Print</Button>
       </Modal.Footer>
     </Modal>
   );
