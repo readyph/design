@@ -10,14 +10,18 @@ import { NotifyItem } from './NotifyItem';
 
 const stockShort = (productId: string) => { const w = stockWord(productOf(productId)); return { text: w.word.startsWith('In stock') ? 'In stock' : w.word.startsWith('Low') ? 'Low stock' : w.word.includes('on order') ? 'On order' : 'Out of stock', tone: w.tone }; };
 
+/** One row of the parts checklist. `taken` = the stockroom already issued it (shown "Taken", box locked). */
+export interface MechPartRow { id: string; name: string; qty: number; stock: { text: string; tone: 'ok' | 'warn' | 'bad' }; taken?: boolean; ready: boolean }
+/** One part request already made for this service. */
+export interface MechPartRequest { id: string; title: string; time: string; detail?: string; tag: string; ready?: boolean }
+
 /**
- * Parts for this service as a checklist TABLE (Part | Qty | Stock | Have it) with the library Checkbox (16px) in each row, so the mechanic confirms
- * they have everything before starting. "x of y parts ready" counts parts the stockroom issued plus the ones ticked. "Request more parts" opens Need a part.
+ * Parts for this service as a checklist TABLE (Part | Qty | Stock | Have it) from any data, with the library Checkbox (16px) in each row, so the mechanic confirms
+ * they have everything before starting. "x of y parts ready" counts rows with `ready`. "Request more parts" opens Need a part.
  */
-export function MechParts({ job, s, readOnly, onRequest }: { job: Job; s: MechState; readOnly: boolean; onRequest: (productId?: string) => void }) {
-  const parts = servicePartsOf(job, s.have[job.id]);
+export function MechParts({ parts, requests = [], readOnly, onToggle, onRequest }: { parts: MechPartRow[]; requests?: MechPartRequest[]; readOnly: boolean; onToggle: (id: string) => void; onRequest: (productId?: string) => void }) {
   const ready = parts.filter((p) => p.ready).length;
-  const asked = s.requests.filter((r) => r.jobId === job.id);
+  const asked = requests;
   return (
     <MechSection title="Parts for this service" hint={parts.length ? <span aria-live="polite">{ready} of {parts.length} parts ready</span> : undefined}>
       {parts.length ? (
@@ -32,15 +36,12 @@ export function MechParts({ job, s, readOnly, onRequest }: { job: Job; s: MechSt
           </thead>
           <tbody>
             {parts.map((p) => {
-              const pr = productOf(p.productId);
-              const issued = p.issued >= p.qty;
-              const st = stockShort(p.productId);
               return (
-                <tr key={p.productId} className="h-11 border-b border-rule last:border-b-0">
-                  <th scope="row" className="py-1.5 pr-2 text-[14px] font-normal leading-5">{shortName(pr)}</th>
+                <tr key={p.id} className="h-11 border-b border-rule last:border-b-0">
+                  <th scope="row" className="py-1.5 pr-2 text-[14px] font-normal leading-5">{p.name}</th>
                   <td className="px-2 py-1.5 text-right tabular-nums">{p.qty}</td>
-                  <td className="px-2 py-1.5">{issued ? <Badge tone="ok">Taken</Badge> : <Badge tone={st.tone === 'ok' ? 'ok' : st.tone === 'warn' ? 'warn' : 'bad'}>{st.text}</Badge>}</td>
-                  <td className="py-1.5 pl-3"><span className="flex justify-center"><Checkbox aria-label={`${shortName(pr)}, have it`} checked={p.ready} disabled={readOnly || issued} onChange={() => toggleHave(job.id, p.productId)} /></span></td>
+                  <td className="px-2 py-1.5">{p.taken ? <Badge tone="ok">Taken</Badge> : <Badge tone={p.stock.tone}>{p.stock.text}</Badge>}</td>
+                  <td className="py-1.5 pl-3"><span className="flex justify-center"><Checkbox aria-label={`${p.name}, have it`} checked={p.ready} disabled={readOnly || p.taken} onChange={() => onToggle(p.id)} /></span></td>
                 </tr>
               );
             })}
@@ -53,11 +54,17 @@ export function MechParts({ job, s, readOnly, onRequest }: { job: Job; s: MechSt
         <div role="group" aria-label="Requests for this service" className="mt-4">
           <h3 className="pb-1 text-[13px] font-semibold">Requests for this service</h3>
           <ul className="-mx-4">{asked.map((r) => {
-            const ok = r.status === 'Ready at stockroom';
-            return <NotifyItem key={r.id} marker={<Package size={20} />} markerTone={ok ? 'ok' : 'muted'} title={`${shortName(productOf(r.productId))} x${r.qty}`} time={agoWord(r.at)} detail={r.note} tag={requestWord(r.status)} tagTone={ok ? 'ok' : 'neutral'} />;
+            return <NotifyItem key={r.id} marker={<Package size={20} />} markerTone={r.ready ? 'ok' : 'muted'} title={r.title} time={r.time} detail={r.detail} tag={r.tag} tagTone={r.ready ? 'ok' : 'neutral'} />;
           })}</ul>
         </div>
       )}
     </MechSection>
   );
+}
+
+/** The prototype adapter: MechParts fed from the sample job and the sample mechanic state (what the Storybook prototypes use). */
+export function MechPartsSample({ job, s, readOnly, onRequest }: { job: Job; s: MechState; readOnly: boolean; onRequest: (productId?: string) => void }) {
+  const parts: MechPartRow[] = servicePartsOf(job, s.have[job.id]).map((p) => ({ id: p.productId, name: shortName(productOf(p.productId)), qty: p.qty, stock: stockShort(p.productId), taken: p.issued >= p.qty, ready: p.ready }));
+  const requests: MechPartRequest[] = s.requests.filter((r) => r.jobId === job.id).map((r) => ({ id: r.id, title: `${shortName(productOf(r.productId))} x${r.qty}`, time: agoWord(r.at), detail: r.note, tag: requestWord(r.status), ready: r.status === 'Ready at stockroom' }));
+  return <MechParts parts={parts} requests={requests} readOnly={readOnly} onToggle={(id) => toggleHave(job.id, id)} onRequest={onRequest} />;
 }
