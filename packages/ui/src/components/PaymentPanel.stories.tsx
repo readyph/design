@@ -4,25 +4,25 @@ import { userEvent, within } from '@storybook/test';
 import { BalancePanel, PaidNotice, PaymentList, RecordPayment } from './PaymentPanel';
 import { Button } from './Button';
 import { ConfirmDialog } from './ConfirmDialog';
-import { fmt, jobFor, methodLabel } from './sms/paymentModel';
+import { fmt, billFor, methodLabel } from './sms/paymentModel';
 
 const meta: Meta<typeof BalancePanel> = {
   title: 'Components/SMS/Payment panel',
   component: BalancePanel,
   tags: ['autodocs'],
   decorators: [(Story) => <div className="w-[360px]"><Story /></div>],
-  args: { job: jobFor('unpaid') },
+  args: { job: billFor('unpaid') },
 };
 export default meta;
 type S = StoryObj<typeof BalancePanel>;
 
 const form = (id: string) => (
-  <BalancePanel job={jobFor(id)}><RecordPayment job={jobFor(id)} onRecord={() => {}} /></BalancePanel>
+  <BalancePanel job={billFor(id)}><RecordPayment job={billFor(id)} onRecord={() => {}} /></BalancePanel>
 );
 
 export const Methods: S = { render: () => form('unpaid') };
 export const MethodGCash: S = {
-  render: () => <BalancePanel job={jobFor('unpaid')}><RecordPayment job={jobFor('unpaid')} onRecord={() => {}} initialMethod="GCASH" /></BalancePanel>,
+  render: () => <BalancePanel job={billFor('unpaid')}><RecordPayment job={billFor('unpaid')} onRecord={() => {}} initialMethod="GCASH" /></BalancePanel>,
 };
 export const PartPayment: S = { render: () => form('partial') };
 export const Change: S = {
@@ -34,7 +34,7 @@ export const Change: S = {
 };
 export const PaidInFull: S = {
   render: () => {
-    const job = jobFor('paid');
+    const job = billFor('paid');
     const last = job.payments[job.payments.length - 1];
     return (
       <BalancePanel job={job}>
@@ -45,12 +45,12 @@ export const PaidInFull: S = {
   },
 };
 export const NotAvailable: S = {
-  render: () => <BalancePanel job={jobFor('completed')}><RecordPayment job={jobFor('completed')} onRecord={() => {}} disabledReason="This service is completed, so no more payments can be recorded." /></BalancePanel>,
+  render: () => <BalancePanel job={billFor('completed')}><RecordPayment job={billFor('completed')} onRecord={() => {}} disabledReason="This service is completed, so no more payments can be recorded." /></BalancePanel>,
 };
 
 export const Payments: S = {
   decorators: [(Story) => <div className="w-[760px]"><Story /></div>],
-  render: () => <PaymentList payments={jobFor('many').payments} canVoid onVoid={() => {}} />,
+  render: () => <PaymentList payments={billFor('many').payments} canVoid onVoid={() => {}} />,
 };
 export const NoPayments: S = {
   decorators: [(Story) => <div className="w-[760px]"><Story /></div>],
@@ -60,7 +60,7 @@ export const NoPayments: S = {
 export const VoidConfirm: S = {
   render: () => {
     const [open, setOpen] = useState(true);
-    const p = jobFor('partial').payments;
+    const p = billFor('partial').payments;
     const last = p[p.length - 1];
     return (
       <>

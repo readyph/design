@@ -1,6 +1,6 @@
 import { toast } from '../toast/toastStore';
 import { dayWord } from './floorModel';
-import { PAY_WORD, fmt, methodLabel, type ReceiptData } from './paymentModel';
+import { PAY_WORD, fmt, methodLabel, type ReceiptData } from '../payment/model';
 
 export type DocPaper = 'a4' | 'slip';
 

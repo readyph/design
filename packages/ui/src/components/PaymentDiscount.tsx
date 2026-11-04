@@ -4,9 +4,7 @@ import { SegmentedControl } from './SegmentedControl';
 import { TextField } from './TextField';
 import { ToggleChip } from './ServicesControls';
 import { MoneyField } from './MoneyField';
-import type { Discount, Job } from './sms/data';
-import { DISCOUNT_REASONS, discountError, discountPreview, fmt } from './sms/paymentModel';
-import { jobSubtotal } from './sms/data';
+import { DISCOUNT_REASONS, billSubtotal, discountError, discountPreview, fmt, type BillDiscount as Discount, type BillJob as Job } from './payment/model';
 
 /**
  * Studio-only PaymentDiscount (NEW): the optional custom discount, collapsed until asked for. Peso amount or percent, a reason,
@@ -31,7 +29,7 @@ export function PaymentDiscount({ job, onApply, onRemove, onCancel }: { job: Job
         <MoneyField
           size="large" label={kind === 'percent' ? 'Percent off' : 'Amount off'} type="number" inputMode="decimal" min={0} unit={kind === 'percent' ? '%' : 'PHP'} value={raw}
           onChange={(e) => setRaw(e.target.value)} error={tried || raw ? err ?? undefined : undefined}
-          hint={kind === 'percent' ? `0 to 100, taken from the subtotal ${fmt(jobSubtotal(job))}.` : `Up to the subtotal, ${fmt(jobSubtotal(job))}.`}
+          hint={kind === 'percent' ? `0 to 100, taken from the subtotal ${fmt(billSubtotal(job))}.` : `Up to the subtotal, ${fmt(billSubtotal(job))}.`}
         />
       </div>
       <div className="mt-3">
@@ -42,7 +40,7 @@ export function PaymentDiscount({ job, onApply, onRemove, onCancel }: { job: Job
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
         <p className="min-w-0 flex-1 text-[13px] text-muted" aria-live="polite">
-          {!err && off > 0 ? <>Takes off <b className="font-semibold text-text tabular-nums">{fmt(off)}</b>. New total <b className="font-semibold text-text tabular-nums">{fmt(jobSubtotal(job) - off)}</b>.</> : 'The customer sees this line on the receipt.'}
+          {!err && off > 0 ? <>Takes off <b className="font-semibold text-text tabular-nums">{fmt(off)}</b>. New total <b className="font-semibold text-text tabular-nums">{fmt(billSubtotal(job) - off)}</b>.</> : 'The customer sees this line on the receipt.'}
         </p>
         {cur && <Button type="button" variant="text" onClick={onRemove}>Remove discount</Button>}
         <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>

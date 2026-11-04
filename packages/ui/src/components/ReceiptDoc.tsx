@@ -7,7 +7,7 @@ import { Modal } from './Modal';
 import { downloadDoc } from './sms/statementFile';
 import { cn } from '../utils/cn';
 import { dayWord } from './sms/floorModel';
-import { PAY_WORD, fmt, methodLabel, type ReceiptData } from './sms/paymentModel';
+import { PAY_WORD, fmt, methodLabel, type ReceiptData } from './payment/model';
 
 export type ReceiptPaper = 'a4' | 'slip';
 type Paper = ReceiptPaper;

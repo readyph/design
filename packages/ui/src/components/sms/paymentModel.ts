@@ -1,116 +1,22 @@
-/** Payment page: pure money logic and the story fixtures. Every figure comes from the job's lines (../data), never typed twice. */
+/** Payment page: re-exports the pure money logic (../payment/model), the studio adapters (Job -> BillJob) and the story fixtures (sample jobs for the Payment page's job control). */
 import {
-  branch, customerOf, discountOf, jobBalance, jobPaid, jobSubtotal, jobTotal, jobs as allJobs, mechanicOf, partPrice, productOf, vehicleOf,
-  type Discount, type Job, type PartLine, type Payment, type PaymentMethod, type ServiceLine,
+  branch, customerOf, jobs as allJobs, mechanicOf, productOf, vehicleOf, type Job, type ServiceLine,
 } from './data';
+import { receiptOf as buildReceipt, type BillJob, type ReceiptData, type StatementHeader } from '../payment/model';
 
-export const METHODS: { id: PaymentMethod; label: string; refLabel: string | null }[] = [
-  { id: 'CASH', label: 'Cash', refLabel: null },
-  { id: 'GCASH', label: 'GCash', refLabel: 'GCash reference no.' },
-  { id: 'MAYA', label: 'Maya', refLabel: 'Maya reference no.' },
-  { id: 'BANK_TRANSFER', label: 'Bank transfer', refLabel: 'Transfer reference no.' },
-  { id: 'CARD', label: 'Card', refLabel: 'Card approval code' },
-  { id: 'CHECK', label: 'Check', refLabel: 'Check no.' },
-];
-export const methodLabel = (m: PaymentMethod) => METHODS.find((x) => x.id === m)?.label ?? m;
-export const refLabelOf = (m: PaymentMethod) => METHODS.find((x) => x.id === m)?.refLabel ?? null;
+export * from '../payment/model';
 
-export const DISCOUNT_REASONS = ['Loyal customer', 'Goodwill', 'Referral', 'Price match'] as const;
-
-export type PayState = 'unpaid' | 'partial' | 'paid';
-export const payStateOf = (j: Job): PayState => {
-  const bal = jobBalance(j);
-  return jobTotal(j) > 0 && bal <= 0 ? 'paid' : jobPaid(j) > 0 ? 'partial' : 'unpaid';
+/** The studio job as the statement reads it: each part line carries its product's name, SKU, unit and sell price. */
+export const billOf = (j: Job): BillJob => ({
+  number: j.number, status: j.status, quoteNo: j.quoteNo, discount: j.discount, payments: j.payments, services: j.services,
+  parts: j.parts.map((l) => { const pr = productOf(l.productId); return { productId: l.productId, name: pr.name, sku: pr.sku, unit: pr.unit, qty: l.qty, listPrice: pr.price, price: l.price, billing: l.billing, issued: l.issued }; }),
+});
+export const headerOf = (j: Job): StatementHeader => {
+  const c = customerOf(j); const v = vehicleOf(j); const m = mechanicOf(j);
+  return { customer: c.name, phone: c.phone, car: `${v.make} ${v.model} ${v.year}`, plate: v.plate, mechanic: m?.name ?? null, mechanicShort: m?.short ?? null };
 };
-export const PAY_WORD: Record<PayState, string> = { unpaid: 'Unpaid', partial: 'Partly paid', paid: 'Paid in full' };
-
-export const isQuoteStatus = (j: Job) => j.status === 'QUOTATION' || j.status === 'FOR_APPROVAL';
-/** Completed jobs are closed (the API answers 409 to a payment on a completed job). */
-export const isClosed = (j: Job) => j.status === 'COMPLETED';
-/** The price is final once the work is done: ready for pick-up or completed. Earlier it is the price so far. */
-export const isFinalPrice = (j: Job) => j.status === 'FOR_PICKUP' || j.status === 'COMPLETED';
-
-export interface StatementLine {
-  key: string; kind: 'service' | 'part'; index: number; name: string; qty: number; unit: number; total: number;
-  /** "Custom price (set: P1,200)" when the price was edited from the set one. */
-  setPrice?: number; billing: boolean; sub?: string;
-}
-export function statementOf(j: Job): { services: StatementLine[]; parts: StatementLine[] } {
-  const services = j.services.map((s: ServiceLine, i) => ({
-    key: `s${i}`, kind: 'service' as const, index: i, name: s.name, qty: s.qty, unit: s.price, total: s.price * s.qty,
-    setPrice: s.listPrice !== undefined && s.listPrice !== s.price ? s.listPrice : undefined, billing: !!s.billing,
-  }));
-  const parts = j.parts.map((l: PartLine, i) => {
-    const pr = productOf(l.productId);
-    return {
-      key: `p${i}`, kind: 'part' as const, index: i, name: pr.name, qty: l.qty, unit: partPrice(l), total: partPrice(l) * l.qty,
-      setPrice: l.price !== undefined && l.price !== pr.price ? pr.price : undefined, billing: !!l.billing, sub: `${pr.sku} · per ${pr.unit}`,
-    };
-  });
-  return { services, parts };
-}
-
-/** What the discount field says, or null when it is fine. Percent is 0-100, an amount cannot pass the subtotal, the total cannot go under what is paid. */
-export function discountError(kind: Discount['kind'], raw: string, job: Job): string | null {
-  const t = raw.trim();
-  if (t === '') return 'Enter an amount.';
-  const n = Number(t);
-  if (!Number.isFinite(n)) return 'Numbers only.';
-  if (n <= 0) return 'Must be more than zero.';
-  const sub = jobSubtotal(job);
-  if (kind === 'percent') {
-    if (n > 100) return 'A percent can be 100 at most.';
-    if (!/^\d+(\.\d{1,2})?$/.test(t)) return 'Up to 2 decimals.';
-  } else {
-    if (n > sub) return `Cannot be more than the subtotal (${fmt(sub)}).`;
-    if (!/^\d+(\.\d{1,2})?$/.test(t)) return 'Up to 2 decimals.';
-  }
-  const off = kind === 'percent' ? Math.round((sub * n) / 100) : n;
-  if (sub - off < jobPaid(job)) return `The total would fall below what is already paid (${fmt(jobPaid(job))}). Void a payment first.`;
-  return null;
-}
-export const discountPreview = (kind: Discount['kind'], raw: string, job: Job): number => {
-  const n = Number(raw);
-  if (!Number.isFinite(n) || n <= 0) return 0;
-  return Math.min(jobSubtotal(job), kind === 'percent' ? Math.round((jobSubtotal(job) * Math.min(n, 100)) / 100) : n);
-};
-
-export const fmt = (n: number) => `₱${n.toLocaleString('en-PH', { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 })}`;
-export const discountWord = (d: Discount) => (d.kind === 'percent' ? `${d.value}%` : fmt(d.value));
-
-export interface PaymentCheck { error: string | null; refError: string | null; tenderedError: string | null; change: number }
-export function checkPayment(job: Job, p: { amount: string; method: PaymentMethod; ref: string; tendered: string }): PaymentCheck {
-  const bal = jobBalance(job);
-  const n = Number(p.amount);
-  let error: string | null = null;
-  if (p.amount.trim() === '' || !Number.isFinite(n)) error = 'Enter the amount received.';
-  else if (n <= 0) error = 'Must be more than zero.';
-  else if (n > bal) error = `More than the balance (${fmt(bal)}). Change is for cash only.`;
-  else if (!/^\d+(\.\d{1,2})?$/.test(p.amount.trim())) error = 'Up to 2 decimals.';
-  const refError = refLabelOf(p.method) && !p.ref.trim() ? 'Required for this method.' : null;
-  const tendered = p.tendered.trim() === '' ? null : Number(p.tendered);
-  const tenderedError = p.method === 'CASH' && tendered !== null && (!Number.isFinite(tendered) || tendered < n) ? 'Less than the amount. Collect the rest, or lower the amount.' : null;
-  const change = p.method === 'CASH' && tendered !== null && !tenderedError && Number.isFinite(n) ? Math.max(0, tendered - n) : 0;
-  return { error, refError, tenderedError, change };
-}
-
-export interface ReceiptData {
-  number: string; shop: { business: string; branch: string; address: string; phone: string };
-  customer: string; phone: string; car: string; plate: string; mechanic: string | null; quoteNo?: string;
-  lines: { name: string; qty: number; unit: number; total: number; part: boolean; billing: boolean }[];
-  subtotal: number; discount: number; discountNote: string | null; total: number; payments: Payment[]; paid: number; balance: number; state: PayState;
-}
-export function receiptOf(j: Job): ReceiptData {
-  const v = vehicleOf(j); const c = customerOf(j); const st = statementOf(j);
-  const row = (l: StatementLine) => ({ name: l.name, qty: l.qty, unit: l.unit, total: l.total, part: l.kind === 'part', billing: l.billing });
-  return {
-    number: j.number, shop: { business: branch.business, branch: branch.name, address: branch.address, phone: '(02) 8555 0142' },
-    customer: c.name, phone: c.phone, car: `${v.make} ${v.model} ${v.year}`, plate: v.plate, mechanic: mechanicOf(j)?.name ?? null, quoteNo: j.quoteNo,
-    lines: [...st.services.map(row), ...st.parts.map(row)], subtotal: jobSubtotal(j), discount: discountOf(j),
-    discountNote: j.discount ? `${discountWord(j.discount)}${j.discount.reason ? `, ${j.discount.reason}` : ''}` : null,
-    total: jobTotal(j), payments: j.payments, paid: jobPaid(j), balance: jobBalance(j), state: payStateOf(j),
-  };
-}
+export const shopOf = () => ({ business: branch.business, branch: branch.name, address: branch.address, phone: '(02) 8555 0142' });
+export const receiptOfJob = (j: Job): ReceiptData => buildReceipt(billOf(j), headerOf(j), shopOf());
 
 // ---------- Story fixtures (sample jobs for the Payment page's job control) ----------
 const find = (id: string) => allJobs.find((j) => j.id === id)!;
@@ -155,5 +61,8 @@ export const PAYMENT_JOBS: { id: string; label: string; job: Job }[] = [
   { id: 'nolines', label: 'Nothing to bill yet (JO-0442)', job: empty },
 ];
 export const jobFor = (id: string) => (PAYMENT_JOBS.find((x) => x.id === id) ?? PAYMENT_JOBS[0]).job;
+/** Sample job `id` as the statement reads it, and its header (customer, car, mechanic). */
+export const billFor = (id: string) => billOf(jobFor(id));
+export const headerFor = (id: string) => headerOf(jobFor(id));
 /** The pool the standalone Payment story looks jobs up in. */
 export const paymentPool: Job[] = [...allJobs, ...PAYMENT_JOBS.map((x) => x.job).filter((j) => !allJobs.some((a) => a.id === j.id))];
