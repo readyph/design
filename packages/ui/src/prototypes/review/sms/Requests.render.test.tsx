@@ -33,14 +33,14 @@ describe('Requests & messages', () => {
     const rows = options();
     const times = itemsOf(getMech()).map((i) => i.id);
     expect(rows.length).toBe(times.length);
-    expect(rows[0].getAttribute('aria-label')).toMatch(/Unread, .*, Question, Needs you, Arnel/);
+    expect(rows[0].textContent).toMatch(/Unread.*Question.*Needs you.*Arnel/);
     const mins = itemsOf(getMech()).map((i) => Number(i.at.slice(11, 13)) * 60 + Number(i.at.slice(14, 16)));
     expect([...mins].sort((a, b) => b - a)).toEqual(mins);
-    const needsRow = rows.find((r) => /Found a problem.*Needs you/.test(r.getAttribute('aria-label')!))!;
+    const needsRow = rows.find((r) => /Found a problem.*Needs you/.test(r.textContent!))!;
     expect(needsRow.textContent).toMatch(/Problem/); expect(needsRow.textContent).toMatch(/Needs you/);
     expect(needsRow.querySelector('[data-unread]')).not.toBeNull();
     expect(rows.some((r) => /Collected/.test(r.textContent!))).toBe(true);
-    expect(rows.some((r) => r.getAttribute('aria-label')!.startsWith('Unread') === false)).toBe(true);
+    expect(rows.some((r) => !r.textContent!.includes('Unread'))).toBe(true);
   });
   it('filters carry counts and narrow the list; search finds by plate or mechanic', async () => {
     render(<RequestsPage initialSelected={null} />);
@@ -48,12 +48,12 @@ describe('Requests & messages', () => {
     const label = (n: string) => within(f).getByRole('radio', { name: new RegExp(n) }).textContent!;
     expect(label('Needs you')).toMatch(/\d/); expect(label('All')).toContain(String(itemsOf(getMech()).length));
     await act(async () => { fireEvent.click(within(f).getByRole('radio', { name: /Parts/ })); });
-    expect(options().every((r) => /, Part,/.test(r.getAttribute('aria-label')!))).toBe(true);
+    expect(options().every((r) => /Part/.test(r.textContent!))).toBe(true);
     await act(async () => { fireEvent.click(within(f).getByRole('radio', { name: /Needs you/ })); });
-    expect(options().every((r) => /Needs you/.test(r.getAttribute('aria-label')!))).toBe(true);
+    expect(options().every((r) => /Needs you/.test(r.textContent!))).toBe(true);
     await act(async () => { fireEvent.click(within(f).getByRole('radio', { name: /All/ })); });
     await act(async () => { fireEvent.change(screen.getByLabelText('Search by plate or mechanic'), { target: { value: 'paolo' } }); });
-    expect(options().length).toBeGreaterThan(0); expect(options().every((r) => /Paolo/.test(r.getAttribute('aria-label')!))).toBe(true);
+    expect(options().length).toBeGreaterThan(0); expect(options().every((r) => /Paolo/.test(r.textContent!))).toBe(true);
   });
   it('selecting an item shows its detail, marks it read here, and arrow keys rove focus', async () => {
     render(<RequestsPage initialSelected={null} />);

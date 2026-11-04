@@ -24,15 +24,16 @@ describe('RequestList', () => {
     render(<RequestList items={[]} selectedId={null} onOpen={() => {}} empty={<p>Nothing here.</p>} />);
     expect(screen.getByText('Nothing here.')).toBeTruthy();
   });
-  it('puts every visible row word in the accessible name (label-in-name)', () => {
+  it('has no aria-label: the name comes from the visible content, with an sr-only Unread cue (label-in-name)', () => {
     render(<RequestList items={items} selectedId={null} onOpen={() => {}} />);
     for (const row of screen.getAllByRole('option')) {
-      const name = row.getAttribute('aria-label') ?? '';
+      expect(row.hasAttribute('aria-label')).toBe(false);
       for (const el of row.querySelectorAll('span.truncate, span.tabular-nums')) {
-        const text = (el.textContent ?? '').replace(/\s+/g, ' ').trim().replace(/ · /, ', ');
-        expect(name).toContain(text);
+        expect(row.textContent).toContain((el.textContent ?? '').trim());
       }
     }
+    const unread = items.filter((i) => i.unread).length;
+    expect(screen.getAllByText('Unread')).toHaveLength(unread);
   });
   it('has no axe violations', async () => {
     const { container } = render(<RequestList items={items} selectedId={items[0]?.id ?? null} onOpen={() => {}} />);
@@ -49,7 +50,7 @@ describe('RequestList with API rows (RDY-652)', () => {
     expect(r1!.textContent).toContain('Brake service');
     expect(r1!.textContent).toContain('Nena');
     expect(r1!.textContent).toContain('5 min ago');
-    expect(r1!.getAttribute('aria-label')).toContain('ZZZ 999');
+    expect(r1!.hasAttribute('aria-label')).toBe(false);
     expect(r2!.textContent).toContain('Shop use');
     expect(r2!.textContent).toContain('Oscar');
     expect(r2!.textContent).toContain('2 h ago');
@@ -68,7 +69,7 @@ describe('RequestList preview', () => {
     expect(lines).toContain('Brake fluid DOT 4 x1');
     expect(lines).toContain('Brake fluid DOT 4 x1: 2 sets');
     expect(lines.some((l) => l?.endsWith(':'))).toBe(false);
-    expect(screen.getAllByRole('option')[0].getAttribute('aria-label')).not.toMatch(/:/);
+    expect(screen.getAllByRole('option')[0].textContent).not.toMatch(/:/);
   });
   it('joins title and body when there is one', () => {
     expect(previewOf(part('2 sets'))).toBe('Brake fluid DOT 4 x1: 2 sets');
