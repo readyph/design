@@ -49,25 +49,25 @@ export function CustomerField({ customer, vehicleId, onPick, onClear, initialQue
 
   const matches = useMemo(() => {
     const t = q.trim().toLowerCase();
-    if (!t) return customers.slice(0, 5).map((c) => ({ c, v: c.vehicles[0]! }));
+    if (!t) return customers.slice(0, 5).map((c) => ({ c, v: c.vehicles[0] }));
     const digits = t.replace(/\D/g, '');
     return customers.flatMap((c) => {
       const byPerson = c.name.toLowerCase().includes(t) || (digits.length >= 3 && c.phone.replace(/\D/g, '').includes(digits));
       const byPlate = c.vehicles.find((v) => norm(v.plate).includes(norm(t)));
-      return byPerson || byPlate ? [{ c, v: byPlate ?? c.vehicles[0]! }] : [];
+      return byPerson || byPlate ? [{ c, v: byPlate ?? c.vehicles[0] }] : [];
     }).slice(0, 6);
   }, [q]);
 
   const options: ComboOption[] = matches.map(({ c, v }) => ({
-    id: `${c.id}|${v.id}`,
-    label: `${c.name}, ${vehicleLine(v)}, ${v.plate}`,
+    id: `${c.id}|${v?.id ?? ''}`,
+    label: v ? `${c.name}, ${vehicleLine(v)}, ${v.plate}` : `${c.name}, no car yet`,
     node: (
       <span className="flex min-w-0 flex-1 items-center gap-3">
         <span className="min-w-0 flex-1">
           <span className="block truncate font-medium text-text">{c.name}</span>
-          <span className="block truncate text-[12px] text-muted">{v.make} {v.model} {v.year}{c.vehicles.length > 1 ? ` · +${c.vehicles.length - 1} more` : ''} · {c.phone}</span>
+          <span className="block truncate text-[12px] text-muted">{v ? `${v.make} ${v.model} ${v.year}${c.vehicles.length > 1 ? ` · +${c.vehicles.length - 1} more` : ''}` : 'No car yet'} · {c.phone}</span>
         </span>
-        <span className="flex-none font-mono text-[12px] text-text">{v.plate}</span>
+        {v && <span className="flex-none font-mono text-[12px] text-text">{v.plate}</span>}
       </span>
     ),
   }));
