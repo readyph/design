@@ -148,7 +148,7 @@ export function HomeZones({ tenant = 'a', role = 'manager', state = 'live', view
       : t != null ? <span className={cn('text-[16px] font-semibold leading-5 tabular-nums', urgent ? 'text-bad' : '')}>{hm(t)}<small className={cn('mt-0.5 block whitespace-nowrap text-[12px] font-medium leading-4', urgent ? 'text-bad' : 'text-muted')}>{lf ? `${lf} left` : 'past due'}</small></span>
       : <span className="text-[13px] font-semibold leading-5 tabular-nums text-bad">Overdue<small className="mt-0.5 block whitespace-nowrap text-[12px] font-medium leading-4 text-muted">since yesterday</small></span>;
     return (
-      <button key={d.id} type="button" onClick={() => onOpen?.(d.id)} aria-label={`${d.title}${d.due ? ', ' + d.due.label : ''}`}
+      <button key={d.id} type="button" onClick={() => onOpen?.(d.id)}
         className={cn(rowCls, 'min-h-[68px] grid-cols-[112px_22px_minmax(0,1fr)_minmax(170px,max-content)] gap-y-0 @max-[760px]/sheet:grid-cols-[112px_minmax(0,1fr)_150px] max-[640px]:grid-cols-[76px_minmax(0,1fr)] max-[640px]:gap-y-2.5')}>
         {tm}
         <span className={cn(riCls, '@max-[760px]/sheet:hidden max-[640px]:hidden [&>svg]:block')}>{d.canDecide ? KIND_IC[d.kind] || <ClipboardText /> : <HourglassMedium />}</span>

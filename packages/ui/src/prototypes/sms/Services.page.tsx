@@ -416,10 +416,11 @@ export function ServicesPage({
           {strip.map((d) => {
             const on = d === anchor; const today = d === TODAY; const closed = isClosed(d);
             return (
-              <button key={d} type="button" aria-pressed={on} aria-label={`${longDay(d)}${today ? ', today' : ''}${closed ? ', closed' : ''}`} onClick={() => setAnchor(d)}
+              <button key={d} type="button" aria-pressed={on} onClick={() => setAnchor(d)}
                 className={cn('flex min-h-11 flex-col items-center justify-center rounded-control text-[12px] leading-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent', on ? 'bg-accent text-accent-ink' : closed ? 'bg-raised text-muted' : 'text-text hover:bg-raised')}>
                 <span className={cn(!on && 'text-muted')}>{dowShort(d).slice(0, 3)}</span>
                 <span className="text-[15px] font-semibold tabular-nums">{dayNum(d)}</span>
+                <span className="sr-only">, {longDay(d)}{today ? ', today' : ''}{closed ? ', closed' : ''}</span>
                 <span aria-hidden className={cn('mt-0.5 h-0.5 w-3 rounded-full', today ? (on ? 'bg-accent-ink' : 'bg-accent') : 'bg-transparent')} />
               </button>
             );

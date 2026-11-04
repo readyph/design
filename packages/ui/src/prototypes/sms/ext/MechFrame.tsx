@@ -72,9 +72,10 @@ export function MechFrame({ title, crumbs, me, onProfile, profileActive, bar, sn
               <p className="min-w-0 leading-5"><span className="block truncate text-[14px] font-semibold text-text">{branch.business}</span><span className="block truncate text-[12px] text-muted">{branch.name}</span></p>
             </div>
             <span className="flex-1" />
-            <button type="button" onClick={onProfile} aria-label="Profile" aria-current={profileActive ? 'page' : undefined} title={me.name}
+            <button type="button" onClick={onProfile} aria-current={profileActive ? 'page' : undefined} title={me.name}
               className={cn('-mr-1 grid size-10 flex-none place-items-center rounded-full bg-transparent p-0 transition-shadow hover:ring-2 hover:ring-control', crumbFocus, profileActive && 'ring-2 ring-accent')}>
               <PersonAvatar personId={me.id} name={me.name} initials={me.initials} size={32} />
+              <span className="sr-only">Profile</span>
             </button>
           </div>
           <h1 className="sr-only">{title}</h1>

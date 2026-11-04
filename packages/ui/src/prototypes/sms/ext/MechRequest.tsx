@@ -11,9 +11,9 @@ const bcProducts: BarcodeProduct[] = products.map((p, i) => ({ id: p.id, name: p
 const stockShort = (productId: string) => { const w = stockWord(productOf(productId)).word; return w.startsWith('In stock') ? 'in stock' : w.startsWith('Low') ? 'low stock' : w.includes('on order') ? 'on order' : 'out of stock'; };
 
 /** A radio row in the right panel's row look (NotifyItem anatomy: rounded inset row, hover `bg-raised`, selected `bg-raised`), 18px ring marker. */
-function Radio({ on, children, onClick, label }: { on: boolean; children: React.ReactNode; onClick: () => void; label?: string }) {
+function Radio({ on, children, onClick }: { on: boolean; children: React.ReactNode; onClick: () => void }) {
   return (
-    <button type="button" role="radio" aria-checked={on} aria-label={label} onClick={onClick} className={cn('flex min-h-11 w-full items-center gap-3 rounded-control px-3 py-2 text-left transition-colors hover:bg-raised focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent', on && 'bg-raised')}>
+    <button type="button" role="radio" aria-checked={on} onClick={onClick} className={cn('flex min-h-11 w-full items-center gap-3 rounded-control px-3 py-2 text-left transition-colors hover:bg-raised focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent', on && 'bg-raised')}>
       <CheckMark on={on} />
       <span className="min-w-0 flex-1">{children}</span>
     </button>
@@ -52,7 +52,7 @@ export function MechRequestForm({ jobs, jobId, setJobId, askCar, productId, setP
             <p className="px-3 text-[13px] text-muted">Usually needed for this service</p>
             <div role="radiogroup" aria-label="Usually needed for this service" className="mt-1 grid gap-1">
               {rows.map((r) => { const pr = productOf(r.productId); return (
-                <Radio key={r.productId} on={productId === r.productId} onClick={() => choose(r.productId)} label={pr.name}>
+                <Radio key={r.productId} on={productId === r.productId} onClick={() => choose(r.productId)}>
                   <span className="block break-words text-[14px] font-medium leading-5">{shortName(pr)}</span>
                   <span className="block text-[13px] text-muted">{stockShort(r.productId)}</span>
                 </Radio>

@@ -17,7 +17,7 @@ describe('DayTimeline', () => {
   it('renders a chip as a real button and info as plain text', () => {
     const { getAllByRole, container } = render(<DayTimeline {...base} />);
     expect(getAllByRole('button')).toHaveLength(1);
-    expect(getAllByRole('button')[0].getAttribute('aria-label')).toBe('Order by 10:00');
+    expect(getAllByRole('button')[0].textContent).toContain('Order by 10:00'); // the full reason is read after the visible text (WCAG 2.5.3)
     expect(container.textContent).toContain('Now 9:12');
     expect(container.textContent).toContain('3 jobs');
   });

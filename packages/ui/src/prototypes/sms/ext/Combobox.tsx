@@ -115,7 +115,7 @@ export function Combobox({ label, value, onValueChange, options, onSelect, actio
           <div ref={setScroller} role="presentation" data-combo-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
             {heading && options.length > 0 && <p role="presentation" className="px-3 pb-1 pt-2 text-[12px] font-medium uppercase tracking-wide text-muted">{heading}</p>}
             {options.map((o, i) => (
-              <div key={o.id} id={optId(i)} role="option" aria-selected={i === active} aria-label={o.label} onMouseEnter={() => setActive(i)} onClick={() => pick(i)} className={cn(row, 'cursor-pointer border-b border-rule last:border-b-0', i === active && 'bg-raised')}>{o.node}</div>
+              <div key={o.id} id={optId(i)} role="option" aria-selected={i === active} onMouseEnter={() => setActive(i)} onClick={() => pick(i)} className={cn(row, 'cursor-pointer border-b border-rule last:border-b-0', i === active && 'bg-raised')}>{o.node}</div>
             ))}
             {options.length === 0 && <p role="presentation" className="px-3 py-3 text-[13px] text-muted">{emptyText}</p>}
           </div>

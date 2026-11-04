@@ -57,7 +57,7 @@ describe('Memory page', () => {
     const user = userEvent.setup();
     render(<MemoryPage initialTab="requests" />);
     expect(screen.getByText(/2,201 of 16,000 characters/)).toBeTruthy();
-    await user.click(screen.getByRole('button', { name: /Try it: Can I bring my car in on Saturday morning/ }));
+    await user.click(screen.getByRole('button', { name: /Try “Can I bring my car in on Saturday morning/ }));
     expect(screen.getByRole('dialog')).toBeTruthy();
   });
 

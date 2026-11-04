@@ -47,9 +47,9 @@ export function NotificationsSection({ prefs, onPrefs, templates, onTemplates, i
         <ul aria-label="Customer text templates" className="max-w-[720px] border-t border-rule">
           {templates.map((x) => (
             <li key={x.id} className="border-b border-rule">
-              <button type="button" onClick={() => setOpen(x.id)} aria-label={`Edit text: ${x.name}`} className="flex min-h-14 w-full items-center gap-3 py-2 text-left hover:bg-raised focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent">
+              <button type="button" onClick={() => setOpen(x.id)} className="flex min-h-14 w-full items-center gap-3 py-2 text-left hover:bg-raised focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent">
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[14px] font-medium">{x.name}{x.body !== x.original && <span className="ml-2 text-[12px] font-normal text-muted">Edited</span>}</span>
+                  <span className="block text-[14px] font-medium">{x.name}{x.body !== x.original && <span className="ml-2 text-[12px] font-normal text-muted">Edited</span>}<span className="sr-only">, edit text</span></span>
                   <span className="block text-[12px] text-muted">{x.when}</span>
                   <span className="mt-0.5 block truncate text-[13px] text-muted">{renderTemplate(x.body)}</span>
                 </span>

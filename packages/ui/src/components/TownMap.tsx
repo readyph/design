@@ -124,9 +124,9 @@ export interface TownMapProps {
   onAdd?: () => void;
   /** Accessible name of the whole map (a group of buttons, one per platform). */
   label?: string;
-  /** Overrides the accessible name of a platform button. Start it with the visible label (WCAG 2.5.3). Default: the visible text followed by visually hidden status. */
+  /** Replaces the visually hidden status read after the visible text of a platform button (an extra cue, never a replacement for the visible label: WCAG 2.5.3). */
   platformLabel?: (p: TownMapPlatform) => string;
-  /** Overrides the accessible name of the HQ button. Start it with the visible label (WCAG 2.5.3). Default: the visible text followed by "your team and plan". */
+  /** Replaces the visually hidden "your team and plan" read after the visible text of the HQ button (an extra cue, never a replacement for the visible label: WCAG 2.5.3). */
   hqLabel?: (p: TownMapPlatform) => string;
   /** A second line under the HQ label (shown when selected or hovered), like "HQ · 6 of 7 on". Without it the HQ label is one line. */
   hqSub?: (p: TownMapPlatform) => string;
@@ -459,7 +459,6 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
                     data-sel={sel ? '' : undefined}
                     data-hl={hl ? '' : undefined}
                     data-count={n ? '' : undefined}
-                    aria-label={(p.hq ? hqLabel : platformLabel)?.(p)}
                     aria-pressed={sel}
                     aria-disabled={loading || undefined}
                     onClick={() => {
@@ -523,7 +522,7 @@ export const TownMap = forwardRef<TownMapHandle, TownMapProps>(function TownMap(
                         )}
                       </span>
                     ) : null}
-                    {(p.hq ? hqLabel : platformLabel) ? null : <span className="sr-only">{hiddenContext(p, n > 0)}</span>}
+                    <span className="sr-only">{(p.hq ? hqLabel : platformLabel) ? `, ${(p.hq ? hqLabel : platformLabel)?.(p)}` : hiddenContext(p, n > 0)}</span>
                   </button>
                 </li>
               );

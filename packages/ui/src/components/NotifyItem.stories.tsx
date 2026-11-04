@@ -14,7 +14,7 @@ export default meta;
 type S = StoryObj<typeof NotifyItem>;
 
 export const Informing: S = {};
-export const WaitingForYou: S = { args: { markerTone: 'warn', onOpen: () => {}, ariaLabel: 'Open JO-0403' } };
+export const WaitingForYou: S = { args: { markerTone: 'warn', onOpen: () => {} } };
 export const Wrapped: S = { args: { wrap: true, detail: 'Needs two front pads.\nWaiting on the supplier.' } };
 export const Dense: S = { args: { dense: true, onOpen: () => {} } };
 export const Checklist: S = { args: { dense: true, checked: true, onOpen: () => {} } };

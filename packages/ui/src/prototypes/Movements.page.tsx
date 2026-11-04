@@ -294,7 +294,7 @@ export function MovementsPage({ tenant = 'a', as = 'manager', state = 'live', vi
     const nm = `${t.id}, ${t.out ? 'to' : 'from'} ${t.other.name}`;
     if (t.status === 'draft' && t.out && M.canSend(t)) return <ActionLink caret aria-label={`Send ${nm}`}>Send</ActionLink>;
     if (t.status === 'transit' && !t.out && can('receive')) return <ActionLink caret aria-label={`Receive ${nm}`}>Receive</ActionLink>;
-    return <ActionLink caret aria-label={`View ${nm}`}>{t.status === 'draft' ? 'Open' : 'View'}</ActionLink>;
+    return <ActionLink caret aria-label={`${t.status === 'draft' ? 'Open' : 'View'} ${nm}`}>{t.status === 'draft' ? 'Open' : 'View'}</ActionLink>;
   };
   const waiting = open.slice().sort((a, b) => (M.needsMe(b) ? 1 : 0) - (M.needsMe(a) ? 1 : 0)).slice(0, 3);
 

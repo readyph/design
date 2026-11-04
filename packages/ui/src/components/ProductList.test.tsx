@@ -20,7 +20,7 @@ describe('ProductList', () => {
   it('add action does not open the row; checkbox is labelled', () => {
     const open = vi.fn(); const sel = vi.fn();
     render(<ProductList groups={groups} total={2} addable={new Set(['p1'])} onSelectedChange={sel} onOpen={open} />);
-    fireEvent.click(screen.getByLabelText('Add 12 Oil filter to the Autopro order list'));
+    fireEvent.click(screen.getByRole('button', { name: /^Add 12 to order list/ }));
     fireEvent.click(screen.getByLabelText('Select Oil filter'));
     expect(open).not.toHaveBeenCalled();
     expect(sel).toHaveBeenCalledWith('p1', true);

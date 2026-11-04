@@ -151,9 +151,13 @@ const SettingsSwitch = forwardRef<HTMLButtonElement, SettingsSwitchProps>(functi
       >
         <i className="absolute left-[3px] top-[3px] h-4 w-4 rounded-full bg-surface transition-transform duration-hover group-data-[state=checked]:translate-x-[18px] group-data-[state=checked]:bg-accent-ink" />
       </span>
-      <span aria-hidden="true" className={cn('min-w-[24px] text-left text-[14px]', on ? 'font-semibold' : 'font-medium text-muted')}>
-        {on ? 'On' : 'Off'}
-      </span>
+      {/* The On/Off word is drawn with CSS content, not DOM text: the state is already exposed by role=switch + aria-checked, and a text node here made the
+          switch's visible label ("On") differ from its accessible name (WCAG 2.5.3 label-content-name-mismatch). */}
+      <span
+        aria-hidden="true"
+        data-switch-word={on ? 'on' : 'off'}
+        className={cn("min-w-[24px] text-left text-[14px] after:content-['Off'] group-data-[state=checked]:after:content-['On']", on ? 'font-semibold' : 'font-medium text-muted')}
+      />
     </RadixSwitch.Root>
   );
 });

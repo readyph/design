@@ -21,7 +21,8 @@ async function openIt(props: Partial<MarketplaceProps> = {}) {
   await userEvent.click(screen.getByText('Open market'));
   return screen.getByRole('dialog');
 }
-const tile = (name: string) => screen.getByRole('radio', { name });
+// The tile's accessible name is all its visible lines (WCAG 2.5.3), so find a tile by the start of that name: [Coming soon | You have N] then the platform name.
+const tile = (name: string) => screen.getByRole('radio', { name: new RegExp(`^(Coming soon |You have \\d+ )?${name}`) });
 const install = () => screen.getByRole('button', { name: /^Install/ }) as HTMLButtonElement;
 const filter = (name: string) => screen.getByRole('button', { name });
 
@@ -53,7 +54,7 @@ describe('Marketplace', () => {
     expect(screen.getAllByRole('radio')).toHaveLength(8);
     await userEvent.click(filter('Sales'));
     expect(screen.getAllByRole('radio').map((r) => r.getAttribute('aria-labelledby') && r.textContent)).toHaveLength(3);
-    expect(screen.queryByRole('radio', { name: 'Inventory' })).toBeNull();
+    expect(screen.queryByRole('radio', { name: /^(You have \d+ )?Inventory/ })).toBeNull();
     expect(filter('Sales').getAttribute('aria-pressed')).toBe('true');
   });
 
