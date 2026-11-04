@@ -35,7 +35,7 @@ describe('FloorLanes (props only)', () => {
   it('selects a chip and drops a chip on another lane', () => {
     const onSelect = vi.fn(); const onMove = vi.fn();
     render(<FloorLanes {...lanesProps} lanes={lanes} onSelect={onSelect} onMove={onMove} />);
-    fireEvent.click(screen.getByRole('button', { name: /^JO-0001/ }));
+    fireEvent.click(screen.getAllByRole('button', { name: /0001/ })[0]!);
     expect(onSelect).toHaveBeenCalledWith(jobs[0]);
     const target = screen.getByText('Counter').closest('div[class*="border-b"]')!;
     fireEvent.drop(target, { dataTransfer: { getData: () => '0001' } });

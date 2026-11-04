@@ -62,11 +62,12 @@ function Logo({ platform, href }: { platform: string; href?: string }) {
         R
       </span>
       <span className="whitespace-nowrap text-[15px] font-semibold leading-5 group-hover/lg:text-muted">{platform}</span>
+      {href ? <span className="sr-only">, Home</span> : null}
     </>
   );
   const cls = 'group/lg inline-flex min-h-[var(--tap)] min-w-0 items-center gap-2.5 rounded-[6px] px-2.5 text-text';
   return href ? (
-    <a className={cls} href={href} aria-label={`${platform}, Home`}>
+    <a className={cls} href={href}>
       {inner}
     </a>
   ) : (
@@ -118,7 +119,6 @@ export function StockerFrame({
               <a
                 href={account.href}
                 aria-current={account.current ? 'page' : undefined}
-                aria-label={`Account, ${account.name}`}
                 className="group/who grid h-[var(--tap)] w-[var(--tap)] flex-none place-items-center rounded-full text-text"
               >
                 <span
@@ -130,6 +130,7 @@ export function StockerFrame({
                 >
                   {account.initials}
                 </span>
+                <span className="sr-only">Account, {account.name}</span>
               </a>
             ) : null}
           </div>

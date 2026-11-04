@@ -137,7 +137,7 @@ export function WeekCalendar<J extends TodayJob = TodayJob>({
             </>
           );
           return onPickDay && days.length > 1
-            ? <button key={c.date} type="button" onClick={() => onPickDay(c.date)} aria-label={`${dowShort(c.date)} ${dayNum(c.date)}, ${sub}. Open this day`} className="flex min-w-0 flex-col items-start justify-center gap-0.5 border-l border-rule px-3 text-left hover:bg-raised focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent">{inner}</button>
+            ? <button key={c.date} type="button" onClick={() => onPickDay(c.date)} className="flex min-w-0 flex-col items-start justify-center gap-0.5 border-l border-rule px-3 text-left hover:bg-raised focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent">{inner}</button>
             : <div key={c.date} className="flex min-w-0 flex-col items-start justify-center gap-0.5 border-l border-rule px-3">{inner}</div>;
         })}
       </div>

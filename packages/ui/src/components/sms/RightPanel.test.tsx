@@ -45,7 +45,7 @@ describe('Right panel', () => {
   it('the collapsed rail opens the panel on the chosen tab', () => {
     let open = false; let tab = 'needs';
     render(<SidePanelLayout open={false} onOpenChange={(o) => { open = o; }} jobs={jobs} replied={{}} tab="needs" onTabChange={(t) => { tab = t; }} onOpenJob={noop} onOpenInquiry={noop}><p>Page</p></SidePanelLayout>);
-    fireEvent.click(screen.getByLabelText(/Inquiries, show the list/));
+    fireEvent.click(screen.getByRole('button', { name: /Inquiries/ }));
     expect(open).toBe(true); expect(tab).toBe('inquiries');
   });
 

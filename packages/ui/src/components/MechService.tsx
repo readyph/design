@@ -59,7 +59,7 @@ export function ServiceItemRow({ name, done, readOnly, parts, onToggle }: { name
   return (
     <NotifyItem
       leading={<span className="pt-px"><CheckMark on={done} /></span>} title={name} wrap detail={needs.length ? `Needs: ${needs.join(', ')}` : undefined}
-      tag={done ? 'Done' : 'To do'} tagTone={done ? 'ok' : 'neutral'} dense checked={done} disabled={readOnly} ariaLabel={name} onOpen={onToggle} className={done ? 'opacity-70' : undefined}
+      tag={done ? 'Done' : 'To do'} tagTone={done ? 'ok' : 'neutral'} dense checked={done} disabled={readOnly} onOpen={onToggle} className={done ? 'opacity-70' : undefined}
     />
   );
 }

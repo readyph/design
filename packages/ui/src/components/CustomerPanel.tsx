@@ -54,7 +54,7 @@ export function CustomerPanel({ customer, pool, onOpenService, onNewService, onC
         <ul>
           {list.map((j) => (
             <li key={j.id} className="border-b border-rule last:border-b-0">
-              <button type="button" onClick={() => onOpenService(j)} className="-mx-2 flex w-[calc(100%+16px)] min-h-11 items-center gap-3 rounded-control px-2 py-1.5 text-left transition-colors duration-150 motion-reduce:transition-none hover:bg-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent" aria-label={`Open ${j.number}, ${serviceTitle(j)}`}>
+              <button type="button" onClick={() => onOpenService(j)} className="-mx-2 flex w-[calc(100%+16px)] min-h-11 items-center gap-3 rounded-control px-2 py-1.5 text-left transition-colors duration-150 motion-reduce:transition-none hover:bg-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent">
                 <span className="min-w-0 flex-1"><span className="block truncate text-[13px] font-medium" title={serviceTitle(j)}>{serviceTitle(j)}</span><span className="block text-[12px] text-muted"><span className="font-mono">{j.number}</span> · {shortDate(j.statusSince)}</span></span>
                 <span className="flex-none text-right"><span className="block text-[13px] tabular-nums">{peso(jobTotal(j))}</span><span className="inline-flex items-center gap-1.5 text-[12px] text-muted"><span aria-hidden className={cn('size-1.5 rounded-full', STATUS_SHORT[j.status].dot)} />{STATUS_SHORT[j.status].label}</span></span>
               </button>

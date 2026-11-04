@@ -27,7 +27,7 @@ describe('ServicesTable', () => {
   it('opens a row and toggles selection', async () => {
     const onOpen = vi.fn(); const onToggle = vi.fn();
     render(table({ onOpen, onToggle }));
-    await userEvent.click(screen.getByRole('button', { name: new RegExp(`^Open ${rows[0].number}`) }));
+    await userEvent.click(screen.getByRole('button', { name: new RegExp(`^${rows[0].number}`) }));
     expect(onOpen).toHaveBeenCalledWith(rows[0]);
     await userEvent.click(screen.getByRole('checkbox', { name: `Select ${rows[0].number}` }));
     expect(onToggle).toHaveBeenCalledWith(rows[0].id);

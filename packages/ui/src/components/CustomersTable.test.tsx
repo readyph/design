@@ -24,3 +24,13 @@ describe('CustomersTable', () => {
     expect(r.violations).toEqual([]);
   });
 });
+
+describe('CustomerCard accessible name', () => {
+  it('is its visible content (no aria-label), so label-content-name-mismatch cannot occur', () => {
+    const rec = recOf(customers[0]!, jobs);
+    const { container } = render(<CustomerCard rec={rec} onOpen={() => {}} />);
+    const btn = container.querySelector('button')!;
+    expect(btn.hasAttribute('aria-label')).toBe(false);
+    expect(btn.textContent).toContain(rec.customer.name);
+  });
+});

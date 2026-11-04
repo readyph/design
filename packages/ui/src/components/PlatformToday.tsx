@@ -390,10 +390,9 @@ export const PlatformToday = forwardRef<HTMLElement, PlatformTodayProps>(functio
                 variant="text"
                 rightIcon={ArrowRight}
                 onClick={l.onViewAll}
-                aria-label={`${l.viewAllLabel ?? 'View all'} ${l.total} in ${l.title}`}
                 className="-ml-1.5 mt-1.5 !h-7 !gap-1.5 !px-1.5 !text-ui !font-medium text-accent hover:bg-raised"
               >
-                {l.viewAllLabel ?? 'View all'}<span className="tabular-nums">{l.total}</span>
+                {l.viewAllLabel ?? 'View all'}{' '}<span className="tabular-nums">{l.total}</span><span className="sr-only"> in {l.title}</span>
               </Button>
             ) : null}
           </div>

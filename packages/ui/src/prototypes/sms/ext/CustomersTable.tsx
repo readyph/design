@@ -105,7 +105,7 @@ export function CustomerCard({ rec, query, onOpen }: { rec: CustomerRec; query?:
   const c = rec.customer;
   return (
     <div className={cn('-mx-2 border-b border-rule px-2', rec.stuck > 0 && 'bg-warn-bg')}>
-      <button type="button" onClick={() => onOpen(rec)} aria-label={`${c.name}, ${c.vehicles.map((v) => v.plate).join(', ')}`} className="block min-h-11 w-full py-2.5 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent">
+      <button type="button" onClick={() => onOpen(rec)} className="block min-h-11 w-full py-2.5 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent">
         <span className="flex items-baseline justify-between gap-3"><span className="min-w-0 break-words text-[15px] font-medium leading-5">{c.name}</span><span className="flex-none text-[12px] tabular-nums text-muted">{rec.last ? shortDate(rec.last) : 'new'}</span></span>
         <span className="mt-0.5 block text-[13px] tabular-nums text-muted">{c.phone}</span>
         <span className="mt-1 block"><CarsCell vehicles={c.vehicles} match={query} /></span>

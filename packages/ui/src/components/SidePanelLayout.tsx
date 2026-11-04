@@ -61,10 +61,11 @@ export function SidePanelLayout({
           {!limited && !loading && (
             <div className="flex flex-col items-center gap-4">
               {stats.map((r) => (
-                <button key={r.id} type="button" onClick={() => { onStatSelect(r.id); onOpenChange(true); }} aria-label={`${r.count} ${r.label}, show the list`}
+                <button key={r.id} type="button" onClick={() => { onStatSelect(r.id); onOpenChange(true); }}
                   className="flex flex-col items-center gap-2 rounded-control px-1 py-1 text-[12px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent">
-                  <span className={cn('min-w-6 rounded-chip px-1.5 text-center text-[12px] font-semibold leading-5 tabular-nums', r.accent ? 'bg-accent text-accent-ink' : 'border border-control text-text')}>{r.count}</span>
+                  <span className={cn('min-w-6 rounded-chip px-1.5 text-center text-[12px] font-semibold leading-5 tabular-nums', r.accent ? 'bg-accent text-accent-ink' : 'border border-control text-text')}>{r.count}</span>{' '}
                   <span className="text-muted [writing-mode:vertical-rl]">{r.label}</span>
+                  <span className="sr-only">, show the list</span>
                 </button>
               ))}
             </div>

@@ -291,7 +291,7 @@ describe('Notifications', () => {
   });
   it('template editor: variable chips insert, preview and SMS count update, reset restores', async () => {
     await mount({ initialSection: 'notifications' });
-    await click(screen.getByRole('button', { name: 'Edit text: Payment receipt' }));
+    await click(screen.getByRole('button', { name: /Payment receipt/ }));
     const d = within(screen.getByRole('dialog', { name: /Payment receipt/ }));
     const ta = screen.getByLabelText('Message') as HTMLTextAreaElement;
     await type('Message', 'Hi {customer}');
@@ -306,7 +306,7 @@ describe('Notifications', () => {
     await type('Message', 'Thanks {customer}, got {amount}');
     await click(d.getByRole('button', { name: 'Save text' }));
     expect(screen.getByText('Payment receipt text saved.')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Edit text: Payment receipt' }).textContent).toMatch(/Edited/);
+    expect(screen.getByRole('button', { name: /Payment receipt/ }).textContent).toMatch(/Edited/);
   });
   it('warns when Quote ready has no link', async () => {
     await mount({ initialOverlay: 'template' });

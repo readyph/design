@@ -55,7 +55,7 @@ describe('JobRow on plain data', () => {
     const onOpen = vi.fn(); const onAction = vi.fn();
     const { container } = render(<JobRow job={job({ status: 'TODO' })} env={env} view={view} mechanics={mechanics} density={density} onOpen={onOpen} onAction={onAction} />);
     expect(screen.getAllByText(/JO-1/).length).toBeGreaterThan(0);
-    fireEvent.click(screen.getByRole('button', { name: /JO-1, Toyota Vios 2018, Ana Cruz/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^JO-1/ }));
     expect(onOpen).toHaveBeenCalledOnce();
     fireEvent.click(screen.getByRole('button', { name: 'Start work' }));
     expect(onAction).toHaveBeenCalledWith(expect.objectContaining({ id: 'a' }), expect.objectContaining({ label: 'Start work' }));
@@ -66,7 +66,8 @@ describe('JobRow on plain data', () => {
 describe('PartChip on plain data', () => {
   it('reads stock and the other branch from env, and is axe clean', async () => {
     const { container } = render(<PartChip product={pump} env={env} inventoryName="Dela Cruz Parts" readOnly />);
-    expect(screen.getByRole('button').getAttribute('aria-label')).toBe('Bendix Water pump, Vios, out of stock. Resolve');
+    expect(screen.getByRole('button').hasAttribute('aria-label')).toBe(false);
+    expect(screen.getByRole('button', { name: /pump/i })).toBeTruthy();
     expect(screen.getByText(/3 at Cubao/)).toBeTruthy();
     expect((await axe.run(container, axeOpts)).violations).toEqual([]);
   });
@@ -83,7 +84,7 @@ describe('SidePanelLayout on plain data', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Hide the side panel' }));
     expect(onOpenChange).toHaveBeenCalledWith(false);
     rerender(<SidePanelLayout open={false} onOpenChange={onOpenChange} stats={stats} onStatSelect={onStatSelect} hint="2 need you" feed={() => null}>Page</SidePanelLayout>);
-    fireEvent.click(screen.getByRole('button', { name: '2 Needs you, show the list' }));
+    fireEvent.click(screen.getByRole('button', { name: /^2\s*Needs you/ }));
     expect(onStatSelect).toHaveBeenCalledWith('needs');
     expect(onOpenChange).toHaveBeenCalledWith(true);
   });

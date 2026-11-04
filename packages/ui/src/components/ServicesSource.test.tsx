@@ -35,7 +35,7 @@ describe('Services list with host data', () => {
     expect(screen.getByText('₱2,150 unpaid')).toBeTruthy();
     unmount();
     render(wrap(<ServiceCard job={j} onOpen={noop} />));
-    expect(screen.getByRole('button', { name: /JO-9001, Mazda CX-5 2021, Lorna Bautista/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /JO-9001/ })).toBeTruthy();
     expect(screen.getByText('1 part short')).toBeTruthy();
   });
   it('does not throw on a customer or product the host did not supply', () => {

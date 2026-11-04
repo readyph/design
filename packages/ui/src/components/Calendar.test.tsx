@@ -77,8 +77,9 @@ describe('data-agnostic calendar (an API job the studio fixtures do not know)', 
 
   it('renders a job unknown to the fixtures, with its own clock, hours, closed day and shift', () => {
     render(<WeekCalendar {...props} days={['2031-03-10', '2031-03-11']} items={[item]} mechanicId="u-77" />);
-    const card = screen.getByRole('button', { name: /SV-9001, ZZZ 999, Walk-in Lopez/ });
-    expect(card.getAttribute('aria-label')).toContain('Nilo Cruz');
+    const card = screen.getByRole('button', { name: /SV-9001/ });
+    expect(card.textContent).toContain('SV-9001');
+    expect(card.textContent).toContain('Nilo Cruz');
     expect(screen.getAllByText('Holiday').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Off shift').length).toBe(2);
     expect(screen.getByText('13:30')).toBeTruthy();

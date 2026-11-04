@@ -21,7 +21,7 @@ describe('MechFrame', () => {
     const back = vi.fn(); const prof = vi.fn();
     render(<MechFrame title="Job" me={me} onProfile={prof} crumbs={[{ label: 'Services', onClick: back }, { label: 'Job' }]}>x</MechFrame>);
     fireEvent.click(screen.getByRole('button', { name: 'Back to Services' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Profile' }));
+    fireEvent.click(screen.getByRole('button', { name: /Profile/ }));
     expect(back).toHaveBeenCalledOnce(); expect(prof).toHaveBeenCalledOnce();
   });
   it('shows status as icon plus word', () => {

@@ -42,7 +42,6 @@ export const PartChip = forwardRef<HTMLButtonElement, PartChipProps>(function Pa
       ref={ref}
       type="button"
       disabled={readOnly}
-      aria-label={`${product.name}, ${st === 'on_order' ? 'on order' : st === 'in' ? 'in stock' : st === 'low' ? 'low stock' : 'out of stock'}. Resolve`}
       className={cn('inline-flex h-7 max-w-full items-center gap-1.5 rounded-control border border-control bg-surface px-2 text-[12px] text-text hover:bg-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent disabled:cursor-default disabled:hover:bg-surface', className)}
     >
       <PlatformLogo decorative name={inventoryName} size={14} />
