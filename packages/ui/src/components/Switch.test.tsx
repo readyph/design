@@ -96,9 +96,11 @@ describe('Switch look settings', () => {
     render(<Switch look="settings" aria-label="Email" />);
     const sw = screen.getByRole('switch', { name: 'Email' });
     expect(sw.getAttribute('aria-checked')).toBe('false');
-    expect(sw.textContent).toBe('Off');
+    // The visible On/Off word is CSS content (no DOM text), so the accessible name stays the label (WCAG 2.5.3).
+    expect(sw.textContent).toBe('');
+    expect(sw.querySelector('[data-switch-word]')?.getAttribute('data-switch-word')).toBe('off');
     fireEvent.keyDown(sw, { key: 'Enter' });
     expect(sw.getAttribute('aria-checked')).toBe('true');
-    expect(sw.textContent).toBe('On');
+    expect(sw.querySelector('[data-switch-word]')?.getAttribute('data-switch-word')).toBe('on');
   });
 });

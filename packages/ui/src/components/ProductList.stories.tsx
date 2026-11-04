@@ -37,7 +37,7 @@ const meta: Meta<typeof ProductList> = {
 export default meta;
 type Story = StoryObj<typeof ProductList>;
 
-const add = (n: number, name: string, sup: string) => ({ kind: 'add' as const, label: `Add ${n} to order list`, ariaLabel: `Add ${n} ${name} to the ${sup} order list` });
+const add = (n: number, name: string, sup: string) => ({ kind: 'add' as const, label: `Add ${n} to order list`, ariaLabel: `${name}, ${sup}` });
 
 const out: ProductRowData[] = [
   { id: 'p1', name: 'Fleetguard LF3349 oil filter', sku: 'FG-LF3349', category: 'Filters', where: 'Aisle 2', onHand: 0, unit: 'pc', reorder: 6, status: 'out', statusLine: 'No order yet', supplier: 'Autopro', action: add(12, 'Fleetguard LF3349 oil filter', 'Autopro') },
@@ -69,8 +69,8 @@ function Page({ loading, stale }: { loading?: boolean; stale?: boolean }) {
         summary="1 list to proceed, 1 draft PO, not sent"
         onOpenAll={() => {}}
         lists={[
-          { id: 'a', name: 'Autopro order list', meta: '3 products · not a PO yet', ariaLabel: 'Autopro order list, still to proceed, 3 products' },
-          { id: 'b', name: 'Petron order list', meta: '1 product · PO-0224 draft, not sent', ariaLabel: 'Petron draft PO-0224, not sent, 1 product' },
+          { id: 'a', name: 'Autopro order list', meta: '3 products · not a PO yet', ariaLabel: 'Autopro Distribution' },
+          { id: 'b', name: 'Petron order list', meta: '1 product · PO-0224 draft, not sent', ariaLabel: 'Petron Direct' },
         ]}
       />
       <div className="flex flex-col gap-6">

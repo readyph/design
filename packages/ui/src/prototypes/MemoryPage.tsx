@@ -1252,7 +1252,7 @@ export function MemoryPage(props: MemoryPageProps) {
                         <li key={r.key} className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-6 border-t border-rule py-4 first:border-t-0 @max-[520px]/sheet:grid-cols-1">
                           <b className={cn("col-start-1 row-start-1 self-center text-[14px] font-medium leading-5", !r.on && "text-muted")}>{r.name}</b>
                           <p className={cn("m-0 col-span-full mt-1 max-w-[640px] justify-self-start text-[13px] leading-5", r.on ? "text-text" : "text-muted")}>{r.about}</p>
-                          <button type="button" aria-label={`Try it: ${r.ask}`} onClick={() => openTry(undefined, `any#${r.src}|r:${r.key}`)} className={cn("col-span-full mt-2 -ml-2 inline-flex min-h-[26px] max-w-full items-center gap-1.5 justify-self-start rounded-chip px-2 py-0.5 text-left text-[12px] leading-[18px] text-muted hover:bg-raised hover:text-text max-[640px]:min-h-9", focusRing)}>
+                          <button type="button" aria-label={`Try “${r.ask}”`} onClick={() => openTry(undefined, `any#${r.src}|r:${r.key}`)} className={cn("col-span-full mt-2 -ml-2 inline-flex min-h-[26px] max-w-full items-center gap-1.5 justify-self-start rounded-chip px-2 py-0.5 text-left text-[12px] leading-[18px] text-muted hover:bg-raised hover:text-text max-[640px]:min-h-9", focusRing)}>
                             <ChatCircle size={14} aria-hidden className="shrink-0" />
                             <span className="[overflow-wrap:anywhere]">Try “{r.ask}”</span>
                           </button>

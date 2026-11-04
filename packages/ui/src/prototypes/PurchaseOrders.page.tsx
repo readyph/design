@@ -131,7 +131,7 @@ export function PurchaseOrdersPage({ tenant = 'a', as = 'manager', state, pos, a
   /* 172-184 rowHTML */
   const row = (o: PurchaseOrder, grp: boolean) => {
     const [verb, kind] = actionOf(o);
-    const aria = kind === 'receive' ? `Receive ${nm(o)}` : o.status === 'DRAFT' ? `Open the paper for ${nm(o)}` : `View ${nm(o)}`;
+    const aria = `${verb} ${nm(o)}`; // starts with the visible verb (WCAG 2.5.3)
     const stk = M.stKey(o);
     return (
       <div key={o.no} data-row={o.no} className={cn('group/row relative -mx-2 grid min-h-[72px] w-[calc(100%+16px)] cursor-pointer items-center gap-x-6 border-t border-rule bg-clip-padding px-2 py-3.5 text-left text-text first:border-t-transparent hover:bg-raised max-[1099px]:gap-x-4 max-[640px]:mx-0 max-[640px]:min-h-0 max-[640px]:w-full max-[640px]:px-0 max-[640px]:py-4', money ? COLS_M : COLS_C, PHONE_COLS)}>

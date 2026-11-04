@@ -58,7 +58,7 @@ export function RequestList({ items, selectedId, onOpen, empty }: RequestListPro
         const j = jobOf(i.jobId); const m = senderOf(i); const sel = i.id === selectedId;
         return (
           <li
-            key={i.id} role="option" aria-selected={sel} aria-label={labelOf(i)} tabIndex={n === focusIdx ? 0 : -1}
+            key={i.id} role="option" aria-selected={sel} tabIndex={n === focusIdx ? 0 : -1}
             onClick={() => onOpen(i.id)}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(i.id); } }}
             className={cn('mx-1 mb-1 flex cursor-pointer gap-3 rounded-control px-3 py-3 text-left transition-colors duration-150 ease-out hover:bg-raised motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent', sel ? 'bg-raised' : i.needsYou && 'bg-warn-bg hover:bg-raised')}
@@ -66,7 +66,7 @@ export function RequestList({ items, selectedId, onOpen, empty }: RequestListPro
             <PersonAvatar personId={m.id} name={m.name} initials={m.initials} size={32} decorative className="mt-0.5" />
             <span className="min-w-0 flex-1">
               <span className="flex items-start gap-2">
-                {i.unread && <span aria-hidden data-unread className="mt-[7px] size-2 flex-none rounded-full bg-accent" />}
+                {i.unread && <><span aria-hidden data-unread className="mt-[7px] size-2 flex-none rounded-full bg-accent" /><span className="sr-only">Unread, </span></>}
                 <span className="min-w-0 flex-1 truncate text-[14px] font-medium leading-5"><span className="font-mono text-[13px]">{j ? vehicleOf(j).plate : 'Shop use'}</span><span className="text-muted"> · </span>{j ? serviceTitle(j) : i.title}</span>
                 <span className="flex-none whitespace-nowrap text-[13px] tabular-nums text-muted">{agoWord(i.at)}</span>
               </span>

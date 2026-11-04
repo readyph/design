@@ -200,6 +200,7 @@ function BarcodeGlyph() {
 /* ---------- the list ---------- */
 
 export type ProductAction =
+  /** `ariaLabel` is an extra cue read after the visible `label` (sr-only), e.g. the product and supplier; never a replacement for it (WCAG 2.5.3). */
   | { kind: 'add'; label: string; ariaLabel: string; onAdd?: () => void }
   | { kind: 'receive' | 'view'; label: string };
 
@@ -309,7 +310,6 @@ export function ProductRow({ product: p, selected = false, onSelectedChange, onO
       <span className="flex justify-end justify-self-end text-right max-[640px]:justify-self-start max-[640px]:[grid-area:pv]">
         {a.kind === 'add' ? (
           <ActionLink
-            aria-label={a.ariaLabel}
             onClick={(e) => {
               e.stopPropagation();
               a.onAdd?.();
@@ -318,6 +318,7 @@ export function ProductRow({ product: p, selected = false, onSelectedChange, onO
           >
             <Plus aria-hidden size={13} />
             <span className="whitespace-normal leading-[17px]">{a.label}</span>
+            <span className="sr-only">, {a.ariaLabel}</span>
           </ActionLink>
         ) : (
           <span className="inline-flex min-h-7 items-center gap-[3px] whitespace-nowrap text-[13px] font-semibold leading-[18px] text-accent group-hover/row:text-lk-hover max-[640px]:min-h-10">
@@ -657,6 +658,7 @@ export interface ProductOrderListLine {
   name: string;
   /** "3 products · not a PO yet". */
   meta: string;
+  /** Extra cue read after the visible name and meta (sr-only), e.g. the full supplier name. */
   ariaLabel: string;
   href?: string;
   onOpen?: () => void;
@@ -717,16 +719,17 @@ export function OrderListsStrip({ lists, summary, error = false, onOpenAll, clas
                 <>
                   <span className="min-w-0 font-semibold text-accent group-hover/oll:text-lk-hover">{l.name}</span>
                   <span className="text-right text-[13px] text-muted max-[640px]:col-start-1 max-[640px]:row-start-2 max-[640px]:text-left">{l.meta}</span>
+                  <span className="sr-only">, {l.ariaLabel}</span>
                   <CaretRight aria-hidden size={12} weight="bold" className="justify-self-end text-accent transition-transform group-hover/oll:translate-x-0.5 group-hover/oll:text-lk-hover max-[640px]:col-start-2 max-[640px]:row-[1/3] max-[640px]:row-start-1" />
                 </>
               );
               const cls = cn('group/oll', olRow, ring, 'focus-visible:rounded-none focus-visible:outline-offset-[-2px]');
               return l.href ? (
-                <a key={l.id} href={l.href} aria-label={l.ariaLabel} onClick={l.onOpen} className={cls}>
+                <a key={l.id} href={l.href} onClick={l.onOpen} className={cls}>
                   {inner}
                 </a>
               ) : (
-                <button key={l.id} type="button" aria-label={l.ariaLabel} onClick={l.onOpen} className={cn(cls, 'cursor-pointer border-x-0 border-b-0 bg-transparent text-left')}>
+                <button key={l.id} type="button" onClick={l.onOpen} className={cn(cls, 'cursor-pointer border-x-0 border-b-0 bg-transparent text-left')}>
                   {inner}
                 </button>
               );

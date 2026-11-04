@@ -79,7 +79,7 @@ describe('Platforms page', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     const place = screen.getByRole('region', { name: 'Your platforms' });
     await user.click(within(place).getAllByRole('button', { name: 'Add' }).at(-1)!);
-    expect((screen.getByRole('radio', { name: 'POS' }) as HTMLInputElement).getAttribute('aria-checked')).toBe('true');
+    expect((screen.getByRole('radio', { name: /^POS/ }) as HTMLInputElement).getAttribute('aria-checked')).toBe('true');
   });
 
   it('opens the marketplace with Leda\'s note when Leda proposes a POS', async () => {

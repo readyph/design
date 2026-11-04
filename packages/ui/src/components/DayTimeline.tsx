@@ -43,7 +43,7 @@ export interface DayTimelineChip {
   /** Chip content: compose with ChipTime, ChipId, ChipSub, ChipWord and plain spans. */
   children: ReactNode;
   onSelect?: () => void;
-  /** Full reason for assistive tech, e.g. the icon-only PO-0221 chip. */
+  /** Full reason for assistive tech, e.g. the icon-only PO-0221 chip. Rendered sr-only after the visible text so the accessible name still contains it (WCAG 2.5.3). */
   "aria-label"?: string;
   /** Tooltip text; should end with the action, e.g. "Click to open ›". */
   tip?: string;
@@ -173,7 +173,6 @@ function Chip({
       ref={chipRef}
       data-tone={tone}
       title={chip.tip}
-      aria-label={chip["aria-label"]}
       onClick={chip.onSelect}
       className={cn(chipBase, tone && chipTone[tone], pos)}
     >
@@ -194,6 +193,7 @@ function Chip({
         </span>
       ) : null}
       {chip.children}
+      {chip["aria-label"] && <span className="sr-only">, {chip["aria-label"]}</span>}
       <CaretRight
         size={12}
         aria-hidden="true"

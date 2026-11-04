@@ -281,7 +281,6 @@ export function OrderListsPanel({
               disabled={busy}
               onClick={() => go(g)}
               rightIcon={gBusy ? undefined : ArrowRight}
-              aria-label={g.poNo ? `Open ${g.poNo} for ${g.supplier}` : `Proceed with the ${g.supplier} order list`}
               className={cn('h-9 flex-none', btnPhone)}
             >
               {gBusy ? (
@@ -290,9 +289,15 @@ export function OrderListsPanel({
                   Creating…
                 </>
               ) : g.poNo ? (
-                `Open ${g.poNo}`
+                <>
+                  Open {g.poNo}
+                  <span className="sr-only"> for {g.supplier}</span>
+                </>
               ) : (
-                'Proceed'
+                <>
+                  Proceed
+                  <span className="sr-only"> with the {g.supplier} order list</span>
+                </>
               )}
             </Button>
           </div>

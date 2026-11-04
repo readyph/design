@@ -119,8 +119,7 @@ function Tile({ item, categoryLabel, checked, tabStop, onPick, onInstall, onKeyD
       role="radio"
       aria-checked={checked}
       aria-disabled={soon || undefined}
-      aria-labelledby={`${id}-n`}
-      aria-describedby={`${id}-c ${id}-d ${id}-io${owned > 0 ? ` ${id}-h` : ''}${soon ? ` ${id}-s` : ''}`}
+      // No aria-labelledby/-describedby: the name comes from the tile's own visible lines, so it always contains the visible text (WCAG 2.5.3).
       tabIndex={soon ? -1 : tabStop ? 0 : -1}
       data-state={checked ? 'checked' : 'unchecked'}
       onClick={soon ? undefined : onPick}

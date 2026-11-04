@@ -61,9 +61,9 @@ describe('Tabs keepInView', () => {
 });
 
 describe('TownMap hqLabel', () => {
-  it('names the HQ button with the page\'s own words', () => {
+  it('reads the page\'s own words after the visible HQ text', () => {
     render(<TownMap platforms={[{ id: 'hq', name: 'Company', kind: 'HQ', status: 'ACTIVE', hq: true }]} hqLabel={() => 'Company, 6 of 7 topics on'} />);
-    expect(screen.getByRole('button', { name: 'Company, 6 of 7 topics on' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Company.*, Company, 6 of 7 topics on$/ })).toBeTruthy();
   });
   it('keeps the default HQ name', () => {
     render(<TownMap platforms={[{ id: 'hq', name: 'Company', kind: 'HQ', status: 'ACTIVE', hq: true }]} />);
