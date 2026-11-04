@@ -121,7 +121,7 @@ export function RequestsPage({ state = 'ready', scenario = 'default', initialSel
         ) : (
           <RequestList
             items={shown} selectedId={selectedId} onOpen={open}
-            empty={<div className="p-4"><EmptyState align="start" icon={Tray} title={items.length === 0 || (items.every((i) => !i.needsYou) && filter === 'needs') ? 'All clear' : 'Nothing matches'} description={filter === 'needs' && !q ? 'Nothing is waiting for you. New requests from mechanics show up here.' : q ? `No request matches "${q}".` : `No ${FILTER_LABEL[filter].toLowerCase()} from mechanics yet.`} /></div>}
+            empty={<div className="p-4"><EmptyState align="start" icon={Tray} title={items.length === 0 || (items.every((i) => !i.needsYou) && filter === 'needs') ? 'All clear' : 'Nothing matches'} description={filter === 'needs' && !q ? 'Nothing is waiting for you. New requests from mechanics show up here.' : q ? `No request matches "${q}".` : filter === 'all' ? 'Nothing from mechanics yet.' : `No ${FILTER_LABEL[filter].toLowerCase()} from mechanics yet.`} /></div>}
           />
         )}
       </div>
