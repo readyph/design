@@ -21,8 +21,18 @@ export function StatusChip({ status }: { status: ItemStatus }) {
   return <Badge tone={STATUS_TONE[status]} dot={status === 'Needs you'}>{status}</Badge>;
 }
 
+/** The accessible name carries every visible word of the row (WCAG 2.5.3 label-in-name), in reading order, plus the "Unread" cue the dot only shows. */
 export const labelOf = (i: RequestListItem) =>
-  [i.unread ? 'Unread' : '', i.plate ?? 'Shop use', i.title, KIND_LABEL[i.kind], i.status === 'Seen' ? '' : i.status, i.sender.short].filter(Boolean).join(', ');
+  [
+    i.unread ? 'Unread' : '',
+    i.plate ?? 'Shop use',
+    i.jobTitle ?? i.title,
+    i.kind === 'part' || i.kind === 'problem' ? `${i.title}: ${i.preview}` : i.preview,
+    i.agoLabel,
+    KIND_LABEL[i.kind],
+    i.status === 'Seen' ? '' : i.status,
+    i.sender.short,
+  ].filter(Boolean).join(', ');
 
 export interface RequestListProps {
   /** Rows with plain display fields (plate, jobTitle, sender, agoLabel). Nothing is looked up from studio data. */
