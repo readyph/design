@@ -34,4 +34,25 @@ describe('TrackingLink', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Make new link' }));
     expect([onCopy.mock.calls.length, onSendSms.mock.calls.length, onRegenerate.mock.calls.length]).toEqual([1, 1, 1]);
   });
+  const props = { jobNumber: 'JO-0001', plate: 'ABC 123', customerName: 'Maria Santos', customerPhone: '0917 000 0000', url: 'https://track.example/t/xyz', expiryDays: 7, onRegenerate: () => {} };
+  it('shows the preview badge for the stand-in QR and hides it for a real QR', async () => {
+    const { unmount } = render(<TrackingLink {...props} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Show QR' }));
+    expect(screen.getByText('Preview only: not scannable')).toBeTruthy();
+    unmount();
+    render(<TrackingLink {...props} qr={<img alt="Real QR" />} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Show QR' }));
+    expect(screen.getByAltText('Real QR')).toBeTruthy();
+    expect(screen.queryByText('Preview only: not scannable')).toBeNull();
+  });
+  it('shows Send by SMS only with onSendSms, and does not say simulated', async () => {
+    const { unmount } = render(<TrackingLink {...props} />);
+    expect(screen.queryByRole('button', { name: 'Send by SMS' })).toBeNull();
+    expect(screen.getAllByRole('button').filter((b) => b.textContent === 'Copy link' || b.textContent === 'Show QR')).toHaveLength(2);
+    unmount();
+    const { container } = render(<TrackingLink {...props} onSendSms={() => {}} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Send by SMS' }));
+    expect(container.querySelector('[role=status]')!.textContent).toBe('Sent by SMS to Maria Santos, 0917 000 0000.');
+    expect(container.textContent).not.toMatch(/simulated/);
+  });
 });
