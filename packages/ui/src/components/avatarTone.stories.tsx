@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { PersonAvatar } from './avatarTone';
 
 const meta: Meta<typeof PersonAvatar> = {
-  title: 'Components/Data/Person avatar',
+  title: 'Components/Identity/Person avatar',
   component: PersonAvatar,
   tags: ['autodocs'],
   args: { personId: 'm-jun', name: 'Jun Reyes', size: 32 },

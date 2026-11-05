@@ -7,7 +7,7 @@ import { Select } from './Select';
 
 /** [For Review] RDY-273. Prototype only: stories are not exported from the package. */
 const meta: Meta = {
-  title: 'Components/Overlays/Panel modal',
+  title: 'Components/Portal/Panel modal',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;

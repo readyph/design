@@ -3,7 +3,7 @@ import { TodayDialogs } from './TodayDialogs';
 import { jobs, products } from './data';
 
 const meta: Meta<typeof TodayDialogs> = {
-  title: 'Components/Overlays/Today dialogs',
+  title: 'Components/SMS/Today dialogs',
   component: TodayDialogs,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' },

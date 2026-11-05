@@ -1,0 +1,30 @@
+import { Meta, Canvas } from '@storybook/blocks';
+import * as Stories from './Team.stories';
+
+<Meta of={Stories} />
+
+# Team
+
+<Canvas of={Stories.Live} />
+
+## Purpose
+Who has access to what: **everyone, and a role on each platform**.
+
+## Layout
+- Place column: the map, where they work, roles by kind, Portal access, seats.
+- Sheet: everyone as a table with a role per platform, grouped Waiting to join / Suspended / People.
+- Person subpage: roles on each platform, Portal access, account, password, activity, suspend.
+- Invite dialog: create, then send now or later.
+- Leda: ask bar, palette, conversation, and her drafted invite.
+
+## Guards
+Own access, the creator, the last admin, suspend, and reset-link rules show their reason instead of acting.
+
+## What is here
+- Page and person: `Live`, `Person`, `PersonAdmin`, `PersonCreator`, `InviteDialog`.
+- Who is looking: `Solo`, `NoAccess`, `Manager`.
+- Scale: `OverSeats`, `ThreePlatforms`, `ManyPlatforms`.
+- States: `Loading`, `ErrorState`. Phone: `Phone`, `PhonePerson`.
+
+## Notes
+RDY-258. Prototype only: stories are not exported from the package. Uses the shared `PortalFrame`. Data: `Team.data.ts`.

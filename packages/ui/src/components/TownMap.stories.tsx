@@ -5,7 +5,7 @@ import { Button } from './Button';
 import { books, cafe, eight, eightLinks, longName, stockroom, three, threeLinks, two, twoLinks, autoWorks, hq } from './TownMap.data';
 
 const meta: Meta<typeof TownMap> = {
-  title: 'Components/Data display/Platform map',
+  title: 'Components/Portal/Platform map',
   component: TownMap,
   tags: ['autodocs'],
   parameters: {

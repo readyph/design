@@ -10,7 +10,7 @@ const products: BarcodeProduct[] = [
 ];
 
 const meta: Meta<typeof BarcodeSheet> = {
-  title: 'Components/Overlays/BarcodeSheet',
+  title: 'Components/Inventory/BarcodeSheet',
   component: BarcodeSheet,
   tags: ['autodocs'],
   parameters: {

@@ -5,7 +5,7 @@ import { WizardBlock } from './WizardBlock';
 import { customers, type Customer } from './sms/data';
 
 const meta: Meta<typeof CustomerField> = {
-  title: 'Components/Forms/Customer field',
+  title: 'Components/SMS/Customer field',
   component: CustomerField,
   tags: ['autodocs'],
   decorators: [(Story) => <div className="min-h-[440px] w-[720px] max-w-full"><Story /></div>],

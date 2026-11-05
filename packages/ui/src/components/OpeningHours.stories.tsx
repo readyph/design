@@ -23,7 +23,7 @@ function Harness(props: Partial<OpeningHoursProps> & { initial?: OpeningHoursVal
 }
 
 const meta: Meta<typeof OpeningHours> = {
-  title: 'Components/Forms/OpeningHours',
+  title: 'Components/Portal/OpeningHours',
   component: OpeningHours,
   tags: ['autodocs'],
   parameters: {

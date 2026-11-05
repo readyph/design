@@ -28,7 +28,7 @@ const draft: OrderListGroup = {
 };
 
 const meta: Meta<typeof OrderListsPanel> = {
-  title: 'Components/Overlays/OrderListsPanel',
+  title: 'Components/Inventory/OrderListsPanel',
   component: OrderListsPanel,
   tags: ['autodocs'],
   parameters: {

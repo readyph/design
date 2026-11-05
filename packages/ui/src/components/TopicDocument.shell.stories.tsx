@@ -6,7 +6,7 @@ import { TopicDocumentPage, dataTopic } from './TopicDocument.sample';
 
 /** RDY-288 (C28). Prototype only: stories are not exported from the package. A topic's page in the real PlatformShell sheet. */
 const meta: Meta = {
-  title: 'Components/Data display/Topic document in the shell',
+  title: 'Components/Portal/Topic document in the shell',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;

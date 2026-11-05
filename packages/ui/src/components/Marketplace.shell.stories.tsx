@@ -7,7 +7,7 @@ import { LedaNote } from './LedaNote';
 
 /** RDY-280. Prototype only: stories are not exported from the package. */
 const meta: Meta = {
-  title: 'Components/Overlays/Marketplace in the shell',
+  title: 'Components/Portal/Marketplace in the shell',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;

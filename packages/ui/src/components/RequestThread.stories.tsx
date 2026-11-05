@@ -9,7 +9,7 @@ const item = itemsOf(getMech()).find((i) => i.kind === 'question')!;
 const job = jobOf(item.jobId);
 
 const meta: Meta<typeof RequestThread> = {
-  title: 'Components/Data/Request thread',
+  title: 'Components/SMS/Request thread',
   component: RequestThread,
   tags: ['autodocs'],
   decorators: [(Story) => <div className="w-[520px] max-w-full bg-surface"><Story /></div>],

@@ -3,7 +3,7 @@ import { StockLevelBar } from './StockLevelBar';
 import { StockerFacts, StockerId, StockerRow, StockerStatus } from './StockerRow';
 
 const meta: Meta<typeof StockerRow> = {
-  title: 'Components/Lists/StockerRow',
+  title: 'Components/Inventory/StockerRow',
   component: StockerRow,
   tags: ['autodocs'],
   parameters: {

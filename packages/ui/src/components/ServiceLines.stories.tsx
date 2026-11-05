@@ -5,7 +5,7 @@ import { typeIdFor } from './sms/catalogue';
 import { customLine, linesFromType, partLine, type WizardLine } from './sms/wizardModel';
 
 const meta: Meta<typeof LinesTable> = {
-  title: 'Components/Forms/Service lines',
+  title: 'Components/SMS/Service lines',
   component: LinesTable,
   tags: ['autodocs'],
   decorators: [(Story) => <div className="min-h-[360px] w-[760px] max-w-full"><Story /></div>],

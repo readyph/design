@@ -14,7 +14,7 @@ import {
 } from './ProductList';
 
 const meta: Meta<typeof ProductList> = {
-  title: 'Components/Data/ProductList',
+  title: 'Components/Inventory/ProductList',
   component: ProductList,
   parameters: {
     layout: 'padded',

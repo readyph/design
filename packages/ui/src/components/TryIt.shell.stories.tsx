@@ -8,7 +8,7 @@ import { Switch } from './Switch';
 
 /** RDY-290 (C30). Prototype only: stories are not exported from the package. Try it in the real PlatformShell. */
 const meta: Meta = {
-  title: 'Components/Overlays/Try it in the shell',
+  title: 'Components/Portal/Try it in the shell',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;

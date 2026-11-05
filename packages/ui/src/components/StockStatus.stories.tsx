@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { StockStatus } from './StockStatus';
 
 const meta: Meta<typeof StockStatus> = {
-  title: 'Components/Feedback/StockStatus',
+  title: 'Components/Inventory/StockStatus',
   component: StockStatus,
   tags: ['autodocs'],
   args: { status: 'low' },

@@ -1,0 +1,23 @@
+import { Meta, Canvas } from '@storybook/blocks';
+import * as Stories from './InventoryStocker.stories';
+
+<Meta of={Stories} />
+
+# Stocker
+
+<Canvas of={Stories.Frame} />
+
+## Purpose
+The phone app for the person on the shelves (handover 2.7). This is slice 1/6 (a): **the shared frame, tabs, steps and states**. Later slices add Find, Stock in, Stock out and Account.
+
+## Layout
+Header with the Portal R mark and platform name, account initials, a back chevron, the step line, the page title and lead; a scrolling main area; a pinned footer. Opens at phone width (390; `FrameSmall` is 360).
+
+## What is here
+`Frame`, `FrameSmall`, `Loading` (`?state=loading`), `ErrorState` (`?state=error`), `Empty` (`?state=empty`), `Quiet` (`?state=quiet`), `TenantB`.
+
+## Built from
+The Stocker frame (I17) under Components / Inventory.
+
+## Notes
+[For Review] RDY-429. Source: inventory-home FINAL `stocker.html`, `stocker.css`, `stocker.js` 1-195. Data: `Stocker.data.ts` (dumped from `data.js` and `receiving.js`). Prototype only: stories are not exported from the package.

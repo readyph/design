@@ -3,7 +3,7 @@ import { TopicDocument } from './TopicDocument';
 import { TopicDocumentPage, dataTopic, lockedTopic } from './TopicDocument.sample';
 
 const meta: Meta = {
-  title: 'Components/Data display/Topic document',
+  title: 'Components/Portal/Topic document',
   tags: ['autodocs'],
   parameters: {
     layout: 'fullscreen',

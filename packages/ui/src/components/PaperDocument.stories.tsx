@@ -6,7 +6,7 @@ import { PlatformLogo } from './PlatformLogo';
 import { QuantityStepper } from './QuantityStepper';
 
 const meta: Meta<typeof PaperDocument> = {
-  title: 'Components/Data/PaperDocument',
+  title: 'Components/Inventory/PaperDocument',
   component: PaperDocument,
   parameters: {
     layout: 'padded',

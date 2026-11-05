@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { RequestStepper } from './RequestStepper';
 
 const meta: Meta<typeof RequestStepper> = {
-  title: 'Components/Data/Request stepper',
+  title: 'Components/SMS/Request stepper',
   component: RequestStepper,
   tags: ['autodocs'],
   decorators: [(Story) => <div className="w-[420px] max-w-full"><Story /></div>],

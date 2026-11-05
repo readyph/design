@@ -4,7 +4,7 @@ import { StockerFrame } from './StockerFrame';
 const account = { initials: 'MR', name: 'Mara Reyes', href: '#' };
 
 const meta: Meta<typeof StockerFrame> = {
-  title: 'Components/Layout/StockerFrame',
+  title: 'Components/Inventory/StockerFrame',
   component: StockerFrame,
   tags: ['autodocs'],
   parameters: {

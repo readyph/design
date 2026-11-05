@@ -5,7 +5,7 @@ import { autoWorks, cafe, jobs, stock, stockroom } from './PlatformToday.data';
 
 /** RDY-284 (C24). Prototype only: stories are not exported from the package. Blocks in the real PlatformShell place column. */
 const meta: Meta = {
-  title: 'Components/Data display/Today blocks',
+  title: 'Components/Portal/Today blocks',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;

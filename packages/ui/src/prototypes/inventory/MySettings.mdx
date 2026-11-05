@@ -1,0 +1,24 @@
+import { Meta, Canvas } from '@storybook/blocks';
+import * as Stories from './MySettings.stories';
+
+<Meta of={Stories} />
+
+# My settings
+
+<Canvas of={Stories.Profile} />
+
+## Purpose
+A person's own settings in Inventory (handover 2.8): the Settings modal (I20) over the Inventory frame (I23). Tabs: **Profile, Display, Notifications, Leda, Account**.
+
+## Changed here, and not
+Not changed here by design: name, role, photo (initials only) and password. The Home sheet behind the modal is RDY-403 and stays empty here.
+
+## What is here
+- Manager: `Profile`, `Display`, `Notifications`, `Leda`, `Account`.
+- Other roles: clerk (`ClerkProfile`, `ClerkNotifications`, `ClerkLeda`) and owner (`OwnerProfile`, `OwnerNotifications`, `OwnerLeda`). Other tenant: `TenantB`.
+- Saving: `UnsavedChanges`, `DiscardQuestion`, `FailedSave`.
+- States: `Loading`, `LoadError`.
+- Phone sheet (390): `PhoneSheet`, `PhoneNotifications`.
+
+## Notes
+[For Review] RDY-409. Source: inventory-home FINAL `settings.js`, `settings-modal.js`, `settings-modal.css`, `my-settings.css`. Prototype only: stories are not exported from the package.

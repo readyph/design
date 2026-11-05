@@ -5,7 +5,7 @@ import { TopicLibraryPage } from './TopicLibrary.sample';
 
 /** RDY-287 (C27). Prototype only: stories are not exported from the package. Memory, Topics tab, in the real PlatformShell sheet. */
 const meta: Meta = {
-  title: 'Components/Data display/Topic library in the shell',
+  title: 'Components/Portal/Topic library in the shell',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;

@@ -6,7 +6,7 @@ import { Toaster } from './toast/Toaster';
 import { items as sampleItems, longItems, longScopes, manyItems, replies as sampleReplies } from './BlockedQuestions.data';
 
 const meta: Meta<typeof BlockedQuestions> = {
-  title: 'Components/Data display/Blocked questions',
+  title: 'Components/Portal/Blocked questions',
   component: BlockedQuestions,
   tags: ['autodocs'],
   parameters: {

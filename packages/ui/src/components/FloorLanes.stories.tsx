@@ -5,7 +5,7 @@ import { jobs, type Job } from './sms/data';
 import { applyOverrides, lanesFor, type LaneId } from './sms/floorModel';
 
 const meta: Meta<typeof FloorLanes> = {
-  title: 'Components/Data/Floor lanes',
+  title: 'Components/SMS/Floor lanes',
   component: FloorLanes,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' },

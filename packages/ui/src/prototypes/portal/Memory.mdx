@@ -1,0 +1,23 @@
+import { Meta, Canvas } from '@storybook/blocks';
+import * as Stories from './Memory.stories';
+
+<Meta of={Stories} />
+
+# Memory
+
+<Canvas of={Stories.Topics} />
+
+## Purpose
+What Leda knows about the business, and what she is still waiting to be told. Memory has three tabs: **Topics**, **Blocked questions** and **Customer requests**. A topic opens as its own page, and **Try it** runs a question against what Leda knows, as a modal.
+
+## What is here
+- Topics: `Topics`, `Grid`, `Search`, `SearchNoMatch`, `CompanyFolder`, `FilterOff`, `TopicPage`, `TopicDataSource`.
+- Other tabs: `BlockedQuestions`, `CustomerRequests`. Overlay: `TryIt`.
+- States: `Loading`, `ErrorState`, `Empty`, `Full`, `ReadOnly`.
+- Phone: `PhoneFolders`, `PhoneRequests`, `PhoneTopics`.
+
+## Shell
+Runs in the real `PlatformShell` through the shared `PortalFrame`. The parts it composes are under Components / Portal: Topic library, Topic document, Blocked questions and Try it.
+
+## Notes
+RDY-259 (handover 2.5). Prototype only: stories are not exported from the package. Data: `Memory.proto.data.ts`.

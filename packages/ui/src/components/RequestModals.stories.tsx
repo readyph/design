@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { DeclineModal, DismissModal, QuoteModal } from './RequestModals';
 
 const meta: Meta = {
-  title: 'Components/Overlays/Request modals',
+  title: 'Components/SMS/Request modals',
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' },
 };

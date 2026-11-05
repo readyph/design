@@ -1,0 +1,21 @@
+import { Meta, Canvas } from '@storybook/blocks';
+import * as Stories from './InventoryHome.stories';
+
+<Meta of={Stories} />
+
+# Home
+
+<Canvas of={Stories.TimelineToday} />
+
+## Purpose
+Inventory's front page. This is slice 2/5 (b): **the timeline panel**. Five lanes: To do by, Stock in, Stock out, Expiring, and Stock left with the runway.
+
+## Built from
+The Day timeline (I6) and the Stock runway (I5), both under Components / Inventory.
+
+## What is here
+- Range: `TimelineToday`, `TimelineThisWeek`, `RunwayToday`, `RunwayThisWeek`.
+- States: `ErrorLane` (`?state=error`), `EmptyFirstRun` (`?state=empty`), `Loading`.
+
+## Notes
+[For Review] RDY-422. Later slices append to this page. Source: inventory-home FINAL `home.js` 131-447 and the `home.html` CSS. Data: `InventoryHome.data.ts`. Prototype only: stories are not exported from the package.

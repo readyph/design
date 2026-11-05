@@ -5,7 +5,7 @@ import { Button } from './Button';
 import { defaultSwitches, sampleAbouts, sampleAsk, sampleQuestions } from './TryIt.sample';
 
 const meta: Meta<typeof TryIt> = {
-  title: 'Components/Overlays/Try it',
+  title: 'Components/Portal/Try it',
   component: TryIt,
   tags: ['autodocs'],
   parameters: {

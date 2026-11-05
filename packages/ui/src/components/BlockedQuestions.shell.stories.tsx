@@ -10,7 +10,7 @@ import { Toaster } from './toast/Toaster';
 
 /** RDY-289. Prototype only: stories are not exported from the package. The platform's Leda & Memory tab in the real PlatformShell. The Memory tab is in Memory (RDY-259). */
 const meta: Meta = {
-  title: 'Components/Data display/Blocked questions in the shell',
+  title: 'Components/Portal/Blocked questions in the shell',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;

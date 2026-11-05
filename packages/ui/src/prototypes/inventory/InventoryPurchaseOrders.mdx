@@ -1,0 +1,24 @@
+import { Meta, Canvas } from '@storybook/blocks';
+import * as Stories from './InventoryPurchaseOrders.stories';
+
+<Meta of={Stories} />
+
+# Purchase orders
+
+<Canvas of={Stories.List} />
+
+## Purpose
+What have we ordered, what is late, and what actually arrived. Three views: the **list**, **one order**, and **Receive** (what actually arrived), plus the short-delivery block when a delivery comes in short.
+
+## What is here
+- List: `List`, `GroupBySupplier` (`&group=sup`), `NoPurchaseOrders`, `NoResults`, `Late`, `Quiet`, `EmptyStore`.
+- One order, by state: `OrderDraft`, `OrderSent`, `OrderPartIn`, `OrderReceived`, `OrderCancelled`, `OrderCameInShort`, `OrderUndoReceipt`, `OrderLate`. Confirmations: `OrderDraftSendQuestion`, `OrderSentCancelQuestion`.
+- Receive: `Receive`, `ReceivePartIn`, `PickDeliveryStory`.
+- Short delivery: `ShortPartIn`, `ShortClosed`, `ShortAcceptForm`, `ShortDisputeForm`, `ShortAccepted`, `ShortDisputed`, `ShortRecordAnswer`, `ShortResolvedCredit`, `ShortError`.
+- Who is looking: `Clerk`, `OrderClerk`, `OrderClerkDraft`, `ReceiveClerk`, `ShortClerk` (tell the manager), `ShortClerkTold`. Other tenant: `TenantB`, `OrderTenantB`, `ReceiveTenantB`.
+- States: `Loading`, `ErrorState`.
+- Print: `PrintOrder` (one order on one page), `PrintReceive` (Receive as a tally sheet).
+- Phone 390: `Phone`, `OrderPhone`, `ReceivePhone`, `ShortPhone`.
+
+## Notes
+[For Review] RDY-426 (handover 2.5), with slices RDY-427 (one order), RDY-428 (Receive and the short-delivery block) and RDY-406 (final assembly: quiet, empty store and print). Source: inventory-home FINAL `purchase-orders.html`, `purchase-orders.js`, `purchase-orders.css`. Data: `PurchaseOrders.data.ts` (RDY-425). Prototype only: stories are not exported from the package.

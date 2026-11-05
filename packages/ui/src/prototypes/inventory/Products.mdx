@@ -1,0 +1,26 @@
+import { Meta, Canvas } from '@storybook/blocks';
+import * as Stories from './Products.stories';
+
+<Meta of={Stories} />
+
+# Products
+
+<Canvas of={Stories.List} />
+
+## Purpose
+Everything we stock, and where each product stands (handover 2.2): the **list** and the **product detail**.
+
+## What is here
+- List and detail: `List`, `Detail` (`?open=p07`), `DetailRate`, `SupplierChosen`.
+- Panels and dialogs: `AdjustStock`, `AddToOrderList`, `AddProduct`, `OrderLists` (the Order lists panel, I8).
+- States: `Loading`, `ErrorState`, `Down` (list did not load), `Empty`, `Quiet`, `NoResults`, `Degraded`, `NeedsSetup`.
+- Who is looking: `Clerk`, `ClerkDetail`. Other tenant: `TenantB`.
+- Phone 390: `Phone`, `PhoneDetail`.
+
+## Known gaps
+- The workshop starts "Needs setting up" empty (requests come from the stocker flow), so `NeedsSetup` seeds one illustrative request.
+- Setup navigates by hash only: there is no Setup page.
+- The palette's "Prototype states" group (`products.js` 676-681) is not built. The stories are those states.
+
+## Notes
+[For Review] RDY-404. Source: inventory-home FINAL `products.html`, `products.js`, `products.css`. Data: `Products.data.ts` (dumped from `data.js`, `stock.js`, `orders.js`). Prototype only: stories are not exported from the package.

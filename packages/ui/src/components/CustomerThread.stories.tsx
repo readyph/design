@@ -9,7 +9,7 @@ const job = jobOf(SCENARIO_JOB['in progress'])!;
 const seeded = (t: ThreadSeed) => { seedTracker('in progress', t); return getMech(); };
 
 const meta: Meta<typeof CustomerThread> = {
-  title: 'Components/Data/Customer thread',
+  title: 'Components/SMS/Customer thread',
   component: CustomerThread,
   tags: ['autodocs'],
   decorators: [(Story) => <div className="w-[520px] max-w-full bg-surface"><Story /></div>],

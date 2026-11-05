@@ -1,0 +1,29 @@
+import { Meta, Canvas } from '@storybook/blocks';
+import * as Stories from './Platform.stories';
+
+<Meta of={Stories} />
+
+# Platform
+
+<Canvas of={Stories.GeneralInfo} />
+
+## Purpose
+One platform's detail, and setting up a new one. The map (this building focused, its partners lit) and a vertical tab list sit in the place column; the sheet holds five sections: **General info, System, Team, Connections, Leda & Memory**.
+
+## Drafts
+Each section has its own draft. An edited tab shows "Unsaved", with Save and Discard, and the browser's "Leave site?" prompt guards leaving.
+
+## Onboarding
+Steps run from `?new=<kind>` and resume at `?id=…&setup=N`. Stories: `OnboardingStart`, `OnboardingInventory`, `OnboardingFromLeda`, `OnboardingResume`.
+
+## What is here
+- Sections: `GeneralInfo`, `GeneralUnsaved`, `System`, `SystemInventory`, `Team`, `Connections`, `ConnectionsFlashed`, `LedaAndMemory`.
+- Disconnect: `DisconnectBlocked` (the platform still shares data) and `DisconnectConfirm`.
+- States: `Loading`, `ErrorState`. Phone: `Phone`, `PhoneLeda`.
+
+## Known gaps
+- No text field or form-field component existed when this was built: the page uses a local labelled input with the same classes as Blocked questions.
+- The Team tab here is people-by-role, composed from Select and rows. The per-platform role picker (C22) is person-by-platform, so the two differ.
+
+## Notes
+RDY-257 (handover 2.3). Prototype only: not exported from the package. Composed only from @readyph/ui parts.

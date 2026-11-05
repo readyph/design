@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { StockLevelBar } from './StockLevelBar';
 
 const meta: Meta<typeof StockLevelBar> = {
-  title: 'Components/Feedback/StockLevelBar',
+  title: 'Components/Inventory/StockLevelBar',
   component: StockLevelBar,
   tags: ['autodocs'],
   args: { onHand: 6, reorder: 10, variant: 'row' },

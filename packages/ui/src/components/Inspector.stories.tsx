@@ -10,7 +10,7 @@ const unpaidPickup = jobs.find((j) => j.status === 'FOR_PICKUP' && money.balance
 const paidPickup = jobs.find((j) => j.status === 'FOR_PICKUP' && money.balance(j) <= 0) ?? jobs.find((j) => j.status === 'FOR_PICKUP') as Job;
 
 const meta: Meta<typeof Inspector> = {
-  title: 'Components/Data/Inspector',
+  title: 'Components/SMS/Inspector',
   component: Inspector,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' },

@@ -23,7 +23,7 @@ const week = {
 };
 
 const meta: Meta<typeof StockRunway> = {
-  title: 'Components/Charts/StockRunway',
+  title: 'Components/Inventory/StockRunway',
   component: StockRunway,
   tags: ['autodocs'],
   args: { name: 'Oil filter', hours, now, points, caption: 'Projected from booked jobs, as of 9:12 AM' },

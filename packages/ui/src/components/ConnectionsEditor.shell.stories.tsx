@@ -5,7 +5,7 @@ import { LedaNote } from './LedaNote';
 
 /** RDY-286 (C26). Prototype only: stories are not exported from the package. Connections tab in the real PlatformShell sheet. */
 const meta: Meta = {
-  title: 'Components/Lists/ConnectionsEditor in the shell',
+  title: 'Components/Portal/ConnectionsEditor in the shell',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;
