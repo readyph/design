@@ -2,6 +2,7 @@ import { useId, useRef, useState } from 'react';
 import { Camera, ImageSquare, Warning, X } from '@phosphor-icons/react';
 import { Button } from './Button';
 import { Switch } from './Switch';
+import { Checkbox } from './Checkbox';
 import { cn } from '../utils/cn';
 import { manager, type Mechanic } from './sms/data';
 import { answerQuestion } from './sms/mechActions';
@@ -44,12 +45,12 @@ export function FeedPostRow({ post, me, flash }: { post: FeedPost; me: Mechanic;
   );
 }
 
-type PostFn = (text: string, photos: number, isProblem: boolean, files?: File[]) => void;
+type PostFn = (text: string, photos: number, isProblem: boolean, files?: File[], internal?: boolean) => void;
 
 /** The composer: ONE unit (the one bordered surface, as it is an input). Top row avatar + borderless textarea; photo chips; hairline; footer with ghost Photo + the Found a problem Switch on the left and a small primary Post on the right. All 12px inner padding. */
-function Composer({ me, onPost, onPickPhotos }: { me: Mechanic; onPost: PostFn; onPickPhotos?: (files: File[]) => void }) {
+function Composer({ me, onPost, onPickPhotos, allowInternal }: { me: Mechanic; onPost: PostFn; onPickPhotos?: (files: File[]) => void; allowInternal?: boolean }) {
   const [text, setText] = useState(''); const [photos, setPhotos] = useState(0); const [files, setFiles] = useState<File[]>([]);
-  const fileRef = useRef<HTMLInputElement>(null); const [problem, setProblem] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null); const [problem, setProblem] = useState(false); const [internal, setInternal] = useState(false);
   const sid = useId();
   const ready = !!text.trim() || photos > 0;
   const drop = (i: number) => { setPhotos((n) => n - 1); setFiles((f) => f.filter((_, k) => k !== i)); };
@@ -71,6 +72,7 @@ function Composer({ me, onPost, onPickPhotos }: { me: Mechanic; onPost: PostFn; 
         </ul>
       )}
       {problem && <p className="px-3 pb-2 pl-[56px] text-[12px] leading-4 text-warn-ink">This will be sent to your manager as a problem.</p>}
+      {allowInternal && <div className="px-3 pb-2 pl-[56px]"><Checkbox label="Internal (customer cannot see it)" checked={internal} onChange={(e) => setInternal(e.target.checked)} /></div>}
       <hr className={cn('border-0 border-t', problem ? 'border-warn-ink' : 'border-rule')} />
       <div className="flex items-center justify-between gap-2 p-3">
         <div className="flex min-w-0 items-center gap-1 -ml-2">
@@ -81,17 +83,17 @@ function Composer({ me, onPost, onPickPhotos }: { me: Mechanic; onPost: PostFn; 
             <Warning size={16} weight={problem ? 'fill' : 'regular'} aria-hidden /><span aria-hidden className="min-[360px]:hidden">Problem</span><span aria-hidden className="hidden min-[360px]:inline">Found a problem</span>
           </label>
         </div>
-        <Button variant="primary" disabled={!ready} onClick={() => { onPost(text.trim(), photos, problem, files); setText(''); setPhotos(0); setFiles([]); setProblem(false); }}>Post</Button>
+        <Button variant="primary" disabled={!ready} onClick={() => { if (allowInternal) onPost(text.trim(), photos, problem, files, internal); else onPost(text.trim(), photos, problem, files); setInternal(false); setText(''); setPhotos(0); setFiles([]); setProblem(false); }}>Post</Button>
       </div>
     </div>
   );
 }
 
 /** The Updates feed, Facebook order in Today's look: one composer on top, then the work activity log as panel rows, newest first. */
-export function MechFeed({ posts, me, readOnly, onPost, onPickPhotos, flash }: { posts: FeedPost[]; me: Mechanic; readOnly: boolean; onPost: PostFn; /** Real photo selection: when given, Photo opens the file picker and the chosen files are passed here and to `onPost` as its 4th argument. */ onPickPhotos?: (files: File[]) => void; flash: (m: string) => void }) {
+export function MechFeed({ posts, me, readOnly, onPost, onPickPhotos, allowInternal, flash }: { posts: FeedPost[]; me: Mechanic; readOnly: boolean; onPost: PostFn; /** Real photo selection: when given, Photo opens the file picker and the chosen files are passed here and to `onPost` as its 4th argument. */ onPickPhotos?: (files: File[]) => void; /** Shows an unchecked "Internal (customer cannot see it)" checkbox; its value is the 5th argument of `onPost`. Hidden when not set. */ allowInternal?: boolean; flash: (m: string) => void }) {
   return (
     <MechSection title="Updates" count={posts.length}>
-      {!readOnly && <div className="pb-3"><Composer me={me} onPickPhotos={onPickPhotos} onPost={(t, n, pr, f) => { onPost(t, n, pr, f); flash(pr ? 'Sent to your manager.' : 'Posted.'); }} /></div>}
+      {!readOnly && <div className="pb-3"><Composer me={me} onPickPhotos={onPickPhotos} allowInternal={allowInternal} onPost={(t, n, pr, f, i) => { if (allowInternal) onPost(t, n, pr, f, i); else onPost(t, n, pr, f); flash(pr ? 'Sent to your manager.' : 'Posted.'); }} /></div>}
       {posts.length ? <ul className="-mx-4">{posts.map((p) => <FeedPostRow key={p.id} post={p} me={me} flash={flash} />)}</ul> : <p className="py-2 text-[14px] text-muted">No updates yet. Add a note or photo, or ask your manager.</p>}
     </MechSection>
   );

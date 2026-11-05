@@ -24,11 +24,11 @@ export interface TrackingLinkProps {
   expiryDays: number;
   /** Called after the link is copied. */
   onCopy?: () => void;
-  /** Called when the manager sends the link by SMS. The page sends it; the block only reports it. */
+  /** Called when the manager sends the link by SMS. The page sends it and reports the real outcome; the block only calls it. Omit it and the Send by SMS button is not shown. */
   onSendSms?: () => void;
   /** Called when the manager confirms "Make new link". The page issues the new token and passes the new `url`; the old link stops working. */
   onRegenerate: () => void;
-  /** Replace the stand-in QR with a real one (an image or QR component). */
+  /** A real QR (an image or QR component). When set, the "Preview only" badge is not shown. */
   qr?: ReactNode;
   className?: string;
 }
@@ -45,7 +45,7 @@ export function TrackingLink({ jobNumber, plate, customerName, customerPhone, ur
   useEffect(() => () => clearTimeout(timer.current), []);
   const say = (m: string) => { setNote(m); clearTimeout(timer.current); timer.current = setTimeout(() => setNote(''), 4000); };
   const copy = () => { try { void navigator.clipboard?.writeText(url).catch(() => undefined); } catch { /* clipboard blocked: the link stays selectable */ } say('Link copied.'); toast.info('Tracking link copied.'); onCopy?.(); };
-  const sms = () => { onSendSms?.(); say(`Sent by SMS to ${customerName}, ${customerPhone} (simulated).`); toast.info(`Tracking link sent by SMS to ${customerName.split(' ')[0]} (simulated).`); };
+  const sms = () => { onSendSms?.(); say(`Sent by SMS to ${customerName}, ${customerPhone}.`); toast.info(`Tracking link sent by SMS to ${customerName.split(' ')[0]}.`); };
   return (
     <div className={cn('text-[13px] leading-5', className)} data-tracking-link>
       <p className="text-muted">The customer follows this service without logging in. Works until {expiryDays} days after pick-up.</p>
@@ -53,7 +53,7 @@ export function TrackingLink({ jobNumber, plate, customerName, customerPhone, ur
       <div className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(104px,1fr))] gap-2">
         <Button variant="secondary" fullWidth leftIcon={Copy} onClick={copy}>Copy link</Button>
         <Button variant="secondary" fullWidth leftIcon={QrCode} onClick={() => setQr(true)}>Show QR</Button>
-        <Button variant="secondary" fullWidth leftIcon={ChatText} onClick={sms}>Send by SMS</Button>
+        {onSendSms && <Button variant="secondary" fullWidth leftIcon={ChatText} onClick={sms}>Send by SMS</Button>}
       </div>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3 border-t border-rule pt-2">
         <span className="text-muted">Shared by mistake?</span>
@@ -68,7 +68,7 @@ export function TrackingLink({ jobNumber, plate, customerName, customerPhone, ur
           </div>
           <p className="text-[14px] font-medium">Scan to follow your service</p>
           <p className="max-w-full break-all text-center font-mono text-[12px] leading-5 text-muted">{url}</p>
-          <Badge tone="neutral">Preview only: not scannable</Badge>
+          {!qrNode && <Badge tone="neutral">Preview only: not scannable</Badge>}
         </div>
       </Modal>
       <ConfirmDialog open={ask} onOpenChange={setAsk} title="Make a new link?" description={`The old link and QR for ${jobNumber} stop working at once. Share the new one with ${customerName.split(' ')[0]}.`} confirmLabel="Make new link" cancelLabel="Keep this link" icon={ArrowsClockwise}
