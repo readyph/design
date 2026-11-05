@@ -11,7 +11,7 @@ export function LiveTrackingLink({ job, className }: { job: Pick<Job, 'id' | 'nu
   return (
     <TrackingLink
       jobNumber={job.number} plate={vehicleOf(full).plate} customerName={c.name} customerPhone={c.phone}
-      url={urlOf(token)} qrValue={token} expiryDays={LINK_EXPIRY_DAYS} onRegenerate={() => { regenerateLink(job.id); }} className={className}
+      url={urlOf(token)} qrValue={token} expiryDays={LINK_EXPIRY_DAYS} onSendSms={() => {}} onRegenerate={() => { regenerateLink(job.id); }} className={className}
     />
   );
 }
