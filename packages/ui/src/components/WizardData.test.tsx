@@ -1,4 +1,4 @@
-import { render, cleanup, act, screen } from '@testing-library/react';
+import { render, cleanup, act, screen, fireEvent } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { LinesTable } from './ServiceLines';
 import { CustomerField } from './CustomerField';
@@ -46,6 +46,17 @@ describe('WizardData (RDY-618)', () => {
     const box = screen.getByRole('combobox');
     await act(async () => { box.focus(); });
     expect(screen.queryByText('Maricel Reyes')).toBeNull();
+  });
+
+  it('CustomerField reports typing, lifts the 6-row cap and shows the total note', async () => {
+    const many = Array.from({ length: 12 }, (_, i) => ({ id: `z${i}`, name: `Zenaida Extra ${i}`, phone: `0917000${1000 + i}`, vehicles: [], since: '2026-01-01' }));
+    const onSearch = vi.fn();
+    render(<WizardDataProvider data={{ ...host, customers: many, onSearchCustomers: onSearch, customerListLimit: 50, customersTotal: 40 }}><CustomerField customer={null} vehicleId="" onPick={() => {}} onClear={() => {}} /></WizardDataProvider>);
+    const box = screen.getByRole('combobox');
+    await act(async () => { box.focus(); fireEvent.change(box, { target: { value: 'Zenaida' } }); });
+    expect(onSearch).toHaveBeenCalledWith('Zenaida');
+    expect(screen.getAllByRole('option').length).toBe(13); // 12 matches + the add-new row
+    expect(screen.getByRole('status').textContent).toBe('Showing 12 of 40, type a name, phone or plate to narrow.');
   });
 
   it('useServiceFlow uses host numbers and saves a new customer through the host', async () => {

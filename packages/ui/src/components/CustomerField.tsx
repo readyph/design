@@ -45,11 +45,12 @@ let seq = 0;
  * Revision 6: renders the same label/value rows as the review block (Customer: name · phone + Change; Car: plate and make/model, a select when there are several, + Add car). No boxed cards.
  */
 export function CustomerField({ customer, vehicleId, onPick, onClear, initialQuery = '', onAddingChange }: CustomerFieldProps) {
-  const { customers } = useWizardData();
+  const { customers, onSearchCustomers, customerListLimit = 6, customersTotal, customersNote } = useWizardData();
   const [q, setQ] = useState(initialQuery);
   const [adding, setAdding] = useState(false);
   const [d, setD] = useState<Draft>(EMPTY);
   const [car, setCarDraft] = useState<Car | null>(null);
+  const search = (v: string) => { setQ(v); onSearchCustomers?.(v); };
   const setAddingBoth = (b: boolean) => { setAdding(b); onAddingChange?.(b); };
 
   const matches = useMemo(() => {
@@ -60,8 +61,8 @@ export function CustomerField({ customer, vehicleId, onPick, onClear, initialQue
       const byPerson = c.name.toLowerCase().includes(t) || (digits.length >= 3 && c.phone.replace(/\D/g, '').includes(digits));
       const byPlate = c.vehicles.find((v) => norm(v.plate).includes(norm(t)));
       return byPerson || byPlate ? [{ c, v: byPlate ?? c.vehicles[0] }] : [];
-    }).slice(0, 6);
-  }, [q, customers]);
+    }).slice(0, customerListLimit);
+  }, [q, customers, customerListLimit]);
 
   const options: ComboOption[] = matches.map(({ c, v }) => ({
     id: `${c.id}|${v?.id ?? ''}`,
@@ -77,6 +78,8 @@ export function CustomerField({ customer, vehicleId, onPick, onClear, initialQue
     ),
   }));
 
+  const shown = matches.length;
+  const note = customersNote ?? (customersTotal !== undefined && customersTotal > shown ? `Showing ${shown} of ${customersTotal}, type a name, phone or plate to narrow.` : null);
   const startAdd = () => { setD(prefill(q)); setAddingBoth(true); };
   const set = (k: 'name' | 'phone') => (e: React.ChangeEvent<HTMLInputElement>) => setD((x) => ({ ...x, [k]: e.target.value }));
   const setCar = (id: string, k: keyof Car) => (e: React.ChangeEvent<HTMLInputElement>) => setD((x) => ({ ...x, cars: x.cars.map((c) => (c.id === id ? { ...c, [k]: k === 'plate' ? e.target.value.toUpperCase() : e.target.value } : c)) }));
@@ -183,7 +186,7 @@ export function CustomerField({ customer, vehicleId, onPick, onClear, initialQue
         <div className="flex items-start gap-4">
           <Combobox
             className="min-w-0 flex-1" hideLabel search
-            label="Find customer by name, phone or plate" value={q} onValueChange={setQ} options={options} onSelect={(id) => { const [cid, vid] = id.split('|'); const c = customers.find((x) => x.id === cid); if (c) onPick(c, vid!); }}
+            label="Find customer by name, phone or plate" value={q} onValueChange={search} hint={note ? <span role="status">{note}</span> : undefined} options={options} onSelect={(id) => { const [cid, vid] = id.split('|'); const c = customers.find((x) => x.id === cid); if (c) onPick(c, vid!); }}
             placeholder="Find customer by name, phone or plate" heading={typed ? undefined : 'Recent customers'} emptyText={typed ? 'No customer matches that.' : 'No customers yet.'}
             action={{ id: 'add', label: typed ? `Add new customer ${typed}` : 'Add new customer', onSelect: startAdd, node: (<><Plus size={16} weight="bold" aria-hidden className="flex-none" /><span className="min-w-0 truncate">New customer{typed ? <span className="font-normal text-muted"> · &ldquo;{typed}&rdquo;</span> : null}</span></>) }}
           />
