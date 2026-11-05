@@ -37,4 +37,21 @@ describe('MechFeed with real data', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Post' }));
     expect(onPost).toHaveBeenCalledWith('', 1, false, [file]);
   });
+  it('hides the internal checkbox unless allowed', () => {
+    render(<MechFeed posts={[]} me={me} readOnly={false} onPost={() => {}} flash={() => {}} />);
+    expect(screen.queryByLabelText('Internal (customer cannot see it)')).toBeNull();
+  });
+  it('passes the internal flag (off by default) as the 5th onPost argument', () => {
+    const onPost = vi.fn();
+    render(<MechFeed posts={[]} me={me} readOnly={false} allowInternal onPost={onPost} flash={() => {}} />);
+    const box = screen.getByLabelText('Internal (customer cannot see it)') as HTMLInputElement;
+    expect(box.checked).toBe(false);
+    fireEvent.change(screen.getByLabelText('Add a note or photo'), { target: { value: 'a' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Post' }));
+    expect(onPost).toHaveBeenLastCalledWith('a', 0, false, [], false);
+    fireEvent.change(screen.getByLabelText('Add a note or photo'), { target: { value: 'b' } });
+    fireEvent.click(box);
+    fireEvent.click(screen.getByRole('button', { name: 'Post' }));
+    expect(onPost).toHaveBeenLastCalledWith('b', 0, false, [], true);
+  });
 });
