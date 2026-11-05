@@ -144,6 +144,7 @@ export * from './components/LedaPanel';
 export * from './components/QrStandIn';
 export * from './components/CustomerChat';
 export * from './components/TrackerBlocks';
+export * from './components/trackerView';
 export * from './components/MechService';
 export * from './components/MechFeed';
 export * from './components/MechParts';

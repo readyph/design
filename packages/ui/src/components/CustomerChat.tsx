@@ -2,21 +2,17 @@ import { Fragment, useEffect, useRef, useState } from 'react';
 import { ArrowDown, ChatCircleText, PaperPlaneRight } from '@phosphor-icons/react';
 import { Button } from './Button';
 import { cn } from '../utils/cn';
-import { HOURS, NOW_MIN, TODAY, branch, manager, type Job } from './sms/data';
-import { hm } from './sms/floorModel';
-import { type MechState } from './sms/mechModel';
-import { fmt12 } from './sms/settingsModel';
-import { customerUnread, markCustomerRead, sendCustomerMessage, threadOf } from './sms/trackerModel';
+import type { TrackerChatManager, TrackerChatMessage, TrackerChatShop } from './trackerView';
 import { PersonAvatar } from './avatarTone';
 import { MechSection } from './MechFrame';
 
-const dayLabel = (iso: string) => {
+const dayLabel = (iso: string, today: string) => {
   const d = iso.slice(0, 10);
-  if (d === TODAY) return 'Today';
+  if (d === today) return 'Today';
   return new Date(`${d}T12:00:00+08:00`).toLocaleDateString('en-PH', { weekday: 'short', month: 'short', day: 'numeric' });
 };
-const clock = (iso: string) => fmt12(hm(iso));
-const openNote = () => (NOW_MIN < HOURS.close ? `Open until ${fmt12(`${String(Math.floor(HOURS.close / 60)).padStart(2, '0')}:${String(HOURS.close % 60).padStart(2, '0')}`)}, replies here` : 'Closed now, replies when the shop opens');
+/** "2026-11-02T09:26:00+08:00" -> "9:26 am" (the shop's own clock: read straight from the ISO string). */
+const clock = (iso: string) => { const h = Number(iso.slice(11, 13)); return `${h % 12 || 12}:${iso.slice(14, 16)} ${h < 12 ? 'am' : 'pm'}`; };
 
 const Rule = ({ label, tone, ...rest }: { label: string; tone?: 'accent' } & Record<string, unknown>) => (
   <li role="presentation" className={cn('flex items-center gap-3 py-1 text-[12px] font-medium', tone === 'accent' ? 'text-accent' : 'text-muted')} {...rest}>
@@ -24,23 +20,33 @@ const Rule = ({ label, tone, ...rest }: { label: string; tone?: 'accent' } & Rec
   </li>
 );
 
+export interface ChatPanelProps {
+  thread: TrackerChatMessage[];
+  manager: TrackerChatManager;
+  shop: TrackerChatShop;
+  /** ISO date ("2026-11-02") of today in the shop's time zone, for the "Today" separator. */
+  today: string;
+  onSend: (text: string) => void | Promise<void>;
+  onMarkRead?: () => void;
+  /** A send is in flight: the last message reads "Sending..." instead of "Sent". */
+  pending?: boolean;
+  error?: string | null;
+  className?: string;
+}
 /**
  * The customer's chat with the manager: a real chatbox, always on the page (never a closed section). Header (who, open or not), a scrollable log with the
  * customer's bubbles on the right and the manager's on the left (time under each, day separators, a "New" line over unread replies), a docked composer
- * (Enter sends, Shift+Enter is a new line) and an empty state. Reads and writes the shared store, so replies from Requests arrive here and messages arrive there.
+ * (Enter sends, Shift+Enter is a new line) and an empty state. Controlled: the thread comes in as props, `onSend(text)` sends, `onMarkRead()` fires once
+ * unread replies have been on screen; `pending` shows "Sending...", `error` shows a line under the composer.
  */
-export function ChatPanel({ job, s, className }: { job: Job; s: MechState; className?: string }) {
-  const thread = threadOf(s, job.id);
-  const unread = customerUnread(s, job.id);
+export function ChatPanel({ thread, manager, shop, today, onSend, onMarkRead, pending = false, error, className }: ChatPanelProps) {
+  const unread = thread.filter((m) => m.from === 'manager' && !m.read).length;
   const [text, setText] = useState('');
-  const [sending, setSending] = useState(false);
   const [pinned, setPinned] = useState(true);
   const [visible, setVisible] = useState(() => typeof IntersectionObserver === 'undefined');
-  const [newFrom, setNewFrom] = useState<string | null>(() => s.custMsgs.find((m) => m.jobId === job.id && m.from === 'manager' && !m.read)?.id ?? null);
+  const [newFrom, setNewFrom] = useState<string | null>(() => thread.find((m) => m.from === 'manager' && !m.read)?.id ?? null);
   const root = useRef<HTMLDivElement>(null);
   const log = useRef<HTMLDivElement>(null);
-  const timer = useRef<ReturnType<typeof setTimeout>>();
-  useEffect(() => () => clearTimeout(timer.current), []);
 
   useEffect(() => {
     if (typeof IntersectionObserver === 'undefined' || !root.current) return;
@@ -50,8 +56,8 @@ export function ChatPanel({ job, s, className }: { job: Job; s: MechState; class
   }, []);
   // Remember where the unread replies start, so the "New" line stays after they are marked read.
   useEffect(() => {
-    if (!newFrom && unread) setNewFrom(s.custMsgs.find((m) => m.jobId === job.id && m.from === 'manager' && !m.read)?.id ?? null);
-  }, [unread, newFrom, s.custMsgs, job.id]);
+    if (!newFrom && unread) setNewFrom(thread.find((m) => m.from === 'manager' && !m.read)?.id ?? null);
+  }, [unread, newFrom, thread]);
   // Latest message in view (unless the customer scrolled up to read older ones).
   const last = thread[thread.length - 1]?.id;
   useEffect(() => {
@@ -59,14 +65,13 @@ export function ChatPanel({ job, s, className }: { job: Job; s: MechState; class
     if (el && pinned) el.scrollTop = el.scrollHeight;
   }, [last, pinned]);
   // Replies count as read once the panel is on screen and scrolled to the latest.
-  useEffect(() => { if (unread && visible && pinned) markCustomerRead(job.id); }, [unread, visible, pinned, job.id]);
+  useEffect(() => { if (unread && visible && pinned) onMarkRead?.(); }, [unread, visible, pinned, onMarkRead]);
 
   const onScroll = () => { const el = log.current; if (el) setPinned(el.scrollHeight - el.scrollTop - el.clientHeight < 24); };
   const toLatest = () => { const el = log.current; if (el) { el.scrollTop = el.scrollHeight; setPinned(true); } };
   const send = () => {
     const t = text.trim(); if (!t) return;
-    sendCustomerMessage(job.id, t); setText(''); setSending(true); setPinned(true);
-    clearTimeout(timer.current); timer.current = setTimeout(() => setSending(false), 700);
+    void onSend(t); setText(''); setPinned(true);
   };
   const lastMine = [...thread].reverse().find((m) => m.from === 'customer')?.id;
   const waiting = thread.length > 0 && thread[thread.length - 1]!.from === 'customer';
@@ -79,7 +84,7 @@ export function ChatPanel({ job, s, className }: { job: Job; s: MechState; class
           <PersonAvatar personId={manager.id} name={manager.name} initials={manager.initials} size={32} decorative />
           <p className="min-w-0 leading-5">
             <span className="block truncate text-[14px] font-medium">{manager.name}<span className="font-normal text-muted"> · Manager</span></span>
-            <span className="flex items-center gap-1.5 text-[12px] text-muted"><span aria-hidden className={cn('size-1.5 flex-none rounded-full', NOW_MIN < HOURS.close ? 'bg-ok-dot' : 'bg-control')} /><span className="truncate">{branch.name} · {openNote()}</span></span>
+            <span className="flex items-center gap-1.5 text-[12px] text-muted"><span aria-hidden className={cn('size-1.5 flex-none rounded-full', shop.open ? 'bg-ok-dot' : 'bg-control')} /><span className="truncate">{shop.name} · {shop.note}</span></span>
           </p>
         </div>
 
@@ -97,11 +102,11 @@ export function ChatPanel({ job, s, className }: { job: Job; s: MechState; class
                   const mine = m.from === 'customer'; const d = m.at.slice(0, 10); const head = d !== day; day = d;
                   return (
                     <Fragment key={m.id}>
-                      {head && <Rule label={dayLabel(m.at)} />}
+                      {head && <Rule label={dayLabel(m.at, today)} />}
                       {m.id === newFrom && <Rule label="New" tone="accent" data-new-divider="" />}
                       <li className={cn('flex flex-col', mine ? 'items-end' : 'items-start')}>
                         <p className={cn('max-w-[80%] whitespace-pre-line break-words rounded-control px-3 py-2 text-[14px] leading-5', mine ? 'bg-accent text-accent-ink' : 'bg-raised text-text')}>{m.text}</p>
-                        <span className="mt-1 text-[12px] tabular-nums text-muted">{mine ? 'You' : manager.short} · {clock(m.at)}{m.id === lastMine && waiting && <span data-sent-state> · {sending ? 'Sending...' : 'Sent'}</span>}</span>
+                        <span className="mt-1 text-[12px] tabular-nums text-muted">{mine ? 'You' : manager.short} · {clock(m.at)}{m.id === lastMine && waiting && <span data-sent-state> · {pending ? 'Sending...' : 'Sent'}</span>}</span>
                       </li>
                     </Fragment>
                   );
@@ -123,6 +128,7 @@ export function ChatPanel({ job, s, className }: { job: Job; s: MechState; class
             </div>
             <Button variant="primary" leftIcon={PaperPlaneRight} disabled={!text.trim()} onClick={send}>Send</Button>
           </div>
+          {error && <p role="alert" className="mt-1.5 text-[12px] text-bad-ink">{error}</p>}
           <p className="mt-1.5 hidden text-[12px] text-muted lg:block">Enter to send, Shift+Enter for a new line</p>
         </div>
       </div>

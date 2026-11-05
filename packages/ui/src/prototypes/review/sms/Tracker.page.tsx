@@ -4,9 +4,10 @@ import { EmptyState, Skeleton, Toaster, toast } from '../../../index';
 import { branch, manager } from '../../../components/sms/data';
 import { useMech, nextId, nowIso, patchMech } from '../../../components/sms/mechModel';
 import {
-  INVALID_TOKEN, SCENARIO_JOB, ensureLink, feedForCustomer, liveJob, quotesFor, regenerateLink, resolveLink, seedTracker, studioPost, useLinks,
+  INVALID_TOKEN, SCENARIO_JOB, ensureLink, liveJob, regenerateLink, resolveLink, seedTracker, studioPost, useLinks,
   type ThreadSeed, type TrackerScenario,
 } from '../../../components/sms/trackerModel';
+import { answerFromStore, chatManager, chatShop, chatToday, trackerViewOf, useChatActions } from '../../../components/sms/trackerAdapter';
 import { ChatPanel } from '../../../components/CustomerChat';
 import { ItemsBlock, PaymentBlock, QuoteCard, StatusBlock, TrackerFrame, UpdatesBlock, WhoBlock } from '../../../components/TrackerBlocks';
 
@@ -50,6 +51,8 @@ export function TrackerPage({ scenario = 'in progress', thread = 'none', state =
   const s = useMech();
   const link = resolveLink(boot.token);
   const job = link.state === 'ok' ? liveJob(s, link.jobId) : null;
+  const v = job ? trackerViewOf(s, job) : null;
+  const chat = useChatActions(job?.id ?? '');
 
   const body = state === 'loading' ? (
     <div aria-busy="true" aria-label="Loading your service" className="flex flex-col gap-10">
@@ -57,16 +60,16 @@ export function TrackerPage({ scenario = 'in progress', thread = 'none', state =
       <div className="space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-6 w-1/2" /><Skeleton className="h-12 w-full" /></div>
       <div className="space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-12 w-full" /><Skeleton className="h-12 w-full" /></div>
     </div>
-  ) : !job ? <DeadLink replaced={link.state === 'replaced'} /> : (
+  ) : !job || !v ? <DeadLink replaced={link.state === 'replaced'} /> : (
     <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
       <div className="flex min-w-0 flex-col gap-10 [&>section]:mt-0">
-        <div><WhoBlock job={job} /><StatusBlock job={job} /></div>
-        {quotesFor(s, job).map((q) => <QuoteCard key={q.id} q={q} />)}
-        <ItemsBlock job={job} />
-        <PaymentBlock job={job} />
-        <UpdatesBlock job={job} posts={feedForCustomer(s, job)} />
+        <div><WhoBlock who={v.who} /><StatusBlock status={v.status} /></div>
+        {v.quotes.map((q) => <QuoteCard key={q.id} q={q} onAnswer={answerFromStore} />)}
+        <ItemsBlock items={v.items} />
+        <PaymentBlock payment={v.payment} />
+        <UpdatesBlock posts={v.updates} />
       </div>
-      <ChatPanel job={job} s={s} className="lg:sticky lg:top-4 lg:col-start-2 lg:row-start-1" />
+      <ChatPanel thread={v.chat} manager={chatManager} shop={chatShop} today={chatToday} {...chat} className="lg:sticky lg:top-4 lg:col-start-2 lg:row-start-1" />
     </div>
   );
 
@@ -81,6 +84,6 @@ export function TrackerPage({ scenario = 'in progress', thread = 'none', state =
     </div>
   ) : undefined;
 
-  return <><TrackerFrame footer={bar}>{body}</TrackerFrame><Toaster /></>;
+  return <><TrackerFrame footer={bar} business={branch.business} branchName={branch.name}>{body}</TrackerFrame><Toaster /></>;
 }
 export { SCENARIO_JOB };

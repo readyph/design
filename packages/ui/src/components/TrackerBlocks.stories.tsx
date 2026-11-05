@@ -1,21 +1,23 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { ItemsBlock, PaymentBlock, QuoteCard, StatusBlock, TrackerFrame, UpdatesBlock, WhoBlock } from './TrackerBlocks';
 import { useMech } from './sms/mechModel';
-import { SCENARIO_JOB, feedForCustomer, liveJob, quotesFor, seedTracker, type TrackerScenario } from './sms/trackerModel';
+import { SCENARIO_JOB, liveJob, seedTracker, type TrackerScenario } from './sms/trackerModel';
+import { answerFromStore, trackerViewOf } from './sms/trackerAdapter';
+import { branch } from './sms/data';
 
 /** The customer tracker blocks, composed the way the tracking page stacks them (single 520px column). */
 function Tracker({ scenario }: { scenario: TrackerScenario }) {
   seedTracker(scenario, 'none');
   const s = useMech();
-  const job = liveJob(s, SCENARIO_JOB[scenario])!;
+  const v = trackerViewOf(s, liveJob(s, SCENARIO_JOB[scenario])!);
   return (
-    <TrackerFrame>
+    <TrackerFrame business={branch.business} branchName={branch.name}>
       <div className="flex min-w-0 flex-col gap-10 [&>section]:mt-0">
-        <div><WhoBlock job={job} /><StatusBlock job={job} /></div>
-        {quotesFor(s, job).map((q) => <QuoteCard key={q.id} q={q} />)}
-        <ItemsBlock job={job} />
-        <PaymentBlock job={job} />
-        <UpdatesBlock job={job} posts={feedForCustomer(s, job)} />
+        <div><WhoBlock who={v.who} /><StatusBlock status={v.status} /></div>
+        {v.quotes.map((q) => <QuoteCard key={q.id} q={q} onAnswer={answerFromStore} />)}
+        <ItemsBlock items={v.items} />
+        <PaymentBlock payment={v.payment} />
+        <UpdatesBlock posts={v.updates} />
       </div>
     </TrackerFrame>
   );
