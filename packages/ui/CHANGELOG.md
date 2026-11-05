@@ -1,5 +1,11 @@
 # @readyph/ui
 
+## 0.35.0
+
+### Minor Changes
+
+- 18ae8dd: `MechFeed` accepts an optional `allowInternal` prop: it adds an "Internal (customer cannot see it)" checkbox (off by default) to the composer and passes the value as the 5th argument of `onPost`. Hidden and unchanged when not set.
+
 ## 0.34.0
 
 ### Minor Changes
