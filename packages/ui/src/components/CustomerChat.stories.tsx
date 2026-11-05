@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { ChatPanel } from './CustomerChat';
 import { jobs, TODAY } from './sms/data';
+import { chatManager, chatShop, chatThreadView, chatToday, useChatActions } from './sms/trackerAdapter';
 import { patchMech, resetMech, useMech, type CustMsg } from './sms/mechModel';
 
 const job = jobs.find((j) => j.id === 'j0408')!;
@@ -30,7 +31,8 @@ function Live({ thread }: { thread: Seed }) {
   const [ready, setReady] = useState(false);
   useEffect(() => { resetMech(); patchMech(() => ({ custMsgs: seedOf(thread) })); setReady(true); }, [thread]);
   const s = useMech();
-  return ready ? <div className="mx-auto max-w-[520px]"><ChatPanel job={job} s={s} /></div> : null;
+  const actions = useChatActions(jobId);
+  return ready ? <div className="mx-auto max-w-[520px]"><ChatPanel thread={chatThreadView(s, job)} manager={chatManager} shop={chatShop} today={chatToday} {...actions} /></div> : null;
 }
 
 const meta: Meta<typeof Live> = {
