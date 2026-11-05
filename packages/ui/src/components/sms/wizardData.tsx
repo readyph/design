@@ -25,6 +25,14 @@ export interface WizardData {
   shop: WizardShop;
   /** Called when a customer (or a car on an existing customer) is created in the wizard, so the host can save it. */
   onSaveCustomer?: (c: Customer) => void;
+  /** Called (not debounced) with what is typed in the customer field, so the host can fetch matches beyond the list it passed in. */
+  onSearchCustomers?: (query: string) => void;
+  /** How many matches the customer list shows (default 6). A host that searches on the server sets the page size it loaded. */
+  customerListLimit?: number;
+  /** Total customers matching, when the host holds only part of them. The field says "Showing N of total" when it is more than shown. */
+  customersTotal?: number;
+  /** A note under the customer field (replaces the default "Showing N of total" line). */
+  customersNote?: ReactNode;
 }
 
 const seedShop: WizardShop = { business: branch.business, branch: branch.name, address: branch.address, phone: manager.phone, preparedBy: manager.name };
