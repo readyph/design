@@ -3,7 +3,7 @@ import { InquiryDetail } from './sms/InquiryDetail';
 import { inquiries, jobs } from './sms/data';
 
 const meta: Meta<typeof InquiryDetail> = {
-  title: 'Components/Data/Inquiry detail',
+  title: 'Components/SMS/Inquiry detail',
   component: InquiryDetail,
   tags: ['autodocs'],
   parameters: { layout: 'fullscreen' },

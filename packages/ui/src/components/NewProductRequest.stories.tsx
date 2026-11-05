@@ -12,7 +12,7 @@ const requests: NewProductRequest[] = [
 ];
 
 const meta: Meta = {
-  title: 'Components/Forms/NewProductRequest',
+  title: 'Components/Inventory/NewProductRequest',
   tags: ['autodocs'],
   parameters: {
     layout: 'fullscreen',

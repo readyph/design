@@ -5,7 +5,7 @@ import { LedaNote } from './LedaNote';
 import { cebu, cubao, main, optRead, optShare, pasig, readsFrom } from './ConnectionsEditor.sample';
 
 const meta: Meta<typeof ConnectionsEditor> = {
-  title: 'Components/Lists/ConnectionsEditor',
+  title: 'Components/Portal/ConnectionsEditor',
   component: ConnectionsEditor,
   tags: ['autodocs'],
   parameters: {

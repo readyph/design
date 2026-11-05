@@ -7,7 +7,7 @@ import { ProgressBar } from './ProgressBar';
 import { autoWorks, cafe, jobs, longName, stock, stockroom, unbreakable } from './PlatformToday.data';
 
 const meta: Meta<typeof PlatformToday> = {
-  title: 'Components/Data display/Platform Today',
+  title: 'Components/Portal/Platform Today',
   component: PlatformToday,
   tags: ['autodocs'],
   parameters: {

@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Row, WizardBlock } from './WizardBlock';
 
 const meta: Meta<typeof WizardBlock> = {
-  title: 'Components/Layout/Wizard block',
+  title: 'Components/SMS/Wizard block',
   component: WizardBlock,
   tags: ['autodocs'],
   decorators: [(Story) => <div className="w-[720px] max-w-full"><Story /></div>],

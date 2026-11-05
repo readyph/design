@@ -1,0 +1,25 @@
+import { Meta, Canvas } from '@storybook/blocks';
+import * as Stories from './OrderLists.stories';
+
+<Meta of={Stories} />
+
+# Order lists
+
+<Canvas of={Stories.Lists} />
+
+## Purpose
+What we need to buy, from whom: the lists you check, print and send (handover 2.3 and 2.4). It has the order list **paper** (I9) you print, the **index**, the **steps** (I10) and the **cart** offcanvas (I8).
+
+## What is here
+- Index: `Lists`, `SentOrders`, `OneSentPo` (PO-0222), `NoLists` (`?lists=empty`), `FirstRun` (`?state=empty`), `FromHome` (`&from=home`).
+- Cart: `CartOpen` (`&cart=open`).
+- Mark as sent: `MarkAsSentConfirm`.
+- Who is looking: `Clerk`, `ClerkAsked`. Other tenant: `TenantB`.
+- States: `Loading`, `ErrorState`.
+- Phone 390: `Phone`, `PhoneSentPo`.
+
+## Built from
+Order lists panel, Paper document and Step line, under Components / Inventory.
+
+## Notes
+[For Review] RDY-405. Source: inventory-home FINAL `order-list.html`, `order-list.js`, `order-list.css`, `cart.js`, `cart.css`, `orders.js`. Data generated from `data.js` and `orders.js` (`OrderLists.data.ts`). Prototype only: stories are not exported from the package.

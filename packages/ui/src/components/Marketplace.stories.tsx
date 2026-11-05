@@ -7,7 +7,7 @@ import { Package } from '@phosphor-icons/react';
 import { LedaNote } from './LedaNote';
 
 const meta: Meta<typeof Marketplace> = {
-  title: 'Components/Overlays/Marketplace',
+  title: 'Components/Portal/Marketplace',
   component: Marketplace,
   tags: ['autodocs'],
   parameters: {

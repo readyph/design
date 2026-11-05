@@ -15,7 +15,7 @@ const people = [
 const base: ReceiveFormProps = { poNo: 'PO-0221', lines, stock, people, viewerId: 'ana', canCloseShort: true, managerName: 'Berto' };
 
 const meta: Meta<typeof ReceiveForm> = {
-  title: 'Components/Forms/ReceiveForm',
+  title: 'Components/Inventory/ReceiveForm',
   component: ReceiveForm,
   tags: ['autodocs'],
   args: base,

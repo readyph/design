@@ -8,7 +8,7 @@ import { productOf } from './sms/data';
 const job = jobs.find((j) => j.id === 'j0412')!;
 
 const meta: Meta<typeof JobRow> = {
-  title: 'Components/Data/Job row',
+  title: 'Components/SMS/Job row',
   component: JobRow,
   tags: ['autodocs'],
   decorators: [(Story) => <div className="w-[960px] max-w-full"><Story /></div>],

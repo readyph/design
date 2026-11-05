@@ -49,7 +49,7 @@ const run: DayTimelineLane = {
 const base: DayTimelineProps = { subtitle: '8:00-18:00 · as of 9:12', legend: true, hours, now, nowLabel: 'Now 9:12', lanes: [decide, stockIn, stockOut, expiring, run] };
 
 const meta: Meta<typeof DayTimeline> = {
-  title: 'Components/Charts/DayTimeline',
+  title: 'Components/Inventory/DayTimeline',
   component: DayTimeline,
   tags: ['autodocs'],
   args: base,

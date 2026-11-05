@@ -4,7 +4,7 @@ import { Queue, type QueueItem } from './Queue';
 import { allPlatforms, done, items, manyItems, snoozed, stock, watching } from './Queue.data';
 
 const meta: Meta<typeof Queue> = {
-  title: 'Components/Data display/Queue',
+  title: 'Components/Portal/Queue',
   component: Queue,
   parameters: {
     layout: 'centered',

@@ -10,7 +10,7 @@ const noop = () => {};
 const base: WeekCalendarProps<Job> = { env: calendarEnv, view: viewOf, mechanics, days: weekDays('2026-11-04'), items: calItems, onOpen: noop, onBook: noop };
 
 const meta = {
-  title: 'SMS/WeekCalendar',
+  title: 'Components/SMS/WeekCalendar',
   component: WeekCalendar<Job>,
   parameters: { layout: 'fullscreen' },
   decorators: [(Story) => <div className="flex h-[720px] flex-col bg-surface"><Story /></div>],

@@ -6,7 +6,7 @@ import { futureJobs } from './sms/scheduleData';
 
 const noop = () => {};
 const meta = {
-  title: 'SMS/CalendarToolbar',
+  title: 'Components/SMS/CalendarToolbar',
   component: CalendarToolbar,
   parameters: { layout: 'fullscreen' },
   args: { days: ['2026-11-02', '2026-11-03', '2026-11-04'], span: '3day', onSpan: noop, onPrev: noop, onNext: noop, onToday: noop, onJump: noop, q: '', onQ: noop, mechanic: 'any', mechanicOptions: calMechanicOptions(), onMechanic: noop, needsCount: 4 },

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { InfiniteSentinel, ListEnd, CardSkeletons, ResultCount } from './InfiniteList';
 
-const meta = { title: 'SMS/InfiniteList', parameters: { layout: 'fullscreen' } } satisfies Meta;
+const meta = { title: 'Components/SMS/InfiniteList', parameters: { layout: 'fullscreen' } } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
 

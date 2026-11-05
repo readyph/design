@@ -6,7 +6,7 @@ import { everyService } from './sms/servicesData';
 const rows = everyService.slice(0, 20);
 const noop = () => {};
 
-const meta = { title: 'SMS/ServicesTable', parameters: { layout: 'fullscreen' } } satisfies Meta;
+const meta = { title: 'Components/SMS/ServicesTable', parameters: { layout: 'fullscreen' } } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
 

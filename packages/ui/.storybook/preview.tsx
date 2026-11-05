@@ -122,9 +122,11 @@ const preview: Preview = {
           'Introduction',
           'Foundations',
           'Components',
-          ['Actions', 'Charts', 'Data display', 'Feedback', 'Forms', 'Identity', 'Layout', 'Leda', 'Lists', 'Navigation', 'Overlays'],
+          // Shared parts first (any platform can use them), then the parts that belong to one platform.
+          ['Actions', 'Charts', 'Data display', 'Feedback', 'Forms', 'Identity', 'Layout', 'Leda', 'Navigation', 'Overlays', 'Portal', 'Inventory', 'SMS'],
           'Prototypes',
           ['Portal', ['Home', 'Platforms', 'Platform', 'Team', 'Memory'], 'Inventory', 'SMS'],
+          'Studio',
         ],
       },
     },

@@ -4,7 +4,7 @@ import { RolePicker, type RolePickerByRoleProps, type RolePickerProps, type Role
 import { eight, invites, lockedPlatforms, manyRoles, people, platforms, roleOptions, saved, savedByRole } from './RolePicker.data';
 
 const meta: Meta<typeof RolePicker> = {
-  title: 'Components/Forms/Role picker',
+  title: 'Components/Portal/Role picker',
   component: RolePicker,
   tags: ['autodocs'],
   parameters: {

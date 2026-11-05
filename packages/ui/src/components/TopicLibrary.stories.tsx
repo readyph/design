@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { TopicLibraryPage, manyTopics } from './TopicLibrary.sample';
 
 const meta: Meta = {
-  title: 'Components/Data display/Topic library',
+  title: 'Components/Portal/Topic library',
   tags: ['autodocs'],
   parameters: {
     layout: 'fullscreen',

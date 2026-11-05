@@ -6,7 +6,7 @@ import { LiveTrackingLink } from './sms/LiveTrackingLink';
 import { jobs } from './sms/data';
 
 const meta: Meta<typeof TrackingLink> = {
-  title: 'Components/Data/TrackingLink',
+  title: 'Components/SMS/TrackingLink',
   component: TrackingLink,
   tags: ['autodocs'],
   parameters: { layout: 'padded' },

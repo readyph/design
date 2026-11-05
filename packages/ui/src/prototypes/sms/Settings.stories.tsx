@@ -31,7 +31,7 @@ type Args = { section: string; scenario: string; saveState: string; overlay: str
 const meta: Meta<Args> = {
   ...liveMeta,
   tags: ['!autodocs'], // literal on purpose: the CSF indexer cannot read tags through a spread
-  title: 'Prototypes/SMS/Settings',
+  title: 'Prototypes/SMS/Settings (previous version)',
   argTypes: {
     section: control.select(Object.keys(SECTIONS), 'Which section is open (the left menu switches it live)', 'Where'),
     scenario: control.select(Object.keys(SCENARIOS), 'Data: default shop, brand-new shop, many staff, long text, logo uploaded', 'Data'),

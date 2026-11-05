@@ -3,7 +3,7 @@ import { CheckCircle } from '@phosphor-icons/react';
 import { NotifyItem } from './NotifyItem';
 
 const meta: Meta<typeof NotifyItem> = {
-  title: 'Components/Data/Notify item',
+  title: 'Components/SMS/Notify item',
   component: NotifyItem,
   tags: ['autodocs'],
   decorators: [(Story) => <ul className="w-[360px] list-none p-0"><Story /></ul>],

@@ -11,7 +11,7 @@ import {
 } from './MovementLedger';
 
 const meta: Meta<typeof MovementLedger> = {
-  title: 'Components/Data/MovementLedger',
+  title: 'Components/Inventory/MovementLedger',
   component: MovementLedger,
   parameters: {
     layout: 'padded',

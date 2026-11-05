@@ -6,7 +6,7 @@ import { typeIdFor } from './sms/catalogue';
 import { emptyDraft, linesFromType, type WizardDraft } from './sms/wizardModel';
 
 const meta: Meta<typeof WizardSummary> = {
-  title: 'Components/Forms/Wizard summary',
+  title: 'Components/SMS/Wizard summary',
   component: WizardSummary,
   tags: ['autodocs'],
   decorators: [(Story) => <div className="min-h-[640px] w-[760px] max-w-full"><Story /></div>],

@@ -5,7 +5,7 @@ import { WeekChart } from './WeekChart';
 import { autoWorks, cafe, days, failed, hardware, loading, noHistory, stockroom } from './OverviewCharts.data';
 
 const meta: Meta<typeof OverviewCharts> = {
-  title: 'Components/Charts/Overview charts',
+  title: 'Components/Portal/Overview charts',
   component: OverviewCharts,
   tags: ['autodocs'],
   parameters: {

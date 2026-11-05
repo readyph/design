@@ -8,7 +8,7 @@ seedRequests({ scenario: 'default', customer: 'waiting' });
 const all = itemsOf(getMech()).sort((a, b) => b.at.localeCompare(a.at));
 
 const meta: Meta<typeof RequestList> = {
-  title: 'Components/Data/Request list',
+  title: 'Components/SMS/Request list',
   component: RequestList,
   tags: ['autodocs'],
   decorators: [(Story) => <div className="w-[420px] max-w-full bg-surface"><Story /></div>],

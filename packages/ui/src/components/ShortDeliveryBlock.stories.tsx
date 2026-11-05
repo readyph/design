@@ -7,7 +7,7 @@ const shortOrder = { ...partIn, closed: true };
 const base: ShortDeliveryBlockProps = { order: partIn, canSettle: true, etaOptions };
 
 const meta: Meta<typeof ShortDeliveryBlock> = {
-  title: 'Components/Feedback/ShortDeliveryBlock',
+  title: 'Components/Inventory/ShortDeliveryBlock',
   component: ShortDeliveryBlock,
   tags: ['autodocs'],
   args: base,

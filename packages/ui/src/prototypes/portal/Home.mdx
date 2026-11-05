@@ -1,0 +1,27 @@
+import { Meta, Canvas } from '@storybook/blocks';
+import * as Stories from './Home.stories';
+
+<Meta of={Stories} />
+
+# Home
+
+<Canvas of={Stories.Live} />
+
+## Purpose
+The Portal's front door: **what needs me today, across every platform?** The map and Needs you sit in the place column; the sheet shows Today, a single case, or the overview (greeting, Leda bar and chips, last 7 days, next, yesterday).
+
+## What is here
+- Opens on Today when something needs a decision (`Live`, four decisions). Click an item's button (or press Enter) to open its case, then Confirm.
+- `Quiet` opens on the overview when nothing needs you.
+- States: `Loading` (skeletons, Leda's mark plays Aurora), `PlatformError` (one platform fails, its block says so with Retry, the rest renders).
+- Scale: `FewPlatforms`, `ManyPlatforms` and their quiet variants.
+- Filters: `HqFilter`, `PlatformFilter`. Leda: `ConversationOpen`. `Phone` is the phone composition.
+
+## Leda entry points
+Ask bar, centred bar and chips, phone bar, palette, conversation panel, headline, proposals and watching, case note and proposal, Today blocks, status bar usage (L1 to L10).
+
+## Shared chrome
+The rail, the phone top bar (account and Leda) and the phone nav (labelled tabs and More) come from `PortalFrame` (`./PortalFrame.tsx`, not exported from the package). Memory, Platforms, Platform detail and Team use the same frame.
+
+## Notes
+RDY-255. Prototype only: stories are not exported from the package. Data: `Home.data.ts`, `Home.sets.data.ts`.

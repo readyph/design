@@ -1,0 +1,28 @@
+import { Meta, Canvas } from '@storybook/blocks';
+import * as Stories from './Movements.stories';
+
+<Meta of={Stories} />
+
+# Movements
+
+<Canvas of={Stories.Ledger} />
+
+## Purpose
+Every change to stock, and a way to record one: **what moved, when, and who did it**. Two tabs: the **ledger** and **Transfers** between places.
+
+## What is here
+- Ledger: `Ledger`, filters (`FilterStockOutSold`, `FilterWeek`, `FilterCustomDates`, `FilterSearch`), `JobOrderNote`.
+- States: `Loading`, `ErrorState`, `NoMovements`, `NoResults`, `Quiet`.
+- Record a movement: `RecordMovement`, `RecordMovementWithProduct`, `LandedWithUndo`, `UndoAsksFirst`, `RecordingOff`.
+- Transfers list and filters: `Transfers`, `TransfersDraft`, `TransfersInTransit`, `TransfersReceived`, `TransfersCancelled`.
+- One transfer by state: `TransferDraft`, `TransferInTransit`, `TransferSentOut`, `TransferReceived`, `TransferSendQuestion`, `TransferWaitingForManager`, `TransferCancelAsks`.
+- Create or change: `NewTransfer`, `ChangeDraft`, `NewTransferWarning`.
+- Receive a transfer: `ReceiveTransfer`, `ReceiveTransferShort`, `ReceiveTransferNothing`, `ReceiveTransferMixedUnits`, `ReceiveTransferError`.
+- Who is looking: `Clerk`, `RecordMovementClerk`. Other tenant: `TenantB`.
+- Phone 390: `Phone`, `PhoneRecord`, `PhoneTransfers`, `PhoneTransferPaper`, `PhoneReceiveTransfer`.
+
+## Built from
+Movement ledger, Record movement form, Transfer list / detail / form, and Step line, under Components / Inventory.
+
+## Notes
+[For Review]. RDY-436 (b): ledger, filters, tabs shell, states, phone. RDY-437 (c): Record movement and Undo. Later slices add the transfer stories. Source: inventory-home FINAL `movements.html`, `movements.js`, `movements.css`. Data: `Movements.data.ts`. Prototype only: stories are not exported from the package.

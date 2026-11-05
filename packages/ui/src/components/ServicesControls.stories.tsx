@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { SearchBox, ToggleChip } from './ServicesControls';
 
-const meta = { title: 'SMS/ServicesControls', parameters: { layout: 'padded' } } satisfies Meta;
+const meta = { title: 'Components/SMS/ServicesControls', parameters: { layout: 'padded' } } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
 

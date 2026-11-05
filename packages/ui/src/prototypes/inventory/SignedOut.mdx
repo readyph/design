@@ -1,0 +1,20 @@
+import { Meta, Canvas } from '@storybook/blocks';
+import * as Stories from './SignedOut.stories';
+
+<Meta of={Stories} />
+
+# Signed out
+
+<Canvas of={Stories.TenantA} />
+
+## Purpose
+The screen after signing out: the platform's logo and name, "You are signed out", and one primary **Sign in** that goes back to Home, keeping the tenant and viewer.
+
+## Exact copy
+An exact copy of the workshop page `signed-out.html` (`workshop/prototypes/inventory-home/round-1/final`). The 1440px hero-void WARN is kept on purpose.
+
+## What is here
+Tenant A is Parts Stockroom, tenant B is Café Inventory. Each in light and dark (`TenantA`, `TenantADark`, `TenantB`, `TenantBDark`), plus `Phone`.
+
+## Notes
+RDY-410. Prototype only: not exported from the package.

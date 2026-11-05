@@ -6,7 +6,7 @@ import { eight, platforms, roleOptions, saved, lockedPlatforms } from './RolePic
 
 /** RDY-282 (C22). Prototype only: not exported from the package. The picker in the real PlatformShell sheet (scrolling), light and dark, desktop and phone. */
 const meta: Meta = {
-  title: 'Components/Forms/Role picker in the shell',
+  title: 'Components/Portal/Role picker in the shell',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;

@@ -8,7 +8,7 @@ const MARK =
   encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128'><rect width='128' height='128' fill='#2f5fa8'/><circle cx='64' cy='64' r='34' fill='#fff'/></svg>");
 
 const meta: Meta<typeof LogoUpload> = {
-  title: 'Components/Forms/LogoUpload',
+  title: 'Components/Portal/LogoUpload',
   component: LogoUpload,
   tags: ['autodocs'],
   args: { name: 'Lakeside Dental', onChange: () => {} },

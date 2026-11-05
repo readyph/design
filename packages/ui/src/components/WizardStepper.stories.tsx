@@ -10,7 +10,7 @@ function Live({ steps: s, start }: { steps: WizardStep[]; start: number }) {
 }
 
 const meta: Meta<typeof WizardStepper> = {
-  title: 'Components/Navigation/Wizard stepper',
+  title: 'Components/SMS/Wizard stepper',
   component: WizardStepper,
   tags: ['autodocs'],
   decorators: [(Story) => <div className="w-[640px] max-w-full"><Story /></div>],

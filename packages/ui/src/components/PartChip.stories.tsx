@@ -4,7 +4,7 @@ import { branch, products, stockState } from './sms/data';
 import { todayEnv } from './sms/floorModel';
 
 const meta: Meta<typeof PartChip> = {
-  title: 'Components/Data/Part chip',
+  title: 'Components/SMS/Part chip',
   component: PartChip,
   tags: ['autodocs'],
   args: { product: products[0], env: todayEnv, inventoryName: branch.inventory.platform, onResolve: () => {} },

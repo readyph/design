@@ -12,7 +12,7 @@ function pick(customer: 'waiting' | 'approved' | 'declined', test: (i: InboxItem
 }
 const Detail = ({ item }: { item: InboxItem }) => <div className="w-[520px] max-w-full bg-surface"><RequestHeader item={item} job={jobOf(item.jobId)} a={actions} /><RequestBody item={item} job={jobOf(item.jobId)} a={actions} /></div>;
 
-const meta: Meta = { title: 'Components/Data/Request detail', tags: ['autodocs'] };
+const meta: Meta = { title: 'Components/SMS/Request detail', tags: ['autodocs'] };
 export default meta;
 type S = StoryObj;
 

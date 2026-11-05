@@ -15,7 +15,7 @@ import { cn } from '../utils/cn';
  * home.html 28-45; handover 2.0 and 5.1 I23. No place column (`--place: 0px`): rail | sheet over the status bar. The rail is 64px from 641px up (`railWidth="wide"`).
  */
 const meta: Meta<typeof PlatformShell> = {
-  title: 'Components/Layout/Inventory frame',
+  title: 'Components/Inventory/Inventory frame',
   component: PlatformShell,
   parameters: { layout: 'fullscreen' },
 };

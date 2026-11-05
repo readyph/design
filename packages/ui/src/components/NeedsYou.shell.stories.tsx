@@ -10,7 +10,7 @@ import { PlatformLogo } from './PlatformLogo';
 
 /** [For Review] RDY-279 (C19). Prototype only: stories are not exported from the package. The Needs you queue in the portal place column (map above it is C16, not built yet). */
 const meta: Meta = {
-  title: 'Components/Data display/Needs you',
+  title: 'Components/Portal/Needs you',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;

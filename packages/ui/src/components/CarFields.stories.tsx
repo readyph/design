@@ -5,7 +5,7 @@ import { blankCar, carToDraft, type CarDraft } from './sms/customersModel';
 import { customers } from './sms/data';
 
 const meta: Meta<typeof CarFields> = {
-  title: 'Components/Forms/Car fields',
+  title: 'Components/SMS/Car fields',
   component: CarFields,
   tags: ['autodocs'],
   decorators: [(Story) => <div className="w-[520px] max-w-full"><Story /></div>],

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { PanelToggle } from './PanelToggle';
 
 const meta: Meta<typeof PanelToggle> = {
-  title: 'Components/Actions/Panel toggle',
+  title: 'Components/Portal/Panel toggle',
   component: PanelToggle,
   tags: ['autodocs'],
   args: { mode: 'hide', onClick: () => {} },

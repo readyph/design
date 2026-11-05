@@ -1,6 +1,6 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { SignIn } from '@phosphor-icons/react';
-import { logoAutoworks, logoCafe } from '../prototypes/Home.logos';
+import { logoAutoworks, logoCafe } from '../prototypes/portal/Home.logos';
 import { ButtonLink } from './ButtonLink';
 import { PlatformLogo } from './PlatformLogo';
 

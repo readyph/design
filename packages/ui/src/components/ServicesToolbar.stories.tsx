@@ -4,7 +4,7 @@ import { BulkBar, ServicesToolbar } from './ServicesToolbar';
 import { NO_FILTERS, VIEWS, matches, type Filters, type SortId, type ViewId } from './sms/servicesModel';
 import { everyService } from './sms/servicesData';
 
-const meta = { title: 'SMS/ServicesToolbar', parameters: { layout: 'fullscreen' } } satisfies Meta;
+const meta = { title: 'Components/SMS/ServicesToolbar', parameters: { layout: 'fullscreen' } } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
 

@@ -6,7 +6,7 @@ import { eight, eightLinks, three, threeLinks } from './TownMap.data';
 
 /** [For Review] RDY-276 (C16). Prototype only: not exported from the package. The map at the top of Home's place column, real PlatformShell. */
 const meta: Meta = {
-  title: 'Components/Data display/Platform map in the Home shell',
+  title: 'Components/Portal/Platform map in the Home shell',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;

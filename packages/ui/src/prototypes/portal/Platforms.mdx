@@ -1,0 +1,29 @@
+import { Meta, Canvas } from '@storybook/blocks';
+import * as Stories from './Platforms.stories';
+
+<Meta of={Stories} />
+
+# Platforms
+
+<Canvas of={Stories.Default} />
+
+## Purpose
+Every platform the business runs, what each shares with the others, and how to add or disconnect one.
+
+## Exact copy
+This page is an exact copy of the workshop page `platforms.html` (`workshop/prototypes/portal-home/round-2/final`): the same data, wording, sizes, map, shell and flows, in the real `PlatformShell`, composed only from @readyph/ui parts. Each story is a state of that page.
+
+## Data sets
+Two platforms (default), `?set=few` (3) and `?set=many` (8, the scale test).
+
+## Marketplace entry points
+Add (place column), Add a platform, Add another platform, the rail "+", "Not shared yet" Add (preselects the reader), the empty state, `?add=1`, and Leda's "Add a POS for the parts counter". Stories: `MarketplaceFromAdd`, `MarketplaceFromNotShared`, `MarketplaceFromLeda`.
+
+## What is here
+- States: `Default`, `Few`, `Many`, `Loading`, `ErrorState`, `Empty`.
+- Leda: `PaletteOpen`, `LedaAnswer`, `LedaRefusal` (she will not disconnect for you).
+- Disconnect: `DisconnectConfirm`, `DisconnectBlocked`.
+- Phone: `Phone`, `PhoneDefault`, `PhoneFew`, `PhoneLoading`, `PhoneError`, `PhoneEmpty`, `PhoneMarketplace`.
+
+## Notes
+RDY-256, exact copy RDY-360 (handover 2.2). Opening a platform shows a toast; the real page is Platform (C15).

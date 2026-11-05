@@ -13,7 +13,7 @@ const placeOf = (id: string, dur: number) => {
 };
 
 const meta = {
-  title: 'SMS/CalCard',
+  title: 'Components/SMS/CalCard',
   component: CalCard<Job>,
   decorators: [(Story) => <RadixTooltip.Provider><div className="relative h-[300px] w-[224px] bg-surface"><Story /></div></RadixTooltip.Provider>],
   args: { env: calendarEnv, jobView: viewOf, mechanic: mechanicOf(calItems.find((i) => i.job.id === 'f06')!.job), selected: false, flash: false, dim: false, showMech: true, onOpen: noop, placed: placeOf('f06', 60) },

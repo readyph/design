@@ -10,7 +10,7 @@ import { Menu } from './Menu';
 
 /** [For Review] RDY-278 (C18). Prototype only: stories are not exported from the package. Platforms sheet, All platforms list. */
 const meta: Meta = {
-  title: 'Components/Data display/Platforms list',
+  title: 'Components/Portal/Platforms list',
   parameters: { layout: 'fullscreen' },
 };
 export default meta;

@@ -14,7 +14,7 @@ const manager: RecordPermission[] = ['stock_out', 'transfer', 'adjust_stock'];
 const clerk: RecordPermission[] = ['stock_out', 'transfer'];
 
 const meta: Meta<typeof RecordMovementForm> = {
-  title: 'Components/Data/RecordMovementForm',
+  title: 'Components/Inventory/RecordMovementForm',
   component: RecordMovementForm,
   parameters: {
     layout: 'padded',
